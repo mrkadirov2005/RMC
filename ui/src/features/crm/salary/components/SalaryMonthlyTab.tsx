@@ -174,7 +174,7 @@ const TeacherSalaryPieView = ({
             />
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-xl font-black">{paid + unpaid}</span>
-              <span className="text-[10px] font-semibold uppercase text-muted-foreground">{t('Months')}</span>
+              <span className="text-[0.625rem] font-semibold uppercase text-muted-foreground">{t('Months')}</span>
             </div>
           </div>
           <div className="flex w-full justify-around text-xs">
@@ -186,7 +186,7 @@ const TeacherSalaryPieView = ({
             </span>
           </div>
           {detail?.history?.[0]?.salary && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[0.6875rem] text-muted-foreground">
               {t('Last recorded:')} {formatMoney(detail.history[0].salary.amount)}
             </p>
           )}

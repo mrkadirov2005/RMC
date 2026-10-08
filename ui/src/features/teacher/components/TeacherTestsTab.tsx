@@ -345,7 +345,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                   <span className="text-xs text-muted-foreground relative">
                     {t('submissions')}
                     {(test.submission_count || 0) > 0 && (
-                      <span className="absolute -top-2 -right-5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] w-4 h-4">
+                      <span className="absolute -top-2 -right-5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[0.625rem] w-4 h-4">
                         {test.submission_count}
                       </span>
                     )}
@@ -389,7 +389,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
             <Users className="h-4 w-4" />
             {t('View Submissions')}
             {(selectedTest?.submission_count || 0) > 0 && (
-              <span className="ml-auto inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] w-4 h-4">
+              <span className="ml-auto inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[0.625rem] w-4 h-4">
                 {selectedTest?.submission_count}
               </span>
             )}

@@ -106,7 +106,7 @@ export const TeacherStatsPanel = ({ data, collections }: Props) => {
             <p className="truncate text-base font-black text-slate-950 dark:text-white">{t(selectedSlide.title)}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-white/55">{t(selectedSlide.description)}</p>
           </div>
-          <span className="rounded bg-emerald-100 px-2 py-1 text-[11px] font-black text-emerald-700">
+          <span className="rounded bg-emerald-100 px-2 py-1 text-[0.6875rem] font-black text-emerald-700">
             {activeSlide + 1}/{analytics.slides.length}
           </span>
           <ChartModeButtons mode={chartMode} onChange={setChartMode} />
@@ -235,7 +235,7 @@ const Insight = ({ label, value, detail }: { label: string; value: string | numb
   const { t } = useLanguage();
   return (
     <div className="rounded-md border border-slate-100 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
-      <p className="text-[10px] font-black uppercase text-slate-500">{t(label)}</p>
+      <p className="text-[0.625rem] font-black uppercase text-slate-500">{t(label)}</p>
       <p className="text-lg font-black leading-tight text-slate-950 dark:text-white">{value}</p>
       <p className="text-xs font-semibold text-slate-500">{detail}</p>
     </div>

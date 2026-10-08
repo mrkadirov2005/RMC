@@ -36,7 +36,7 @@ const ScoreCircle = ({ option, active }: { option: ScoreOption; active: boolean 
       className="grid h-6 w-6 shrink-0 place-items-center rounded-full"
       style={{ background: `conic-gradient(${tone.fill} ${degrees}deg, ${tone.track} 0deg)` }}
     >
-      <span className={cn('grid h-4 w-4 place-items-center rounded-full bg-white text-[9px] shadow-sm', active && 'text-slate-950')}>
+      <span className={cn('grid h-4 w-4 place-items-center rounded-full bg-white text-[0.5625rem] shadow-sm', active && 'text-slate-950')}>
         {option.symbol}
       </span>
     </span>
@@ -145,7 +145,7 @@ export const ScoreTable = ({
             key={option.label}
             type="button"
             className={cn(
-              'flex h-8 items-center gap-1.5 rounded-full border px-2 text-[11px] font-bold shadow-sm transition',
+              'flex h-8 items-center gap-1.5 rounded-full border px-2 text-[0.6875rem] font-bold shadow-sm transition',
               tone.idle,
             )}
             onClick={() => onFillAll(option.label)}
@@ -161,9 +161,9 @@ export const ScoreTable = ({
         <TableRow className="bg-primary">
           <TableHead className="h-10 w-[100px] min-w-[100px] px-2 text-xs font-semibold text-primary-foreground sm:w-[180px] sm:min-w-[180px] sm:px-3">{t('Student')}</TableHead>
           {options.map((option) => (
-            <TableHead key={option.label} className="h-9 w-[50px] min-w-[50px] px-0.5 text-center text-[10px] font-semibold text-primary-foreground sm:w-[72px] sm:min-w-[72px] sm:px-1 sm:text-[11px]">
+            <TableHead key={option.label} className="h-9 w-[50px] min-w-[50px] px-0.5 text-center text-[0.625rem] font-semibold text-primary-foreground sm:w-[72px] sm:min-w-[72px] sm:px-1 sm:text-[0.6875rem]">
               <span className="block truncate">{option.label}</span>
-              <span className="block text-[10px] font-medium text-primary-foreground/80">{t('{count} points', { count: option.score })}</span>
+              <span className="block text-[0.625rem] font-medium text-primary-foreground/80">{t('{count} points', { count: option.score })}</span>
             </TableHead>
           ))}
           {getTotalScore && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">{t('Combined Score')}</TableHead>}
@@ -221,7 +221,7 @@ export const ScoreTable = ({
                     type="button"
                     disabled={!enabled || readOnly}
                     className={cn(
-                      'inline-flex h-8 items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-bold shadow-sm transition disabled:pointer-events-none',
+                      'inline-flex h-8 items-center justify-center gap-1.5 rounded-full border px-3 text-[0.6875rem] font-bold shadow-sm transition disabled:pointer-events-none',
                       isStellar
                         ? 'border-amber-500 bg-amber-500 text-white shadow-amber-100'
                         : 'border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-400',
@@ -275,7 +275,7 @@ export const ManualPointsTable = ({
         <button
           key={value}
           type="button"
-          className="h-8 rounded-full border border-slate-200 bg-white px-3 text-[11px] font-bold text-slate-700 shadow-sm transition hover:border-slate-400"
+          className="h-8 rounded-full border border-slate-200 bg-white px-3 text-[0.6875rem] font-bold text-slate-700 shadow-sm transition hover:border-slate-400"
           onClick={() => onFillAll(String(value))}
         >
           {value}
@@ -320,7 +320,7 @@ export const ManualPointsTable = ({
                 />}
               </TableCell>
               <TableCell className="px-3 py-1.5 text-center">
-                <span className={cn('inline-flex h-8 min-w-[92px] items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-bold', status.className)}>
+                <span className={cn('inline-flex h-8 min-w-[92px] items-center justify-center gap-1.5 rounded-full border px-3 text-[0.6875rem] font-bold', status.className)}>
                   <StatusIcon className="h-3.5 w-3.5" />
                   {status.label}
                 </span>

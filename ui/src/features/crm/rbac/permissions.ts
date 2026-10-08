@@ -51,7 +51,7 @@ export const PERMISSION_DESCRIPTIONS = {
   [PERMISSION_CODES.MANAGE_SALARY]: 'View and mark teacher salary payments',
   [PERMISSION_CODES.MANAGE_TESTS]: 'Manage test creation, assignments, and results',
   [PERMISSION_CODES.VIEW_REPORTS]: "Open reports for this branch",
-  [PERMISSION_CODES.MANAGE_USERS]: 'Manage user accounts and permissions',
+  [PERMISSION_CODES.MANAGE_USERS]: 'Open Settings: text size, lesson scoring, calendar and list colors',
   [PERMISSION_CODES.VIEW_CONSOLIDATIONS]: 'Open consolidation exercises and their results',
   [PERMISSION_CODES.RETENTION_TAB_RETENTION]: 'Students who left',
   [PERMISSION_CODES.RETENTION_TAB_INTAKE]: 'New students who joined',

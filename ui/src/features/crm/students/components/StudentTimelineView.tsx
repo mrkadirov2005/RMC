@@ -61,7 +61,7 @@ export const StudentTimelineView = ({ students }: Props) => {
           {t('Date range')}
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] uppercase text-muted-foreground">{t('From')}</Label>
+          <Label className="text-[0.625rem] uppercase text-muted-foreground">{t('From')}</Label>
           <Input
             aria-label={t('From date')}
             type="date"
@@ -74,7 +74,7 @@ export const StudentTimelineView = ({ students }: Props) => {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] uppercase text-muted-foreground">{t('To')}</Label>
+          <Label className="text-[0.625rem] uppercase text-muted-foreground">{t('To')}</Label>
           <Input
             aria-label={t('To date')}
             type="date"
@@ -87,7 +87,7 @@ export const StudentTimelineView = ({ students }: Props) => {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] uppercase text-muted-foreground">{t('Interval')}</Label>
+          <Label className="text-[0.625rem] uppercase text-muted-foreground">{t('Interval')}</Label>
           <Select value={granularity} onValueChange={(value) => setGranularity(value as StudentTimelineGranularity)}>
             <SelectTrigger className="h-9 w-[130px]"><SelectValue /></SelectTrigger>
             <SelectContent>

@@ -586,7 +586,7 @@ const PaymentFormPage = () => {
                                 const status = getMonthPaymentStatus(state);
                                 return (
                                   <TableCell key={getMonthKey(month)} className="px-2 py-3 text-center">
-                                    <span className={`inline-flex min-w-[92px] justify-center rounded-full px-3 py-1.5 text-[11px] font-bold shadow-sm ${status.className}`}>
+                                    <span className={`inline-flex min-w-[92px] justify-center rounded-full px-3 py-1.5 text-[0.6875rem] font-bold shadow-sm ${status.className}`}>
                                       {status.label}
                                     </span>
                                   </TableCell>

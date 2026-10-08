@@ -368,19 +368,19 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
               <div className="flex-1">
                 <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
                   <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
-                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Lesson days')}</p>
+                    <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Lesson days')}</p>
                     <p className="text-base font-black text-slate-950">{monthlyLessonDaysCount}</p>
                   </div>
                   <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
-                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Filled')}</p>
+                    <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Filled')}</p>
                     <p className="text-base font-black text-emerald-700">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
                   </div>
                   <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
-                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Missing')}</p>
+                    <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Missing')}</p>
                     <p className="text-base font-black text-rose-700">{monthlyPointStats.missing}</p>
                   </div>
                   <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
-                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Average')}</p>
+                    <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Average')}</p>
                     <p className="text-base font-black text-violet-700">{monthlyPointStats.average}</p>
                   </div>
                 </div>
@@ -413,7 +413,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
                     <div className="flex items-center justify-between rounded-md border bg-white px-3 py-3 shadow-sm">
                       <div>
-                        <p className="text-[11px] font-semibold text-muted-foreground">{t('Attendance Rate')}</p>
+                        <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Attendance Rate')}</p>
                         <p className="text-base font-black text-slate-950">{
                           (() => {
                             const total = groupStudents.reduce((s, x) => s + (x.totalCount || 0), 0);
@@ -425,13 +425,13 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                     </div>
                     <div className="flex items-center justify-between rounded-md border bg-white px-3 py-3 shadow-sm">
                       <div>
-                        <p className="text-[11px] font-semibold text-muted-foreground">{t('Attended')}</p>
+                        <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Attended')}</p>
                         <p className="text-base font-black text-emerald-700">{groupStudents.reduce((s, x) => s + (x.attendedCount || 0), 0)}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between rounded-md border bg-white px-3 py-3 shadow-sm">
                       <div>
-                        <p className="text-[11px] font-semibold text-muted-foreground">{t('Unattended')}</p>
+                        <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Unattended')}</p>
                         <p className="text-base font-black text-rose-700">{Math.max(0, groupStudents.reduce((s, x) => s + (x.totalCount || 0) - (x.attendedCount || 0), 0))}</p>
                       </div>
                     </div>

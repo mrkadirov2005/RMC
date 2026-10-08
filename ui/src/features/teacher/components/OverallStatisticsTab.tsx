@@ -439,7 +439,7 @@ const OverallStatisticsTab = ({
         <div className="min-w-0 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-sky-50 p-4 dark:border-white/10 dark:from-slate-900/50 dark:via-slate-900/70 dark:to-slate-900">
           <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
             <span>{selectedSection.label}</span>
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <span className="rounded-full bg-slate-100 px-2 py-1 text-[0.625rem] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
               {selectedSection.detail}
             </span>
           </div>
@@ -452,7 +452,7 @@ const OverallStatisticsTab = ({
             <div className="relative z-10 flex h-[118px] w-[118px] items-center justify-center rounded-full border border-slate-200 bg-white shadow-inner dark:border-white/10 dark:bg-slate-950">
               <div className="text-center">
                 <div className="text-3xl font-black leading-none text-slate-900 dark:text-white">{selectedSection.total}</div>
-                <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                <div className="mt-1 text-[0.625rem] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                   {selectedSection.label}
                 </div>
               </div>
@@ -539,7 +539,7 @@ const OverallStatisticsTab = ({
                 <DialogDescription className="mt-1">{selectedGroup ? `${studentsInSelectedGroup.length} students` : ''}</DialogDescription>
               </div>
               <div className="w-full sm:w-auto sm:min-w-[220px]">
-                <Label className="mb-1 text-[11px] uppercase">{t('Search students')}</Label>
+                <Label className="mb-1 text-[0.6875rem] uppercase">{t('Search students')}</Label>
                 <Input value={groupSearch} onChange={(e) => setGroupSearch(e.target.value)} placeholder={t('Name, email, or id')} />
               </div>
             </div>

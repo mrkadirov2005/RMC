@@ -257,15 +257,15 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             className="h-8 w-40 bg-slate-100 text-xs font-bold"
           />
           {financeView === 'teachers' && <div className="ml-auto flex flex-wrap gap-1.5">
-            <span className="rounded bg-blue-100 px-2 py-1 text-[11px] font-black text-blue-700">
+            <span className="rounded bg-blue-100 px-2 py-1 text-[0.6875rem] font-black text-blue-700">
               <Users className="mr-1 inline h-3 w-3" />
               {teacherRows.length} o'qituvchi
             </span>
-            <span className="rounded bg-emerald-100 px-2 py-1 text-[11px] font-black text-emerald-700">
+            <span className="rounded bg-emerald-100 px-2 py-1 text-[0.6875rem] font-black text-emerald-700">
               <DollarSign className="mr-1 inline h-3 w-3" />
               {formatMoney(totalCollected)}
             </span>
-            <span className="rounded bg-lime-100 px-2 py-1 text-[11px] font-black text-lime-700">
+            <span className="rounded bg-lime-100 px-2 py-1 text-[0.6875rem] font-black text-lime-700">
               <TrendingUp className="mr-1 inline h-3 w-3" />
               {formatMoney(totalSalary)}
             </span>
@@ -281,7 +281,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             ['Ulash', `${paymentStats.paidPercent}%`, 'bg-violet-600'],
           ].map(([label, value, tone]) => (
             <div key={label} className={cn('rounded px-2 py-1.5 text-white', tone as string)}>
-              <p className="text-[10px] font-black uppercase text-white/75">{label}</p>
+              <p className="text-[0.625rem] font-black uppercase text-white/75">{label}</p>
               <p className="text-sm font-black leading-tight">{value}</p>
             </div>
           ))}

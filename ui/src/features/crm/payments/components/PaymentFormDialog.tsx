@@ -460,7 +460,7 @@ export const PaymentFormDialog = ({
                         className="flex items-center justify-center px-2 py-3"
                       >
                         <span
-                          className={`inline-flex min-w-[92px] justify-center rounded-full px-3 py-1.5 text-[11px] font-bold shadow-sm ${monthStatus.className}`}
+                          className={`inline-flex min-w-[92px] justify-center rounded-full px-3 py-1.5 text-[0.6875rem] font-bold shadow-sm ${monthStatus.className}`}
                         >
                           {monthStatus.label}
                         </span>

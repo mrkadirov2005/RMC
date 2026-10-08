@@ -297,7 +297,7 @@ const RequestLogsPage = () => {
               <Filter className="mr-2 h-4 w-4" />
               Filters
               {activeFilterCount > 0 ? (
-                <Badge className="ml-2 h-5 min-w-5 justify-center rounded-full px-1 text-[10px]">
+                <Badge className="ml-2 h-5 min-w-5 justify-center rounded-full px-1 text-[0.625rem]">
                   {activeFilterCount}
                 </Badge>
               ) : null}

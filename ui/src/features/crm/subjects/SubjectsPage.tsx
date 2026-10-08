@@ -43,7 +43,7 @@ import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/componen
 import { countDuplicateClassSubjectAssignments } from './subjectAssignments';
 import { buildSubjectCatalog, getSubjectTeacherCount } from './subjectCatalog';
 
-const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none whitespace-nowrap';
+const infoPillClass = 'rounded px-1.5 py-0.5 text-[0.625rem] font-black leading-none whitespace-nowrap';
 const statTileClass = 'rounded-md bg-gradient-to-br p-2 text-white shadow-sm';
 
 // Renders the subjects page screen.
@@ -183,28 +183,28 @@ const SubjectsPage = () => {
           <div className={`${statTileClass} from-blue-500 to-indigo-600`}>
             <div className="flex items-center gap-1.5">
               <BookOpen className="h-3.5 w-3.5 text-white/75" />
-              <p className="text-[10px] font-black uppercase text-white/75">{t('Total Subjects')}</p>
+              <p className="text-[0.625rem] font-black uppercase text-white/75">{t('Total Subjects')}</p>
             </div>
             <p className="text-lg font-black leading-tight">{catalogSubjects.length.toLocaleString()}</p>
           </div>
           <div className={`${statTileClass} from-emerald-500 to-teal-600`}>
             <div className="flex items-center gap-1.5">
               <Layers3 className="h-3.5 w-3.5 text-white/75" />
-              <p className="text-[10px] font-black uppercase text-white/75">{t('Assigned Classes')}</p>
+              <p className="text-[0.625rem] font-black uppercase text-white/75">{t('Assigned Classes')}</p>
             </div>
             <p className="text-lg font-black leading-tight">{assignedClasses.toLocaleString()}</p>
           </div>
           <div className={`${statTileClass} from-amber-500 to-orange-600`}>
             <div className="flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-white/75" />
-              <p className="text-[10px] font-black uppercase text-white/75">{t('Unassigned Classes')}</p>
+              <p className="text-[0.625rem] font-black uppercase text-white/75">{t('Unassigned Classes')}</p>
             </div>
             <p className="text-lg font-black leading-tight">{unassignedClasses.toLocaleString()}</p>
           </div>
           <div className={`${statTileClass} ${duplicateAssignments > 0 ? 'from-rose-500 to-pink-600' : 'from-fuchsia-500 to-violet-600'}`}>
             <div className="flex items-center gap-1.5">
               <GraduationCap className="h-3.5 w-3.5 text-white/75" />
-              <p className="text-[10px] font-black uppercase text-white/75">{t('Without Teacher')}</p>
+              <p className="text-[0.625rem] font-black uppercase text-white/75">{t('Without Teacher')}</p>
             </div>
             <p className="text-lg font-black leading-tight">{subjectsWithoutTeacher.toLocaleString()}</p>
           </div>
@@ -348,9 +348,9 @@ const SubjectsPage = () => {
           {selectedSubject && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
-                <div className={`${statTileClass} from-violet-500 to-indigo-600`}><p className="text-[10px] font-black uppercase text-white/75">{t('Groups')}</p><p className="text-2xl font-black">{selectedSubject.assignments.length}</p></div>
-                <div className={`${statTileClass} from-fuchsia-500 to-pink-600`}><p className="text-[10px] font-black uppercase text-white/75">{t('Teachers')}</p><p className="text-2xl font-black">{getSubjectTeacherCount(selectedSubject)}</p></div>
-                <div className={`${statTileClass} from-emerald-500 to-teal-600`}><p className="text-[10px] font-black uppercase text-white/75">{t('Passing Marks')}</p><p className="text-2xl font-black">{selectedSubject.passing_marks}/{selectedSubject.total_marks}</p></div>
+                <div className={`${statTileClass} from-violet-500 to-indigo-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Groups')}</p><p className="text-2xl font-black">{selectedSubject.assignments.length}</p></div>
+                <div className={`${statTileClass} from-fuchsia-500 to-pink-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Teachers')}</p><p className="text-2xl font-black">{getSubjectTeacherCount(selectedSubject)}</p></div>
+                <div className={`${statTileClass} from-emerald-500 to-teal-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Passing Marks')}</p><p className="text-2xl font-black">{selectedSubject.passing_marks}/{selectedSubject.total_marks}</p></div>
               </div>
               <div className="overflow-hidden rounded-lg border">
                 <Table>

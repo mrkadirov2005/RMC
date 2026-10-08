@@ -120,7 +120,7 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
             <p className="truncate text-base font-black text-slate-950 dark:text-white">{t(selectedSlide.title)}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-white/55">{t(selectedSlide.description)}</p>
           </div>
-          <span className="rounded bg-cyan-100 px-2 py-1 text-[11px] font-black text-cyan-700">
+          <span className="rounded bg-cyan-100 px-2 py-1 text-[0.6875rem] font-black text-cyan-700">
             {activeSlide + 1}/{slides.length}
           </span>
           <ChartModeButtons mode={chartMode} onChange={setChartMode} />

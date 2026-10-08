@@ -95,16 +95,16 @@ export const FinanceTeachersView = ({
               </span>
               <span className="min-w-0">
                 <span className="block truncate font-black text-slate-950">{teacher.teacherName}</span>
-                <span className="block truncate text-[10px] font-bold text-slate-500">
+                <span className="block truncate text-[0.625rem] font-bold text-slate-500">
                   {teacher.classCount} guruh · {teacher.totalStudents} o'quvchi
                 </span>
               </span>
               {!selectedTeacherId && (
-                <span className="hidden rounded bg-blue-100 px-2 py-1 text-[10px] font-black text-blue-700 sm:inline">
+                <span className="hidden rounded bg-blue-100 px-2 py-1 text-[0.625rem] font-black text-blue-700 sm:inline">
                   {formatMoney(teacher.earnedAmount)}
                 </span>
               )}
-              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black text-emerald-700">
+              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[0.625rem] font-black text-emerald-700">
                 {formatMoney(teacherSalary)}
               </span>
             </button>
@@ -176,12 +176,12 @@ const TeacherGroupsHeader = ({
   <div className="rounded-md border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
     <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
       <p className="text-sm font-black text-slate-950 dark:text-white">{selectedTeacherName}</p>
-      <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">{selectedTeacherRow.classCount} guruh</span>
-      <span className="rounded bg-cyan-100 px-2 py-1 text-[10px] font-black text-cyan-700">{selectedTeacherRow.totalStudents} o'quvchi</span>
-      <span className="ml-auto rounded bg-blue-100 px-2 py-1 text-[10px] font-black text-blue-700">
+      <span className="rounded bg-slate-100 px-2 py-1 text-[0.625rem] font-black text-slate-600">{selectedTeacherRow.classCount} guruh</span>
+      <span className="rounded bg-cyan-100 px-2 py-1 text-[0.625rem] font-black text-cyan-700">{selectedTeacherRow.totalStudents} o'quvchi</span>
+      <span className="ml-auto rounded bg-blue-100 px-2 py-1 text-[0.625rem] font-black text-blue-700">
         Jami to'lov: {formatMoney(selectedTeacherRow.earnedAmount)}
       </span>
-      <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">
+      <span className="rounded bg-emerald-100 px-2 py-1 text-[0.625rem] font-black text-emerald-700">
         Maosh ({salaryPercent}%): {formatMoney(Math.round((selectedTeacherRow.earnedAmount * salaryPercent) / 100))}
       </span>
     </div>
@@ -223,7 +223,7 @@ const SelectedGroupTable = ({ selectedGroup }: { selectedGroup: TeacherGroup }) 
     <CardContent className="p-0">
       <div className="overflow-x-auto">
         <div className="min-w-[640px]">
-          <div className="flex items-center justify-start gap-5 border-b bg-slate-100 px-3 py-2 text-[11px] font-black uppercase text-slate-500">
+          <div className="flex items-center justify-start gap-5 border-b bg-slate-100 px-3 py-2 text-[0.6875rem] font-black uppercase text-slate-500">
             <span className="w-8 shrink-0">#</span>
             <span className="w-52 shrink-0">O'quvchi</span>
             <span className="w-44 shrink-0">Guruh</span>
@@ -235,14 +235,14 @@ const SelectedGroupTable = ({ selectedGroup }: { selectedGroup: TeacherGroup }) 
             <span className="w-52 shrink-0 truncate font-black text-slate-950">
               {selectedGroup.name}
               {selectedGroup.unpaidCount > 0 && (
-                <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700">
+                <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-[0.625rem] font-black text-amber-700">
                   {selectedGroup.unpaidCount} qarzdor
                 </span>
               )}
             </span>
             <span className="w-44 shrink-0 truncate text-slate-500">{selectedGroup.name}</span>
             <span className="w-28 shrink-0 font-black text-blue-700">{formatMoney(selectedGroup.groupCollected)}</span>
-            <span className="w-24 shrink-0 text-[10px] font-black text-slate-500">{selectedGroup.totalStudents} ta</span>
+            <span className="w-24 shrink-0 text-[0.625rem] font-black text-slate-500">{selectedGroup.totalStudents} ta</span>
           </div>
           <div className="divide-y dark:divide-white/10">
             {selectedGroup.students.map((student, index) => (
@@ -262,7 +262,7 @@ const StudentPaymentRow = ({ student, groupName, index }: { student: StudentPaym
     <span className="w-44 shrink-0 truncate text-slate-500">{groupName}</span>
     <span className="w-28 shrink-0 font-black text-slate-700">{student.paid ? formatMoney(student.paidAmount) : '-'}</span>
     <span className="w-24 shrink-0">
-      <span className={cn('inline-flex items-center rounded px-2 py-1 text-[10px] font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')}>
+      <span className={cn('inline-flex items-center rounded px-2 py-1 text-[0.625rem] font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')}>
         {student.paid ? (
           <>
             <CheckCircle2 className="mr-1 h-3 w-3" />

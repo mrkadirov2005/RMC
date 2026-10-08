@@ -112,7 +112,7 @@ export const Timeline = ({ min, max, start, end, markers = [], onChange }: Timel
 
   return (
     <div className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-slate-900/40">
-      <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      <div className="mb-2 flex items-center justify-between text-[0.625rem] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         <span>{min}</span>
         <span>{interactive ? 'Drag to pick a range' : 'Full available range'}</span>
         <span>{max}</span>
@@ -156,7 +156,7 @@ export const Timeline = ({ min, max, start, end, markers = [], onChange }: Timel
           </>
         )}
       </div>
-      <div className="mt-2 text-center text-[11px] font-bold text-blue-700 dark:text-blue-300">
+      <div className="mt-2 text-center text-[0.6875rem] font-bold text-blue-700 dark:text-blue-300">
         {start || min} <span className="text-slate-400">→</span> {end || max}
       </div>
     </div>

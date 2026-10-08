@@ -333,7 +333,7 @@ export default function TeacherStudentDirectory({
 
   const renderPaymentChip = (student: TeacherStudentItem) => (
     <span
-      className={`inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none ${
+      className={`inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[0.6875rem] font-bold leading-none ${
         student.paid_this_month ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
       }`}
       title={getPaymentTitle(student)}
@@ -437,7 +437,7 @@ export default function TeacherStudentDirectory({
               <>
                 <TableHeader className="bg-slate-50/95">
                   <TableRow>
-                    <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] px-2 text-[11px] font-bold uppercase tracking-wide">{t('Student')}</TableHead>
+                    <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] px-2 text-[0.6875rem] font-bold uppercase tracking-wide">{t('Student')}</TableHead>
                     {monthlyLessonDates.map((d) => {
                       const date = new Date(d);
                       const day = date.getDate();
@@ -446,12 +446,12 @@ export default function TeacherStudentDirectory({
                         <TableHead key={d} className="h-9 min-w-[70px] px-1 text-center">
                           <div className="flex items-center justify-center gap-1 leading-none">
                             <span className="text-xs font-black">{day}</span>
-                            <span className="text-[9px] font-bold uppercase text-muted-foreground">{dayName}</span>
+                            <span className="text-[0.5625rem] font-bold uppercase text-muted-foreground">{dayName}</span>
                           </div>
                         </TableHead>
                       );
                     })}
-                    <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide">{t('Total')}</TableHead>
+                    <TableHead className="h-9 min-w-[64px] px-1 text-center text-[0.6875rem] font-bold uppercase tracking-wide">{t('Total')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -468,7 +468,7 @@ export default function TeacherStudentDirectory({
                           <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold">
                             <div className="flex min-w-0 items-center gap-1.5">
                               <div>{index + 1}</div>
-                              <span className="max-w-[180px] truncate text-[11px]">{student.last_name} {student.first_name}</span>
+                              <span className="max-w-[180px] truncate text-[0.6875rem]">{student.last_name} {student.first_name}</span>
                               <MonthlyRankBadge rank={rank} />
                             </div>
                           </TableCell>
@@ -512,14 +512,14 @@ export default function TeacherStudentDirectory({
 
                             return (
                               <TableCell key={`${studentId}-${d}`} className="px-1 py-1 text-center">
-                                <span className={`inline-flex h-6 min-w-[46px] items-center justify-center gap-1 rounded-md border px-1.5 text-[10px] font-black ${toneClass}`} title={rec ? JSON.stringify(rec) : ''}>
+                                <span className={`inline-flex h-6 min-w-[46px] items-center justify-center gap-1 rounded-md border px-1.5 text-[0.625rem] font-black ${toneClass}`} title={rec ? JSON.stringify(rec) : ''}>
                                   {content}
                                 </span>
                               </TableCell>
                             );
                           })}
                           <TableCell className="px-1 py-1 text-center">
-                            <span className="inline-flex h-6 min-w-[46px] items-center justify-center rounded-md bg-violet-100 px-1.5 text-[11px] font-black text-violet-800">
+                            <span className="inline-flex h-6 min-w-[46px] items-center justify-center rounded-md bg-violet-100 px-1.5 text-[0.6875rem] font-black text-violet-800">
                               {studentTotalPoints > 0 ? studentTotalPoints : (studentAttendanceCount > 0 ? studentAttendanceCount : '-')}
                             </span>
                           </TableCell>

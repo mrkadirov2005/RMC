@@ -26,7 +26,7 @@ export const RoomTimetableSheet = ({ events, roomNames, onSelect, onMove, canMov
           {bands.map((band, bandIndex) => {
             const bandEvents = patternEvents.filter(event => band.includes(event.room_name || ''));
             const rows = buildTimeGridRows(bandEvents, band);
-            return <table key={`${pattern.id}-${bandIndex}`} className="w-full table-fixed border-collapse text-[11px]" aria-label={`${pattern.label}, rooms ${band.join(', ')}`}>
+            return <table key={`${pattern.id}-${bandIndex}`} className="w-full table-fixed border-collapse text-[0.6875rem]" aria-label={`${pattern.label}, rooms ${band.join(', ')}`}>
               <thead>
                 <tr className="bg-yellow-300 text-slate-950 dark:bg-yellow-600 dark:text-white">
                   {band.map((room, index) => <Fragment key={room}>

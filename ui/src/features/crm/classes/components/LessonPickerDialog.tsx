@@ -156,7 +156,7 @@ function LessonPickerBody({ classId, onClose, label, section, initialDate, from 
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <div className="mb-1 grid grid-cols-7 text-center text-[10px] font-bold uppercase text-muted-foreground">
+          <div className="mb-1 grid grid-cols-7 text-center text-[0.625rem] font-bold uppercase text-muted-foreground">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}
           </div>
           <div className="grid grid-cols-7 gap-1">

@@ -51,6 +51,27 @@ const saveOwnerPalette = async (req: any, res: any) => {
   }
 };
 
+// Every signed-in account reads the sizes to apply its own. A center's choice wins; an owner with
+// no branch selected reads and saves the all-branches default.
+const getTextSizes = async (req: any, res: any) => {
+  try {
+    const { centerId } = getScopedCenterId(req);
+    res.json(await settingsService.getTextSizes(centerId ?? undefined));
+  } catch (error: any) {
+    res.status(500).json({ error: "Matn o'lchamini yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+const saveTextSizes = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    res.json(await settingsService.saveTextSizes(req.body?.sizes, centerId ?? undefined));
+  } catch (error: any) {
+    res.status(500).json({ error: "Matn o'lchamini saqlab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
 const getVisualOverrides = async (req: any, res: any) => {
   try {
     const { centerId } = getScopedCenterId(req);
@@ -87,6 +108,8 @@ const saveSidebarOrder = async (req: any, res: any) => {
   }
 };
 
-module.exports = { getLessonScoring, saveLessonScoring, getOwnerPalette, saveOwnerPalette, getVisualOverrides, saveVisualOverrides, getSidebarOrder, saveSidebarOrder };
+module.exports = {
+  getTextSizes,
+  saveTextSizes, getLessonScoring, saveLessonScoring, getOwnerPalette, saveOwnerPalette, getVisualOverrides, saveVisualOverrides, getSidebarOrder, saveSidebarOrder };
 
 export {};

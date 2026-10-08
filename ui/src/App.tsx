@@ -1,5 +1,6 @@
 // Application router and top-level shell.
 
+import { applyRememberedTextSize, applyTextSize, getTextSizeRole, normalizeTextSizes } from './features/crm/settings/textSize';
 import { useEffect, lazy, Suspense, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -192,6 +193,33 @@ function AppContent() {
   useEffect(() => {
     dispatch(initializeAuth());
   }, [dispatch]);
+
+  // Text size for this account type (Settings → Text size). Starts at the size remembered on this
+  // device, then follows the saved setting; signing out goes back to normal.
+  useEffect(() => {
+    applyRememberedTextSize();
+  }, []);
+
+  useEffect(() => {
+    const role = getTextSizeRole(user);
+    if (!isInitialized) return;
+    if (!role) {
+      applyTextSize('normal');
+      return;
+    }
+    let active = true;
+    const load = () => settingsAPI.getTextSizes().then((response) => {
+      if (active) applyTextSize(normalizeTextSizes(response?.data)[role]);
+    }).catch(() => null);
+    void load();
+    window.addEventListener('text-size-changed', load);
+    window.addEventListener('active-center-changed', load);
+    return () => {
+      active = false;
+      window.removeEventListener('text-size-changed', load);
+      window.removeEventListener('active-center-changed', load);
+    };
+  }, [isInitialized, user]);
 
 // Runs side effects for this component.
   useEffect(() => {

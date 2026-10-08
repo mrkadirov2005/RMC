@@ -6,4 +6,4 @@ export const formControlClassName =
 export const compactFormControlClassName = 'h-9 rounded-lg px-3 text-xs';
 
 export const formLabelClassName =
-  'text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400';
+  'text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400';

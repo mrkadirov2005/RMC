@@ -58,28 +58,28 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
         />
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-black">{stats.tracked}</span>
-          <span className="text-[10px] font-semibold uppercase text-muted-foreground">{t('Months')}</span>
+          <span className="text-[0.625rem] font-semibold uppercase text-muted-foreground">{t('Months')}</span>
         </div>
       </div>
 
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[0.6875rem] font-semibold text-muted-foreground">
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: PAID_COLOR }} />
               {t('Paid')}
             </div>
             <p className="text-xl font-black text-emerald-600">{stats.paid}</p>
           </div>
           <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[0.6875rem] font-semibold text-muted-foreground">
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: UNPAID_COLOR }} />
               {t('Unpaid')}
             </div>
             <p className="text-xl font-black text-rose-600">{stats.unpaid}</p>
           </div>
           <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
-            <p className="text-[11px] font-semibold text-muted-foreground">{t('Total Received')}</p>
+            <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Total Received')}</p>
             <p className="text-xl font-black">{formatMoney(stats.totalReceived)}</p>
           </div>
         </div>

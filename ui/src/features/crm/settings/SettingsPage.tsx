@@ -1,7 +1,7 @@
 // Page component for the settings screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { Activity, CalendarDays, Clock, Coins, Palette, RotateCcw, Save, Server, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { Activity, CalendarDays, Clock, Coins, Palette, RotateCcw, Save, Server, Settings as SettingsIcon, Timer, Type } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { settingsAPI } from './api';
 import { showToast } from '@/utils/toast';
 import { PageHeader } from '@/components/common/PageHeader';
+import { DEFAULT_TEXT_SIZES, normalizeTextSizes, TEXT_SIZE_OPTIONS, TEXT_SIZE_ROLES, type TextSizeRole, type TextSizes } from './textSize';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -70,6 +71,8 @@ const hourOptions = Array.from({ length: 24 }, (_, hour) => ({
   label: `${String(hour).padStart(2, '0')}:00`,
 }));
 
+const TEXT_SIZE_ROLE_LABELS: Record<TextSizeRole, string> = { owner: 'Owner', admin: 'Admins', teacher: 'Teachers', student: 'Students' };
+
 type ScoreSection = 'attendance' | 'homework' | 'activity';
 
 // Renders the settings page screen.
@@ -86,6 +89,7 @@ const SettingsPage = () => {
   const [primaryRowColor, setPrimaryRowColor] = useState(DEFAULT_LIST_ROW_PRIMARY);
   const [alternateRowColor, setAlternateRowColor] = useState(DEFAULT_LIST_ROW_ALTERNATE);
   const [ownerPalette, setOwnerPalette] = useState<OwnerPalette>(() => getOwnerPalette(DEFAULT_OWNER_PALETTE));
+  const [textSizes, setTextSizes] = useState<TextSizes>(DEFAULT_TEXT_SIZES);
 
   useEffect(() => {
     setDefaultDuration(readStoredNumber(DEFAULT_DURATION_KEY, 90));
@@ -108,6 +112,9 @@ const SettingsPage = () => {
         setOwnerPalette(saveOwnerPalette(palette));
       })
       .catch(() => setOwnerPalette(readOwnerPalette()));
+    settingsAPI.getTextSizes()
+      .then((response) => setTextSizes(normalizeTextSizes(response.data)))
+      .catch(() => setTextSizes(DEFAULT_TEXT_SIZES));
   }, []);
 
   const updateScoreOption = (section: ScoreSection, index: number, key: 'label' | 'score' | 'symbol' | 'fill', value: string) => {
@@ -158,7 +165,10 @@ const SettingsPage = () => {
       await Promise.all([
         settingsAPI.saveLessonScoring(lessonScoring),
         settingsAPI.saveOwnerPalette(ownerPalette),
+        settingsAPI.saveTextSizes(textSizes),
       ]);
+      // Applies the new size to this account right away.
+      window.dispatchEvent(new Event('text-size-changed'));
       showToast.success('Settings saved.');
     } catch {
       showToast.error('Failed to save lesson scoring settings.');
@@ -274,6 +284,41 @@ const SettingsPage = () => {
               ))}
             </div>
             <Button type="button" variant="outline" onClick={async () => { try { await settingsAPI.saveOwnerPalette(ownerPalette); showToast.success('Custom palette saved for this center.'); } catch { showToast.error('Failed to save custom palette.'); } }}>{t('Save custom colors')}</Button>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel
+          title={
+            <span className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
+                <Type className="h-4 w-4" />
+              </span>
+              {t('Text size')}
+            </span>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t('Choose how big text is for each type of account. It applies the next time they open the platform.')}</p>
+            {TEXT_SIZE_ROLES.map((role) => (
+              <div key={role} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-sm font-semibold">{t(TEXT_SIZE_ROLE_LABELS[role])}</span>
+                <div className="inline-flex rounded-lg border bg-muted/40 p-1" role="radiogroup" aria-label={t(TEXT_SIZE_ROLE_LABELS[role])}>
+                  {TEXT_SIZE_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={textSizes[role] === option.value}
+                      onClick={() => setTextSizes((current) => ({ ...current, [role]: option.value }))}
+                      className={`rounded-md px-3 py-1.5 font-semibold transition ${textSizes[role] === option.value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      style={{ fontSize: `${0.8125 * option.scale}rem` }}
+                    >
+                      {t(option.label)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </SectionPanel>
 

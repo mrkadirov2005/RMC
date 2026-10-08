@@ -145,15 +145,15 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           <CardContent className="space-y-4 p-4">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <div className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-white">
-                <p className="text-[11px] text-white/70">{t('Students shown')}</p>
+                <p className="text-[0.6875rem] text-white/70">{t('Students shown')}</p>
                 <p className="text-base font-bold">{groupStudentRows.length} · {paidCount} {t('paid')}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-2 text-white">
-                <p className="text-[11px] text-white/70">{t('Collected')}</p>
+                <p className="text-[0.6875rem] text-white/70">{t('Collected')}</p>
                 <p className="text-base font-bold">{formatAmount(totalPaid)}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-white">
-                <p className="text-[11px] text-white/70">{t('Remaining')}</p>
+                <p className="text-[0.6875rem] text-white/70">{t('Remaining')}</p>
                 <p className="text-base font-bold">{formatAmount(totalRemaining)}</p>
               </div>
             </div>
@@ -211,9 +211,9 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>
                     <p className="truncate font-semibold leading-tight">{row.name}</p>
-                    <p className="truncate text-[11px] leading-tight text-muted-foreground">{row.student.phone || `ID ${row.studentId}`}</p>
+                    <p className="truncate text-[0.6875rem] leading-tight text-muted-foreground">{row.student.phone || `ID ${row.studentId}`}</p>
                     {row.discountAmount > 0 && (
-                      <Badge variant="outline" className="mt-0.5 h-5 gap-1 px-1.5 text-[10px] border-violet-200 bg-violet-50 text-violet-700">
+                      <Badge variant="outline" className="mt-0.5 h-5 gap-1 px-1.5 text-[0.625rem] border-violet-200 bg-violet-50 text-violet-700">
                         <BadgePercent className="h-3 w-3" />
                         {t('Discount')} {formatAmount(row.discountAmount)}
                       </Badge>
@@ -313,15 +313,15 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
         <CardContent className="space-y-4 p-4">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-white">
-              <p className="text-[11px] text-white/70">{t('Visible Records')}</p>
+              <p className="text-[0.6875rem] text-white/70">{t('Visible Records')}</p>
               <p className="text-base font-bold">{displayedPayments.length}</p>
             </div>
             <div className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-2 text-white">
-              <p className="text-[11px] text-white/70">{t('Visible Total')}</p>
+              <p className="text-[0.6875rem] text-white/70">{t('Visible Total')}</p>
               <p className="text-base font-bold">{formatMoney(totalAmount)}</p>
             </div>
             <div className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-white">
-              <p className="text-[11px] text-white/70">{t('Pending or Unpaid')}</p>
+              <p className="text-[0.6875rem] text-white/70">{t('Pending or Unpaid')}</p>
               <p className="text-base font-bold">{formatMoney(displayedPendingAmount)}</p>
             </div>
           </div>

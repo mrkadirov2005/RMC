@@ -21,12 +21,12 @@ export const CalendarTimeGrid = ({ days, events, onSelect, label }: {
           <div className="sticky left-0 z-40 border-r bg-card" />
           {days.map(({ date, label: dayLabel }) => {
             const key = localDateKey(date);
-            return <div key={key} className={`border-r px-2 py-2 text-center ${key === todayKey ? 'bg-primary text-primary-foreground' : 'bg-slate-50 dark:bg-muted/40'}`}><div className="text-[11px] font-semibold uppercase">{dayLabel || date.toLocaleDateString(undefined, { weekday: 'short' })}</div><div className="text-base font-bold">{date.getDate()}</div></div>;
+            return <div key={key} className={`border-r px-2 py-2 text-center ${key === todayKey ? 'bg-primary text-primary-foreground' : 'bg-slate-50 dark:bg-muted/40'}`}><div className="text-[0.6875rem] font-semibold uppercase">{dayLabel || date.toLocaleDateString(undefined, { weekday: 'short' })}</div><div className="text-base font-bold">{date.getDate()}</div></div>;
           })}
         </div>
         <div role="grid" aria-label={label} className="grid" style={{ gridTemplateColumns: `72px repeat(${days.length}, minmax(120px, 1fr))` }}>
           <div className="sticky left-0 z-20 border-r bg-card" style={{ height: DAY_MINUTES / 60 * HOUR_HEIGHT }}>
-            {clockLabels.map((time, hour) => <time key={time} className="absolute right-2 -translate-y-1/2 text-[11px] font-medium tabular-nums text-muted-foreground" style={{ top: hour * HOUR_HEIGHT }}>{time}</time>)}
+            {clockLabels.map((time, hour) => <time key={time} className="absolute right-2 -translate-y-1/2 text-[0.6875rem] font-medium tabular-nums text-muted-foreground" style={{ top: hour * HOUR_HEIGHT }}>{time}</time>)}
           </div>
           {days.map(({ date }) => {
             const key = localDateKey(date);

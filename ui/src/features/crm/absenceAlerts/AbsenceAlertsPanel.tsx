@@ -123,7 +123,7 @@ export function AbsenceAlertsPanel({ canResolve = false, className }: { canResol
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-bold">{alert.student_name}</span>
-                <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-black text-white">
+                <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[0.6875rem] font-black text-white">
                   {t('{count} lessons in a row', { count: alert.streak })}
                 </span>
               </div>

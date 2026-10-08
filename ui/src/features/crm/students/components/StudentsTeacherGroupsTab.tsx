@@ -612,7 +612,7 @@ export const StudentsTeacherGroupsTab = ({
           </Card>
         ) : (
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-            <div className="grid grid-cols-[28px_minmax(0,1fr)_90px_minmax(240px,300px)] items-center gap-2 border-b bg-slate-50 px-3 py-1.5 text-[11px] font-bold uppercase text-muted-foreground dark:bg-muted/40">
+            <div className="grid grid-cols-[28px_minmax(0,1fr)_90px_minmax(240px,300px)] items-center gap-2 border-b bg-slate-50 px-3 py-1.5 text-[0.6875rem] font-bold uppercase text-muted-foreground dark:bg-muted/40">
               <span>
                 <input
                   type="checkbox"
@@ -648,11 +648,11 @@ export const StudentsTeacherGroupsTab = ({
                     <button type="button" className="truncate text-left text-xs font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => openClass(classId)}>
                       {cls.class_name || `Class #${classId}`}
                     </button>
-                    {getGroupWeekdays(cls).length > 0 ? <p className="truncate text-[10px] text-muted-foreground">{getGroupWeekdays(cls).join(', ')}</p> : null}
+                    {getGroupWeekdays(cls).length > 0 ? <p className="truncate text-[0.625rem] text-muted-foreground">{getGroupWeekdays(cls).join(', ')}</p> : null}
                   </div>
                 </div>
 
-                <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openClass(classId)}>
+                <button type="button" className="w-fit px-2 py-1 text-[0.6875rem] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openClass(classId)}>
                   {studentCount} {t('students')}
                 </button>
 
@@ -662,7 +662,7 @@ export const StudentsTeacherGroupsTab = ({
                     onValueChange={(value) => setTargetTeachers((current) => ({ ...current, [classId]: value }))}
                     disabled={savingClassId === classId}
                   >
-                    <SelectTrigger className="h-6 bg-white px-2 text-[11px] dark:bg-background">
+                    <SelectTrigger className="h-6 bg-white px-2 text-[0.6875rem] dark:bg-background">
                       <SelectValue placeholder={t('Transfer teacher')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -675,7 +675,7 @@ export const StudentsTeacherGroupsTab = ({
                         ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-2 text-[11px] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => saveTransfer(classId)} disabled={!targetTeachers[classId] || savingClassId === classId}>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-2 text-[0.6875rem] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => saveTransfer(classId)} disabled={!targetTeachers[classId] || savingClassId === classId}>
                     {savingClassId === classId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
                     {t('Transfer')}
                   </Button>
@@ -725,7 +725,7 @@ export const StudentsTeacherGroupsTab = ({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-        <div className="grid grid-cols-[minmax(0,1fr)_80px_90px_70px] items-center gap-2 border-b bg-slate-50 px-3 py-1.5 text-[11px] font-bold uppercase text-muted-foreground dark:bg-muted/40">
+        <div className="grid grid-cols-[minmax(0,1fr)_80px_90px_70px] items-center gap-2 border-b bg-slate-50 px-3 py-1.5 text-[0.6875rem] font-bold uppercase text-muted-foreground dark:bg-muted/40">
           <span>{t('Teacher')}</span>
           <span className="text-center">{t('Groups')}</span>
           <span className="text-center">{t('Students')}</span>
@@ -750,13 +750,13 @@ export const StudentsTeacherGroupsTab = ({
                     </button>
                   </div>
                 </div>
-                <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
+                <button type="button" className="w-fit px-2 py-1 text-[0.6875rem] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {t('{count} groups', { count: groupCount })}
                 </button>
-                <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
+                <button type="button" className="w-fit px-2 py-1 text-[0.6875rem] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {studentCount} {t('students')}
                 </button>
-                <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-1.5 text-[11px] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => openTeacher(teacher.id)}>
+                <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-1.5 text-[0.6875rem] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => openTeacher(teacher.id)}>
                   {t('Open')}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>

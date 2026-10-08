@@ -38,7 +38,7 @@ const ScheduleDay = ({ day, items, t }: { day: string; items: ScheduleItem[]; t:
       )}
     >
       <div className="flex items-center justify-between">
-        <span className={cn('text-[10px] font-bold uppercase tracking-wider', isToday ? 'text-teal-700 dark:text-teal-300' : 'text-muted-foreground')}>
+        <span className={cn('text-[0.625rem] font-bold uppercase tracking-wider', isToday ? 'text-teal-700 dark:text-teal-300' : 'text-muted-foreground')}>
           {t(day).substring(0, 3)}
         </span>
         {isToday && <div className="h-1.5 w-1.5 rounded-full bg-teal-600 dark:bg-teal-300" />}
@@ -46,12 +46,12 @@ const ScheduleDay = ({ day, items, t }: { day: string; items: ScheduleItem[]; t:
 
       <div className="min-h-[40px] space-y-1.5">
         {items.length === 0 ? (
-          <div className="py-2 text-[10px] italic text-muted-foreground">{t('No class')}</div>
+          <div className="py-2 text-[0.625rem] italic text-muted-foreground">{t('No class')}</div>
         ) : (
           items.map((item, index) => (
             <div key={index} className="rounded-lg border bg-card p-2 shadow-sm">
-              <div className="text-[11px] font-bold leading-tight text-foreground">{item.time}</div>
-              <div className="mt-0.5 flex items-center gap-1 text-[9px] text-muted-foreground">
+              <div className="text-[0.6875rem] font-bold leading-tight text-foreground">{item.time}</div>
+              <div className="mt-0.5 flex items-center gap-1 text-[0.5625rem] text-muted-foreground">
                 <MapPin className="h-2 w-2" />
                 {t('Room')} {item.room_number}
               </div>

@@ -99,7 +99,7 @@ const Dashboard = memo(() => {
           </div>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <div className="mb-5 flex items-center justify-between"><div><h2 className="font-black">{t('Monthly payment activity')}</h2><p className="text-sm text-slate-500">{t('Number of completed student payments per day.')}</p></div><BarChart3 className="h-5 w-5 text-cyan-600" /></div>
-            <div className="flex h-48 items-end gap-1 overflow-x-auto pb-6">{paymentDays.map((day) => <div key={day.key} className="flex min-w-[14px] flex-1 flex-col items-center justify-end gap-1"><div title={`${day.key}: ${day.count}`} className={`w-full rounded-t-sm ${day.key === todayKey ? 'bg-emerald-500' : day.key === yesterdayKey ? 'bg-amber-500' : 'bg-cyan-500/70'}`} style={{ height: `${Math.max(4, (day.count / maxPaymentCount) * 140)}px` }} /><span className="text-[9px] text-slate-400">{day.label}</span></div>)}</div>
+            <div className="flex h-48 items-end gap-1 overflow-x-auto pb-6">{paymentDays.map((day) => <div key={day.key} className="flex min-w-[14px] flex-1 flex-col items-center justify-end gap-1"><div title={`${day.key}: ${day.count}`} className={`w-full rounded-t-sm ${day.key === todayKey ? 'bg-emerald-500' : day.key === yesterdayKey ? 'bg-amber-500' : 'bg-cyan-500/70'}`} style={{ height: `${Math.max(4, (day.count / maxPaymentCount) * 140)}px` }} /><span className="text-[0.5625rem] text-slate-400">{day.label}</span></div>)}</div>
           </section>
           <Button variant="outline" onClick={() => navigate('/payments')}>{t('Open payments management')}</Button>
         </div>

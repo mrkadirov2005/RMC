@@ -63,7 +63,7 @@ const MetricCard = ({
   <Card className={`${color} owner-primary-card overflow-hidden border-0 text-white shadow-sm`}>
     <CardContent className="flex items-center justify-between gap-3 p-3">
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase text-white/80">{label}</p>
+        <p className="text-[0.6875rem] font-bold uppercase text-white/80">{label}</p>
         <p className="mt-1 text-2xl font-extrabold tracking-normal">{value}</p>
         <p className="mt-1 truncate text-xs font-medium text-white/85">{sub}</p>
       </div>
@@ -120,7 +120,7 @@ const CountList = ({
             <div key={row.label} className="space-y-1">
               <div className="flex items-center justify-between gap-3 text-xs">
                 <span className="truncate font-medium">{row.label}</span>
-                <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-muted dark:text-foreground">{row.count}</span>
+                <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.6875rem] font-bold text-slate-700 dark:bg-muted dark:text-foreground">{row.count}</span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-muted">
                 <div className={`${color} h-full rounded-full`} style={{ width: `${percent(row.count, total)}%` }} />
@@ -279,7 +279,7 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
           <CardContent className="p-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-bold uppercase text-white/75">{t('Top teacher')}</p>
+                <p className="text-[0.6875rem] font-bold uppercase text-white/75">{t('Top teacher')}</p>
                 <h3 className="mt-1 text-lg font-extrabold">{topTeacher?.name || 'No assignments yet'}</h3>
                 <p className="mt-1 text-xs font-medium text-white/85">{topTeacher?.count || 0} {t('assigned students')}</p>
               </div>

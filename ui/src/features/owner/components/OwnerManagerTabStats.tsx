@@ -270,7 +270,7 @@ export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, co
               >
                 <CardContent className="flex items-center justify-between gap-3 p-2">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-white/75">
+                    <p className="text-[0.625rem] font-black uppercase text-white/75">
                       {t(card.label)}
                     </p>
                     <p className="text-lg font-black leading-tight text-white">

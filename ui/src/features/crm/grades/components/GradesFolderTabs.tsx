@@ -42,7 +42,7 @@ const folderRowCardClass =
 const rowIconClass = 'flex h-6 w-6 shrink-0 items-center justify-center rounded';
 const rowBodyClass = 'flex min-w-0 shrink-0 items-center gap-1.5 overflow-hidden';
 const rowTitleClass = 'w-44 shrink-0 truncate text-xs font-semibold';
-const rowStatsClass = 'flex shrink-0 items-center justify-start gap-1.5 text-[10px] font-bold';
+const rowStatsClass = 'flex shrink-0 items-center justify-start gap-1.5 text-[0.625rem] font-bold';
 
 const GradesFolderTabs = ({
   activeTab,
@@ -305,7 +305,7 @@ const GradesFolderTabs = ({
                       </div>
                       <div className={rowBodyClass}>
                         <h3 className={rowTitleClass}>{subject.subject_name}</h3>
-                        <p className="truncate rounded bg-cyan-100 px-1.5 py-0.5 text-[10px] font-bold text-cyan-700">
+                        <p className="truncate rounded bg-cyan-100 px-1.5 py-0.5 text-[0.625rem] font-bold text-cyan-700">
                           {cls?.class_name || 'Class'}
                         </p>
                       </div>

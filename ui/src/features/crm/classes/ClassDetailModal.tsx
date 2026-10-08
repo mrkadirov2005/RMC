@@ -516,7 +516,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                                   size="sm"
                                   variant={status === s ? 'default' : 'outline'}
                                   className={cn(
-                                    'text-[10px] h-8 px-2 min-w-[80px]',
+                                    'text-[0.625rem] h-8 px-2 min-w-[80px]',
                                     status === s && (s === 'Present' ? 'bg-green-600' : s === 'Late' ? 'bg-yellow-600' : 'bg-red-600')
                                   )}
                                   onClick={() => handleAttendanceToggle(studentId, s)}

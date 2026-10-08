@@ -46,7 +46,7 @@ export default function TeacherClassesStudentsTab({
               <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500">{index + 1}</span>
               <div className="flex-grow">
                 <h3 className="text-xs font-semibold">{classItem.class_name}</h3>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-[0.625rem] text-muted-foreground">
                   {t('{label} / Level: {level}', { label: isTeacherOwned ? t('Teacher group') : t('Group'), level: classItem.level || 'N/A' })}
                 </p>
               </div>
@@ -95,12 +95,12 @@ const StudentList = ({ students }: { students: any[] }) => {
             {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
           </span>
           {outgoing && (
-            <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${getStatusVariant(student.status)}`}>
+            <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-bold ${getStatusVariant(student.status)}`}>
               {t('Transferred')}
             </span>
           )}
           {incoming && (
-            <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${INCOMING_TRANSFER_VARIANT}`}>
+            <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-bold ${INCOMING_TRANSFER_VARIANT}`}>
               {t('New (Transferred)')}
             </span>
           )}

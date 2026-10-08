@@ -120,11 +120,11 @@ export const ClassDialogs = ({
               </div>
               <div className="grid gap-2.5 md:grid-cols-2">
                 <div className="space-y-1 md:col-span-2">
-                  <Label htmlFor="class_name" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Class Name')} *</Label>
+                  <Label htmlFor="class_name" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Class Name')} *</Label>
                   <Input id="class_name" required value={formData.class_name || ''} onChange={(e) => setFormData({ ...formData, class_name: e.target.value })} className="h-8 border-sky-100 bg-sky-50/60 text-xs font-semibold shadow-sm focus-visible:ring-sky-500 dark:border-input dark:bg-background" />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <Label htmlFor="subject_id" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Subject')} *</Label>
+                  <Label htmlFor="subject_id" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Subject')} *</Label>
                   <Select
                     required
                     value={formData.subject_id ? String(formData.subject_id) : ''}
@@ -142,24 +142,24 @@ export const ClassDialogs = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  {subjectOptions.length === 0 && <p className="text-[10px] text-amber-700">{t('Create an unassigned subject first, then return to this form.')}</p>}
+                  {subjectOptions.length === 0 && <p className="text-[0.625rem] text-amber-700">{t('Create an unassigned subject first, then return to this form.')}</p>}
                 </div>
                 {editingId && (
                   <div className="space-y-1">
-                    <Label htmlFor="class_code" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Class Code')}</Label>
+                    <Label htmlFor="class_code" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Class Code')}</Label>
                     <Input id="class_code" value={formData.class_code || ''} onChange={(e) => setFormData({ ...formData, class_code: e.target.value })} className="h-8 border-indigo-100 bg-indigo-50/60 text-xs font-semibold shadow-sm focus-visible:ring-indigo-500 dark:border-input dark:bg-background" />
                   </div>
                 )}
                 <div className="space-y-1">
-                  <Label htmlFor="level" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Level')} *</Label>
+                  <Label htmlFor="level" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Level')} *</Label>
                   <Input id="level" type="number" required value={formData.level || ''} onChange={(e) => setFormData({ ...formData, level: Number(e.target.value) })} className="h-8 border-violet-100 bg-violet-50/60 text-xs font-semibold shadow-sm focus-visible:ring-violet-500 dark:border-input dark:bg-background" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="capacity" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Capacity')} *</Label>
+                  <Label htmlFor="capacity" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Capacity')} *</Label>
                   <Input id="capacity" type="number" required value={formData.capacity || ''} onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })} className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm focus-visible:ring-emerald-500 dark:border-input dark:bg-background" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="room_number" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Room Number')} *</Label>
+                  <Label htmlFor="room_number" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Room Number')} *</Label>
                   <Select required value={formData.room_number || ''} onValueChange={(value) => setFormData({ ...formData, room_number: value })}>
                     <SelectTrigger id="room_number" aria-label={t('Room Number')} className="h-8 border-amber-100 bg-amber-50/60 text-xs font-semibold shadow-sm focus:ring-amber-500 dark:border-input dark:bg-background">
                       <SelectValue placeholder={t('Select Room')} />
@@ -168,15 +168,15 @@ export const ClassDialogs = ({
                       {roomOptions.map((room) => <SelectItem key={room} value={room}>{room}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  {roomOptions.length === 0 && <p className="text-[10px] text-amber-700">{t('Create a room first, then return to this form.')}</p>}
-                  {roomConflict && <p role="alert" className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1.5 text-[10px] font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{t('This room is already booked by')} {roomConflict.group} — {roomConflict.day}, {roomConflict.start}–{roomConflict.end}.</p>}
+                  {roomOptions.length === 0 && <p className="text-[0.625rem] text-amber-700">{t('Create a room first, then return to this form.')}</p>}
+                  {roomConflict && <p role="alert" className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1.5 text-[0.625rem] font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{t('This room is already booked by')} {roomConflict.group} — {roomConflict.day}, {roomConflict.start}–{roomConflict.end}.</p>}
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="start_date" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Start Date')}</Label>
+                  <Label htmlFor="start_date" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Start Date')}</Label>
                   <Input id="start_date" type="date" value={toDateInputValue(formData.start_date)} onChange={(e) => setFormData({ ...formData, start_date: e.target.value || null })} className="h-8 border-cyan-100 bg-cyan-50/60 text-xs font-semibold shadow-sm focus-visible:ring-cyan-500 dark:border-input dark:bg-background" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="end_date" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('End Date')}</Label>
+                  <Label htmlFor="end_date" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('End Date')}</Label>
                   <Input id="end_date" type="date" value={toDateInputValue(formData.end_date)} onChange={(e) => setFormData({ ...formData, end_date: e.target.value || null })} className="h-8 border-rose-100 bg-rose-50/60 text-xs font-semibold shadow-sm focus-visible:ring-rose-500 dark:border-input dark:bg-background" />
                 </div>
               </div>
@@ -191,10 +191,10 @@ export const ClassDialogs = ({
                   <h4 className="text-xs font-bold text-slate-950 dark:text-card-foreground">{t('Class Schedule')}</h4>
                 </div>
                 <div className="space-y-2">
-                  <p className="mb-1.5 text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Select Class Days')}</p>
+                  <p className="mb-1.5 text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Select Class Days')}</p>
                   <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">
                     {weekDays.map((day, index) => (
-                      <label key={day} className={cn('flex min-h-7 cursor-pointer items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-bold shadow-sm transition-colors', selectedDays.includes(day) ? 'border-cyan-300 bg-cyan-50 text-cyan-950 dark:border-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-100' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-border dark:bg-card dark:text-card-foreground')}>
+                      <label key={day} className={cn('flex min-h-7 cursor-pointer items-center gap-1 rounded-md border px-1.5 py-0.5 text-[0.6875rem] font-bold shadow-sm transition-colors', selectedDays.includes(day) ? 'border-cyan-300 bg-cyan-50 text-cyan-950 dark:border-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-100' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-border dark:bg-card dark:text-card-foreground')}>
                         <Switch className="scale-[0.65]" checked={selectedDays.includes(day)} onCheckedChange={(checked) => handleDayChange(day, checked)} />
                         <span className="truncate">{day}</span>
                         <span className={cn('ml-auto h-2 w-2 rounded-full', index % 3 === 0 ? 'bg-sky-500' : index % 3 === 1 ? 'bg-emerald-500' : 'bg-fuchsia-500')} />
@@ -203,11 +203,11 @@ export const ClassDialogs = ({
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label htmlFor="schedule_time" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Start Time')}</Label>
+                      <Label htmlFor="schedule_time" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Start Time')}</Label>
                       <Input id="schedule_time" type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="h-8 border-cyan-100 bg-cyan-50/60 text-xs font-semibold shadow-sm focus-visible:ring-cyan-500 dark:border-input dark:bg-background" />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="schedule_end_time" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('End Time')}</Label>
+                      <Label htmlFor="schedule_end_time" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('End Time')}</Label>
                       <Input id="schedule_end_time" type="time" value={scheduleEndTime} onChange={(e) => setScheduleEndTime(e.target.value)} className="h-8 border-cyan-100 bg-cyan-50/60 text-xs font-semibold shadow-sm focus-visible:ring-cyan-500 dark:border-input dark:bg-background" />
                     </div>
                   </div>
@@ -224,11 +224,11 @@ export const ClassDialogs = ({
                   </div>
                   <div className="space-y-2">
                     <div className="space-y-1">
-                      <Label htmlFor="payment_amount" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Payment Amount')} *</Label>
+                      <Label htmlFor="payment_amount" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Payment Amount')} *</Label>
                       <Input id="payment_amount" type="number" required step="0.01" value={formData.payment_amount || ''} onChange={(e) => setFormData({ ...formData, payment_amount: Number(e.target.value) })} className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm focus-visible:ring-emerald-500 dark:border-input dark:bg-background" />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="payment_frequency" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Payment Frequency')}</Label>
+                      <Label htmlFor="payment_frequency" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Payment Frequency')}</Label>
                       <Select value={formData.payment_frequency || 'Monthly'} onValueChange={(val) => setFormData({ ...formData, payment_frequency: val })}>
                         <SelectTrigger className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background">
                           <SelectValue placeholder={t('Select Frequency')} />
@@ -253,7 +253,7 @@ export const ClassDialogs = ({
                   <div className="space-y-2">
                     {isOwner && (
                       <div className="space-y-1">
-                        <Label htmlFor="center_id" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Center')}</Label>
+                        <Label htmlFor="center_id" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Center')}</Label>
                         <Select value={String(formData.center_id || '')} onValueChange={(val) => setFormData({ ...formData, center_id: Number(val) })}>
                           <SelectTrigger className="h-8 border-fuchsia-100 bg-fuchsia-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background">
                             <SelectValue placeholder={t('Select Center')} />
@@ -267,7 +267,7 @@ export const ClassDialogs = ({
                       </div>
                     )}
                     <div className="space-y-1">
-                      <Label htmlFor="teacher_id" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Teacher (Optional)')}</Label>
+                      <Label htmlFor="teacher_id" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Teacher (Optional)')}</Label>
                       <Select value={String(formData.teacher_id || 'none')} onValueChange={(val) => setFormData({ ...formData, teacher_id: val === 'none' ? undefined : Number(val) })}>
                         <SelectTrigger className="h-8 border-fuchsia-100 bg-fuchsia-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background">
                           <SelectValue placeholder={t('Select Teacher')} />

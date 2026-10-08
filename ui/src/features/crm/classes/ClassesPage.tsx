@@ -286,7 +286,7 @@ const ClassesPage = () => {
         size="sm"
         variant="ghost"
         onClick={() => navigate(`/classes/${getClassId(cls)}`)}
-        className="h-7 px-2 text-[11px] font-semibold text-slate-700"
+        className="h-7 px-2 text-[0.6875rem] font-semibold text-slate-700"
       >
         <Info className="mr-1 h-3.5 w-3.5" />
         {t('View')}
@@ -296,7 +296,7 @@ const ClassesPage = () => {
         size="sm"
         variant="ghost"
         onClick={() => handleGenerateSessions(cls)}
-        className="h-7 px-2 text-[11px] font-semibold text-slate-700"
+        className="h-7 px-2 text-[0.6875rem] font-semibold text-slate-700"
       >
         <CalendarDays className="mr-1 h-3.5 w-3.5" />
         {t('Sessions')}
@@ -306,7 +306,7 @@ const ClassesPage = () => {
         size="sm"
         variant="ghost"
         onClick={() => handleOpenModal(cls)}
-        className="h-7 px-2 text-[11px] font-semibold text-slate-700"
+        className="h-7 px-2 text-[0.6875rem] font-semibold text-slate-700"
       >
         <Pencil className="mr-1 h-3.5 w-3.5" />
         {t('Edit')}
@@ -316,7 +316,7 @@ const ClassesPage = () => {
         size="sm"
         variant="ghost"
         onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
-        className="h-7 px-2 text-[11px] font-semibold text-rose-600"
+        className="h-7 px-2 text-[0.6875rem] font-semibold text-rose-600"
       >
         <Trash2 className="mr-1 h-3.5 w-3.5" />
         {t('Delete')}

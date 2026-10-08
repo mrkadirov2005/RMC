@@ -381,10 +381,10 @@ const TeachersPage = () => {
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right">
-                      <span className="inline-flex text-[11px] font-bold text-slate-700 dark:text-slate-200">{Number(teacher.student_count || 0)}</span>
+                      <span className="inline-flex text-[0.6875rem] font-bold text-slate-700 dark:text-slate-200">{Number(teacher.student_count || 0)}</span>
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right">
-                      <span className="inline-flex text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                      <span className="inline-flex text-[0.6875rem] font-bold text-slate-700 dark:text-slate-200">
                         {Number(teacher.salary_percentage ?? 50)}%
                       </span>
                     </TableCell>
@@ -420,7 +420,7 @@ const TeachersPage = () => {
                 className="owner-tertiary-card relative cursor-pointer overflow-hidden border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
                 onClick={() => navigate(getTeacherProfilePath(teacher))}
               >
-                <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
+                <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[0.625rem] font-bold text-white">
                   {getPaginatedRowNumber(index, page, pageSize)}
                 </span>
                 <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
@@ -439,12 +439,12 @@ const TeachersPage = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className="truncate text-[0.6875rem] text-muted-foreground">
                         {getTeacherSubtitle(teacher)}
                       </p>
                     </div>
                   </div>
-                  <div className="mt-2 flex items-center gap-1.5 text-[11px]">
+                  <div className="mt-2 flex items-center gap-1.5 text-[0.6875rem]">
                     <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{Number(teacher.student_count || 0)} {t('students')}</span>
                     <span className="owner-secondary-tag rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
                   </div>
@@ -478,7 +478,7 @@ const TeachersPage = () => {
                 key={teacher.teacher_id || teacher.id}
                 className="owner-tertiary-card relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
               >
-                <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
+                <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[0.625rem] font-bold text-white">
                   {getPaginatedRowNumber(index, page, pageSize)}
                 </span>
                 <div className="absolute right-3 top-3 z-10">
@@ -511,11 +511,11 @@ const TeachersPage = () => {
                   </p>
                   <div className="owner-secondary-tag mt-2 rounded-lg bg-emerald-600 p-2 text-center text-xs text-white shadow-sm">
                     <p className="font-bold">{Number(teacher.student_count || 0)}</p>
-                    <p className="text-[11px] text-white/80">{t('Students')}</p>
+                    <p className="text-[0.6875rem] text-white/80">{t('Students')}</p>
                   </div>
                   <div className="owner-secondary-tag mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
                     <p className="font-bold">{Number(teacher.salary_percentage ?? 50)}%</p>
-                    <p className="text-[11px] text-white/80">{t('Teacher share')}</p>
+                    <p className="text-[0.6875rem] text-white/80">{t('Teacher share')}</p>
                   </div>
                 </CardContent>
 
