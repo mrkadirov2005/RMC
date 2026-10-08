@@ -13,6 +13,17 @@ describe('settings service', () => {
     expect(value.stellarBonusCoins).toBe(8);
     expect(value.coinScoreMapping).toEqual([{ score: 100, coins: 6 }, { score: 40, coins: 2 }]);
   });
+  test('keeps the stellar activity level and uses the center scoring rules by default', async () => {
+    repository.getSetting.mockResolvedValue(null);
+    const loaded = await service.getLessonScoring(2);
+    expect(loaded.attendance.map((option) => option.score)).toEqual([40, 30, 20, 0]);
+    expect(loaded.activity.map((option) => option.score)).toEqual([40, 30, 20, 10, 5]);
+    expect(loaded.activity.filter((option) => option.stellar).map((option) => option.label)).toEqual(['Stellar']);
+
+    const saved = service.normalizeLessonScoring({ activity: [{ label: 'Yulduz', score: 40, stellar: true }, { label: 'Faol', score: 30 }] });
+    expect(saved.activity[0].stellar).toBe(true);
+    expect(saved.activity[1].stellar).toBeUndefined();
+  });
   test('loads defaults when no center setting exists and saves normalized values', async () => {
     repository.getSetting.mockResolvedValue(null);
     const loaded = await service.getLessonScoring(2);

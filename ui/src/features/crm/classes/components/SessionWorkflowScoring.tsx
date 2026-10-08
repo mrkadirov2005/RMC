@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { optionToneClasses } from './scoreTones';
+import { getLessonGrade } from '../utils/points';
 
 const stepToneClasses = {
   emerald: 'border-emerald-300 bg-emerald-50',
@@ -22,6 +23,8 @@ export type ScoreOption = {
   symbol: string;
   fill: number;
   tone: ScoreTone;
+  /** The stellar activity level: one student per lesson, so it is never in "Fill all". */
+  stellar?: boolean;
 };
 
 
@@ -135,7 +138,7 @@ export const ScoreTable = ({
   <div className="overflow-x-auto rounded-lg border">
     {!readOnly && <div className="flex flex-wrap items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
       <span className="mr-1 shrink-0 text-xs font-semibold text-muted-foreground">{t('Fill all')}</span>
-      {options.map((option) => {
+      {options.filter((option) => !option.stellar).map((option) => {
         const tone = optionToneClasses[option.tone];
         return (
           <button
@@ -209,6 +212,7 @@ export const ScoreTable = ({
               {getTotalScore && (
                 <TableCell className="px-3 py-1.5 text-center text-base font-bold">
                   {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ 100</span>
+                  <span className="ml-1.5 rounded-md bg-muted px-1.5 py-0.5 text-xs font-black" title={t('Grade')}>{getLessonGrade(getTotalScore(studentId))}</span>
                 </TableCell>
               )}
               {onToggleStellar && (

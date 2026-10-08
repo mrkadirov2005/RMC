@@ -1,6 +1,7 @@
 import type { LessonScoringSettings } from './lessonScoringSettings';
 import type { ScoreOption } from './components/SessionWorkflowScoring';
 import { DEFAULT_ATTENDANCE_REMARK } from './absenceStreak';
+import { combineLessonScore, POINTS_WEIGHT_WITH_ATTENDANCE } from './utils/points';
 
 export type WorkflowScoreMap = Map<number, string>;
 export type WorkflowScoringAction = 'attendance' | 'homework' | 'activity' | 'points' | 'coins';
@@ -72,11 +73,13 @@ export const getWorkflowTotalScore = ({
   const attendanceStatus = selectedActions.includes('attendance') ? attendance.get(studentId) || '' : '';
   const homeworkStatus = selectedActions.includes('homework') ? homework.get(studentId) || '' : '';
   const activityStatus = selectedActions.includes('activity') ? activity.get(studentId) || '' : '';
-  const manualPoints = selectedActions.includes('points') ? Number(points.get(studentId) || 0) : 0;
-  return (attendancePoints[attendanceStatus] || 0)
-    + (homeworkPoints[homeworkStatus] || 0)
-    + (activityPoints[activityStatus] || 0)
-    + (Number.isFinite(manualPoints) ? manualPoints : 0);
+  const manualPoints = Number(points.get(studentId) || 0);
+  return combineLessonScore({
+    attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
+    homework_score: homeworkPoints[homeworkStatus] || 0,
+    activity_score: activityPoints[activityStatus] || 0,
+    points_score: selectedActions.includes('points') && Number.isFinite(manualPoints) ? manualPoints : null,
+  });
 };
 
 /** Workflow attendance labels → stored attendance statuses. */
@@ -200,10 +203,12 @@ export const buildLessonSummary = ({
   const ids = counted.map(getWorkflowStudentId);
   const has = (action: WorkflowScoringAction) => selectedActions.includes(action);
 
-  const maxScore = (has('attendance') ? maxOptionScore(settings.attendance) : 0)
-    + (has('homework') ? maxOptionScore(settings.homework) : 0)
-    + (has('activity') ? maxOptionScore(settings.activity) : 0)
-    + (has('points') ? 100 : 0);
+  // Points stand in for homework and activity: next to attendance they count for 60.
+  const maxScore = has('points')
+    ? (has('attendance') ? maxOptionScore(settings.attendance) + Math.round(100 * POINTS_WEIGHT_WITH_ATTENDANCE) : 100)
+    : (has('attendance') ? maxOptionScore(settings.attendance) : 0)
+      + (has('homework') ? maxOptionScore(settings.homework) : 0)
+      + (has('activity') ? maxOptionScore(settings.activity) : 0);
   const scored = counted.map((student) => {
     const id = getWorkflowStudentId(student);
     return {
@@ -220,7 +225,7 @@ export const buildLessonSummary = ({
   const pointValues = ids.map((id) => points.get(id)).filter((value): value is string => value !== undefined && value !== '').map(Number);
 
   const coinRows = (saveResult?.coins || []).filter((row) => row?.transaction);
-  const stellar = stellarStudentId && has('coins') ? counted.find((student) => getWorkflowStudentId(student) === stellarStudentId) : null;
+  const stellar = stellarStudentId && (has('activity') || has('coins')) ? counted.find((student) => getWorkflowStudentId(student) === stellarStudentId) : null;
 
   return {
     total: counted.length,

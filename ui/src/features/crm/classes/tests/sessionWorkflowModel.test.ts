@@ -36,8 +36,9 @@ describe('session workflow model', () => {
       attendance: new Map([[1, 'On time']]),
       homework: new Map([[1, 'Good']]),
       activity: new Map([[1, 'Very active']]),
-      points: new Map([[1, '5']]),
+      points: new Map([[1, '50']]),
       settings: defaultLessonScoringSettings,
+    // On time 40 + 60% of 50 points; homework does not add on top of points.
     })).toBe(70);
   });
 
@@ -112,10 +113,11 @@ describe('lesson summary', () => {
   });
 
   it('scores the lesson against the best possible total for the chosen actions', () => {
-    // max = 50 attendance + 20 homework; scores 70, 50, 0 → average 40 → 57%
-    expect(summary.maxScore).toBe(70);
-    expect(summary.averageScore).toBe(40);
-    expect(summary.averagePercent).toBe(57);
+    // max = 40 attendance + 20 homework; scores 60 (on time + excellent), 40 (late + half), 0
+    // → average 33.3 → 56%
+    expect(summary.maxScore).toBe(60);
+    expect(summary.averageScore).toBe(33.3);
+    expect(summary.averagePercent).toBe(56);
     expect(summary.status).toBe('fair');
     expect(summary.activity).toBeNull();
     expect(summary.pointsAverage).toBeNull();

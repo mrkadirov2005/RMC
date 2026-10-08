@@ -26,7 +26,7 @@ describe('scoring tables in read-only mode', () => {
     );
 
     expect(screen.queryByText('Fill all')).toBeNull();
-    const late = screen.getByLabelText('Late 40 points') as HTMLButtonElement;
+    const late = screen.getByLabelText('Late 30 points') as HTMLButtonElement;
     expect(late.disabled).toBe(true);
     fireEvent.click(late);
     expect(onToggle).not.toHaveBeenCalled();
@@ -45,7 +45,7 @@ describe('scoring tables in read-only mode', () => {
     );
 
     expect(screen.getByText('Fill all')).toBeTruthy();
-    fireEvent.click(screen.getByLabelText('On time 50 points'));
+    fireEvent.click(screen.getByLabelText('On time 40 points'));
     expect(onToggle).toHaveBeenCalledWith(1, 'On time');
   });
 

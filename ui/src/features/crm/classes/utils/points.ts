@@ -13,12 +13,34 @@ export type LessonPointRecord = {
   points_score?: number | string | null;
 };
 
+/** Weight of the 100-point score next to attendance, so the lesson total stays at most 100. */
+export const POINTS_WEIGHT_WITH_ATTENDANCE = 0.6;
+
+const toScore = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+/**
+ * A lesson's total out of 100, the same rule the server uses (grades/services/lessonScore.ts):
+ * attendance + homework + activity, or, when the 100-point score was given, attendance + 60% of
+ * it (it stands in for homework and activity). Points without attendance count in full.
+ */
+export const combineLessonScore = (scores: LessonPointRecord) => {
+  const attendance = toScore(scores.attendance_score);
+  const points = toScore(scores.points_score);
+  if (points !== null) return attendance !== null ? attendance + Math.round(points * POINTS_WEIGHT_WITH_ATTENDANCE) : points;
+  return (attendance || 0) + (toScore(scores.homework_score) || 0) + (toScore(scores.activity_score) || 0);
+};
+
+/** 90+ is a 5, 70-89 a 4, 50-69 a 3, below 50 a 2 (out of 100). */
+export const getLessonGrade = (scoreOutOf100: number) =>
+  scoreOutOf100 >= 90 ? 5 : scoreOutOf100 >= 70 ? 4 : scoreOutOf100 >= 50 ? 3 : 2;
+
 export const getCombinedLessonPoints = (grade?: LessonPointRecord | null): number | null => {
   if (!grade) return null;
   const values = [grade.attendance_score, grade.homework_score, grade.activity_score, grade.points_score];
   if (values.every((value) => value === null || value === undefined || value === '')) return null;
-  return values.reduce<number>((total, value) => {
-    const points = Number(value ?? 0);
-    return total + (Number.isFinite(points) ? points : 0);
-  }, 0);
+  return combineLessonScore(grade);
 };

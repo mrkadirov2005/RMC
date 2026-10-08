@@ -1,8 +1,8 @@
 const DEFAULT_LESSON_SCORING_SETTINGS = {
   attendance: [
-    { label: 'On time', score: 50, symbol: '✓', fill: 100, tone: 'emerald' },
-    { label: 'Late', score: 40, symbol: '◕', fill: 80, tone: 'amber' },
-    { label: 'Excused', score: 30, symbol: '◐', fill: 60, tone: 'sky' },
+    { label: 'On time', score: 40, symbol: '✓', fill: 100, tone: 'emerald' },
+    { label: 'Late', score: 30, symbol: '◕', fill: 75, tone: 'amber' },
+    { label: 'Excused', score: 20, symbol: '◐', fill: 50, tone: 'sky' },
     { label: 'Absent', score: 0, symbol: '○', fill: 0, tone: 'rose' },
   ],
   homework: [
@@ -13,10 +13,12 @@ const DEFAULT_LESSON_SCORING_SETTINGS = {
     { label: 'None', score: 0, symbol: '😞', fill: 0, tone: 'rose' },
   ],
   activity: [
-    { label: 'Very active', score: 30, symbol: '★', fill: 100, tone: 'violet' },
-    { label: 'Average', score: 20, symbol: '●', fill: 66, tone: 'sky' },
-    { label: 'Weak', score: 10, symbol: '◔', fill: 33, tone: 'amber' },
-    { label: 'No activity', score: 0, symbol: '○', fill: 0, tone: 'rose' },
+    // Only one student per lesson can be the stellar student.
+    { label: 'Stellar', score: 40, symbol: '🌟', fill: 100, tone: 'violet', stellar: true },
+    { label: 'Very active', score: 30, symbol: '★', fill: 75, tone: 'emerald' },
+    { label: 'Good', score: 20, symbol: '●', fill: 50, tone: 'sky' },
+    { label: 'Little', score: 10, symbol: '◔', fill: 25, tone: 'amber' },
+    { label: 'Barely noticeable', score: 5, symbol: '○', fill: 10, tone: 'rose' },
   ],
   stellarBonusCoins: 30,
   coinScoreMapping: [
