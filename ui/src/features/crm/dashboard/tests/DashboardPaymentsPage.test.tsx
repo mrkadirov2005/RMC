@@ -16,6 +16,23 @@ const api = vi.hoisted(() => ({
   classes: vi.fn(async () => ({ data: [{ class_id: 3, class_name: 'English A', teacher_id: 7 }] })),
   subjects: vi.fn(async () => ({ data: [{ subject_name: 'English' }, { subject_name: 'English' }] })),
 }));
+const paymentHook = vi.hoisted(() => ({
+  handleOpenModalForStudent: vi.fn(),
+  handleCloseModal: vi.fn(),
+  handleSubmit: vi.fn(),
+  setFormData: vi.fn(),
+  isModalOpen: false,
+  formData: {},
+  state: { loading: false, items: [] },
+  students: [],
+  classes: [],
+  studentOptions: [],
+  centerOptions: [],
+  isLoadingOptions: false,
+}));
+vi.mock('../../payments/hooks/usePaymentsPage', () => ({ usePaymentsPage: () => paymentHook }));
+vi.mock('../../payments/components/PaymentFormDialog', () => ({ PaymentFormDialog: () => null }));
+
 vi.mock('../api', () => ({
   paymentAPI: { getStudentsSummary: (params: unknown) => api.getStudentsSummary(params) },
   teacherAPI: { getAll: () => api.teachers() },
@@ -61,5 +78,15 @@ describe('dashboard payments page', () => {
     fireEvent.click(screen.getByLabelText('Next page'));
     await waitFor(() => expect(api.getStudentsSummary).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'unpaid', page: 2 })));
     expect(await screen.findByText('101–200 of 250')).toBeTruthy();
+  });
+
+  it('records a payment for a student who has not paid, with what they owe filled in', async () => {
+    render(<MemoryRouter><DashboardPaymentsPage /></MemoryRouter>);
+    await screen.findByText('Karimov Bek');
+    // Only students not paid in full get the button.
+    const buttons = screen.getAllByText("To'lov");
+    expect(buttons).toHaveLength(1);
+    fireEvent.click(buttons[0]);
+    expect(paymentHook.handleOpenModalForStudent).toHaveBeenCalledWith(2, { amount: 300000 });
   });
 });
