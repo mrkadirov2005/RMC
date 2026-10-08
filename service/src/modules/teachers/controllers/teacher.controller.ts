@@ -50,15 +50,40 @@ const getMyProfile = async (req: any, res: any) => {
   }
 };
 
+// A teacher's salary share (%) is the owner's business: admins see salary amounts only, and a
+// teacher sees only their own share. Everyone else gets teachers without it.
+const isOwner = (user: any) => user?.userType === 'superuser' && String(user?.role || '').toLowerCase() === 'owner';
+
+const hideSalaryShare = (req: any, row: any) => {
+  if (!row || typeof row !== 'object' || isOwner(req.user)) return row;
+  if (req.user?.userType === 'teacher' && Number(row.teacher_id) === Number(req.user?.id)) return row;
+  const { salary_percentage: _hidden, ...rest } = row;
+  return rest;
+};
+
+const hideSalaryShares = (req: any, payload: any) => {
+  if (Array.isArray(payload)) return payload.map((row) => hideSalaryShare(req, row));
+  if (payload && Array.isArray(payload.data)) return { ...payload, data: payload.data.map((row: any) => hideSalaryShare(req, row)) };
+  if (payload && Array.isArray(payload.items)) return { ...payload, items: payload.items.map((row: any) => hideSalaryShare(req, row)) };
+  return hideSalaryShare(req, payload);
+};
+
+/** Only the owner sets a teacher's salary share. */
+const withoutShareUnlessOwner = (req: any, body: any) => {
+  if (isOwner(req.user) || !body || typeof body !== 'object') return body;
+  const { salary_percentage: _ignored, ...rest } = body;
+  return rest;
+};
+
 const getAllTeachers = async (req: any, res: any) => {
   try {
     const { centerId } = getScopedCenterId(req);
     if (hasTeacherListParams(req.query)) {
       const result = await teacherService.listTeachersPaginated(parseTeacherListQuery(req.query), centerId ?? undefined);
-      return res.json(result);
+      return res.json(hideSalaryShares(req, result));
     }
     const rows = await teacherService.listTeachers(centerId ?? undefined);
-    res.json(rows);
+    res.json(hideSalaryShares(req, rows));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'qituvchilarni yuklab bo'lmadi", details: error.message || String(error) });
@@ -70,7 +95,7 @@ const getTeacherById = async (req: any, res: any) => {
     const { centerId } = getScopedCenterId(req);
     const row = await teacherService.getTeacher(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
-    res.json(row);
+    res.json(hideSalaryShare(req, row));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'qituvchini yuklab bo'lmadi", details: error.message || String(error) });
@@ -86,14 +111,14 @@ const createTeacher = async (req: any, res: any) => {
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
-    const out = await teacherService.createTeacher({ ...req.body, center_id: centerId });
+    const out = await teacherService.createTeacher({ ...withoutShareUnlessOwner(req, req.body), center_id: centerId });
     if (out.error === 'validation') {
       return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: out.details });
     }
     if (out.error === 'username_taken') {
       return res.status(400).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     }
-    res.status(201).json((out as any).row);
+    res.status(201).json(hideSalaryShare(req, (out as any).row));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'qituvchini yaratib bo'lmadi", details: error.message || String(error) });
@@ -106,9 +131,9 @@ const updateTeacher = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
-    const row = await teacherService.updateTeacher(Number(req.params.id), req.body, centerId ?? undefined);
+    const row = await teacherService.updateTeacher(Number(req.params.id), withoutShareUnlessOwner(req, req.body), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
-    res.json(row);
+    res.json(hideSalaryShare(req, row));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'qituvchini yangilab bo'lmadi", details: error.message || String(error) });

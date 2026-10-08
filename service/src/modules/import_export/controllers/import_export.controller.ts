@@ -9,7 +9,8 @@ const exportEntity = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
-    const out = await importExportService.exportEntity(entity, centerId ?? undefined);
+    const isOwner = req.user?.userType === 'superuser' && String(req.user?.role || '').toLowerCase() === 'owner';
+    const out = await importExportService.exportEntity(entity, centerId ?? undefined, { hideSalaryShare: !isOwner });
     if (out.error === 'unsupported') {
       return res.status(400).json({ error: "Bu bo'limni eksport qilib bo'lmaydi" });
     }

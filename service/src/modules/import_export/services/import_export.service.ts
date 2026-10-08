@@ -401,7 +401,8 @@ const callAppsScript = async (payload: any) => {
   return { data };
 };
 
-const exportEntity = async (entity: string, centerId?: number) => {
+// hideSalaryShare: admins export teachers without their salary share; only the owner sees it.
+const exportEntity = async (entity: string, centerId?: number, { hideSalaryShare = false }: { hideSalaryShare?: boolean } = {}) => {
   if (!ENTITY_CONFIG[entity]) {
     return { error: 'unsupported' as const };
   }
@@ -412,7 +413,7 @@ const exportEntity = async (entity: string, centerId?: number) => {
     columns = STUDENT_COLS;
   } else if (entity === 'teachers') {
     rows = await importExportRepository.selectAllTeachers(centerId);
-    columns = TEACHER_COLS;
+    columns = hideSalaryShare ? TEACHER_COLS.filter((column) => column !== 'salary_percentage') : TEACHER_COLS;
   } else if (entity === 'classes') {
     rows = await importExportRepository.selectAllClasses(centerId);
     columns = CLASS_COLS;

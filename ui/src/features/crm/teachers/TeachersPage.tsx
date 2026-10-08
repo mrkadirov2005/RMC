@@ -1,5 +1,6 @@
 // Page component for the teachers screen in the crm feature.
 
+import { useAppSelector } from '../hooks';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, Eye, User, X, Loader2, Search, Upload, Download, MoreHorizontal, Target, Users, LineChart } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
@@ -80,6 +81,8 @@ const TeachersPage = () => {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { t } = useLanguage();
+  // Only the owner sees and sets a teacher's salary share; admins see salary amounts only.
+  const canSeeShare = String(useAppSelector((state) => state.auth.user?.role) || '').toLowerCase() === 'owner';
   const teacherParams = useMemo(() => ({
     q: debouncedSearchTerm.trim() || undefined,
     page,
@@ -347,7 +350,7 @@ const TeachersPage = () => {
                 <TableHead className="h-8 w-12 px-2">#</TableHead>
                 <TableHead className="h-8 px-2">{t('Teacher')}</TableHead>
                 <TableHead className="h-8 px-2 text-right">{t('Students')}</TableHead>
-                <TableHead className="h-8 px-2 text-right">{t('Share')}</TableHead>
+                {canSeeShare && <TableHead className="h-8 px-2 text-right">{t('Share')}</TableHead>}
                 <TableHead className="h-8 px-2 text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -383,11 +386,13 @@ const TeachersPage = () => {
                     <TableCell className="px-2 py-2 text-right">
                       <span className="inline-flex text-[0.6875rem] font-bold text-slate-700 dark:text-slate-200">{Number(teacher.student_count || 0)}</span>
                     </TableCell>
-                    <TableCell className="px-2 py-2 text-right">
-                      <span className="inline-flex text-[0.6875rem] font-bold text-slate-700 dark:text-slate-200">
-                        {Number(teacher.salary_percentage ?? 50)}%
-                      </span>
-                    </TableCell>
+                    {canSeeShare && (
+                      <TableCell className="px-2 py-2 text-right">
+                        <span className="inline-flex text-[0.6875rem] font-bold text-slate-700 dark:text-slate-200">
+                          {Number(teacher.salary_percentage ?? 50)}%
+                        </span>
+                      </TableCell>
+                    )}
                     <TableCell className="px-2 py-2 text-right">
                       {renderTeacherActions(teacher)}
                     </TableCell>
@@ -446,7 +451,7 @@ const TeachersPage = () => {
                   </div>
                   <div className="mt-2 flex items-center gap-1.5 text-[0.6875rem]">
                     <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{Number(teacher.student_count || 0)} {t('students')}</span>
-                    <span className="owner-secondary-tag rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
+                    {canSeeShare && <span className="owner-secondary-tag rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>}
                   </div>
                   <div className="mt-2 border-t pt-2" onClick={(event) => event.stopPropagation()}>
                     {renderTeacherActions(teacher)}
@@ -513,10 +518,12 @@ const TeachersPage = () => {
                     <p className="font-bold">{Number(teacher.student_count || 0)}</p>
                     <p className="text-[0.6875rem] text-white/80">{t('Students')}</p>
                   </div>
-                  <div className="owner-secondary-tag mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
-                    <p className="font-bold">{Number(teacher.salary_percentage ?? 50)}%</p>
-                    <p className="text-[0.6875rem] text-white/80">{t('Teacher share')}</p>
-                  </div>
+                  {canSeeShare && (
+                    <div className="owner-secondary-tag mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
+                      <p className="font-bold">{Number(teacher.salary_percentage ?? 50)}%</p>
+                      <p className="text-[0.6875rem] text-white/80">{t('Teacher share')}</p>
+                    </div>
+                  )}
                 </CardContent>
 
                 <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-2.5 dark:border-border/10 dark:bg-muted/50">
@@ -598,7 +605,7 @@ const TeachersPage = () => {
                   <Label htmlFor="specialization" className="text-xs">{t('Specialization')}</Label>
                   <Input id="specialization" className="h-8 text-xs" required value={formData.specialization || ''} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} />
                 </div>
-                <div className="space-y-1">
+                {canSeeShare && <div className="space-y-1">
                   <Label htmlFor="salary_percentage" className="text-xs">{t('Teacher Share (%)')}</Label>
                   <Input
                     id="salary_percentage"
@@ -611,7 +618,7 @@ const TeachersPage = () => {
                     value={formData.salary_percentage ?? 50}
                     onChange={(e) => setFormData({ ...formData, salary_percentage: Number(e.target.value) })}
                   />
-                </div>
+                </div>}
                 <div className="space-y-1">
                   <Label htmlFor="gender" className="text-xs">{t('Gender')}</Label>
                   <Select value={formData.gender || 'Male'} onValueChange={(val) => setFormData({ ...formData, gender: val })}>
