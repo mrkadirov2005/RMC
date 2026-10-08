@@ -123,7 +123,7 @@ describe('teachers repository', () => {
       expect(result.total).toBe(0);
     });
 
-    it('searches across name, contact and status columns', async () => {
+    it('finds a teacher by the start of their name, not by status or specialization', async () => {
       const countChain = queueSelect([{ total: 1 }]);
       queueSelect([]);
 
@@ -131,7 +131,18 @@ describe('teachers repository', () => {
 
       const where = dialect.sqlToQuery(countChain.where.mock.calls[0][0]);
       expect(where.sql.toLowerCase()).toContain('ilike');
-      expect(where.params).toContain('%ada%');
+      expect(where.params).toContain('ada%');
+      expect(where.params).not.toContain('%ada%');
+      expect(where.sql).not.toMatch(/status|specialization|qualification|email/);
+    });
+
+    it('matches a phone number by its digits once four are typed', async () => {
+      const countChain = queueSelect([{ total: 0 }]);
+      queueSelect([]);
+
+      await teacherRepository.findPaginated({ q: '90 123' });
+      const where = dialect.sqlToQuery(countChain.where.mock.calls[0][0]);
+      expect(where.params).toContain('%90123%');
     });
 
     it('accepts the search term under either q or search', async () => {
@@ -140,7 +151,7 @@ describe('teachers repository', () => {
 
       await teacherRepository.findPaginated({ search: 'lovelace' });
 
-      expect(dialect.sqlToQuery(countChain.where.mock.calls[0][0]).params).toContain('%lovelace%');
+      expect(dialect.sqlToQuery(countChain.where.mock.calls[0][0]).params).toContain('lovelace%');
     });
 
     it('filters by status when one is given', async () => {
