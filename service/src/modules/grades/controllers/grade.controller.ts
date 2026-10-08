@@ -1,4 +1,5 @@
 const gradeService = require('../services/grade.service');
+const telegramService = require('../../telegram/services/telegram.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 const { studentBelongsToTeacher } = require('../../../shared/tenantDb');
 
@@ -221,6 +222,10 @@ const saveSessionWorkflow = async (req: any, res: any) => {
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });
     }
+    // Lesson results go to students and parents on Telegram. Never holds up or fails the save.
+    telegramService.enqueueLessonResults(Number(body.session_id)).catch((error: any) => {
+      console.error('Telegram lesson results not queued:', error?.message || error);
+    });
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);

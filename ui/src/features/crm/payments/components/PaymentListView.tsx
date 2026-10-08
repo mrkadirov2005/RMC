@@ -8,6 +8,7 @@ import {
   X,
   Search,
   Filter,
+  Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,6 +39,10 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { paymentMethodOptions, paymentStatusOptions } from '../../../../utils/dropdownOptions';
 import type { UsePaymentsPageReturn } from '../hooks/usePaymentsPage';
 import { GROUP_PAYMENT_TABLE_CLASS } from '../paymentListLayout';
+import { telegramBotAPI } from '../../telegramBot/api';
+import { getApiPayload } from '@/shared/api/response';
+import { getErrorMessage } from '@/utils/errorMessage';
+import { showToast } from '@/utils/toast';
 
 const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
@@ -134,6 +139,26 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
       .filter((row) => groupPaymentFilter === 'all' || (groupPaymentFilter === 'paid' ? row.paymentState === 'paid' : row.paymentState !== 'paid'));
   }, [groupPaymentFilter, groupPaymentMonth, searchTerm, selectedFolder, selectedGroupClass, state.items, students]);
 
+  // Students in this group who have not paid the month in full; the bot reminds them and their parents.
+  const unpaidGroupRows = groupStudentRows.filter((row) => row.paymentState !== 'paid');
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const sendPaymentReminders = async () => {
+    setSendingReminders(true);
+    try {
+      const result = getApiPayload<{ queued?: number }>(await telegramBotAPI.sendPaymentReminders({
+        student_ids: unpaidGroupRows.map((row) => row.studentId),
+        month: groupPaymentMonth,
+      }));
+      const queued = Number(result?.queued || 0);
+      if (queued > 0) showToast.success(t('Reminder sent on Telegram to {count} students and their parents', { count: queued }));
+      else showToast.info(t('None of these students or parents have joined the Telegram bot yet.'));
+    } catch (error) {
+      showToast.error(getErrorMessage(error) || t("Couldn't send the reminders"));
+    } finally {
+      setSendingReminders(false);
+    }
+  };
+
   if (selectedFolder?.type === 'class') {
     const paidCount = groupStudentRows.filter((row) => row.paymentState === 'paid').length;
     const totalPaid = groupStudentRows.reduce((sum, row) => sum + row.paidAmount, 0);
@@ -186,6 +211,14 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                 </SelectContent>
               </Select>
             </div>
+            {!isTeacher && unpaidGroupRows.length > 0 && (
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" size="sm" onClick={sendPaymentReminders} disabled={sendingReminders}>
+                  <Send className="mr-1.5 h-4 w-4" />
+                  {t('Remind {count} unpaid on Telegram', { count: unpaidGroupRows.length })}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 

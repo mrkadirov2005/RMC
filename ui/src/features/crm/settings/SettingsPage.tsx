@@ -11,6 +11,7 @@ import { settingsAPI } from './api';
 import { showToast } from '@/utils/toast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DEFAULT_TEXT_SIZES, normalizeTextSizes, TEXT_SIZE_OPTIONS, TEXT_SIZE_ROLES, type TextSizeRole, type TextSizes } from './textSize';
+import { BotContentSettings } from '../telegramBot/BotContentSettings';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -286,6 +287,8 @@ const SettingsPage = () => {
             <Button type="button" variant="outline" onClick={async () => { try { await settingsAPI.saveOwnerPalette(ownerPalette); showToast.success('Custom palette saved for this center.'); } catch { showToast.error('Failed to save custom palette.'); } }}>{t('Save custom colors')}</Button>
           </div>
         </SectionPanel>
+
+        <BotContentSettings />
 
         <SectionPanel
           title={

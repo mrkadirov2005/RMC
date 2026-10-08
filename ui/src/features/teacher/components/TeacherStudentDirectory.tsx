@@ -12,9 +12,11 @@ import {
   Loader2,
   Trash2,
   X,
+  Send,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { PaymentStateBadge } from '../payments/PaymentStateBadge';
+import { TelegramFeedbackDialog } from '../../crm/telegramBot/TelegramFeedbackDialog';
 import { MonthlyRankBadge } from '../../crm/classes/components/MonthlyRankBadge';
 import { getMonthlyTotals, rankMonthlyTotals, rankRowClassName } from '../../crm/classes/utils/monthlyRanking';
 import type { GroupPaymentStudent } from '../payments/types';
@@ -132,6 +134,7 @@ export default function TeacherStudentDirectory({
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('all');
+  const [telegramStudent, setTelegramStudent] = useState<{ id: number; name: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [classFilter, setClassFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<TeacherStudentItem | null>(null);
@@ -607,6 +610,10 @@ export default function TeacherStudentDirectory({
                                 <Coins className="mr-2 h-4 w-4" />
                                 {t('Update Coins')}
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setTelegramStudent({ id: studentId, name: `${student.first_name || ''} ${student.last_name || ''}`.trim() })}>
+                                <Send className="mr-2 h-4 w-4" />
+                                {t('Message on Telegram')}
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => navigate(`/student/${studentId}`)}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 {t('Full Profile')}
@@ -910,6 +917,12 @@ export default function TeacherStudentDirectory({
         studentName={selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : undefined}
         currentCoins={coinBalance}
         onSaved={refreshCoins}
+      />
+      <TelegramFeedbackDialog
+        studentId={telegramStudent?.id ?? null}
+        studentName={telegramStudent?.name}
+        open={telegramStudent !== null}
+        onOpenChange={(open) => { if (!open) setTelegramStudent(null); }}
       />
     </div>
   );

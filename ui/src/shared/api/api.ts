@@ -413,6 +413,17 @@ export const teacherTaskAPI = {
     apiClient.patch(`/teacher-tasks/${id}/status`, data),
 };
 
+// The Telegram bot, from the platform side: messages are queued and the bot delivers them.
+export const telegramBotAPI = {
+  sendFeedback: (data: { student_id: number; text: string }) => apiClient.post('/telegram-bot/feedback', data),
+  sendPaymentReminders: (data: { student_ids: number[]; month: string }) => apiClient.post('/telegram-bot/payment-reminders', data),
+  getInbox: () => apiClient.get('/telegram-bot/inbox'),
+  markInboxRead: (id: number) => apiClient.patch(`/telegram-bot/inbox/${id}/read`),
+  getContent: () => apiClient.get('/telegram-bot/content'),
+  saveContent: (data: { about_director: string; rules: string; prizes: Array<{ name: string; coins: number }> }) => apiClient.put('/telegram-bot/content', data),
+  getStats: () => apiClient.get('/telegram-bot/stats'),
+};
+
 // Students who missed their group's latest lessons in a row; admins close each with an outcome.
 export const absenceAlertAPI = {
   getAll: () => apiClient.get('/absence-alerts'),
