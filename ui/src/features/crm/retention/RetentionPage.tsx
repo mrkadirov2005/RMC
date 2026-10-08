@@ -63,7 +63,15 @@ interface RetentionReport {
     latest_deleted_at?: string | null;
   }>;
   recent_students: Array<Record<string, any>>;
+  /** Why students left this month, most common first (retention view only). */
+  by_reason?: Array<{ reason_id: number | null; reason_code: string | null; reason_name: string | null; left_count: number; percent: number; teacher_fault: boolean }>;
+  /** Teachers ranked by students who left because of the teacher. */
+  worst_teachers?: Array<{ teacher_id: number | null; teacher_name: string; teacher_fault_count: number; left_count: number; students: Array<Record<string, any>> }>;
 }
+
+// "Reason · note" for a student who left, e.g. "Muvaffaqiyatli tugatib natijaga erishdi · B2 oldi".
+const reasonText = (student: Record<string, any>) =>
+  [student.reason_name, student.reason_note].filter(Boolean).join(' · ') || '-';
 
 const defaultMonth = () => {
   const now = new Date();
@@ -313,6 +321,13 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
               <TeacherPanel rows={report.by_teacher} pie={teacherPie} onTeacherClick={setSelectedTeacher} intake={isIntake} />
             )}
 
+            {!isIntake && (
+              <div className="grid gap-4 xl:grid-cols-2">
+                <ReasonsPanel rows={report.by_reason || []} />
+                <WorstTeachersPanel rows={report.worst_teachers || []} />
+              </div>
+            )}
+
             <RecentStudents rows={report.recent_students} intake={isIntake} />
             <TeacherStudentsDialog teacher={selectedTeacher} intake={isIntake} onOpenChange={(open) => !open && setSelectedTeacher(null)} />
           </>
@@ -455,7 +470,7 @@ const TeacherStudentsDialog = ({
             <TableRow>
               <TableHead>{t('Student')}</TableHead>
               <TableHead>{t('Group')}</TableHead>
-              <TableHead>{t('Status')}</TableHead>
+              {intake ? <TableHead>{t('Status')}</TableHead> : <TableHead>{t('Reason')}</TableHead>}
               <TableHead>{t('Phone')}</TableHead>
               <TableHead className="text-right">{t(intake ? 'Joined at' : 'Deleted at')}</TableHead>
             </TableRow>
@@ -465,7 +480,7 @@ const TeacherStudentsDialog = ({
               <TableRow key={student.student_id}>
                 <TableCell className="font-bold">{getName(student)}</TableCell>
                 <TableCell>{student.class_name || '-'}</TableCell>
-                <TableCell>{student.status || '-'}</TableCell>
+                <TableCell>{intake ? student.status || '-' : reasonText(student)}</TableCell>
                 <TableCell>{student.phone || '-'}</TableCell>
                 <TableCell className="text-right">{formatDate(student.deleted_at)}</TableCell>
               </TableRow>
@@ -518,6 +533,68 @@ const ClassPanel = ({ rows, intake }: { rows: RetentionReport['by_class']; intak
   );
 };
 
+const ReasonsPanel = ({ rows }: { rows: NonNullable<RetentionReport['by_reason']> }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+      <h3 className="mb-3 text-base font-black text-slate-900 dark:text-white">{t('Why students left')}</h3>
+      {rows.length === 0 ? (
+        <p className="py-6 text-center text-sm text-slate-500">{t('No deleted students for this month.')}</p>
+      ) : (
+        <ol className="space-y-2">
+          {rows.map((row, index) => (
+            <li key={row.reason_id ?? `none-${index}`} className="space-y-1">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className={cn('min-w-0', row.teacher_fault && 'font-bold text-rose-700 dark:text-rose-300')}>
+                  <span className="mr-1.5 text-xs font-black text-slate-400">{index + 1}.</span>
+                  {row.reason_name || t('No reason recorded')}
+                </span>
+                <span className="shrink-0 font-black tabular-nums">{row.left_count} <span className="text-xs font-semibold text-slate-500">· {row.percent}%</span></span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div className={cn('h-full rounded-full', row.teacher_fault ? 'bg-rose-500' : 'bg-blue-500')} style={{ width: `${Math.max(2, row.percent)}%` }} />
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+};
+
+// Teachers ranked by students who left because of the teacher ("Ustoz yoqmagani uchun ketdi").
+const WorstTeachersPanel = ({ rows }: { rows: NonNullable<RetentionReport['worst_teachers']> }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="rounded-lg border border-rose-200 bg-white p-4 shadow-sm dark:border-rose-900/60 dark:bg-white/[0.04]">
+      <h3 className="text-base font-black text-slate-900 dark:text-white">{t('Students lost because of the teacher')}</h3>
+      <p className="mb-3 text-xs text-slate-500">{t('Teachers ranked by students who left because they did not like the teacher.')}</p>
+      {rows.length === 0 ? (
+        <p className="py-6 text-center text-sm text-slate-500">{t('No student left because of a teacher this month.')}</p>
+      ) : (
+        <ol className="divide-y">
+          {rows.map((row, index) => (
+            <li key={row.teacher_id ?? index} className="py-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 font-semibold">
+                  <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black text-white', index === 0 ? 'bg-rose-600' : 'bg-rose-400')}>{index + 1}</span>
+                  <span className="truncate">{row.teacher_name}</span>
+                </span>
+                <span className="shrink-0 text-sm font-black text-rose-700 dark:text-rose-300">
+                  {row.teacher_fault_count} <span className="text-xs font-semibold text-slate-500">/ {row.left_count} {t('left')}</span>
+                </span>
+              </div>
+              <p className="mt-1 truncate pl-8 text-xs text-slate-500">
+                {row.students.map((student) => [getName(student), student.reason_note].filter(Boolean).join(' — ')).join(', ')}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+};
+
 const RecentStudents = ({ rows, intake }: { rows: RetentionReport['recent_students']; intake: boolean }) => {
   const { t } = useLanguage();
   return (
@@ -529,7 +606,7 @@ const RecentStudents = ({ rows, intake }: { rows: RetentionReport['recent_studen
             <TableHead>{t('Student')}</TableHead>
             <TableHead>{t('Group')}</TableHead>
             <TableHead>{t('Teacher')}</TableHead>
-            <TableHead>{t('Status')}</TableHead>
+            {intake ? <TableHead>{t('Status')}</TableHead> : <TableHead>{t('Reason')}</TableHead>}
             <TableHead className="text-right">{t(intake ? 'Joined at' : 'Deleted at')}</TableHead>
           </TableRow>
         </TableHeader>
@@ -539,7 +616,7 @@ const RecentStudents = ({ rows, intake }: { rows: RetentionReport['recent_studen
               <TableCell className="font-bold">{getName(student)}</TableCell>
               <TableCell>{student.class_name || '-'}</TableCell>
               <TableCell>{[student.teacher_first_name, student.teacher_last_name].filter(Boolean).join(' ') || '-'}</TableCell>
-              <TableCell>{student.status || '-'}</TableCell>
+              <TableCell>{intake ? student.status || '-' : reasonText(student)}</TableCell>
               <TableCell className="text-right">{formatDate(student.deleted_at)}</TableCell>
             </TableRow>
           ))}

@@ -1,6 +1,6 @@
 const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { attendance, classes, debts, payments, students, teachers } = require('../../../db/schema');
+const { attendance, classes, debts, payments, students, studentActionReasons, teachers } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -144,7 +144,10 @@ const deletedStudentJson = sql`json_build_object(
   'teacher_id', ${teachers.teacherId},
   'teacher_first_name', ${teachers.firstName},
   'teacher_last_name', ${teachers.lastName},
-  'deleted_at', ${students.deletedAt}
+  'deleted_at', ${students.deletedAt},
+  'reason_code', (SELECT r.reason_code FROM student_action_reasons r WHERE r.reason_id = ${students.deleteReasonId}),
+  'reason_name', (SELECT r.reason_name FROM student_action_reasons r WHERE r.reason_id = ${students.deleteReasonId}),
+  'reason_note', ${students.deleteReasonNote}
 )`;
 
 const deletedStudentsByTeacherWithStudents = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
@@ -189,13 +192,32 @@ const recentDeletedStudents = (filters: { centerId?: number; start?: string | nu
       teacher_first_name: teachers.firstName,
       teacher_last_name: teachers.lastName,
       deleted_at: students.deletedAt,
+      reason_code: studentActionReasons.reasonCode,
+      reason_name: studentActionReasons.reasonName,
+      reason_note: students.deleteReasonNote,
     })
     .from(students)
     .leftJoin(classes, eq(classes.classId, students.classId))
     .leftJoin(teachers, eq(teachers.teacherId, sql`COALESCE(${classes.teacherId}, ${students.teacherId})`))
+    .leftJoin(studentActionReasons, eq(studentActionReasons.reasonId, students.deleteReasonId))
     .where(and(...retentionDeletedFilters(filters)))
     .orderBy(desc(students.deletedAt), desc(students.studentId))
     .limit(Math.min(100, Math.max(1, Number(filters.limit || 25))));
+
+// Why students left in the period, most common first (no reason recorded counts as its own row).
+const deletedStudentsByReason = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
+  db
+    .select({
+      reason_id: studentActionReasons.reasonId,
+      reason_code: studentActionReasons.reasonCode,
+      reason_name: studentActionReasons.reasonName,
+      left_count: sql`COUNT(*)::int`,
+    })
+    .from(students)
+    .leftJoin(studentActionReasons, eq(studentActionReasons.reasonId, students.deleteReasonId))
+    .where(and(...retentionDeletedFilters(filters)))
+    .groupBy(studentActionReasons.reasonId, studentActionReasons.reasonCode, studentActionReasons.reasonName)
+    .orderBy(desc(sql`COUNT(*)`));
 
 const intakeFilters = (filters: { centerId?: number; start?: string | null; end?: string | null; sourceId?: number; referredByTeacherId?: number; sourceDetail?: string } = {}) => {
   const conditions: any[] = [];
@@ -304,6 +326,7 @@ const intakeStudentsByTeacherWithStudents = (filters: { centerId?: number; start
     .orderBy(desc(sql`COUNT(DISTINCT ${students.studentId})`), asc(teachers.firstName), asc(teachers.lastName));
 
 module.exports = {
+  deletedStudentsByReason,
   countStudents,
   countTeachers,
   countClasses,
