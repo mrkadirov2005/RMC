@@ -20,9 +20,10 @@ import {
   UserX,
   Users,
   X,
+  Video,
 } from 'lucide-react';
 import { studentAPI, classAPI, teacherAPI } from './api';
-import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab, GroupsTab } from './tabs';
+import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab, GroupsTab, VideosTab } from './tabs';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -434,6 +435,7 @@ const StudentDetailPage = () => {
   const tabItems = [
     { value: 'overview', label: 'Overview', icon: User },
     { value: 'groups', label: 'Groups', icon: Users },
+    { value: 'videos', label: 'Videos', icon: Video },
     { value: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { value: 'payments', label: 'Payments', icon: Receipt },
     { value: 'assignments', label: 'Assignments', icon: ClipboardList },
@@ -637,6 +639,7 @@ const StudentDetailPage = () => {
               />
             )}
 
+            {activeTab === 'videos' && studentId && <VideosTab studentId={Number(studentId)} />}
             {activeTab === 'groups' && studentId && (
               <GroupsTab studentId={Number(studentId)} onOpenStudent={(id) => navigate(`/students/${id}/profile`)} />
             )}

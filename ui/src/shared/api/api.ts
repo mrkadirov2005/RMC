@@ -216,6 +216,10 @@ export const studentAPI = {
       },
     }),
   getById: (id: number) => apiClient.get(`/students/${id}`),
+  /** A child's before/after video links (Loom, Google Drive or YouTube), kept on their main record. */
+  getVideos: (id: number) => apiClient.get(`/students/${id}/videos`),
+  saveVideos: (id: number, data: { before_video_url: string | null; after_video_url: string | null }) =>
+    apiClient.put(`/students/${id}/videos`, data),
   /** A group's roster. Pass `exclude_transferred: 1` for "who is in the group now" student lists;
    * billing and lesson pages leave it out to keep students transferred out this month. */
   getByClassWithTransfers: (classId: number, params?: Record<string, unknown>) =>

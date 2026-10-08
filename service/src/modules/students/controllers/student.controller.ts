@@ -1,6 +1,7 @@
 const { generateToken } = require('../../../middleware/auth');
 const studentService = require('../services/student.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
+const { studentBelongsToTeacher } = require('../../../shared/tenantDb');
 const { hasStudentListParams, parseStudentListQuery } = require('./studentListQuery');
 const studentCoinsController = require('./studentCoins.controller');
 
@@ -110,6 +111,41 @@ const getClassStudentsWithTransfers = async (req: any, res: any) => {
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Guruh o'quvchilarini yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+// Before/after videos: admins and the owner set the links; a teacher can view their own students'.
+const getStudentVideos = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    const studentId = Number(req.params.id);
+    if (req.user?.userType === 'student') return res.status(403).json({ error: 'Kirish rad etildi.' });
+    if (req.user?.userType === 'teacher' && !(await studentBelongsToTeacher(studentId, req.user?.id))) {
+      return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
+    }
+    const row = await studentService.getVideos(studentId, centerId ?? undefined);
+    if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
+    res.json(row);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Videolarni yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+const saveStudentVideos = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    const out = await studentService.saveVideos(Number(req.params.id), req.body, centerId ?? undefined);
+    if (out?.error === 'invalid_url') {
+      return res.status(400).json({ error: "Faqat Loom, Google Drive yoki YouTube havolasi (https) qabul qilinadi." });
+    }
+    if (!out) return res.status(404).json({ error: "O'quvchi topilmadi" });
+    res.json(out);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Videolarni saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -373,6 +409,8 @@ const changeStudentPassword = async (req: any, res: any) => {
 };
 
 module.exports = {
+  getStudentVideos,
+  saveStudentVideos,
   getAcquisitionSources,
   createAcquisitionSource,
   getActionReasons,

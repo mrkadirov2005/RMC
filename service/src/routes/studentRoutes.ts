@@ -67,6 +67,8 @@ router_student.get('/class/:classId', requireAuth, validateParams(ClassIdParamDt
  *       404:
  *         description: Student not found
  */
+router_student.get('/:id/videos', requireAuth, validateParams(IdParamDto), studentController.getStudentVideos);
+router_student.put('/:id/videos', requireAuth, requireRole('superuser'), validateParams(IdParamDto), studentController.saveStudentVideos);
 router_student.get('/:id', requireAuth, validateParams(IdParamDto), studentController.getStudentById);
 
 /**

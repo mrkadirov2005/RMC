@@ -6,3 +6,4 @@ export { AssignmentsTab } from './AssignmentsTab';
 export { IndividualTasksTab } from './IndividualTasksTab';
 export { GradesTab } from './GradesTab';
 export { GroupsTab } from './GroupsTab';
+export { VideosTab } from './VideosTab';
