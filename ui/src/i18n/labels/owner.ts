@@ -1,4 +1,5 @@
 export const ownerLabels: Record<string, string> = {
+  '{count} attendance records': '{count} ta davomat yozuvi',
   // Admin permission dialog: submenus and the newer pages
   List: "Ro'yxat",
   'Open consolidation exercises and their results': 'Mustahkamlash mashqlari va natijalarini ochish',

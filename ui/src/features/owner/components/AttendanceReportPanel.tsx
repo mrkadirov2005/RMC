@@ -6,6 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PieChart } from '@/shared/components/PieChart';
 import type { OwnerManagerStatisticsCollections } from '../types';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+/** Today's date (YYYY-MM-DD) in Tashkent, where the centers are. */
+const getCenterDay = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
 const getId = (row: any, key: string) => Number(row?.[key] || row?.id || 0);
 const getGroupName = (group: any) => String(
@@ -27,7 +33,19 @@ export const AttendanceReportPanel = ({ collections }: { collections: OwnerManag
   const [subjectKey, setSubjectKey] = useState('');
   const [detailGroupId, setDetailGroupId] = useState<number | null>(null);
   const [subjectDetailOpen, setSubjectDetailOpen] = useState(false);
-  const records = collections.attendance || [];
+  // Dates to report on (YYYY-MM-DD, inclusive); empty means all records.
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const allRecords = collections.attendance;
+  const records = useMemo(() => (allRecords || []).filter((record) => {
+    const day = String(record.attendance_date || '').slice(0, 10);
+    return (!dateFrom || day >= dateFrom) && (!dateTo || day <= dateTo);
+  }), [allRecords, dateFrom, dateTo]);
+  const today = getCenterDay();
+  const setRange = (from: string, to: string) => {
+    setDateFrom(from);
+    setDateTo(to);
+  };
   const students = collections.students || [];
   const classes = collections.classes || [];
   const teachers = collections.teachers || [];
@@ -73,6 +91,22 @@ export const AttendanceReportPanel = ({ collections }: { collections: OwnerManag
   ];
 
   return <div className="space-y-4">
+    <Card><CardContent className="flex flex-wrap items-end gap-3 p-4">
+      <div className="space-y-1">
+        <Label htmlFor="attendance-from" className="text-xs">{t('From')}</Label>
+        <Input id="attendance-from" type="date" value={dateFrom} max={dateTo || undefined} onChange={(event) => setDateFrom(event.target.value)} className="h-9 w-[160px]" />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="attendance-to" className="text-xs">{t('To')}</Label>
+        <Input id="attendance-to" type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => setDateTo(event.target.value)} className="h-9 w-[160px]" />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <Button type="button" size="sm" variant={dateFrom === today && dateTo === today ? 'default' : 'outline'} onClick={() => setRange(today, today)}>{t('Today')}</Button>
+        <Button type="button" size="sm" variant={dateFrom === `${today.slice(0, 7)}-01` && dateTo === today ? 'default' : 'outline'} onClick={() => setRange(`${today.slice(0, 7)}-01`, today)}>{t('This month')}</Button>
+        <Button type="button" size="sm" variant={!dateFrom && !dateTo ? 'default' : 'outline'} onClick={() => setRange('', '')}>{t('All')}</Button>
+      </div>
+      <p className="ml-auto text-xs text-muted-foreground">{t('{count} attendance records', { count: records.length })}</p>
+    </CardContent></Card>
     <Card className="overflow-hidden"><CardContent className="grid items-center justify-center gap-6 p-6 md:grid-cols-[300px_300px]">
       <div className="flex justify-center">{overall.total ? <PieChart data={overallPieData} size={240} strokeWidth={40} /> : <div className="h-60 w-60 rounded-full border-[40px] border-slate-100 dark:border-slate-800" />}</div>
       <div><p className="text-5xl font-black text-slate-950 dark:text-white">{overall.rate}%</p>
