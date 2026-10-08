@@ -1,4 +1,13 @@
 export const studentsLabels: Record<string, string> = {
+  'Videos': 'Videolar',
+  'Before': 'Oldin',
+  'After': 'Keyin',
+  'Q&A video recorded when the student started.': "O'quvchi kelganda olingan savol-javob videosi.",
+  'The same questions after 5-6 months.': '5-6 oydan keyin xuddi shu savollar.',
+  'Paste a Loom, Google Drive or YouTube link. For Google Drive, share the file as "Anyone with the link".': "Loom, Google Drive yoki YouTube havolasini qo'ying. Google Drive uchun faylni \"Havolasi bor har kim\" deb ulashing.",
+  'No video yet': "Hali video yo'q",
+  'Videos saved': 'Videolar saqlandi',
+  "Couldn't save the videos": "Videolarni saqlab bo'lmadi",
   '+ Add a custom reason': "+ Boshqa sabab qo'shish",
   'Add Record': "Yozuv qo'shish",
   'Assignment, status, and coin readiness across the current scope.': "Joriy doira bo'yicha vazifa, holat va coin tayyorligi.",

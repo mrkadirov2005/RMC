@@ -311,6 +311,8 @@ const students = pgTable('students', {
   coins: integer('coins'),
   acquisitionSourceId: integer('acquisition_source_id'),
   acquisitionDetail: text('acquisition_detail'),
+  beforeVideoUrl: text('before_video_url'),
+  afterVideoUrl: text('after_video_url'),
   referredByTeacherId: integer('referred_by_teacher_id'),
   transferReasonId: integer('transfer_reason_id'),
   deleteReasonId: integer('delete_reason_id'),

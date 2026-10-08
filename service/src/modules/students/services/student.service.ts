@@ -141,7 +141,35 @@ const changePassword = async (id: number, old_password: string, new_password: st
   return { ok: true as const };
 };
 
+// Before/after videos are links to where the video is kept: Loom, Google Drive or YouTube.
+const VIDEO_HOSTS = ['loom.com', 'drive.google.com', 'youtube.com', 'youtu.be'];
+
+const normalizeVideoUrl = (value: unknown): string | null | 'invalid' => {
+  const text = String(value ?? '').trim();
+  if (!text) return null;
+  try {
+    const url = new URL(text);
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    if (url.protocol !== 'https:' || !VIDEO_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`))) return 'invalid';
+    return url.toString();
+  } catch {
+    return 'invalid';
+  }
+};
+
+const getVideos = (id: number, centerId?: number) => studentRepository.findVideos(id, centerId);
+
+const saveVideos = async (id: number, body: any, centerId?: number) => {
+  const before = normalizeVideoUrl(body?.before_video_url);
+  const after = normalizeVideoUrl(body?.after_video_url);
+  if (before === 'invalid' || after === 'invalid') return { error: 'invalid_url' };
+  return studentRepository.saveVideos(id, { before_video_url: before, after_video_url: after }, centerId);
+};
+
 module.exports = {
+  getVideos,
+  saveVideos,
+  normalizeVideoUrl,
   listAcquisitionSources: () => studentRepository.listAcquisitionSources(),
   createAcquisitionSource: (name: string) => studentRepository.createAcquisitionSource(name),
   listActionReasons: (reasonType: string) => studentRepository.listActionReasons(reasonType),

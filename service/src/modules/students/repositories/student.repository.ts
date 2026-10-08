@@ -837,7 +837,36 @@ const updatePasswordHash = async (id: number, password_hash: string) => {
     .where(and(eq(students.studentId, mainIdExpr(id)), isNull(students.deletedAt)));
 };
 
+// A child's before/after videos live on their main record, whichever group record is open.
+const findVideos = async (id: number, centerId?: number) => {
+  const mainId = await findMainId(db, id);
+  if (!mainId) return null;
+  const conditions: any[] = [eq(students.studentId, mainId), isNull(students.deletedAt)];
+  if (centerId) conditions.push(eq(students.centerId, centerId));
+  const rows = await db
+    .select({ student_id: students.studentId, before_video_url: students.beforeVideoUrl, after_video_url: students.afterVideoUrl })
+    .from(students)
+    .where(and(...conditions))
+    .limit(1);
+  return rows[0] || null;
+};
+
+const saveVideos = async (id: number, videos: { before_video_url: string | null; after_video_url: string | null }, centerId?: number) => {
+  const mainId = await findMainId(db, id);
+  if (!mainId) return null;
+  const conditions: any[] = [eq(students.studentId, mainId), isNull(students.deletedAt)];
+  if (centerId) conditions.push(eq(students.centerId, centerId));
+  const rows = await db
+    .update(students)
+    .set({ beforeVideoUrl: videos.before_video_url, afterVideoUrl: videos.after_video_url, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(...conditions))
+    .returning({ student_id: students.studentId, before_video_url: students.beforeVideoUrl, after_video_url: students.afterVideoUrl });
+  return rows[0] || null;
+};
+
 module.exports = {
+  findVideos,
+  saveVideos,
   listAcquisitionSources,
   createAcquisitionSource,
   listActionReasons,
