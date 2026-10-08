@@ -212,6 +212,85 @@ const findStaffName = async (table: 'owners' | 'superusers', id: number) => {
   return row ? (row.full_name || row.username || null) : null;
 };
 
-module.exports = { findAll, findById, insert, withTransaction, update, findByStudent, remove, purge, findReceipt, findStaffName };
+// Every active student's payments over a date range, with their group, teacher and subject, for
+// the dashboard's payments page: filtered and paged (100 per page) in SQL, plus totals for the
+// whole filtered list. Expected = the group's monthly fee x the months the range touches.
+const findStudentPaymentSummary = async (filters: {
+  centerId?: number;
+  from: string;
+  to: string;
+  months: number;
+  status?: 'paid' | 'partial' | 'unpaid';
+  teacherId?: number;
+  classId?: number;
+  subject?: string;
+  q?: string;
+  limit: number;
+  offset: number;
+}) => {
+  const params: any[] = [filters.from, filters.to, filters.months];
+  const where: string[] = ['s.deleted_at IS NULL', "LOWER(COALESCE(s.status::text, 'Active')) = 'active'"];
+  const add = (value: any) => { params.push(value); return `$${params.length}`; };
+  if (filters.centerId) where.push(`s.center_id = ${add(filters.centerId)}`);
+  if (filters.teacherId) where.push(`COALESCE(c.teacher_id, s.teacher_id) = ${add(filters.teacherId)}`);
+  if (filters.classId) where.push(`s.class_id = ${add(filters.classId)}`);
+  if (filters.subject) where.push(`EXISTS (SELECT 1 FROM subjects sub WHERE sub.class_id = s.class_id AND LOWER(sub.subject_name) = LOWER(${add(filters.subject)}))`);
+  if (filters.q) {
+    const term = add(`%${filters.q}%`);
+    where.push(`(CONCAT_WS(' ', s.first_name, s.last_name) ILIKE ${term} OR CONCAT_WS(' ', s.last_name, s.first_name) ILIKE ${term}
+      OR regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g') LIKE ${add(`%${String(filters.q).replace(/\D/g, '') || '~'}%`)})`);
+  }
+  const statusFilter = filters.status ? `WHERE state = ${add(filters.status)}` : '';
+  const limit = add(filters.limit);
+  const offset = add(filters.offset);
+
+  const result = await pool.query(
+    `WITH base AS (
+       SELECT s.student_id, s.first_name, s.last_name, s.phone, s.parent_phone, s.class_id,
+              c.class_name, COALESCE(c.payment_amount, 0)::numeric AS monthly_fee,
+              COALESCE(c.teacher_id, s.teacher_id) AS teacher_id,
+              NULLIF(trim(concat_ws(' ', t.first_name, t.last_name)), '') AS teacher_name,
+              (SELECT string_agg(DISTINCT sub.subject_name, ', ') FROM subjects sub WHERE sub.class_id = s.class_id) AS subject,
+              COALESCE(p.paid, 0)::numeric AS paid_amount, COALESCE(p.payments_count, 0)::int AS payments_count, p.last_payment_date
+       FROM students s
+       LEFT JOIN classes c ON c.class_id = s.class_id
+       LEFT JOIN teachers t ON t.teacher_id = COALESCE(c.teacher_id, s.teacher_id)
+       LEFT JOIN LATERAL (
+         SELECT SUM(pay.amount) AS paid, COUNT(*) AS payments_count, MAX(pay.payment_date)::text AS last_payment_date
+         FROM payments pay
+         WHERE pay.student_id = s.student_id AND pay.deleted_at IS NULL
+           AND LOWER(COALESCE(pay.payment_status::text, '')) IN ('completed', 'paid')
+           AND pay.payment_date >= $1::date AND pay.payment_date <= $2::date
+       ) p ON true
+       WHERE ${where.join(' AND ')}
+     ),
+     scored AS (
+       SELECT *, monthly_fee * $3::int AS expected,
+              CASE WHEN paid_amount <= 0 THEN 'unpaid'
+                   WHEN monthly_fee * $3::int > 0 AND paid_amount + 0.01 < monthly_fee * $3::int THEN 'partial'
+                   ELSE 'paid' END AS state
+       FROM base
+     ),
+     totals AS (
+       SELECT COUNT(*)::int AS students,
+              COUNT(*) FILTER (WHERE state = 'paid')::int AS paid_students,
+              COUNT(*) FILTER (WHERE state = 'partial')::int AS partial_students,
+              COUNT(*) FILTER (WHERE state = 'unpaid')::int AS unpaid_students,
+              COALESCE(SUM(paid_amount), 0)::numeric AS collected,
+              COALESCE(SUM(GREATEST(expected - paid_amount, 0)), 0)::numeric AS remaining
+       FROM scored
+     ),
+     filtered AS (SELECT * FROM scored ${statusFilter})
+     SELECT (SELECT row_to_json(totals) FROM totals) AS totals,
+            (SELECT COUNT(*)::int FROM filtered) AS total,
+            COALESCE((SELECT json_agg(page) FROM (
+              SELECT * FROM filtered ORDER BY last_name NULLS LAST, first_name, student_id LIMIT ${limit} OFFSET ${offset}
+            ) page), '[]'::json) AS rows`,
+    params
+  );
+  return result.rows[0];
+};
+
+module.exports = { findStudentPaymentSummary, findAll, findById, insert, withTransaction, update, findByStudent, remove, purge, findReceipt, findStaffName };
 
 export {};

@@ -1,4 +1,11 @@
 export const paymentsLabels: Record<string, string> = {
+  'Search by name or phone': "Ism yoki telefon bo'yicha qidirish",
+  'Last payment': "Oxirgi to'lov",
+  'No students match these filters.': "Bu filtrlarga mos o'quvchi topilmadi.",
+  '{first}–{last} of {total}': "{total} tadan {first}–{last}",
+  'Page {page} of {pages}': "{page}/{pages} sahifa",
+  'Previous page': "Oldingi sahifa",
+  'Next page': "Keyingi sahifa",
   '% paid': "% to'langan",
   '% unpaid': "% to'lanmagan",
   'Checking active discount...': 'Faol chegirma tekshirilmoqda...',

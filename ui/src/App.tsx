@@ -21,6 +21,7 @@ const SharedTestPage = lazy(() => import('./features/public/SharedTestPage'));
 const ConsolidationsOverviewPage = lazy(() => import('./features/crm/consolidations/ConsolidationsOverviewPage'));
 const ConsolidationSessionPage = lazy(() => import('./features/student/ConsolidationSessionPage'));
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
+const DashboardPaymentsPage = lazy(() => import('./features/crm/dashboard/DashboardPaymentsPage'));
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
 const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
@@ -357,6 +358,19 @@ function AppContent() {
             </ProtectedRoute>
           }
 
+        />
+
+        <Route
+          path="/dashboard/payments"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} excludedRoles={['owner']} requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <DashboardPaymentsPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
         />
 
         <Route

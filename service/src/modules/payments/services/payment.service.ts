@@ -210,7 +210,65 @@ const deletePayment = (id: number, centerId?: number, teacherId?: number) => pay
 
 const purgePayment = (id: number, centerId?: number, teacherId?: number) => paymentRepository.purge(id, centerId, teacherId);
 
+// Dashboard payments page: every active student with what they paid in a date range (this month
+// by default), 100 per page.
+const PAGE_SIZE = 100;
+const isDay = (value: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
+const centerToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const monthsTouched = (from: string, to: string) =>
+  (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 + (Number(to.slice(5, 7)) - Number(from.slice(5, 7))) + 1;
+
+const listStudentPaymentSummary = async (query: any, centerId?: number) => {
+  const today = centerToday();
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const lastDay = new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)), 0)).getUTCDate();
+  let from = isDay(query.from) ? String(query.from) : monthStart;
+  let to = isDay(query.to) ? String(query.to) : `${today.slice(0, 7)}-${String(lastDay).padStart(2, '0')}`;
+  if (from > to) [from, to] = [to, from];
+  const months = Math.max(1, Math.min(36, monthsTouched(from, to)));
+  const page = Math.max(1, Number(query.page) || 1);
+  const status = ['paid', 'partial', 'unpaid'].includes(String(query.status)) ? String(query.status) as 'paid' | 'partial' | 'unpaid' : undefined;
+
+  const row = await paymentRepository.findStudentPaymentSummary({
+    centerId,
+    from,
+    to,
+    months,
+    status,
+    teacherId: Number(query.teacher_id) || undefined,
+    classId: Number(query.class_id) || undefined,
+    subject: String(query.subject || '').trim() || undefined,
+    q: String(query.q || '').trim().slice(0, 100) || undefined,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  });
+  const totals = row?.totals || {};
+  const num = (value: unknown) => Number(value || 0);
+  return {
+    period: { from, to, months },
+    page,
+    limit: PAGE_SIZE,
+    total: num(row?.total),
+    totals: {
+      students: num(totals.students),
+      paid_students: num(totals.paid_students),
+      partial_students: num(totals.partial_students),
+      unpaid_students: num(totals.unpaid_students),
+      collected: num(totals.collected),
+      remaining: num(totals.remaining),
+    },
+    rows: (row?.rows || []).map((item: any) => ({
+      ...item,
+      monthly_fee: num(item.monthly_fee),
+      paid_amount: num(item.paid_amount),
+      expected: num(item.expected),
+      remaining: Math.max(0, num(item.expected) - num(item.paid_amount)),
+    })),
+  };
+};
+
 module.exports = {
+  listStudentPaymentSummary,
   resolveCashierName,
   getReceipt,
   listPayments,

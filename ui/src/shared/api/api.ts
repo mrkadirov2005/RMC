@@ -334,6 +334,8 @@ export const classAPI = {
 
 
 export const paymentAPI = {
+  /** Every active student's payments over a date range (this month by default), 100 per page. */
+  getStudentsSummary: (params: Record<string, unknown>) => apiClient.get('/payments/students-summary', { params }),
   getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/payments', {
       params,
