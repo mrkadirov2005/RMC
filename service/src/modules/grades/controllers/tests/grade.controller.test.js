@@ -1,3 +1,4 @@
+jest.mock('../../../telegram/services/telegram.service', () => ({ enqueueLessonResults: jest.fn(() => Promise.resolve(0)) }));
 jest.mock('../../services/grade.service', () => ({
   listGrades: jest.fn(),
   getGrade: jest.fn(),
@@ -489,6 +490,19 @@ describe('grades controller', () => {
       await gradeController.saveSessionWorkflow({ body: { records: [] }, user: {} }, res);
 
       expect(res.json).toHaveBeenCalledWith({ saved: 4 });
+    });
+
+    it('queues the lesson results for Telegram, and a Telegram failure does not fail the save', async () => {
+      const telegramService = require('../../../telegram/services/telegram.service');
+      telegramService.enqueueLessonResults.mockRejectedValueOnce(new Error('bot down'));
+      const res = createResponse();
+      gradeService.saveSessionWorkflow.mockResolvedValue({ saved: 2 });
+
+      await gradeController.saveSessionWorkflow({ body: { session_id: 77, records: [] }, user: {} }, res);
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(telegramService.enqueueLessonResults).toHaveBeenCalledWith(77);
+      expect(res.json).toHaveBeenCalledWith({ saved: 2 });
     });
 
     it('reports a service failure as a 500', async () => {

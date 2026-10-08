@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TelegramInboxPanel } from '../telegramBot/TelegramInboxPanel';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { telegramRegistrationAPI, classAPI, teacherAPI } from './api';
@@ -185,6 +186,9 @@ const TelegramRegistrationsPage = () => {
           <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       )}
+
+      {/* Suggestions and complaints to the director, and messages to teachers, from the bot. */}
+      <TelegramInboxPanel />
 
       <Card className="border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
         <CardContent className="space-y-4 p-4">

@@ -11,6 +11,7 @@ import { attendanceAPI } from '../api';
 import { LessonPickerDialog } from '../../crm/classes/components/LessonPickerDialog';
 import { buildSessionWorkflowPath, defaultLessonActions } from '../../crm/classes/lessonStart';
 import { AbsenceAlertsPanel } from '../../crm/absenceAlerts/AbsenceAlertsPanel';
+import { TelegramInboxPanel } from '../../crm/telegramBot/TelegramInboxPanel';
 
 type SectionKey = 'students' | 'attendance' | 'points' | 'payments';
 interface OverallStatisticsTabProps {
@@ -409,6 +410,8 @@ const OverallStatisticsTab = ({
     <div className="space-y-4">
     {/* The teacher's own groups only; the admin closes each alert. */}
     <AbsenceAlertsPanel />
+    {/* Messages parents and students sent this teacher from the Telegram bot. */}
+    <TelegramInboxPanel title={t('Messages from parents')} hideWhenEmpty />
     <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-white/10 dark:bg-slate-950/20">
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3 dark:border-white/10">
         {(

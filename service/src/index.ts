@@ -56,6 +56,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const parentRoutes = require('./routes/parentRoutes');
   const reportRoutes = require('./routes/reportRoutes');
   const absenceAlertRoutes = require('./routes/absenceAlertRoutes');
+  const telegramBotRoutes = require('./routes/telegramBotRoutes');
   const portalRoutes = require('./routes/portalRoutes');
   const roomsRoutes = require('./routes/roomsRoutes');
   const roomSlotsRoutes = require('./routes/roomSlotsRoutes');
@@ -157,6 +158,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/grades', requireAuth, requireRole('superuser', 'teacher'), gradeRoutes);
   app.use('/api/attendance', requireAuth, requireRole('superuser', 'teacher'), attendanceRoutes);
   app.use('/api/absence-alerts', requireAuth, requireRole('superuser', 'teacher'), absenceAlertRoutes);
+  app.use('/api/telegram-bot', requireAuth, requireRole('superuser', 'teacher'), telegramBotRoutes);
   app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
   app.use('/api/teacher-tasks', requireAuth, requireRole('superuser', 'teacher'), teacherTaskRoutes);
   app.use('/api/salaries', requireAuth, requireRole('superuser', 'teacher'), salaryRoutes);

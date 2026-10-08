@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -19,21 +20,43 @@ const pool = new Pool({
 
 const apiBase = `https://api.telegram.org/bot${token}`;
 const userState = new Map();
+// Signed-in chats, cached from telegram_links so a restart does not sign anyone out.
 const sessions = new Map();
 
+// Users must join the center's main channel before using the bot. Set it as @username (the bot
+// has to be an admin of the channel to check membership). Unset: no check.
+const REQUIRED_CHANNEL = String(process.env.TELEGRAM_REQUIRED_CHANNEL || '').trim();
+const CHANNEL_URL = REQUIRED_CHANNEL.startsWith('@') ? `https://t.me/${REQUIRED_CHANNEL.slice(1)}` : String(process.env.TELEGRAM_CHANNEL_URL || '');
+const channelMembers = new Map();
+const CHANNEL_CHECK_TTL_MS = 10 * 60 * 1000;
+const OUTBOX_INTERVAL_MS = 5000;
+
 const MAIN_KEYBOARD = {
-  keyboard: [[{ text: '🔐 Kirish' }, { text: "📝 Ro'yhatdan o'tish" }]],
+  keyboard: [
+    [{ text: "🔐 O'quvchi sifatida kirish" }],
+    [{ text: "👨‍👩‍👧 Ota-ona sifatida ulanish" }],
+    [{ text: "📝 Ro'yhatdan o'tish" }],
+  ],
   resize_keyboard: true,
 };
 
 const AUTH_KEYBOARD = {
   keyboard: [
+    [{ text: '📊 Ballarim' }, { text: '🪙 Coinlarim' }],
     [{ text: '📚 Darslar' }, { text: '🕘 Oxirgi dars' }],
-    [{ text: '📝 Vazifalar' }, { text: "🏆 O'rin" }],
-    [{ text: "💳 To'lovlar" }, { text: '📊 Natijalar' }],
-    [{ text: '🚪 Chiqish' }],
+    [{ text: "🏆 O'rin" }, { text: "💳 To'lovlar" }],
+    [{ text: '📝 Vazifalar' }, { text: "🎁 Sovg'alar" }],
+    [{ text: '✉️ Taklif va shikoyat' }, { text: '✍️ Ustozga yozish' }],
+    [{ text: '👤 Markaz rahbari' }, { text: '📜 Qonun-qoidalar' }],
+    [{ text: '👥 Farzandni tanlash' }, { text: '🚪 Chiqish' }],
   ],
   resize_keyboard: true,
+};
+
+const CONTACT_KEYBOARD = {
+  keyboard: [[{ text: '📱 Telefon raqamni yuborish', request_contact: true }], [{ text: '⬅️ Orqaga' }]],
+  resize_keyboard: true,
+  one_time_keyboard: true,
 };
 
 const TASKS_PAGE_SIZE = 5;
@@ -249,18 +272,71 @@ async function isPhoneTaken(phone) {
   return result.rowCount > 0;
 }
 
+const STUDENT_FIELDS = 's.student_id, s.center_id, s.enrollment_number, s.first_name, s.last_name, s.username, s.class_id, s.teacher_id, s.coins';
+
+// The platform stores bcrypt hashes; very old accounts may still have a bare SHA-256 digest.
+function passwordMatches(password, storedHash) {
+  const hash = String(storedHash || '');
+  if (!hash) return false;
+  if (hash.startsWith('$2')) return bcrypt.compareSync(password, hash);
+  return hash === hashPassword(password);
+}
+
 async function authenticate(username, password) {
   const result = await pool.query(
-    `SELECT s.student_id, s.center_id, s.enrollment_number, s.first_name, s.last_name, s.username, s.class_id, s.teacher_id, s.coins
+    `SELECT ${STUDENT_FIELDS}, s.password_hash
      FROM students s
      WHERE s.username = $1
-       AND s.password_hash = $2
+       AND s.main_student_id IS NULL
        AND s.status = 'Active'
        AND s.deleted_at IS NULL
      LIMIT 1`,
-    [username, hashPassword(password)]
+    [username]
   );
-  return result.rows[0] || null;
+  const row = result.rows[0];
+  if (!row || !passwordMatches(password, row.password_hash)) return null;
+  delete row.password_hash;
+  return row;
+}
+
+// Remembers that this chat follows this child (their main record), as the student or a parent.
+async function saveLink(chatId, from, student, role, phone = null) {
+  await pool.query(
+    `INSERT INTO telegram_links (center_id, student_id, telegram_chat_id, telegram_user_id, role, phone, active)
+     VALUES ($1, $2, $3, $4, $5, $6, true)
+     ON CONFLICT (telegram_chat_id, student_id)
+     DO UPDATE SET active = true, role = EXCLUDED.role, phone = COALESCE(EXCLUDED.phone, telegram_links.phone), updated_at = CURRENT_TIMESTAMP`,
+    [student.center_id || null, student.student_id, chatId, from?.id || null, role, phone]
+  );
+}
+
+async function findLinkedStudents(chatId) {
+  const result = await pool.query(
+    `SELECT ${STUDENT_FIELDS}, l.role
+     FROM telegram_links l
+     JOIN students s ON s.student_id = l.student_id AND s.deleted_at IS NULL
+     WHERE l.telegram_chat_id = $1 AND l.active
+     ORDER BY l.updated_at DESC`,
+    [chatId]
+  );
+  return result.rows;
+}
+
+// The signed-in child for this chat: from the cache, else from the saved links (after a restart).
+async function getSession(chatId) {
+  if (sessions.has(chatId)) return sessions.get(chatId);
+  const linked = await findLinkedStudents(chatId);
+  if (linked.length === 0) return null;
+  const student = linked[0];
+  const session = { ...student, selectedClassId: student.class_id, selectedStudentId: student.student_id, childCount: linked.length };
+  sessions.set(chatId, session);
+  return session;
+}
+
+async function signOut(chatId) {
+  sessions.delete(chatId);
+  userState.delete(chatId);
+  await pool.query('UPDATE telegram_links SET active = false, updated_at = CURRENT_TIMESTAMP WHERE telegram_chat_id = $1', [chatId]);
 }
 
 async function getStudentClasses(session) {
@@ -824,14 +900,16 @@ async function handleLoginStep(message, state) {
     return;
   }
 
-  sessions.set(chatId, { ...student, selectedClassId: student.class_id, selectedStudentId: student.student_id });
+  await saveLink(chatId, message.from, student, 'student');
+  sessions.delete(chatId);
+  await getSession(chatId);
   await sendMessage(chatId, [`👋 <b>Xush kelibsiz</b>`, `👤 ${student.first_name} ${student.last_name}`, '', "Kerakli bo'limni tanlang."].join('\n'), {
     reply_markup: AUTH_KEYBOARD,
   });
 }
 
 async function showClasses(chatId) {
-  const session = sessions.get(chatId);
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -847,7 +925,7 @@ async function showClasses(chatId) {
 }
 
 async function showLastSession(chatId) {
-  const session = sessions.get(chatId);
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -876,7 +954,7 @@ async function showLastSession(chatId) {
 }
 
 async function showTasks(chatId) {
-  const session = sessions.get(chatId);
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -899,7 +977,7 @@ async function showTasks(chatId) {
 }
 
 async function showRankMenu(chatId) {
-  const session = sessions.get(chatId);
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -908,7 +986,7 @@ async function showRankMenu(chatId) {
 }
 
 async function showRank(chatId, scope) {
-  const session = sessions.get(chatId);
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -932,7 +1010,7 @@ async function showRank(chatId, scope) {
 }
 
 async function showResults(chatId, page = 1) {
-  const session = sessions.get(chatId);
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -944,7 +1022,7 @@ async function showResults(chatId, page = 1) {
 }
 
 async function showPayments(chatId, page = 1) {
-  const session = sessions.get(chatId);
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -955,16 +1033,353 @@ async function showPayments(chatId, page = 1) {
   await sendMessage(chatId, paymentsText(payments), { reply_markup: keyboard || AUTH_KEYBOARD });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Channel membership: the bot works only for members of the center's main channel.
+// ---------------------------------------------------------------------------------------------
+
+function joinChannelKeyboard() {
+  const rows = [];
+  if (CHANNEL_URL) rows.push([{ text: "📢 Kanalga a'zo bo'lish", url: CHANNEL_URL }]);
+  rows.push([{ text: "✅ A'zo bo'ldim", callback_data: 'check_sub' }]);
+  return { inline_keyboard: rows };
+}
+
+async function isChannelMember(userId, { fresh = false } = {}) {
+  if (!REQUIRED_CHANNEL || !userId) return true;
+  const cached = channelMembers.get(userId);
+  if (!fresh && cached && Date.now() - cached.at < CHANNEL_CHECK_TTL_MS) return cached.ok;
+  try {
+    const member = await telegram('getChatMember', { chat_id: REQUIRED_CHANNEL, user_id: userId });
+    const ok = ['creator', 'administrator', 'member'].includes(member.status) || (member.status === 'restricted' && member.is_member);
+    channelMembers.set(userId, { ok, at: Date.now() });
+    return ok;
+  } catch (error) {
+    // The bot is not an admin of the channel, or the channel name is wrong: do not lock everyone
+    // out because of a setup mistake.
+    console.error('Channel check failed:', error.message || error);
+    return true;
+  }
+}
+
+async function askToJoinChannel(chatId) {
+  await sendMessage(chatId, [
+    '📢 <b>Avval kanalimizga a\'zo bo\'ling</b>',
+    '',
+    `Botdan foydalanish uchun markazimizning asosiy kanaliga a'zo bo'ling${REQUIRED_CHANNEL ? ` (${REQUIRED_CHANNEL})` : ''}, so'ng "✅ A'zo bo'ldim" tugmasini bosing.`,
+  ].join('\n'), { reply_markup: joinChannelKeyboard() });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Parents: link by sharing the phone number saved as the child's parent phone.
+// ---------------------------------------------------------------------------------------------
+
+const lastNineDigits = (value) => String(value || '').replace(/\D/g, '').slice(-9);
+
+async function startParentLink(chatId) {
+  userState.set(chatId, { flow: 'parent_contact' });
+  await sendMessage(chatId, [
+    "👨‍👩‍👧 <b>Ota-ona sifatida ulanish</b>",
+    '',
+    "Pastdagi tugma orqali telefon raqamingizni yuboring. Raqamingiz farzandingizning ma'lumotlarida ota-ona raqami sifatida saqlangan bo'lishi kerak.",
+  ].join('\n'), { reply_markup: CONTACT_KEYBOARD });
+}
+
+async function handleParentContact(message) {
+  const chatId = message.chat.id;
+  const contact = message.contact;
+  if (!contact || (contact.user_id && message.from && contact.user_id !== message.from.id)) {
+    await sendMessage(chatId, "⚠️ Iltimos, o'zingizning raqamingizni tugma orqali yuboring.", { reply_markup: CONTACT_KEYBOARD });
+    return;
+  }
+  const digits = lastNineDigits(contact.phone_number);
+  if (digits.length < 9) {
+    await sendMessage(chatId, "⚠️ Telefon raqam noto'g'ri.", { reply_markup: CONTACT_KEYBOARD });
+    return;
+  }
+  // Children whose parent phone (or, if a parent phone was never given, own phone) is this number.
+  const result = await pool.query(
+    `SELECT ${STUDENT_FIELDS},
+            RIGHT(regexp_replace(COALESCE(s.parent_phone, ''), '\\D', '', 'g'), 9) = $1 AS is_parent_phone
+     FROM students s
+     WHERE s.deleted_at IS NULL AND s.status = 'Active' AND s.main_student_id IS NULL
+       AND (RIGHT(regexp_replace(COALESCE(s.parent_phone, ''), '\\D', '', 'g'), 9) = $1
+            OR RIGHT(regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g'), 9) = $1)`,
+    [digits]
+  );
+  userState.delete(chatId);
+  if (result.rows.length === 0) {
+    await sendMessage(chatId, [
+      "❌ <b>Raqam topilmadi</b>",
+      '',
+      "Bu raqam hech bir o'quvchining ota-ona raqami sifatida saqlanmagan. Markaz administratoriga murojaat qiling — raqamingizni farzandingiz ma'lumotlariga qo'shib beradi.",
+    ].join('\n'), { reply_markup: MAIN_KEYBOARD });
+    return;
+  }
+  for (const row of result.rows) {
+    await saveLink(chatId, message.from, row, row.is_parent_phone ? 'parent' : 'student', contact.phone_number);
+  }
+  sessions.delete(chatId);
+  await getSession(chatId);
+  const names = result.rows.map((row) => `• ${row.first_name} ${row.last_name}`).join('\n');
+  await sendMessage(chatId, [
+    "✅ <b>Ulandingiz</b>",
+    '',
+    names,
+    '',
+    "Endi har bir darsdan keyin natijalar shu yerga avtomatik keladi.",
+  ].join('\n'), { reply_markup: AUTH_KEYBOARD });
+}
+
+async function showChildPicker(chatId) {
+  const linked = await findLinkedStudents(chatId);
+  if (linked.length <= 1) {
+    await sendMessage(chatId, "👤 Sizga bitta o'quvchi biriktirilgan.", { reply_markup: AUTH_KEYBOARD });
+    return;
+  }
+  await sendMessage(chatId, "👥 Qaysi farzandingiz ma'lumotlarini ko'rmoqchisiz?", {
+    reply_markup: { inline_keyboard: linked.map((row) => [{ text: `${row.first_name} ${row.last_name}`, callback_data: `child:${row.student_id}` }]) },
+  });
+}
+
+async function selectChild(chatId, studentId) {
+  const linked = await findLinkedStudents(chatId);
+  const child = linked.find((row) => Number(row.student_id) === Number(studentId));
+  if (!child) return;
+  sessions.set(chatId, { ...child, selectedClassId: child.class_id, selectedStudentId: child.student_id, childCount: linked.length });
+  await sendMessage(chatId, `👤 Tanlandi: <b>${child.first_name} ${child.last_name}</b>`, { reply_markup: AUTH_KEYBOARD });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Coins, prizes, and what the center writes about itself (Settings → bot content).
+// ---------------------------------------------------------------------------------------------
+
+async function getBotContent(centerId) {
+  const result = await pool.query(
+    `SELECT setting_value FROM app_settings
+     WHERE setting_key = 'bot_content' AND (center_id = $1 OR center_id IS NULL)
+     ORDER BY center_id NULLS LAST LIMIT 1`,
+    [centerId || null]
+  );
+  const value = result.rows[0]?.setting_value || {};
+  return {
+    about: String(value.about_director || '').trim(),
+    rules: String(value.rules || '').trim(),
+    prizes: Array.isArray(value.prizes) ? value.prizes : [],
+  };
+}
+
+async function coinBalance(studentId) {
+  const result = await pool.query(
+    `SELECT COALESCE(SUM(coins), 0)::int AS balance FROM students
+     WHERE deleted_at IS NULL AND COALESCE(main_student_id, student_id) = $1`,
+    [studentId]
+  );
+  return Number(result.rows[0]?.balance || 0);
+}
+
+async function showCoins(chatId) {
+  const session = await getSession(chatId);
+  if (!session) return askToSignIn(chatId);
+  const [balance, history] = await Promise.all([
+    coinBalance(session.student_id),
+    pool.query(
+      `SELECT t.delta, t.reason, t.created_at FROM student_coin_transactions t
+       JOIN students s ON s.student_id = t.student_id
+       WHERE COALESCE(s.main_student_id, s.student_id) = $1
+       ORDER BY t.created_at DESC NULLS LAST, t.transaction_id DESC LIMIT 10`,
+      [session.student_id]
+    ),
+  ]);
+  const lines = [`🪙 <b>Coinlarim</b>`, `👤 ${session.first_name} ${session.last_name}`, '', `Jami: <b>${balance}</b> coin`];
+  if (history.rows.length) {
+    lines.push('', 'Oxirgi o\'zgarishlar:');
+    history.rows.forEach((row) => {
+      const delta = Number(row.delta || 0);
+      lines.push(`${delta >= 0 ? '➕' : '➖'} ${delta > 0 ? '+' : ''}${delta} · ${formatDate(row.created_at)}`);
+    });
+  }
+  await sendMessage(chatId, lines.join('\n'), { reply_markup: AUTH_KEYBOARD });
+}
+
+async function showPrizes(chatId) {
+  const session = await getSession(chatId);
+  if (!session) return askToSignIn(chatId);
+  const [content, balance] = await Promise.all([getBotContent(session.center_id), coinBalance(session.student_id)]);
+  if (content.prizes.length === 0) {
+    await sendMessage(chatId, "🎁 Sovg'alar ro'yxati hali kiritilmagan.", { reply_markup: AUTH_KEYBOARD });
+    return;
+  }
+  const lines = ["🎁 <b>Sovg'alar va narxlari</b>", '', `Sizda: <b>${balance}</b> coin`, ''];
+  content.prizes
+    .slice()
+    .sort((a, b) => Number(a.coins) - Number(b.coins))
+    .forEach((prize) => lines.push(`${balance >= Number(prize.coins) ? '✅' : '▫️'} ${prize.name} — ${prize.coins} coin`));
+  await sendMessage(chatId, lines.join('\n'), { reply_markup: AUTH_KEYBOARD });
+}
+
+async function showCenterText(chatId, kind) {
+  const session = await getSession(chatId);
+  const content = await getBotContent(session?.center_id);
+  const text = kind === 'about' ? content.about : content.rules;
+  const title = kind === 'about' ? '👤 <b>Markaz rahbari haqida</b>' : '📜 <b>Markaz qonun-qoidalari</b>';
+  await sendMessage(chatId, text ? `${title}\n\n${text.replace(/[<>&]/g, '')}` : `${title}\n\nMa'lumot hali kiritilmagan.`, {
+    reply_markup: session ? AUTH_KEYBOARD : MAIN_KEYBOARD,
+  });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Suggestions and complaints to the director, and messages to the child's teacher.
+// ---------------------------------------------------------------------------------------------
+
+async function askToSignIn(chatId) {
+  await sendMessage(chatId, '🔐 Avval kiring yoki ota-ona sifatida ulaning.', { reply_markup: MAIN_KEYBOARD });
+}
+
+async function startFeedback(chatId) {
+  const session = await getSession(chatId);
+  if (!session) return askToSignIn(chatId);
+  await sendMessage(chatId, "✉️ <b>Markaz rahbariga</b>\n\nNimani yubormoqchisiz?", {
+    reply_markup: { inline_keyboard: [[{ text: '💡 Taklif', callback_data: 'fb:suggestion' }, { text: '⚠️ Shikoyat', callback_data: 'fb:complaint' }]] },
+  });
+}
+
+async function startTeacherMessage(chatId) {
+  const session = await getSession(chatId);
+  if (!session) return askToSignIn(chatId);
+  const classes = (await getStudentClasses(session)).filter((row) => !row.deleted_at);
+  if (classes.length === 0) {
+    await sendMessage(chatId, '📭 Guruh topilmadi.', { reply_markup: AUTH_KEYBOARD });
+    return;
+  }
+  await sendMessage(chatId, '✍️ <b>Ustozga yozish</b>\n\nQaysi guruh ustoziga?', {
+    reply_markup: {
+      inline_keyboard: classes.map((row) => [{
+        text: `${row.class_name}${row.teacher_first_name ? ` — ${row.teacher_first_name} ${row.teacher_last_name || ''}` : ''}`,
+        callback_data: `tm:${row.class_id}`,
+      }]),
+    },
+  });
+}
+
+async function askForMessageText(chatId, state, prompt) {
+  userState.set(chatId, state);
+  await sendMessage(chatId, prompt, { reply_markup: { keyboard: [[{ text: '⬅️ Orqaga' }]], resize_keyboard: true } });
+}
+
+async function saveInboxMessage(message, state) {
+  const chatId = message.chat.id;
+  const text = cleanText(message.text).slice(0, 1500);
+  if (!text) return;
+  const session = await getSession(chatId);
+  userState.delete(chatId);
+  if (!session) return askToSignIn(chatId);
+  let teacherId = null;
+  if (state.kind === 'to_teacher') {
+    const result = await pool.query('SELECT teacher_id FROM classes WHERE class_id = $1 AND deleted_at IS NULL', [state.classId]);
+    teacherId = result.rows[0]?.teacher_id || null;
+  }
+  const senderName = [message.from?.first_name, message.from?.last_name].filter(Boolean).join(' ') || message.from?.username || null;
+  await pool.query(
+    `INSERT INTO telegram_inbox (center_id, student_id, teacher_id, telegram_chat_id, sender_role, sender_name, kind, text)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [session.center_id || null, session.student_id, teacherId, chatId, session.role || 'student', senderName, state.kind, text]
+  );
+  const done = state.kind === 'to_teacher' ? '✅ Xabaringiz ustozga yuborildi.' : '✅ Rahmat! Xabaringiz markaz rahbariga yuborildi.';
+  await sendMessage(chatId, done, { reply_markup: AUTH_KEYBOARD });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Outbox: lesson results, teacher feedback and payment reminders queued by the platform.
+// ---------------------------------------------------------------------------------------------
+
+const isGoneChat = (error) => /blocked by the user|chat not found|user is deactivated|bot was kicked/i.test(String(error?.message || error));
+
+async function deliverOutbox() {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const pending = await client.query(
+      `SELECT message_id, student_id, text FROM telegram_outbox
+       WHERE sent_at IS NULL ORDER BY message_id LIMIT 30 FOR UPDATE SKIP LOCKED`
+    );
+    for (const message of pending.rows) {
+      const chats = await client.query(
+        'SELECT DISTINCT telegram_chat_id FROM telegram_links WHERE student_id = $1 AND active',
+        [message.student_id]
+      );
+      let delivered = 0;
+      let lastError = null;
+      for (const row of chats.rows) {
+        try {
+          await sendMessage(row.telegram_chat_id, message.text);
+          delivered += 1;
+        } catch (error) {
+          lastError = String(error.message || error).slice(0, 300);
+          if (isGoneChat(error)) {
+            await client.query('UPDATE telegram_links SET active = false, updated_at = CURRENT_TIMESTAMP WHERE telegram_chat_id = $1', [row.telegram_chat_id]);
+          }
+        }
+      }
+      await client.query(
+        'UPDATE telegram_outbox SET sent_at = CURRENT_TIMESTAMP, delivered_count = $2, error = $3 WHERE message_id = $1',
+        [message.message_id, delivered, delivered === 0 ? lastError || 'no linked chat' : null]
+      );
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => null);
+    console.error('Outbox delivery failed:', error.message || error);
+  } finally {
+    client.release();
+  }
+}
+
+function startOutboxLoop() {
+  let running = false;
+  setInterval(async () => {
+    if (running) return;
+    running = true;
+    try {
+      await deliverOutbox();
+    } finally {
+      running = false;
+    }
+  }, OUTBOX_INTERVAL_MS);
+}
+
 async function handleMessage(message) {
   const chatId = message.chat.id;
   const text = cleanText(message.text);
   const state = userState.get(chatId);
 
+  // Members of the center's channel only.
+  if (!(await isChannelMember(message.from?.id))) {
+    await askToJoinChannel(chatId);
+    return;
+  }
+
   if (text === '/start') {
     userState.delete(chatId);
+    const session = await getSession(chatId);
     await sendMessage(chatId, ['👋 <b>Assalomu alaykum</b>', '', 'Kerakli bo‘limni tanlang:'].join('\n'), {
-      reply_markup: MAIN_KEYBOARD,
+      reply_markup: session ? AUTH_KEYBOARD : MAIN_KEYBOARD,
     });
+    return;
+  }
+
+  if (text === '⬅️ Orqaga') {
+    userState.delete(chatId);
+    await sendMessage(chatId, '👇 Kerakli bo‘limni tanlang.', { reply_markup: (await getSession(chatId)) ? AUTH_KEYBOARD : MAIN_KEYBOARD });
+    return;
+  }
+
+  if (message.contact || state?.flow === 'parent_contact') {
+    await handleParentContact(message);
+    return;
+  }
+
+  if (state?.flow === 'inbox') {
+    await saveInboxMessage(message, state);
     return;
   }
 
@@ -990,8 +1405,53 @@ async function handleMessage(message) {
     return;
   }
 
-  if (text === 'Kirish' || text === '🔐 Kirish') {
+  if (text === 'Kirish' || text === '🔐 Kirish' || text === "🔐 O'quvchi sifatida kirish") {
     await startLogin(chatId);
+    return;
+  }
+
+  if (text === "👨‍👩‍👧 Ota-ona sifatida ulanish") {
+    await startParentLink(chatId);
+    return;
+  }
+
+  if (text === '📊 Ballarim') {
+    await showResults(chatId);
+    return;
+  }
+
+  if (text === '🪙 Coinlarim') {
+    await showCoins(chatId);
+    return;
+  }
+
+  if (text === "🎁 Sovg'alar") {
+    await showPrizes(chatId);
+    return;
+  }
+
+  if (text === '✉️ Taklif va shikoyat') {
+    await startFeedback(chatId);
+    return;
+  }
+
+  if (text === '✍️ Ustozga yozish') {
+    await startTeacherMessage(chatId);
+    return;
+  }
+
+  if (text === '👤 Markaz rahbari') {
+    await showCenterText(chatId, 'about');
+    return;
+  }
+
+  if (text === '📜 Qonun-qoidalar') {
+    await showCenterText(chatId, 'rules');
+    return;
+  }
+
+  if (text === '👥 Farzandni tanlash') {
+    await showChildPicker(chatId);
     return;
   }
 
@@ -1026,21 +1486,50 @@ async function handleMessage(message) {
   }
 
   if (text === 'Chiqish' || text === '🚪 Chiqish') {
-    sessions.delete(chatId);
-    userState.delete(chatId);
+    await signOut(chatId);
     await sendMessage(chatId, '🚪 Tizimdan chiqdingiz.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
   await sendMessage(chatId, '👇 Iltimos, menyudan tanlang.', {
-    reply_markup: sessions.has(chatId) ? AUTH_KEYBOARD : MAIN_KEYBOARD,
+    reply_markup: (await getSession(chatId)) ? AUTH_KEYBOARD : MAIN_KEYBOARD,
   });
 }
 
 async function handleCallback(callbackQuery) {
   await answerCallbackQuery(callbackQuery.id);
   const chatId = callbackQuery.message.chat.id;
-  const session = sessions.get(chatId);
+  const data = String(callbackQuery.data || '');
+
+  if (data === 'check_sub') {
+    if (await isChannelMember(callbackQuery.from?.id, { fresh: true })) {
+      await sendMessage(chatId, '✅ Rahmat! Endi botdan foydalanishingiz mumkin.', {
+        reply_markup: (await getSession(chatId)) ? AUTH_KEYBOARD : MAIN_KEYBOARD,
+      });
+    } else {
+      await askToJoinChannel(chatId);
+    }
+    return;
+  }
+  if (!(await isChannelMember(callbackQuery.from?.id))) {
+    await askToJoinChannel(chatId);
+    return;
+  }
+  if (data.startsWith('child:')) {
+    await selectChild(chatId, Number(data.slice(6)));
+    return;
+  }
+  if (data.startsWith('fb:')) {
+    const kind = data.slice(3) === 'complaint' ? 'complaint' : 'suggestion';
+    await askForMessageText(chatId, { flow: 'inbox', kind }, kind === 'complaint' ? '⚠️ Shikoyatingizni yozing:' : '💡 Taklifingizni yozing:');
+    return;
+  }
+  if (data.startsWith('tm:')) {
+    await askForMessageText(chatId, { flow: 'inbox', kind: 'to_teacher', classId: Number(data.slice(3)) }, '✍️ Ustozga xabaringizni yozing:');
+    return;
+  }
+
+  const session = await getSession(chatId);
   if (!session) {
     await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
@@ -1109,6 +1598,7 @@ async function poll() {
 async function main() {
   await initDb();
   console.log('Telegram bot started.');
+  startOutboxLoop();
   await poll();
 }
 
@@ -1122,8 +1612,13 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-main().catch(async (error) => {
-  console.error(error);
-  await pool.end();
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(async (error) => {
+    console.error(error);
+    await pool.end();
+    process.exit(1);
+  });
+}
+
+// For tests: drive the handlers without polling Telegram.
+module.exports = { handleMessage, handleCallback, deliverOutbox, getSession, passwordMatches, pool, sessions, channelMembers };
