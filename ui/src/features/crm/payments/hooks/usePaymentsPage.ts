@@ -136,6 +136,14 @@ export const usePaymentsPage = () => {
     dispatch(setPaymentsModalOpen(true));
   };
 
+  // Opens a new payment for one student, filled in (e.g. from the dashboard payments list).
+  const handleOpenModalForStudent = (studentId: number, overrides: Partial<Payment> = {}) => {
+    if (user?.userType === 'teacher') return;
+    dispatch(setPaymentsEditingId(null));
+    setFormData(createPaymentDraft(getResolvedCenterId(user) ?? 0, { student_id: studentId, ...overrides }));
+    dispatch(setPaymentsModalOpen(true));
+  };
+
   const handleCloseModal = () => {
     dispatch(setPaymentsModalOpen(false));
     dispatch(setPaymentsEditingId(null));
@@ -556,6 +564,7 @@ export const usePaymentsPage = () => {
 
     // handlers
     handleOpenModal,
+    handleOpenModalForStudent,
     handleCloseModal,
     handleSubmit,
     handleDelete,

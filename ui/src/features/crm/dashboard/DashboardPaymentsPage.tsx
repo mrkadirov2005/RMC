@@ -2,7 +2,7 @@
 // page, filtered by status, dates, teacher, subject and group.
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, RotateCcw, Search } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Plus, RotateCcw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,8 @@ import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { classAPI, paymentAPI, subjectAPI, teacherAPI } from './api';
+import { usePaymentsPage } from '../payments/hooks/usePaymentsPage';
+import { PaymentFormDialog } from '../payments/components/PaymentFormDialog';
 
 type PaymentState = 'paid' | 'partial' | 'unpaid';
 const ALL = 'all';
@@ -78,6 +80,19 @@ const DashboardPaymentsPage = () => {
   const [teachers, setTeachers] = useState<Array<{ id: number; name: string }>>([]);
   const [classes, setClasses] = useState<Array<{ id: number; name: string; teacherId: number }>>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
+  // Bumped after a payment is saved here, so the list shows the new status.
+  const [refresh, setRefresh] = useState(0);
+  const paymentHook = usePaymentsPage();
+  // The student a payment is being recorded for: their card, group fee and payment history.
+  const selectedStudent = paymentHook.students.find(
+    (student) => Number(student.student_id || student.id || 0) === Number(paymentHook.formData.student_id || 0)
+  );
+  const selectedClass = paymentHook.classes.find(
+    (classItem) => Number(classItem.class_id || classItem.id || 0) === Number(selectedStudent?.class_id || 0)
+  );
+  const selectedStudentHistory = paymentHook.state.items.filter(
+    (payment) => Number(payment.student_id || 0) === Number(paymentHook.formData.student_id || 0)
+  );
 
   // Filter choices: teachers, groups and subject names of the branch.
   useEffect(() => {
@@ -113,12 +128,12 @@ const DashboardPaymentsPage = () => {
     class_id: classId === ALL ? undefined : classId,
     q: query || undefined,
   };
-  const requestKey = JSON.stringify(params);
+  const requestKey = JSON.stringify({ ...params, refresh });
 
   useEffect(() => {
     let cancelled = false;
     paymentAPI
-      .getStudentsSummary(JSON.parse(requestKey))
+      .getStudentsSummary((({ refresh: _refresh, ...filters }) => filters)(JSON.parse(requestKey)))
       .then((response) => {
         if (!cancelled) setResult({ key: requestKey, data: getApiPayload<SummaryResponse>(response) });
       })
@@ -269,13 +284,14 @@ const DashboardPaymentsPage = () => {
               <TableHead className="text-right">{t('Remaining')}</TableHead>
               <TableHead>{t('Last payment')}</TableHead>
               <TableHead>{t('Status')}</TableHead>
+              <TableHead className="w-24" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={9} className="py-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="py-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" /></TableCell></TableRow>
             ) : !data || data.rows.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">{t('No students match these filters.')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="py-12 text-center text-sm text-muted-foreground">{t('No students match these filters.')}</TableCell></TableRow>
             ) : data.rows.map((row, index) => {
               const style = STATE_STYLE[row.state];
               return (
@@ -292,6 +308,21 @@ const DashboardPaymentsPage = () => {
                   <TableCell className="text-right font-semibold tabular-nums text-rose-600">{row.remaining > 0 ? formatMoney(row.remaining) : '—'}</TableCell>
                   <TableCell className="text-sm tabular-nums">{formatDay(row.last_payment_date)}</TableCell>
                   <TableCell><span className={cn('rounded-md px-2 py-0.5 text-xs font-bold', style.className)}>{t(style.label)}</span></TableCell>
+                  <TableCell className="text-right">
+                    {/* Not paid in full: record a payment with the student and what they owe filled in. */}
+                    {row.state !== 'paid' && (
+                      <Button
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          paymentHook.handleOpenModalForStudent(row.student_id, { amount: row.remaining > 0 ? row.remaining : row.monthly_fee || undefined });
+                        }}
+                      >
+                        <Plus className="mr-1 h-3.5 w-3.5" /> {t("To'lov")}
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -311,6 +342,44 @@ const DashboardPaymentsPage = () => {
           </Button>
         </div>
       </div>
+      <PaymentFormDialog
+        open={paymentHook.isModalOpen}
+        onOpenChange={(open) => { if (!open) paymentHook.handleCloseModal(); }}
+        title={t('Add Payment')}
+        description={t('Record a payment without leaving the dashboard.')}
+        formData={paymentHook.formData}
+        setFormData={paymentHook.setFormData}
+        onSubmit={async (event) => {
+          await paymentHook.handleSubmit(event);
+          setRefresh((value) => value + 1);
+        }}
+        isSubmitting={paymentHook.state.loading}
+        submitLabel="Save payment"
+        studentOptions={paymentHook.studentOptions}
+        centerOptions={paymentHook.centerOptions}
+        isLoadingOptions={paymentHook.isLoadingOptions}
+        showStudentSelect
+        showCenterSelect={Boolean(paymentHook.centerOptions.length)}
+        selectedStudent={
+          selectedStudent
+            ? {
+                name: `${selectedStudent.first_name || ''} ${selectedStudent.last_name || ''}`.trim(),
+                subtitle: `ID ${selectedStudent.student_id || selectedStudent.id || ''}${selectedStudent.phone ? ` / ${selectedStudent.phone}` : ''}`,
+                className: selectedClass?.class_name || selectedStudent.class_name || undefined,
+                amount: selectedClass?.payment_amount,
+              }
+            : null
+        }
+        paymentHistory={selectedStudentHistory}
+        historyExpectedAmount={Number(selectedClass?.payment_amount || 0)}
+        historyBillingPeriod={selectedStudent}
+        amountHint={
+          selectedClass?.payment_amount
+            ? `Suggested from ${selectedClass.class_name || 'selected class'} fee: ${Number(selectedClass.payment_amount).toLocaleString()}`
+            : undefined
+        }
+        submitDisabled={!paymentHook.formData.student_id}
+      />
     </div>
   );
 };
