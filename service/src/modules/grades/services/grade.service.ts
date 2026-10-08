@@ -6,6 +6,7 @@ const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
 const studentService = require('../../students/services/student.service');
 const { calculateCoins } = require('../../../utils/coinCalculator');
 const settingsService = require('../../settings/services/settings.service');
+const { combineLessonScore, lessonGrade } = require('./lessonScore');
 const db = pool.db;
 
 const listGrades = (centerId?: number, teacherId?: number, studentId?: number) =>
@@ -245,14 +246,12 @@ const coinTransactionSelection = {
 
 const calculateSessionScore = (payload: any) => {
   const totalMarks = Number(payload.total_marks || 100);
-  const marks =
-    Number(payload.attendance_score || 0) +
-    Number(payload.homework_score || 0) +
-    Number(payload.activity_score || 0) +
-    Number(payload.points_score || 0);
+  const marks = combineLessonScore(payload);
+  const percentage = totalMarks > 0 ? Number(((marks * 100) / totalMarks).toFixed(2)) : null;
   return {
     marksObtained: marks,
-    percentage: totalMarks > 0 ? Number(((marks * 100) / totalMarks).toFixed(2)) : null,
+    percentage,
+    gradeLetter: percentage === null ? null : lessonGrade(percentage),
   };
 };
 
@@ -321,6 +320,7 @@ const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
         centerId: normalized.center_id ?? existing[0].center_id,
         marksObtained: mergedTotals.marksObtained,
         percentage: mergedTotals.percentage,
+        gradeLetter: mergedTotals.gradeLetter,
         updatedAt: sql`CURRENT_TIMESTAMP`,
       })
       .where(eq(grades.gradeId, existing[0].grade_id))
@@ -345,6 +345,7 @@ const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
       pointsScore: normalized.points_score,
       marksObtained: totals.marksObtained,
       percentage: totals.percentage,
+      gradeLetter: totals.gradeLetter,
     })
     .returning(gradeSelection);
   return rows[0];

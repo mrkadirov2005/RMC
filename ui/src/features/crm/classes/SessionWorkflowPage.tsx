@@ -202,6 +202,7 @@ export default function SessionWorkflowPage() {
           if (id && activity) nextActivity.set(id, activity);
           if (id && grade.points_score !== null && grade.points_score !== undefined) nextPoints.set(id, String(Number(grade.points_score || 0)));
           if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarStudentId = id;
+          if (id && activity && nextScoringSettings.activity.find((option) => option.label === activity)?.stellar) nextStellarStudentId = id;
         });
 
         // A read-only view shows what is saved, never an unsaved draft.
@@ -345,6 +346,33 @@ export default function SessionWorkflowPage() {
     setActiveTab('attendance');
     showToast.error(t('Write a reason for every student absent from the last two lessons.'));
     return false;
+  };
+
+  // Stellar is an activity level for one student per lesson: giving it to a student takes it away
+  // from the previous one, whose activity is cleared so the teacher picks a new level for them.
+  const stellarLabel = scoringSettings.activity.find((option) => option.stellar)?.label || '';
+  const toggleActivity = (studentId: number, value: string) => {
+    if (isViewMode) return;
+    if (!stellarLabel || value !== stellarLabel) {
+      toggleMapValue(setActivityScores, studentId, value);
+      if (stellarStudentId === studentId) setStellarStudentId(null);
+      return;
+    }
+    const becomesStellar = activityScores.get(studentId) !== stellarLabel;
+    const previous = Array.from(activityScores.entries()).find(([id, label]) => label === stellarLabel && id !== studentId)?.[0];
+    setActivityScores((current) => {
+      const next = new Map(current);
+      if (becomesStellar && previous) next.set(previous, '');
+      next.set(studentId, becomesStellar ? stellarLabel : '');
+      return next;
+    });
+    setStellarStudentId(becomesStellar ? studentId : null);
+    if (becomesStellar && previous) {
+      const previousStudent = students.find((student) => getStudentId(student) === previous);
+      showToast.info(t('Only one stellar student per lesson. Choose a new activity for {name}.', {
+        name: [previousStudent?.first_name, previousStudent?.last_name].filter(Boolean).join(' ') || `#${previous}`,
+      }));
+    }
   };
 
   const setAbsenceReason = (studentId: number, value: string) => {
@@ -686,12 +714,9 @@ export default function SessionWorkflowPage() {
                 options={scoringSettings.activity}
                 values={activityScores}
                 isEnabled={isViewMode ? undefined : (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
-                onToggle={(studentId, value) => toggleMapValue(setActivityScores, studentId, value)}
-                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))))}
+                onToggle={toggleActivity}
+                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))) && (!stellarLabel || activityScores.get(studentId) !== stellarLabel))}
                 getTotalScore={getTotalScore}
-                stellarStudentId={shouldAwardCoins ? stellarStudentId : null}
-                onToggleStellar={shouldAwardCoins ? (studentId) => { if (!isViewMode) setStellarStudentId((current) => current === studentId ? null : studentId); } : undefined}
-                stellarBonusCoins={scoringSettings.stellarBonusCoins}
                 readOnly={isViewMode}
                 action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? t('Complete Activity') : shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}</Button></>}
               />

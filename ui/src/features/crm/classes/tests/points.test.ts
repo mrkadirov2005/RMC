@@ -1,18 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { getCombinedLessonPoints, getPointTone } from '../utils/points';
+import { getCombinedLessonPoints, getLessonGrade, getPointTone } from '../utils/points';
 
 describe('getCombinedLessonPoints', () => {
-  it('adds attendance, homework, activity, and manual points', () => {
-    expect(getCombinedLessonPoints({
-      attendance_score: 50,
-      homework_score: 20,
-      activity_score: 30,
-      points_score: 5,
-    })).toBe(105);
+  it('adds attendance, homework and activity up to 100', () => {
+    expect(getCombinedLessonPoints({ attendance_score: 40, homework_score: 20, activity_score: 40 })).toBe(100);
+  });
+
+  it('counts the 100-point score as 60 next to attendance, in place of homework and activity', () => {
+    expect(getCombinedLessonPoints({ attendance_score: 40, homework_score: 20, activity_score: 30, points_score: 100 })).toBe(100);
+    expect(getCombinedLessonPoints({ attendance_score: 40, points_score: 50 })).toBe(70);
+    expect(getCombinedLessonPoints({ points_score: 80 })).toBe(80);
   });
 
   it('treats omitted score categories as zero', () => {
-    expect(getCombinedLessonPoints({ attendance_score: 50, points_score: null })).toBe(50);
+    expect(getCombinedLessonPoints({ attendance_score: 40, points_score: null })).toBe(40);
+  });
+
+  it('turns a lesson total into a 2-5 grade', () => {
+    expect([100, 90, 85, 70, 65, 50, 30].map(getLessonGrade)).toEqual([5, 5, 4, 4, 3, 3, 2]);
   });
 
   it('returns missing only when no score category was recorded', () => {

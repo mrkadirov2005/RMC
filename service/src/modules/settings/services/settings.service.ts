@@ -19,6 +19,8 @@ const normalizeOption = (option: any, fallback: any) => ({
   symbol: String(option?.symbol || fallback.symbol || '●').slice(0, 4),
   fill: Math.max(0, Math.min(100, Number.isFinite(Number(option?.fill)) ? Number(option.fill) : Number(fallback.fill || 0))),
   tone: allowedTones.has(option?.tone) ? option.tone : fallback.tone,
+  // The stellar activity level (one student per lesson); kept only where it is set.
+  ...(option?.stellar === true || (option?.stellar === undefined && fallback?.stellar && option?.label === fallback.label) ? { stellar: true } : {}),
 });
 
 const normalizeOptionList = (items: any, fallback: any[]) => {
