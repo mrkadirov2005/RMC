@@ -1,3 +1,4 @@
+import { formatScheduleShort } from '../utils/schedule';
 import { Fragment, type ReactNode } from 'react';
 import { Plus, Trash2, Loader2, CalendarDays, Search, X, BookOpen, Upload, Download, UserRound, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -365,6 +366,8 @@ export const ClassesMainView = ({
                                       <span className="inline-flex flex-col align-middle">
                                         <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
                                         <span className="owner-secondary-tag rounded px-1.5 py-0.5 text-[0.625rem] font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</span>
+                                        {/* Weekdays and time, so a student can be placed by day (e.g. Tue/Thu/Sat). */}
+                                        <span className="px-1.5 text-[0.6875rem] font-semibold text-slate-600 dark:text-slate-300">{formatScheduleShort(cls.section) || t('No schedule')}</span>
                                       </span>
                                     </button>
                                     <span className="px-2 py-1 text-center text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || t('No room')}</span>
