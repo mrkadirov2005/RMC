@@ -16,4 +16,11 @@ describe('teacher overview editing', () => {
     const draft = createTeacherOverviewDraft({ first_name: ' Aziza ', salary_percentage: 50 });
     expect(buildTeacherOverviewUpdate(draft)).toMatchObject({ first_name: 'Aziza', salary_percentage: 50 });
   });
+
+  it('shows and saves the salary share only when the server sent it (the owner)', () => {
+    expect(buildTeacherOverviewColumns({ salary_percentage: 40 }).professional.map((row) => row.label)).toContain('Teacher share');
+    expect(buildTeacherOverviewColumns({}).professional.map((row) => row.label)).not.toContain('Teacher share');
+    const draft = createTeacherOverviewDraft({ first_name: 'Aziza' });
+    expect(buildTeacherOverviewUpdate(draft, { includeShare: false })).not.toHaveProperty('salary_percentage');
+  });
 });

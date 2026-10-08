@@ -22,7 +22,7 @@ export default function TeacherInfoTab({ teacher, onRefresh }: { teacher: any; o
     if (!draft.first_name.trim() || !draft.last_name.trim()) return showToast.error('First name and last name are required.');
     setSaving(true);
     try {
-      await teacherAPI.update(Number(teacher.teacher_id || teacher.id), buildTeacherOverviewUpdate(draft));
+      await teacherAPI.update(Number(teacher.teacher_id || teacher.id), buildTeacherOverviewUpdate(draft, { includeShare: teacher.salary_percentage != null }));
       onRefresh(); cancel(); showToast.success('Teacher information updated successfully.');
     } catch (error) { showToast.error(getErrorMessage(error) || 'Failed to update teacher information.'); }
     finally { setSaving(false); }

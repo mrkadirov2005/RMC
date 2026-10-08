@@ -27,11 +27,14 @@ export const buildTeacherOverviewColumns = (teacher: any) => ({
   professional: [
     { label: 'Email', value: display(teacher.email) }, { label: 'Phone', value: display(teacher.phone) },
     { label: 'Qualification', value: display(teacher.qualification) }, { label: 'Specialization', value: display(teacher.specialization) },
-    { label: 'Teacher share', value: `${Number(teacher.salary_percentage ?? 50)}%` },
+    // The server sends the salary share to the owner only; admins never see the row.
+    ...(teacher.salary_percentage != null ? [{ label: 'Teacher share', value: `${Number(teacher.salary_percentage)}%` }] : []),
   ],
 });
 
-export const buildTeacherOverviewUpdate = (draft: TeacherOverviewDraft) => ({
-  ...Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, value.trim()])),
-  salary_percentage: Number(draft.salary_percentage),
-});
+export const buildTeacherOverviewUpdate = (draft: TeacherOverviewDraft, { includeShare = true }: { includeShare?: boolean } = {}) => {
+  const update: Record<string, unknown> = Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, value.trim()]));
+  if (includeShare) update.salary_percentage = Number(draft.salary_percentage);
+  else delete update.salary_percentage;
+  return update;
+};

@@ -79,7 +79,18 @@ describe('import and export controller', () => {
 
       await controller[handler]({ params: { entity: 'students' }, user: { userType: 'superuser' } }, res);
 
-      expect(service[method]).toHaveBeenCalledWith('students', undefined);
+      expect(service[method].mock.calls[0].slice(0, 2)).toEqual(['students', undefined]);
+    });
+
+    it('exports teachers without their salary share unless the owner asks', async () => {
+      getScopedCenterId.mockReturnValue({ centerId: 2, isGlobal: false });
+      service.exportEntity.mockResolvedValue({ csv: 'a', rows: 0 });
+
+      await controller.exportEntity({ params: { entity: 'teachers' }, user: { userType: 'superuser', role: 'admin' } }, createResponse());
+      expect(service.exportEntity).toHaveBeenLastCalledWith('teachers', 2, { hideSalaryShare: true });
+
+      await controller.exportEntity({ params: { entity: 'teachers' }, user: { userType: 'superuser', role: 'owner' } }, createResponse());
+      expect(service.exportEntity).toHaveBeenLastCalledWith('teachers', 2, { hideSalaryShare: false });
     });
   });
 
