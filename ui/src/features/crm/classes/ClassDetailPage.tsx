@@ -113,7 +113,7 @@ const ClassDetailPage = () => {
     navigate(`/students/${studentId}/edit`);
   };
 
-  const handleDeleteStudent = async (reasonId: number) => {
+  const handleDeleteStudent = async (reasonId: number, reasonNote?: string) => {
     const studentId = deleteStudentTarget ? getClassStudentId(deleteStudentTarget) : 0;
     if (!studentId) {
       showToast.error('Student ID is missing.');
@@ -122,7 +122,7 @@ const ClassDetailPage = () => {
 
     setDeletingStudentId(studentId);
     try {
-      await studentsApi.deleteStudent(studentId, reasonId);
+      await studentsApi.deleteStudent(studentId, reasonId, reasonNote);
       setStudents((current) => removeClassStudentById(current, studentId));
       showToast.success('Student deleted successfully.');
     } catch (deleteError: any) {

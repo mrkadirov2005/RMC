@@ -12,7 +12,7 @@ interface Props {
   title: string;
   description: string;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (reasonId: number) => Promise<void> | void;
+  onConfirm: (reasonId: number, note?: string) => Promise<void> | void;
 }
 
 // Renders the delete student dialog.
@@ -20,20 +20,25 @@ export const DeleteStudentDialog = ({ open, title, description, onOpenChange, on
   const { t } = useLanguage();
   const [reasonId, setReasonId] = useState('');
   const [customReason, setCustomReason] = useState('');
+  const [note, setNote] = useState('');
+  const [needsNote, setNeedsNote] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (open) return;
     setReasonId('');
     setCustomReason('');
+    setNote('');
   }, [open]);
 
+  const ready = isReasonReady(reasonId, customReason) && (!needsNote || note.trim().length > 0);
+
   const confirm = async () => {
-    if (!isReasonReady(reasonId, customReason)) return;
+    if (!ready) return;
     setDeleting(true);
     try {
       const resolvedId = await resolveReasonId('delete', reasonId, customReason);
-      await onConfirm(resolvedId);
+      await onConfirm(resolvedId, note.trim() || undefined);
       onOpenChange(false);
     } finally {
       setDeleting(false);
@@ -55,12 +60,16 @@ export const DeleteStudentDialog = ({ open, title, description, onOpenChange, on
           onChange={setReasonId}
           onCustomChange={setCustomReason}
           disabled={deleting}
+          allowCustom={false}
+          note={note}
+          onNoteChange={setNote}
+          onNeedsNoteChange={setNeedsNote}
         />
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={deleting}>
             {t('Cancel')}
           </Button>
-          <Button type="button" variant="destructive" onClick={confirm} disabled={deleting || !isReasonReady(reasonId, customReason)}>
+          <Button type="button" variant="destructive" onClick={confirm} disabled={deleting || !ready}>
             <Trash2 className="mr-2 h-4 w-4" />
             {deleting ? t('Deleting...') : t('Delete')}
           </Button>

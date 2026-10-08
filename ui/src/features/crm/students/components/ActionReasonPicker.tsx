@@ -31,20 +31,31 @@ interface Props {
   onChange: (value: string) => void;
   onCustomChange: (value: string) => void;
   disabled?: boolean;
+  /** False for leaving reasons: the center uses its fixed list instead of typed-in reasons. */
+  allowCustom?: boolean;
+  /** A note for the chosen reason; required when the reason asks for one (e.g. the result reached). */
+  note?: string;
+  onNoteChange?: (value: string) => void;
+  onNeedsNoteChange?: (needsNote: boolean) => void;
 }
 
 // Renders the action reason picker.
-export const ActionReasonPicker = ({ reasonType, open, value, customValue, onChange, onCustomChange, disabled = false }: Props) => {
+export const ActionReasonPicker = ({ reasonType, open, value, customValue, onChange, onCustomChange, disabled = false, allowCustom = true, note, onNoteChange, onNeedsNoteChange }: Props) => {
   const { t } = useLanguage();
-  const [options, setOptions] = useState<Array<{ value: number; label: string }>>([]);
+  const [options, setOptions] = useState<Array<{ value: number; label: string; needsNote: boolean }>>([]);
 
   useEffect(() => {
     if (!open) return;
     studentsApi.getActionReasons(reasonType).then((response) => {
       const rows = Array.isArray(response.data) ? response.data : [];
-      setOptions(rows.map((row: any) => ({ value: Number(row.reason_id), label: row.reason_name })));
+      setOptions(rows.map((row: any) => ({ value: Number(row.reason_id), label: row.reason_name, needsNote: Boolean(row.needs_note) })));
     }).catch(() => setOptions([]));
   }, [open, reasonType]);
+
+  const needsNote = Boolean(options.find((option) => String(option.value) === value)?.needsNote);
+  useEffect(() => {
+    onNeedsNoteChange?.(needsNote);
+  }, [needsNote, onNeedsNoteChange]);
 
   const fieldId = `${reasonType}-reason`;
 
@@ -57,7 +68,7 @@ export const ActionReasonPicker = ({ reasonType, open, value, customValue, onCha
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => <SelectItem key={option.value} value={String(option.value)}>{option.label}</SelectItem>)}
-          <SelectItem value={String(CUSTOM_REASON_VALUE)}>{t('+ Add a custom reason')}</SelectItem>
+          {allowCustom && <SelectItem value={String(CUSTOM_REASON_VALUE)}>{t('+ Add a custom reason')}</SelectItem>}
         </SelectContent>
       </Select>
       {Number(value) === CUSTOM_REASON_VALUE && (
@@ -67,6 +78,19 @@ export const ActionReasonPicker = ({ reasonType, open, value, customValue, onCha
           disabled={disabled}
           placeholder={t('Enter your own reason')}
         />
+      )}
+      {onNoteChange && (
+        <div className="space-y-1">
+          <Label htmlFor={`${fieldId}-note`}>{needsNote ? t('Note (required)') : t('Note (optional)')}</Label>
+          <Input
+            id={`${fieldId}-note`}
+            value={note || ''}
+            onChange={(event) => onNoteChange(event.target.value.slice(0, 500))}
+            disabled={disabled}
+            placeholder={needsNote ? t('e.g. Got B2 / Went to another center (which one)') : ''}
+            aria-invalid={needsNote && !(note || '').trim()}
+          />
+        </div>
       )}
     </div>
   );

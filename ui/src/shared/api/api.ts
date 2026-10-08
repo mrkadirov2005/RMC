@@ -235,7 +235,7 @@ export const studentAPI = {
   assignToGroup: (id: number, classId: number) => apiClient.post(`/students/${id}/groups`, { class_id: classId }),
   transfer: (id: number, targetClassId: number, reasonId: number) =>
     apiClient.post(`/students/${id}/transfer`, { target_class_id: targetClassId, reason_id: reasonId }),
-  delete: (id: number, reasonId: number) => apiClient.delete(`/students/${id}`, { data: { reason_id: reasonId } }),
+  delete: (id: number, reasonId: number, reasonNote?: string) => apiClient.delete(`/students/${id}`, { data: { reason_id: reasonId, reason_note: reasonNote } }),
   purge: (id: number) => apiClient.delete(`/students/${id}/purge`),
   setPassword: (id: number, data: { username: string; password: string }) =>
     apiClient.post(`/students/${id}/set-password`, data),

@@ -436,7 +436,7 @@ describe('students controller handlers', () => {
         user: { userType: 'teacher', id: 7 },
       }, res);
 
-      expect(studentService.deleteStudent).toHaveBeenCalledWith(9, 4, 2, 7);
+      expect(studentService.deleteStudent).toHaveBeenCalledWith(9, 4, 2, 7, undefined);
       expect(res.json).toHaveBeenCalledWith({ message: "O'quvchi muvaffaqiyatli o'chirildi", student: { student_id: 9 } });
     });
 

@@ -142,13 +142,13 @@ const StudentsPage = () => {
       throw error;
     }
   };
-  const handleBulkDeleteStudents = async (ids: number[], reasonId: number) => {
+  const handleBulkDeleteStudents = async (ids: number[], reasonId: number, reasonNote?: string) => {
     if (ids.length === 0) return;
 
     let failed = 0;
     for (const id of ids) {
       try {
-        await studentsApi.deleteStudent(id, reasonId);
+        await studentsApi.deleteStudent(id, reasonId, reasonNote);
       } catch {
         failed += 1;
       }

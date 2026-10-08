@@ -517,7 +517,7 @@ export const useOwnerManager = () => {
   }, [activeCenterId, activeTab, dispatch, editingId, fetchData, fetchOverview, formData]);
 
 // Memoizes the handle delete callback.
-  const handleDelete = useCallback(async (id: number, studentReasonId?: number) => {
+  const handleDelete = useCallback(async (id: number, studentReasonId?: number, studentReasonNote?: string) => {
     if (activeTab === 'students' && !studentReasonId) {
       setPendingStudentDelete({ id, hard: false });
       return;
@@ -540,7 +540,7 @@ export const useOwnerManager = () => {
           await ownerManagerApi.teachers.delete(id);
           break;
         case 'students':
-          await ownerManagerApi.students.delete(id, Number(studentReasonId));
+          await ownerManagerApi.students.delete(id, Number(studentReasonId), studentReasonNote);
           break;
       }
       showToast.success('Record deleted successfully.');
@@ -555,7 +555,7 @@ export const useOwnerManager = () => {
   }, [activeTab, dispatch, fetchData, fetchOverview]);
 
 // Memoizes the handle hard delete callback.
-  const handleHardDelete = useCallback(async (id: number, studentReasonId?: number) => {
+  const handleHardDelete = useCallback(async (id: number, studentReasonId?: number, studentReasonNote?: string) => {
     if (!canHardDelete) {
       showToast.error('You do not have permission to permanently delete records.');
       return;
@@ -574,7 +574,7 @@ export const useOwnerManager = () => {
           await ownerManagerApi.teachers.purge(id);
           break;
         case 'students':
-          await ownerManagerApi.students.delete(id, Number(studentReasonId));
+          await ownerManagerApi.students.delete(id, Number(studentReasonId), studentReasonNote);
           await ownerManagerApi.students.purge(id);
           break;
         default:
@@ -593,12 +593,12 @@ export const useOwnerManager = () => {
   }, [activeTab, canHardDelete, dispatch, fetchData, fetchOverview]);
 
 // Memoizes the confirm student delete callback.
-  const confirmStudentDelete = useCallback(async (reasonId: number) => {
+  const confirmStudentDelete = useCallback(async (reasonId: number, note?: string) => {
     if (!pendingStudentDelete) return;
     const { id, hard } = pendingStudentDelete;
     setPendingStudentDelete(null);
-    if (hard) await handleHardDelete(id, reasonId);
-    else await handleDelete(id, reasonId);
+    if (hard) await handleHardDelete(id, reasonId, note);
+    else await handleDelete(id, reasonId, note);
   }, [handleDelete, handleHardDelete, pendingStudentDelete]);
 
 // Memoizes the handle reset password callback.
