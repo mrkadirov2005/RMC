@@ -89,24 +89,24 @@ const buildListConditions = (filters: Record<string, any> = {}, centerId?: numbe
   const conditions: any[] = [isNull(teachers.deletedAt)];
   if (centerId) conditions.push(eq(teachers.centerId, centerId));
 
-  const search = String(filters.q || filters.search || '').trim();
+  // Finds a teacher by name as it is typed: first or last name, or the full name in either order,
+  // starting with the text. It used to match the text anywhere in eleven fields (status,
+  // specialization, email...), so a few letters listed most teachers.
+  const search = String(filters.q || filters.search || '').trim().replace(/\s+/g, ' ');
   if (search) {
-    const pattern = `%${search}%`;
-    conditions.push(
-      or(
-        ilike(sql`CAST(${teachers.teacherId} AS TEXT)`, pattern),
-        ilike(teachers.firstName, pattern),
-        ilike(teachers.lastName, pattern),
-        ilike(sql`CONCAT_WS(' ', ${teachers.firstName}, ${teachers.lastName})`, pattern),
-        ilike(teachers.employeeId, pattern),
-        ilike(teachers.specialization, pattern),
-        ilike(teachers.qualification, pattern),
-        ilike(teachers.email, pattern),
-        ilike(teachers.phone, pattern),
-        ilike(teachers.username, pattern),
-        ilike(teachers.status, pattern)
-      )
-    );
+    const prefix = `${search.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
+    const digits = search.replace(/\D/g, '');
+    const matches = [
+      ilike(teachers.firstName, prefix),
+      ilike(teachers.lastName, prefix),
+      ilike(sql`CONCAT_WS(' ', ${teachers.firstName}, ${teachers.lastName})`, prefix),
+      ilike(sql`CONCAT_WS(' ', ${teachers.lastName}, ${teachers.firstName})`, prefix),
+      ilike(teachers.employeeId, prefix),
+      ilike(teachers.username, prefix),
+    ];
+    if (/^\d+$/.test(search)) matches.push(eq(teachers.teacherId, Number(search)));
+    if (digits.length >= 4) matches.push(sql`regexp_replace(COALESCE(${teachers.phone}, ''), '\\D', '', 'g') LIKE ${`%${digits}%`}`);
+    conditions.push(or(...matches));
   }
 
   const status = String(filters.status || '').trim();
