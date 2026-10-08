@@ -4,12 +4,13 @@ jest.mock('../../repositories/report.repository', () => ({
   countDeletedStudents: jest.fn(), deletedStudentsByMonth: jest.fn(), deletedStudentsByTeacherWithStudents: jest.fn(),
   deletedStudentsByClass: jest.fn(), recentDeletedStudents: jest.fn(), countIntakeStudents: jest.fn(),
   intakeStudentsByMonth: jest.fn(), intakeStudentsByTeacherWithStudents: jest.fn(), intakeStudentsByClass: jest.fn(), recentIntakeStudents: jest.fn(),
+  deletedStudentsByReason: jest.fn(async () => []),
 }));
 const repository = require('../../repositories/report.repository');
 const service = require('../report.service');
 
 describe('report service', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => { jest.clearAllMocks(); repository.deletedStudentsByReason.mockResolvedValue([]); });
   test('builds center-forced overview with inclusive date filters', async () => {
     repository.countStudents.mockResolvedValue(5); repository.countTeachers.mockResolvedValue(2); repository.countClasses.mockResolvedValue(3);
     repository.sumPayments.mockResolvedValue(100); repository.sumDebts.mockResolvedValue(20);
@@ -216,5 +217,29 @@ describe('report service', () => {
       expect(repository.deletedStudentsByTeacherWithStudents).not.toHaveBeenCalled();
       expect(repository.countDeletedStudents).not.toHaveBeenCalled();
     });
+  });
+
+  test('ranks why students left and the teachers they left because of', async () => {
+    repository.countDeletedStudents.mockResolvedValue({ total: 4 });
+    repository.deletedStudentsByMonth.mockResolvedValue([]);
+    repository.deletedStudentsByClass.mockResolvedValue([]);
+    repository.recentDeletedStudents.mockResolvedValue([]);
+    repository.deletedStudentsByReason.mockResolvedValue([
+      { reason_id: 5, reason_code: 'disliked_teacher', reason_name: 'Ustoz yoqmagani uchun ketdi', left_count: 3 },
+      { reason_id: 1, reason_code: 'school_started', reason_name: 'Maktab boshlanib qoldi', left_count: 1 },
+    ]);
+    repository.deletedStudentsByTeacherWithStudents.mockResolvedValue([
+      { teacher_id: 7, teacher_first_name: 'A', teacher_last_name: 'B', left_count: 2, students: [{ student_id: 1, reason_code: 'disliked_teacher' }, { student_id: 2, reason_code: 'school_started' }] },
+      { teacher_id: 8, teacher_first_name: 'C', teacher_last_name: 'D', left_count: 2, students: [{ student_id: 3, reason_code: 'disliked_teacher' }, { student_id: 4, reason_code: 'disliked_teacher', reason_note: 'Qattiqqo\'l' }] },
+      { teacher_id: 9, teacher_first_name: 'E', left_count: 0, students: [] },
+    ]);
+
+    const result = await service.retentionReport({ month: '2026-10' }, 2);
+    expect(result.by_reason.map((row) => [row.reason_code, row.left_count, row.percent, row.teacher_fault])).toEqual([
+      ['disliked_teacher', 3, 75, true],
+      ['school_started', 1, 25, false],
+    ]);
+    expect(result.worst_teachers.map((row) => [row.teacher_id, row.teacher_fault_count])).toEqual([[8, 2], [7, 1]]);
+    expect(result.worst_teachers[0].students[1].reason_note).toBe("Qattiqqo'l");
   });
 });

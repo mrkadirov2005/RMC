@@ -80,6 +80,36 @@ const monthRange = (date: Date) => {
   return { start: dateOnly(start), end: dateOnly(end) };
 };
 
+// Leaving reasons that put the blame on the teacher; students who left for them rank the teachers.
+const TEACHER_FAULT_REASONS = new Set(['disliked_teacher']);
+
+const leavingReasonSummary = (reasonRows: any[], teacherRows: any[]) => {
+  const total = reasonRows.reduce((sum, row) => sum + Number(row.left_count || 0), 0);
+  const byReason = reasonRows.map((row: any) => ({
+    reason_id: row.reason_id ?? null,
+    reason_code: row.reason_code ?? null,
+    reason_name: row.reason_name || null,
+    left_count: Number(row.left_count || 0),
+    percent: total > 0 ? Math.round((Number(row.left_count || 0) / total) * 1000) / 10 : 0,
+    teacher_fault: TEACHER_FAULT_REASONS.has(String(row.reason_code || '')),
+  }));
+  const worstTeachers = teacherRows
+    .map((row: any) => {
+      const studentsLeft = Array.isArray(row.students) ? row.students : [];
+      const faultStudents = studentsLeft.filter((student: any) => TEACHER_FAULT_REASONS.has(String(student?.reason_code || '')));
+      return {
+        teacher_id: row.teacher_id == null ? null : Number(row.teacher_id),
+        teacher_name: [row.teacher_first_name, row.teacher_last_name].filter(Boolean).join(' ') || 'No teacher',
+        teacher_fault_count: faultStudents.length,
+        left_count: Number(row.left_count || 0),
+        students: faultStudents.map((student: any) => ({ student_id: student.student_id, first_name: student.first_name, last_name: student.last_name, class_name: student.class_name, reason_note: student.reason_note || null })),
+      };
+    })
+    .filter((row) => row.teacher_fault_count > 0)
+    .sort((a, b) => b.teacher_fault_count - a.teacher_fault_count || b.left_count - a.left_count);
+  return { by_reason: byReason, worst_teachers: worstTeachers };
+};
+
 const retentionReport = async (query: { center_id?: string; month?: string; months?: string; limit?: string; view?: string; source_id?: string; referred_by_teacher_id?: string; source_detail?: string }, centerId?: number) => {
   const scopedCenterId = centerId ?? (query.center_id ? Number(query.center_id) : undefined);
   const selectedMonth = parseMonth(query.month);
@@ -98,13 +128,14 @@ const retentionReport = async (query: { center_id?: string; month?: string; mont
     referredByTeacherId: query.referred_by_teacher_id ? Number(query.referred_by_teacher_id) : undefined,
     sourceDetail: String(query.source_detail || '').trim() || undefined,
   };
-  const [current, previous, seriesRows, teacherRows, classRows, deletedStudentRows] = await Promise.all([
+  const [current, previous, seriesRows, teacherRows, classRows, deletedStudentRows, reasonRows] = await Promise.all([
     intake ? reportRepository.countIntakeStudents({ centerId: scopedCenterId, ...currentRange, ...intakeExtra }) : reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...currentRange }),
     intake ? reportRepository.countIntakeStudents({ centerId: scopedCenterId, ...previousRange, ...intakeExtra }) : reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...previousRange }),
     intake ? reportRepository.intakeStudentsByMonth({ centerId: scopedCenterId, start: dateOnly(seriesStart), end: dateOnly(seriesEnd), ...intakeExtra }) : reportRepository.deletedStudentsByMonth({ centerId: scopedCenterId, start: dateOnly(seriesStart), end: dateOnly(seriesEnd) }),
     intake ? reportRepository.intakeStudentsByTeacherWithStudents({ centerId: scopedCenterId, ...currentRange, ...intakeExtra }) : reportRepository.deletedStudentsByTeacherWithStudents({ centerId: scopedCenterId, ...currentRange }),
     intake ? reportRepository.intakeStudentsByClass({ centerId: scopedCenterId, ...currentRange, ...intakeExtra }) : reportRepository.deletedStudentsByClass({ centerId: scopedCenterId, ...currentRange }),
     intake ? reportRepository.recentIntakeStudents({ centerId: scopedCenterId, ...currentRange, limit: recentLimit, ...intakeExtra }) : reportRepository.recentDeletedStudents({ centerId: scopedCenterId, ...currentRange, limit: recentLimit }),
+    intake ? Promise.resolve([]) : reportRepository.deletedStudentsByReason({ centerId: scopedCenterId, ...currentRange }),
   ]);
 
   const seriesMap = new Map(seriesRows.map((row: any) => [String(row.month_start).slice(0, 7), Number(row.left_count || 0)]));
@@ -159,6 +190,7 @@ const retentionReport = async (query: { center_id?: string; month?: string; mont
       left_count: Number(row.left_count || 0),
     })),
     recent_students: deletedStudentRows.slice(0, recentLimit),
+    ...(intake ? {} : leavingReasonSummary(reasonRows, teacherRows)),
   };
 };
 

@@ -1,4 +1,10 @@
 export const ownerLabels: Record<string, string> = {
+  'Why students left': "O'quvchilar nima uchun ketdi",
+  'No reason recorded': "Sabab kiritilmagan",
+  'Students lost because of the teacher': "Ustoz sababli ketgan o'quvchilar",
+  'Teachers ranked by students who left because they did not like the teacher.': "Ustoz yoqmagani uchun ketgan o'quvchilar soni bo'yicha o'qituvchilar reytingi.",
+  'No student left because of a teacher this month.': "Bu oy ustoz sababli ketgan o'quvchi yo'q.",
+  'left': "ketgan",
   '{count} attendance records': '{count} ta davomat yozuvi',
   // Admin permission dialog: submenus and the newer pages
   List: "Ro'yxat",
