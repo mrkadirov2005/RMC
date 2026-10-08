@@ -53,9 +53,9 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
     }
   };
 // Handles delete.
-  const handleDelete = async (id: number, reasonId: number) => {
+  const handleDelete = async (id: number, reasonId: number, reasonNote?: string) => {
     try {
-      await studentAPI.delete(id, reasonId);
+      await studentAPI.delete(id, reasonId, reasonNote);
       showToast.success('Student deleted successfully!');
       refreshStudents?.();
     } catch (error) {

@@ -34,9 +34,9 @@ interface Props {
   hasActiveFilters: boolean;
   onView: (id: number) => void;
   onEdit: (student: Student) => void;
-  onDelete: (id: number, reasonId: number) => void;
+  onDelete: (id: number, reasonId: number, reasonNote?: string) => void;
   onTransfer?: (student: Student, targetClassId: number, reasonId: number) => Promise<void> | void;
-  onBulkDelete?: (ids: number[], reasonId: number) => Promise<void> | void;
+  onBulkDelete?: (ids: number[], reasonId: number, reasonNote?: string) => Promise<void> | void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   classOptions?: Class[];
@@ -171,13 +171,13 @@ export const StudentsTableView = ({
     setDeleteTarget({ ids, bulk: true });
   };
 
-  const confirmDelete = async (reasonId: number) => {
+  const confirmDelete = async (reasonId: number, reasonNote?: string) => {
     if (!deleteTarget) return;
     if (deleteTarget.bulk) {
-      await onBulkDelete?.(deleteTarget.ids, reasonId);
+      await onBulkDelete?.(deleteTarget.ids, reasonId, reasonNote);
       clearSelection();
     } else {
-      await onDelete(deleteTarget.ids[0], reasonId);
+      await onDelete(deleteTarget.ids[0], reasonId, reasonNote);
     }
     setDeleteTarget(null);
   };

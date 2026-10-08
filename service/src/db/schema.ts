@@ -280,6 +280,8 @@ const studentActionReasons = pgTable('student_action_reasons', {
   reasonCode: varchar('reason_code', { length: 50 }).notNull(),
   reasonName: varchar('reason_name', { length: 100 }).notNull(),
   active: boolean('active'),
+  sortOrder: integer('sort_order'),
+  needsNote: boolean('needs_note'),
   createdAt: timestamp('created_at'),
 });
 
@@ -312,6 +314,7 @@ const students = pgTable('students', {
   acquisitionSourceId: integer('acquisition_source_id'),
   acquisitionDetail: text('acquisition_detail'),
   beforeVideoUrl: text('before_video_url'),
+  deleteReasonNote: text('delete_reason_note'),
   afterVideoUrl: text('after_video_url'),
   referredByTeacherId: integer('referred_by_teacher_id'),
   transferReasonId: integer('transfer_reason_id'),

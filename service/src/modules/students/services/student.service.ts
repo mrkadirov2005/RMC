@@ -95,8 +95,13 @@ const updateStudent = async (id: number, body: any, centerId?: number, teacherId
   return student;
 };
 
-const deleteStudent = (id: number, reasonId: number, centerId?: number, teacherId?: number) =>
-  studentRepository.remove(id, reasonId, centerId, teacherId);
+// Some leaving reasons need a note (the result reached, which center they went to).
+const deleteStudent = async (id: number, reasonId: number, centerId?: number, teacherId?: number, reasonNote?: unknown) => {
+  const note = String(reasonNote ?? '').trim().slice(0, 500) || null;
+  const reason = reasonId ? await studentRepository.findActionReason(reasonId) : null;
+  if (reason?.needs_note && !note) return { error: 'note_required' as const };
+  return studentRepository.remove(id, reasonId, centerId, teacherId, note);
+};
 
 const purgeStudent = (id: number, centerId?: number, teacherId?: number) =>
   studentRepository.purge(id, centerId, teacherId);

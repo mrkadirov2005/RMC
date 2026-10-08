@@ -1,4 +1,6 @@
 export const studentsLabels: Record<string, string> = {
+  'Note (required)': "Izoh (majburiy)",
+  'e.g. Got B2 / Went to another center (which one)': "Masalan: B2 oldi / Qaysi markazga ketgani",
   'Videos': 'Videolar',
   'Before': 'Oldin',
   'After': 'Keyin',

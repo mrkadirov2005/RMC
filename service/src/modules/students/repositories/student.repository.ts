@@ -22,7 +22,14 @@ const listActionReasons = (reasonType: string) => db.select({
   reason_type: studentActionReasons.reasonType,
   reason_code: studentActionReasons.reasonCode,
   reason_name: studentActionReasons.reasonName,
-}).from(studentActionReasons).where(and(eq(studentActionReasons.reasonType, reasonType), eq(studentActionReasons.active, true))).orderBy(asc(studentActionReasons.reasonName));
+  needs_note: studentActionReasons.needsNote,
+}).from(studentActionReasons).where(and(eq(studentActionReasons.reasonType, reasonType), eq(studentActionReasons.active, true))).orderBy(sql`${studentActionReasons.sortOrder} NULLS LAST`, asc(studentActionReasons.reasonName));
+
+const findActionReason = async (reasonId: number) => {
+  const rows = await db.select({ reason_id: studentActionReasons.reasonId, reason_type: studentActionReasons.reasonType, needs_note: studentActionReasons.needsNote })
+    .from(studentActionReasons).where(eq(studentActionReasons.reasonId, reasonId)).limit(1);
+  return rows[0] || null;
+};
 
 const createActionReason = async (reasonType: string, name: string) => {
   const code = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 50) || `reason_${Date.now()}`;
@@ -502,14 +509,14 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
   return rows[0] || null;
 };
 
-const remove = async (id: number, reasonId: number, centerId?: number, teacherId?: number) => {
+const remove = async (id: number, reasonId: number, centerId?: number, teacherId?: number, reasonNote: string | null = null) => {
   const conditions = [eq(students.studentId, id), isNull(students.deletedAt)];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(students.teacherId, teacherId));
   return db.transaction(async (tx: any) => {
     const rows = await tx
       .update(students)
-      .set({ deletedAt: sql`CURRENT_TIMESTAMP`, status: 'Removed', deleteReasonId: reasonId, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .set({ deletedAt: sql`CURRENT_TIMESTAMP`, status: 'Removed', deleteReasonId: reasonId, deleteReasonNote: reasonNote, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(and(...conditions))
       .returning({ ...studentSelection, password_hash: students.passwordHash });
     const removed = rows[0];
@@ -865,6 +872,7 @@ const saveVideos = async (id: number, videos: { before_video_url: string | null;
 };
 
 module.exports = {
+  findActionReason,
   findVideos,
   saveVideos,
   listAcquisitionSources,

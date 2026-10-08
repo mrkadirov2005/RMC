@@ -218,7 +218,8 @@ const deleteStudent = async (req: any, res: any) => {
     if (req.user?.userType === 'student') {
       return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
-    const row = await studentService.deleteStudent(Number(req.params.id), Number(req.body.reason_id), centerId ?? undefined, teacherId);
+    const row = await studentService.deleteStudent(Number(req.params.id), Number(req.body.reason_id), centerId ?? undefined, teacherId, req.body?.reason_note);
+    if (row?.error === 'note_required') return res.status(400).json({ error: "Bu sabab uchun izoh yozilishi shart." });
     if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
     res.json({ message: "O'quvchi muvaffaqiyatli o'chirildi", student: row });
   } catch (error: any) {

@@ -37,9 +37,9 @@ interface Props {
   viewMode: ViewMode;
   onView: (id: number) => void;
   onEdit: (student: Student) => void;
-  onDelete: (id: number, reasonId: number) => void;
+  onDelete: (id: number, reasonId: number, reasonNote?: string) => void;
   onTransfer?: (student: Student, targetClassId: number, reasonId: number) => Promise<void> | void;
-  onBulkDelete?: (ids: number[], reasonId: number) => Promise<void> | void;
+  onBulkDelete?: (ids: number[], reasonId: number, reasonNote?: string) => Promise<void> | void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   onTransferGroup: (classId: number, teacherId: number) => Promise<void> | void;
