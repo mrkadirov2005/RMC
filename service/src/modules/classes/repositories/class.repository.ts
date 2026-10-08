@@ -147,7 +147,7 @@ const findPaginated = async (filters: Record<string, any> = {}, centerId?: numbe
         WHERE counted_students.class_id = classes.class_id
           AND counted_students.deleted_at IS NULL
           -- A student transferred out belongs to their new group from the transfer on.
-          AND COALESCE(counted_students.status, '') <> 'Transferred'
+          AND (counted_students.status IS NULL OR counted_students.status <> 'Transferred')
       )`,
     }))
     .from(classes)
