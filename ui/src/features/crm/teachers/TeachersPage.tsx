@@ -234,10 +234,13 @@ const TeachersPage = () => {
             <Users className="h-3.5 w-3.5" />
             {t('Teachers')}
           </TabsTrigger>
-          <TabsTrigger value="kpi" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
-            <Target className="h-3.5 w-3.5" />
-            KPI
-          </TabsTrigger>
+          {/* KPI, like the salary share, is for the owner only. */}
+          {canSeeShare && (
+            <TabsTrigger value="kpi" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
+              <Target className="h-3.5 w-3.5" />
+              KPI
+            </TabsTrigger>
+          )}
           <TabsTrigger value="statistics" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
             <LineChart className="h-3.5 w-3.5" />
             {t('Statistics')}
@@ -245,7 +248,7 @@ const TeachersPage = () => {
         </TabsList>
       </Tabs>
 
-      {pageTab === 'kpi' ? (
+      {pageTab === 'kpi' && canSeeShare ? (
         <Suspense fallback={<div className="flex justify-center py-16"><Loader2 className="w-10 h-10 animate-spin text-indigo-500" /></div>}>
           <TeachersKpiTab />
         </Suspense>

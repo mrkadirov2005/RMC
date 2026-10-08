@@ -531,7 +531,7 @@ function AppContent() {
         <Route
           path="/teachers/:teacherId/kpi"
           element={
-            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_TEACHER}>
+            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeacherKpiDetailPage />
