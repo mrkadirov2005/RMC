@@ -1,5 +1,6 @@
 // Page component for the classes screen in the crm feature.
 
+import { scheduleDaysUz } from './utils/schedule';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pencil, Trash2, Info, CalendarDays, BookOpen, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -134,6 +135,7 @@ const ClassesPage = () => {
         cls.payment_amount,
         cls.payment_frequency,
         schedule,
+        scheduleDaysUz(cls.section),
       ]
         .filter((value) => value != null)
         .some((value) => String(value).toLowerCase().includes(search));
