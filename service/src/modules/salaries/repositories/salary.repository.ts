@@ -325,6 +325,7 @@ const findTeacherGroupPaymentRows = async ({
           last_name: students.lastName,
           start_date: students.startDate,
           end_date: students.endDate,
+          status: students.status,
         })
         .from(students)
         .where(and(inArray(students.classId, classIds), isNull(students.deletedAt)))

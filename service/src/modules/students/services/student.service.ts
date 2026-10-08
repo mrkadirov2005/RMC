@@ -14,8 +14,8 @@ const getStudent = (id: number, centerId?: number, teacherId?: number) =>
 const listDeletedStudents = (centerId?: number) =>
   studentRepository.findDeletedWithClassAndTeacher(centerId);
 
-const listClassStudentsWithTransfers = (classId: number, centerId?: number, teacherId?: number) =>
-  studentRepository.findByClassIncludingTransferred(classId, centerId, teacherId);
+const listClassStudentsWithTransfers = (classId: number, centerId?: number, teacherId?: number, excludeTransferred = false) =>
+  studentRepository.findByClassIncludingTransferred(classId, centerId, teacherId, excludeTransferred);
 
 const syncStudentDiscount = async (student: any, body: any, centerId?: number) => {
   const studentId = Number(student?.student_id || student?.id || body.student_id || 0);

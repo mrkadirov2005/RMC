@@ -97,8 +97,11 @@ const GroupCard = ({ group, sharePercent }: { group: GroupPayment; sharePercent:
           ) : (
             <ul className="divide-y">
               {group.students.map((student) => (
-                <li key={student.student_id} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                  <span className="min-w-0 truncate font-medium">{student.name}</span>
+                <li key={student.student_id} className={cn('flex items-center justify-between gap-3 px-4 py-2 text-sm', student.transferred && 'bg-rose-50/70 dark:bg-rose-950/30')}>
+                  <span className={cn('min-w-0 truncate font-medium', student.transferred && 'text-rose-700 dark:text-rose-300')}>
+                    {student.name}
+                    {student.transferred && <span className="ml-1.5 text-xs font-semibold">· {t('Transferred')}</span>}
+                  </span>
                   <span className="flex shrink-0 items-center gap-3">
                     {student.remaining > 0 && (
                       <span className="text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-400">

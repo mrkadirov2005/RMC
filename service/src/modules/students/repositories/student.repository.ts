@@ -234,7 +234,9 @@ const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, 
 
   if (filters.class_id != null) {
     if (Number(filters.class_id) === -1) conditions.push(isNull(students.classId));
-    else conditions.push(eq(students.classId, filters.class_id), stillOnOldRoster());
+    // A group's student list shows only the students in it now; a student transferred out is
+    // listed in their new group (their old record still counts for the old teacher's salary).
+    else conditions.push(eq(students.classId, filters.class_id), wantsTransferredStatus ? stillOnOldRoster() : or(isNull(students.status), ne(students.status, 'Transferred')));
   }
 
   if (filters.subject_id != null) conditions.push(eq(subjects.subjectId, filters.subject_id));
@@ -387,8 +389,12 @@ const findDeletedWithClassAndTeacher = async (centerId?: number) => {
     .orderBy(desc(students.deletedAt), desc(students.studentId));
 };
 
-const findByClassIncludingTransferred = async (classId: number, centerId?: number, teacherId?: number) => {
-  const conditions: any[] = [eq(students.classId, classId), or(isNull(students.deletedAt), eq(students.status, 'Transferred')), stillOnOldRoster()];
+// Billing and lesson pages need a transferred-out student for the days they were still in the
+// group; student lists pass excludeTransferred to show only who is in the group now.
+const findByClassIncludingTransferred = async (classId: number, centerId?: number, teacherId?: number, excludeTransferred = false) => {
+  const conditions: any[] = excludeTransferred
+    ? [eq(students.classId, classId), isNull(students.deletedAt), or(isNull(students.status), ne(students.status, 'Transferred'))]
+    : [eq(students.classId, classId), or(isNull(students.deletedAt), eq(students.status, 'Transferred')), stillOnOldRoster()];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(effectiveTeacherExpr, teacherId));
 

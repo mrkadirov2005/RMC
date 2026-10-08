@@ -91,7 +91,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
         const centerId = getResolvedCenterId(user) || undefined;
         const [classResponse, studentsResponse, roomsResponse, bookingResponse] = await Promise.all([
           classAPI.getById(selectedClassId),
-          studentAPI.getByClassWithTransfers(selectedClassId).catch(() => ({ data: [] })),
+          studentAPI.getByClassWithTransfers(selectedClassId, { exclude_transferred: 1 }).catch(() => ({ data: [] })),
           roomAPI.getAll(centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
           roomSlotAPI.getBookingsByClass(selectedClassId, centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
         ]);

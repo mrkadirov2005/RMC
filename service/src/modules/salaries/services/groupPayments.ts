@@ -47,7 +47,7 @@ const buildTeacherGroupPayments = ({
   monthKey: string;
   salaryPercentage: unknown;
   classes: Array<{ class_id: number; class_name?: string | null; payment_amount?: unknown }>;
-  students: Array<{ student_id: number; class_id: number | null; first_name?: string | null; last_name?: string | null; start_date?: unknown; end_date?: unknown }>;
+  students: Array<{ student_id: number; class_id: number | null; first_name?: string | null; last_name?: string | null; start_date?: unknown; end_date?: unknown; status?: string | null }>;
   payments: Array<{ student_id: number | null; amount?: unknown; discount_amount?: unknown }>;
   salary?: any;
 }) => {
@@ -81,6 +81,9 @@ const buildTeacherGroupPayments = ({
           expected,
           paid,
           remaining: state === 'paid' ? 0 : roundMoney(Math.max(0, expected - paid)),
+          // Moved to another teacher's group this month: still part of this teacher's salary for the
+          // days they were here, shown in red, and gone from the list once the month is over.
+          transferred: String(student.status || '') === 'Transferred',
         };
       })
       // A record that was not in this group during the month (transferred out before it, or in

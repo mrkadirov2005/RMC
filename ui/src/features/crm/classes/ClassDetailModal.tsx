@@ -146,7 +146,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       dispatch(fetchAttendance());
       dispatch(fetchSubjectsThunk());
       studentAPI
-        .getByClassWithTransfers(classId)
+        .getByClassWithTransfers(classId, { exclude_transferred: 1 })
         .then((response) => {
           const data = response?.data ?? response;
           setClassStudents(Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []);

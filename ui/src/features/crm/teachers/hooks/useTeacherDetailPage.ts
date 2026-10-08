@@ -219,7 +219,7 @@ export const useTeacherDetailPage = () => {
     try {
       let rows: TeacherStudent[] = [];
       try {
-        rows = getRows<TeacherStudent>(await studentAPI.getByClassWithTransfers(classId, { _fresh: Date.now() }));
+        rows = getRows<TeacherStudent>(await studentAPI.getByClassWithTransfers(classId, { _fresh: Date.now(), exclude_transferred: 1 }));
       } catch {
         rows = [];
       }

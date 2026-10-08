@@ -9,6 +9,8 @@ export interface GroupPaymentStudent {
   expected: number;
   paid: number;
   remaining: number;
+  /** Moved to another group this month; counts for this teacher's salary until the month ends. */
+  transferred?: boolean;
 }
 
 export interface GroupPaymentCounts {

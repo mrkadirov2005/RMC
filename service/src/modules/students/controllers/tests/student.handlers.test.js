@@ -306,7 +306,20 @@ describe('students controller handlers', () => {
         user: { userType: 'student', id: 9, class_id: '3' },
       }, res);
 
-      expect(studentService.listClassStudentsWithTransfers).toHaveBeenCalledWith(3, 2, undefined);
+      expect(studentService.listClassStudentsWithTransfers).toHaveBeenCalledWith(3, 2, undefined, false);
+    });
+
+    it('leaves out students transferred out when the student list asks for it', async () => {
+      const res = createResponse();
+      studentService.listClassStudentsWithTransfers.mockResolvedValue([]);
+
+      await controller.getClassStudentsWithTransfers({
+        params: { classId: '3' },
+        query: { exclude_transferred: '1' },
+        user: { userType: 'superuser', id: 1 },
+      }, res);
+
+      expect(studentService.listClassStudentsWithTransfers).toHaveBeenCalledWith(3, 2, undefined, true);
     });
 
     it('reports a service failure as a 500', async () => {

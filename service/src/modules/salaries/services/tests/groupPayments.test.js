@@ -95,4 +95,20 @@ describe('teacher group payments', () => {
     expect(result.totals.current_salary).toBe(0);
     expect(result.totals.collected_percent).toBe(100);
   });
+
+  it('keeps a student transferred out this month in the old teacher salary, flagged', () => {
+    const result = buildTeacherGroupPayments({
+      monthKey: '2026-10',
+      salaryPercentage: 40,
+      classes: [{ class_id: 1, class_name: 'Math A', payment_amount: 310000 }],
+      students: [
+        { student_id: 10, class_id: 1, first_name: 'Alisher', status: 'Transferred', end_date: '2026-10-10' },
+        { student_id: 11, class_id: 1, first_name: 'Bek', status: 'Active' },
+      ],
+      payments: [],
+    });
+    const [alisher, bek] = result.groups[0].students;
+    expect(alisher).toMatchObject({ name: 'Alisher', transferred: true, expected: 100000 });
+    expect(bek.transferred).toBe(false);
+  });
 });

@@ -76,7 +76,7 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
         const teacherId = Number(nextClass?.teacher_id || 0);
         const shouldLoadTeacher = teacherId > 0 && !String(nextClass?.teacher_name || '').trim();
         const [studentsResponse, subjectsResponse, sessionsResponse, testsResponse, roomsResponse, bookingResponse, teacherResponse] = await Promise.all([
-          studentAPI.getByClassWithTransfers(targetClassId).catch(() => ({ data: [] })),
+          studentAPI.getByClassWithTransfers(targetClassId, { exclude_transferred: 1 }).catch(() => ({ data: [] })),
           subjectAPI.getByClass(targetClassId).catch(() => ({ data: [] })),
           classAPI.getSessions(targetClassId).catch(() => ({ data: [] })),
           testAPI.getAssignedTests('class', targetClassId).catch(() => ({ data: [] })),
