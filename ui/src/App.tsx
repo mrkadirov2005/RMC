@@ -105,6 +105,23 @@ const prefetchPrimaryRoute = (user: any) => {
   }
 };
 
+const MOUSE_WHEEL_SPEED = 0.65;
+
+const isMouseWheelEvent = (event: WheelEvent) => {
+  if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) return true;
+  if (event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL || event.deltaX % 1 !== 0 || event.deltaY % 1 !== 0) return false;
+  return Math.abs(event.deltaX) >= 40 || Math.abs(event.deltaY) >= 40;
+};
+
+const findScrollableWheelTarget = (target: EventTarget | null) => {
+  let element = target instanceof HTMLElement ? target : null;
+  while (element) {
+    if (element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth) return element;
+    element = element.parentElement;
+  }
+  return document.scrollingElement as HTMLElement | null;
+};
+
 // Handles safe log arg.
 const safeLogArg = (value: unknown) => {
   if (typeof value === 'string') return value;
@@ -191,6 +208,24 @@ function AppContent() {
   const centerReady = useAppSelector((state) => state.pagesUi.app.centerReady);
 
 // Runs side effects for this component.
+  useEffect(() => {
+    const slowMouseWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || !isMouseWheelEvent(event)) return;
+      const target = findScrollableWheelTarget(event.target);
+      if (!target) return;
+
+      event.preventDefault();
+      target.scrollBy({
+        left: event.deltaX * MOUSE_WHEEL_SPEED,
+        top: event.deltaY * MOUSE_WHEEL_SPEED,
+        behavior: 'auto',
+      });
+    };
+
+    window.addEventListener('wheel', slowMouseWheel, { capture: true, passive: false });
+    return () => window.removeEventListener('wheel', slowMouseWheel, true);
+  }, []);
+
   useEffect(() => {
     dispatch(initializeAuth());
   }, [dispatch]);
