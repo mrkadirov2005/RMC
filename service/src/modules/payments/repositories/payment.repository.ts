@@ -1,6 +1,7 @@
 const { and, desc, eq, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { classes, payments, students } = require('../../../db/schema');
+const { effectiveEndDateSql } = require('../../discounts/repositories/discount.repository');
 
 type PaymentListOptions = {
   centerId?: number;
@@ -214,7 +215,9 @@ const findStaffName = async (table: 'owners' | 'superusers', id: number) => {
 
 // Every active student's payments over a date range, with their group, teacher and subject, for
 // the dashboard's payments page: filtered and paged (100 per page) in SQL, plus totals for the
-// whole filtered list. Expected = the group's monthly fee x the months the range touches.
+// whole filtered list. Expected = the group's monthly fee x the months the range touches, less
+// discounts: what payments in the range already took off (serial or one-month), and the active
+// serial discount for each month in the range that has no payment yet.
 const findStudentPaymentSummary = async (filters: {
   centerId?: number;
   from: string;
@@ -251,25 +254,54 @@ const findStudentPaymentSummary = async (filters: {
               COALESCE(c.teacher_id, s.teacher_id) AS teacher_id,
               NULLIF(trim(concat_ws(' ', t.first_name, t.last_name)), '') AS teacher_name,
               (SELECT string_agg(DISTINCT sub.subject_name, ', ') FROM subjects sub WHERE sub.class_id = s.class_id) AS subject,
-              COALESCE(p.paid, 0)::numeric AS paid_amount, COALESCE(p.payments_count, 0)::int AS payments_count, p.last_payment_date
+              COALESCE(p.paid, 0)::numeric AS paid_amount, COALESCE(p.payments_count, 0)::int AS payments_count, p.last_payment_date,
+              COALESCE(p.discounts, 0)::numeric AS discount_applied, COALESCE(p.paid_months, 0)::int AS paid_months,
+              CASE
+                WHEN sd.discount_type = 'percent' THEN LEAST(COALESCE(c.payment_amount, 0), COALESCE(c.payment_amount, 0) * LEAST(GREATEST(sd.value, 0), 100) / 100)
+                WHEN sd.value IS NOT NULL THEN LEAST(COALESCE(c.payment_amount, 0), GREATEST(sd.value, 0))
+                ELSE 0
+              END::numeric AS serial_discount_per_month
        FROM students s
        LEFT JOIN classes c ON c.class_id = s.class_id
        LEFT JOIN teachers t ON t.teacher_id = COALESCE(c.teacher_id, s.teacher_id)
        LEFT JOIN LATERAL (
-         SELECT SUM(pay.amount) AS paid, COUNT(*) AS payments_count, MAX(pay.payment_date)::text AS last_payment_date
+         SELECT SUM(pay.amount) AS paid, COUNT(*) AS payments_count, MAX(pay.payment_date)::text AS last_payment_date,
+                SUM(COALESCE(pay.discount_amount, 0)) AS discounts,
+                COUNT(DISTINCT date_trunc('month', pay.payment_date)) AS paid_months
          FROM payments pay
          WHERE pay.student_id = s.student_id AND pay.deleted_at IS NULL
            AND LOWER(COALESCE(pay.payment_status::text, '')) IN ('completed', 'paid')
            AND pay.payment_date >= $1::date AND pay.payment_date <= $2::date
        ) p ON true
+       LEFT JOIN LATERAL (
+         SELECT d.discount_type, d.value::numeric AS value
+         FROM discounts d
+         WHERE d.student_id = s.student_id AND d.active = TRUE AND d.discount_kind = 'serial_discount'
+           AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+           AND (${effectiveEndDateSql('d')} IS NULL OR ${effectiveEndDateSql('d')} >= CURRENT_DATE)
+         ORDER BY d.created_at DESC
+         LIMIT 1
+       ) sd ON true
        WHERE ${where.join(' AND ')}
      ),
-     scored AS (
-       SELECT *, monthly_fee * $3::int AS expected,
-              CASE WHEN paid_amount <= 0 THEN 'unpaid'
-                   WHEN monthly_fee * $3::int > 0 AND paid_amount + 0.01 < monthly_fee * $3::int THEN 'partial'
-                   ELSE 'paid' END AS state
+     owed AS (
+       SELECT *,
+              monthly_fee * $3::int AS expected_before_discount,
+              serial_discount_per_month * GREATEST($3::int - paid_months, 0) AS pending_discount
        FROM base
+     ),
+     netted AS (
+       SELECT *, GREATEST(expected_before_discount - discount_applied - pending_discount, 0) AS expected
+       FROM owed
+     ),
+     scored AS (
+       -- Fully covered by discounts (e.g. 100% off) counts as paid; a group with no fee stays as before.
+       SELECT *,
+              GREATEST(expected_before_discount - discount_applied - paid_amount, 0) AS remaining_before_discount,
+              CASE WHEN paid_amount <= 0 AND discount_applied <= 0 AND NOT (expected_before_discount > 0 AND expected <= 0) THEN 'unpaid'
+                   WHEN expected > 0 AND paid_amount + 0.01 < expected THEN 'partial'
+                   ELSE 'paid' END AS state
+       FROM netted
      ),
      totals AS (
        SELECT COUNT(*)::int AS students,

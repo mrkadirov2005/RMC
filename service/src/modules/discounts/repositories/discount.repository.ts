@@ -6,7 +6,8 @@ const db = pool.db;
 
 // A one-month discount lasts one month from the day it was given (start_date, else created_at),
 // so when no end_date is stored it lapses on the same day next month (Jan 31 -> Feb 28).
-const effectiveEndDate = (alias: string) => sql.raw(`COALESCE(${alias}.end_date, CASE WHEN ${alias}.discount_kind = 'monthly_discount' THEN (COALESCE(${alias}.start_date, ${alias}.created_at::date, CURRENT_DATE) + interval '1 month')::date END)`);
+const effectiveEndDateSql = (alias: string) => `COALESCE(${alias}.end_date, CASE WHEN ${alias}.discount_kind = 'monthly_discount' THEN (COALESCE(${alias}.start_date, ${alias}.created_at::date, CURRENT_DATE) + interval '1 month')::date END)`;
+const effectiveEndDate = (alias: string) => sql.raw(effectiveEndDateSql(alias));
 
 const selection = {
   discount_id: discounts.discountId,
@@ -128,6 +129,6 @@ const remove = async (id: number, centerId?: number) => {
   return rows[0] || null;
 };
 
-module.exports = { effectiveEndDate, findAllFiltered, findById, findActiveSerialByStudent, findActiveByStudent, insert, update, remove };
+module.exports = { effectiveEndDate, effectiveEndDateSql, findAllFiltered, findById, findActiveSerialByStudent, findActiveByStudent, insert, update, remove };
 
 export {};
