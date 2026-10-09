@@ -270,11 +270,19 @@ export const archiveAPI = {
     apiClient.post(`/archive/${entity}/${id}/restore`),
   purge: (entity: 'students' | 'teachers' | 'classes' | 'payments' | 'sessions', id: number) =>
     apiClient.delete(`/archive/${entity}/${id}/purge`),
+  /** Students archived as "finished successfully", with study history and certificates. */
+  getGraduates: () => apiClient.get('/archive/graduates'),
+  uploadCertificate: (studentId: number, data: { title: string; file_name: string; data: string }) =>
+    apiClient.post(`/archive/graduates/${studentId}/certificates`, data),
+  downloadCertificate: (id: number) => apiClient.get(`/archive/certificates/${id}/file`, { responseType: 'blob' }),
+  deleteCertificate: (id: number) => apiClient.delete(`/archive/certificates/${id}`),
 };
 
 export const reportAPI = {
   retention: (params?: { center_id?: number; month?: string; months?: number; limit?: number; view?: 'retention' | 'intake'; source_id?: number; referred_by_teacher_id?: number; source_detail?: string }) =>
     apiClient.get('/reports/retention', { params }),
+  /** Student count on the 10th, 20th and 30th of each of the last `months` months. */
+  studentTrend: (months: number) => apiClient.get('/reports/student-trend', { params: { months } }),
 };
 
 export const telegramRegistrationAPI = {
@@ -346,6 +354,14 @@ export const watchlistAPI = {
   add: (data: { student_id: number; contact_name: string; contact_phone?: string; note?: string }) => apiClient.post('/watchlist', data),
   update: (id: number, data: { contact_name: string; contact_phone?: string; note?: string }) => apiClient.patch(`/watchlist/${id}`, data),
   remove: (id: number) => apiClient.delete(`/watchlist/${id}`),
+};
+
+/** Siblings, relatives and friends who come together. */
+export const studentLinkAPI = {
+  getAll: () => apiClient.get('/student-links'),
+  create: (data: { relation_type: string; student_ids: number[]; note?: string }) => apiClient.post('/student-links', data),
+  update: (id: number, data: { relation_type: string; student_ids: number[]; note?: string }) => apiClient.put(`/student-links/${id}`, data),
+  remove: (id: number) => apiClient.delete(`/student-links/${id}`),
 };
 
 /** Daily till report (payments by method minus expenses) and the expenses admins record. */

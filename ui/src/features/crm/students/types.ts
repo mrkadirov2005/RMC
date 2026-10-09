@@ -27,6 +27,8 @@ export interface Student {
   end_date?: string | null;
   school_name?: string | null;
   school_class?: string | null;
+  /** The subjects of the student's group, comma-separated (list endpoint). */
+  class_subjects?: string | null;
   father_name?: string | null;
   passport_number?: string | null;
   /** school | college | university */

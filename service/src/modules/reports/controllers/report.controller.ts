@@ -1,4 +1,5 @@
 const reportService = require('../services/report.service');
+const studentTrendService = require('../services/studentTrend.service');
 const { getCenterScope, sendError, sendScopeError } = require('../../../shared/controller');
 
 const getOverviewReport = async (req: any, res: any) => {
@@ -52,7 +53,19 @@ const getRetentionReport = async (req: any, res: any) => {
   }
 };
 
+// Student count on the 10th, 20th and 30th of each month. The owner may see every branch.
+const getStudentTrend = async (req: any, res: any) => {
+  try {
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    res.json(await studentTrendService.studentTrend(req.query, scope.centerId ?? undefined));
+  } catch (error: any) {
+    sendError(res, error, "O'quvchilar soni trendini yuklab bo'lmadi");
+  }
+};
+
 module.exports = {
+  getStudentTrend,
   getOverviewReport,
   getPaymentsReport,
   getAttendanceReport,

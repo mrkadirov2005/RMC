@@ -43,3 +43,5 @@ export const ownerManagerApi = {
       salaryAPI.getOverview(params, { skipCenterScope: true }),
   },
 };
+
+export { reportAPI } from '../../shared/api/api';
