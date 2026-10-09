@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength, Matches } from 'class-validator';
 
 class StudentListQueryDto {
   @IsOptional()
@@ -175,6 +175,12 @@ class CreateStudentDto {
   @IsString()
   school_class?: string;
 
+  @IsOptional() @IsString() @MaxLength(255) father_name?: string;
+  // Uzbek passport or ID card: two letters and seven digits (AA1234567); empty clears it.
+  @IsOptional() @Matches(/^([A-Z]{2}\d{7})?$/) passport_number?: string;
+  @IsOptional() @IsIn(['school', 'college', 'university', '']) study_place_type?: string;
+  @IsOptional() @IsString() @MaxLength(255) previous_school?: string;
+
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
@@ -292,6 +298,12 @@ class UpdateStudentDto {
   @IsOptional()
   @IsString()
   school_class?: string;
+
+  @IsOptional() @IsString() @MaxLength(255) father_name?: string;
+  // Uzbek passport or ID card: two letters and seven digits (AA1234567); empty clears it.
+  @IsOptional() @Matches(/^([A-Z]{2}\d{7})?$/) passport_number?: string;
+  @IsOptional() @IsIn(['school', 'college', 'university', '']) study_place_type?: string;
+  @IsOptional() @IsString() @MaxLength(255) previous_school?: string;
 
   @IsOptional()
   @Type(() => Boolean)

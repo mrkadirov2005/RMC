@@ -27,6 +27,11 @@ export interface Student {
   end_date?: string | null;
   school_name?: string | null;
   school_class?: string | null;
+  father_name?: string | null;
+  passport_number?: string | null;
+  /** school | college | university */
+  study_place_type?: string | null;
+  previous_school?: string | null;
   class_name?: string | null;
   class_code?: string | null;
   class_level?: number | null;

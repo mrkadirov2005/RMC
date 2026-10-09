@@ -17,3 +17,12 @@ export const DISCOUNT_REASON_OPTIONS = [
   { label: 'Charity', value: 'charity' },
   { label: 'Other', value: 'other' },
 ];
+
+export const STUDY_PLACE_OPTIONS = [
+  { label: 'School', value: 'school' },
+  { label: 'College', value: 'college' },
+  { label: 'University', value: 'university' },
+];
+
+/** "aa 123 45 67" -> "AA1234567", the format the server accepts. */
+export const normalizePassport = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
