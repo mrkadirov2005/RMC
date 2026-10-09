@@ -333,6 +333,14 @@ export const classAPI = {
 };
 
 
+/** Daily till report (payments by method minus expenses) and the expenses admins record. */
+export const cashAPI = {
+  getDaily: (date: string) => apiClient.get('/cash/daily', { params: { date } }),
+  getExpenses: (from: string, to: string) => apiClient.get('/cash/expenses', { params: { from, to } }),
+  createExpense: (data: { expense_date: string; amount: number; payment_method: string; description: string }) => apiClient.post('/cash/expenses', data),
+  deleteExpense: (id: number) => apiClient.delete(`/cash/expenses/${id}`),
+};
+
 export const paymentAPI = {
   /** Every active student's payments over a date range (this month by default), 100 per page. */
   getStudentsSummary: (params: Record<string, unknown>) => apiClient.get('/payments/students-summary', { params }),

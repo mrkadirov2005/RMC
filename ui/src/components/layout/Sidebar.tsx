@@ -80,6 +80,7 @@ const iconToneMap: Record<string, string> = {
   Server: 'from-emerald-600 to-cyan-700 shadow-emerald-500/25',
   Calendar: 'from-teal-500 to-emerald-600 shadow-teal-500/25',
   MdPayment: 'from-indigo-600 to-blue-700 shadow-indigo-500/25',
+  Finance: 'from-emerald-600 to-teal-700 shadow-emerald-500/25',
   MdBarChart: 'from-lime-500 to-green-600 shadow-lime-500/25',
   Attendance: 'from-green-500 to-emerald-700 shadow-green-500/25',
   Assignments: 'from-rose-500 to-pink-600 shadow-rose-500/25',
@@ -247,6 +248,7 @@ const Sidebar = memo(() => {
     // Settings removed from sidebar — accessible via gear icon in header
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
+    { label: 'Cash report', path: '/cash', iconName: 'Finance', roles: ['superuser'], permission: 'CRUD_PAYMENT' },
     {
       label: 'Salary', path: '/salary', iconName: 'Salary', roles: ['superuser'], permission: 'MANAGE_SALARY',
       children: [

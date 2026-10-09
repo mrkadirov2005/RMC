@@ -2,6 +2,7 @@ import { assignmentsLabels } from './assignments';
 import { attendanceLabels } from './attendance';
 import { authLabels } from './auth';
 import { calendarLabels } from './calendar';
+import { cashLabels } from './cash';
 import { centersLabels } from './centers';
 import { classesLabels } from './classes';
 import { componentsLabels } from './components';
@@ -28,6 +29,7 @@ export const pageLabelTranslations: Record<string, string> = {
   ...attendanceLabels,
   ...authLabels,
   ...calendarLabels,
+  ...cashLabels,
   ...centersLabels,
   ...classesLabels,
   ...componentsLabels,

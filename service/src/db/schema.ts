@@ -643,6 +643,20 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
     index('idx_payment_plan_installments_center_id').on(table.centerId),
 ]);
 
+const expenses = pgTable('expenses', {
+  expenseId: serial('expense_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  expenseDate: date('expense_date').notNull(),
+  amount: numeric('amount').notNull(),
+  paymentMethod: varchar('payment_method', { length: 50 }).notNull(),
+  description: text('description').notNull(),
+  createdByName: varchar('created_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+  deletedAt: timestamp('deleted_at'),
+}, (table) => [
+    index('idx_expenses_center_date').on(table.centerId, table.expenseDate),
+]);
+
 const payments = pgTable('payments', {
   paymentId: serial('payment_id').primaryKey(),
   studentId: integer('student_id'),
@@ -1062,6 +1076,7 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 ]);
 
 module.exports = {
+  expenses,
   absenceAlertResolutions,
   appSettings,
   translations,
