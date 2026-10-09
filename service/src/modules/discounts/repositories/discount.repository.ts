@@ -4,6 +4,10 @@ const { discounts } = require('../../../db/schema');
 
 const db = pool.db;
 
+// A one-month discount lasts one month from the day it was given (start_date, else created_at),
+// so when no end_date is stored it lapses on the same day next month (Jan 31 -> Feb 28).
+const effectiveEndDate = (alias: string) => sql.raw(`COALESCE(${alias}.end_date, CASE WHEN ${alias}.discount_kind = 'monthly_discount' THEN (COALESCE(${alias}.start_date, ${alias}.created_at::date, CURRENT_DATE) + interval '1 month')::date END)`);
+
 const selection = {
   discount_id: discounts.discountId,
   student_id: discounts.studentId,
@@ -16,7 +20,7 @@ const selection = {
   reason: discounts.reason,
   payment_period: discounts.paymentPeriod,
   start_date: discounts.startDate,
-  end_date: discounts.endDate,
+  end_date: sql`${effectiveEndDate('discounts')}::text`,
   active: discounts.active,
   created_at: discounts.createdAt,
   updated_at: discounts.updatedAt,
@@ -45,7 +49,7 @@ const activeConditions = (studentId: number, centerId?: number, discountKind?: s
     eq(discounts.studentId, studentId),
     eq(discounts.active, true),
     or(sql`${discounts.startDate} IS NULL`, lte(discounts.startDate, sql`CURRENT_DATE`)),
-    or(sql`${discounts.endDate} IS NULL`, sql`${discounts.endDate} >= CURRENT_DATE`),
+    sql`(${effectiveEndDate('discounts')} IS NULL OR ${effectiveEndDate('discounts')} >= CURRENT_DATE)`,
   ];
   if (centerId) conditions.push(eq(discounts.centerId, centerId));
   if (discountKind) conditions.push(eq(discounts.discountKind, discountKind));
@@ -107,7 +111,8 @@ const update = async (id: number, params: any[], centerId?: number, queryable: a
       reason: sql`COALESCE(${params[5] ?? null}, ${discounts.reason})`,
       paymentPeriod: sql`COALESCE(${params[6] ?? null}, ${discounts.paymentPeriod})`,
       startDate: sql`COALESCE(${params[7] ?? null}, ${discounts.startDate})`,
-      endDate: sql`COALESCE(${params[8] ?? null}, ${discounts.endDate})`,
+      // undefined keeps the current end date; null clears it
+      endDate: params[8] === undefined ? sql`${discounts.endDate}` : params[8] || null,
       active: sql`COALESCE(${params[9] ?? null}, ${discounts.active})`,
       updatedAt: sql`CURRENT_TIMESTAMP`,
     })
@@ -123,6 +128,6 @@ const remove = async (id: number, centerId?: number) => {
   return rows[0] || null;
 };
 
-module.exports = { findAllFiltered, findById, findActiveSerialByStudent, findActiveByStudent, insert, update, remove };
+module.exports = { effectiveEndDate, findAllFiltered, findById, findActiveSerialByStudent, findActiveByStudent, insert, update, remove };
 
 export {};

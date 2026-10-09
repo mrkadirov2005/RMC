@@ -47,6 +47,7 @@ export interface Student {
   discount_value?: number;
   discount_original_price?: number;
   discount_reason?: string;
+  discount_end_date?: string | null;
   acquisition_source_id?: number;
   acquisition_detail?: string;
   referred_by_teacher_id?: number;

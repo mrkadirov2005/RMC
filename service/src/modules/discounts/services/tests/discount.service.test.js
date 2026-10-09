@@ -9,6 +9,24 @@ const { studentInCenter } = require('../../../../shared/tenantDb');
 const service = require('../discount.service');
 
 describe('discount service', () => {
+  describe('one-month discount end date', () => {
+    it('lapses one month after the day it was given, clamped to shorter months', () => {
+      expect(service.monthlyEndDate('2026-10-09')).toBe('2026-11-09');
+      expect(service.monthlyEndDate('2026-01-31')).toBe('2026-02-28');
+      expect(service.monthlyEndDate('2028-01-30')).toBe('2028-02-29');
+      expect(service.monthlyEndDate('2026-12-15')).toBe('2027-01-15');
+    });
+
+    it('is stored on create when none is given, while an explicit date and serial discounts are left alone', async () => {
+      studentInCenter.mockResolvedValue(true);
+      repository.insert.mockResolvedValue({ discount_id: 5 });
+      await service.create({ student_id: 1, discount_kind: 'monthly_discount', value: 10, start_date: '2026-09-09' }, 2);
+      await service.create({ student_id: 1, discount_kind: 'monthly_discount', value: 10, end_date: '2026-09-15' }, 2);
+      await service.create({ student_id: 1, discount_kind: 'serial_discount', value: 10 }, 2);
+      expect(repository.insert.mock.calls.map((call) => call[0][10])).toEqual(['2026-10-09', '2026-09-15', null]);
+    });
+  });
+
   beforeEach(() => jest.clearAllMocks());
 
   test.each([

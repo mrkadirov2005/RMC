@@ -1,6 +1,7 @@
 const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, ne, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, studentActionReasons, subjects, teachers } = require('../../../db/schema');
+const { effectiveEndDate } = require('../../discounts/repositories/discount.repository');
 const { buildTransferAllocation, toDateOnly, todayInCenterTimeZone } = require('../../../utils/transferAllocation');
 
 const db = pool.db;
@@ -328,14 +329,14 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
         WHERE d.student_id = ${students.studentId}
           AND d.active = TRUE
           AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
-          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+          AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
       )`,
       discount_kind: sql`(
         SELECT d.discount_kind FROM ${discounts} d
         WHERE d.student_id = ${students.studentId}
           AND d.active = TRUE
           AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
-          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+          AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
         ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
         LIMIT 1
       )`,
@@ -344,7 +345,7 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
         WHERE d.student_id = ${students.studentId}
           AND d.active = TRUE
           AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
-          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+          AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
         ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
         LIMIT 1
       )`,
@@ -353,7 +354,7 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
         WHERE d.student_id = ${students.studentId}
           AND d.active = TRUE
           AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
-          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+          AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
         ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
         LIMIT 1
       )`,
@@ -362,7 +363,7 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
         WHERE d.student_id = ${students.studentId}
           AND d.active = TRUE
           AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
-          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+          AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
         ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
         LIMIT 1
       )`,
@@ -371,7 +372,16 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
         WHERE d.student_id = ${students.studentId}
           AND d.active = TRUE
           AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
-          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+          AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
+        ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
+        LIMIT 1
+      )`,
+      discount_end_date: sql`(
+        SELECT ${effectiveEndDate('d')}::text FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId}
+          AND d.active = TRUE
+          AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+          AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
         ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
         LIMIT 1
       )`,

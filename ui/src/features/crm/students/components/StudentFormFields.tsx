@@ -264,6 +264,17 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             <div className="sm:col-span-2 lg:col-span-5">
               <TextField label={t('Reason')} value={formData.discount_reason} onChange={(value) => setFormData({ ...formData, discount_reason: value })} placeholder={t('Reason for discount')} />
             </div>
+            <div className="sm:col-span-2 lg:col-span-5">
+              <label className="block text-xs font-semibold text-rose-900 dark:text-rose-200">
+                {t('Discount expiry date')}
+                <input
+                  type="date"
+                  value={formData.discount_end_date || ''}
+                  onChange={(event) => setFormData({ ...formData, discount_end_date: event.target.value || null })}
+                  className="mt-1 block h-9 w-full rounded-md border border-rose-200 bg-white px-2 text-sm font-medium text-slate-900 dark:border-rose-900 dark:bg-slate-950 dark:text-white"
+                />
+              </label>
+            </div>
           </div>
         )}
       </section>

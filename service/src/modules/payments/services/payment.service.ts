@@ -85,7 +85,22 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
   const originalAmount = Number(original_amount ?? amount ?? 0);
   let appliedDiscount: any = null;
 
-  if (discount_kind === 'monthly_discount' && Number(discount_value || 0) > 0) {
+  // A stored monthly discount must still be active (not expired/used) at save time;
+  // a manual one-off monthly discount has no discount_id and is taken as entered.
+  const storedMonthlyDiscount = discount_kind === 'monthly_discount' && discount_id
+    ? await discountService.getActiveByStudent(Number(student_id), Number(scopedCenterId), 'monthly_discount')
+    : null;
+  const manualMonthly = discount_kind === 'monthly_discount' && !discount_id && Number(discount_value || 0) > 0;
+
+  if (storedMonthlyDiscount && Number(storedMonthlyDiscount.discount_id) === Number(discount_id)) {
+    appliedDiscount = resolveAppliedDiscount(
+      'monthly_discount',
+      storedMonthlyDiscount.discount_id,
+      storedMonthlyDiscount.discount_type,
+      Number(storedMonthlyDiscount.value),
+      originalAmount
+    );
+  } else if (manualMonthly) {
     appliedDiscount = resolveAppliedDiscount(
       'monthly_discount',
       discount_id || null,
@@ -122,7 +137,8 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
   const resolvedDiscountAmount = Number(appliedDiscount?.discount_amount ?? 0);
   const resolvedFinalAmount = Number(appliedDiscount?.final_amount ?? Math.max(0, resolvedOriginalAmount - resolvedDiscountAmount));
   const paidAmount = Number(amount || 0);
-  const complete = is_complete ?? paidAmount >= resolvedFinalAmount;
+  // The form computes is_complete against its own (possibly stale) discount, so it can only lower the flag
+  const complete = paidAmount >= resolvedFinalAmount && is_complete !== false;
 
   const paymentPayload = [
     student_id,
@@ -136,10 +152,11 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
     payment_status || 'Completed',
     payment_type,
     notes,
-    discount_id || appliedDiscount?.discount_id || null,
-    discount_kind || appliedDiscount?.discount_kind || null,
-    discount_value_type || appliedDiscount?.discount_value_type || null,
-    discount_value ?? appliedDiscount?.discount_value ?? 0,
+    // Record only the discount actually applied, never stale fields from the form
+    appliedDiscount?.discount_id || null,
+    appliedDiscount?.discount_kind || null,
+    appliedDiscount?.discount_value_type || null,
+    appliedDiscount?.discount_value ?? 0,
     resolvedOriginalAmount,
     resolvedDiscountAmount,
     resolvedFinalAmount,

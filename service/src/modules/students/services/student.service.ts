@@ -46,6 +46,9 @@ const syncStudentDiscount = async (student: any, body: any, centerId?: number) =
     original_price: originalPrice,
     final_price: calculated.finalAmount,
     reason: body.discount_reason || activeDiscount?.reason || null,
+    end_date: discountKind === 'monthly_discount'
+      ? body.discount_end_date || activeDiscount?.end_date || discountService.monthlyEndDate()
+      : body.discount_end_date !== undefined ? body.discount_end_date || null : activeDiscount?.end_date || null,
     active: true,
   };
 
