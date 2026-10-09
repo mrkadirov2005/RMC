@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, TrendingUp, Users } from 'lucide-react';
+import { AlertTriangle, BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, TrendingUp, Users } from 'lucide-react';
 import { PieChart } from '@/shared/components/PieChart';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,10 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { attendanceAPI } from '../api';
 import { LessonPickerDialog } from '../../crm/classes/components/LessonPickerDialog';
 import { buildSessionWorkflowPath, defaultLessonActions } from '../../crm/classes/lessonStart';
-import { AbsenceAlertsPanel } from '../../crm/absenceAlerts/AbsenceAlertsPanel';
 import { TelegramInboxPanel } from '../../crm/telegramBot/TelegramInboxPanel';
+import TeacherWarningsTab from './TeacherWarningsTab';
 
-type SectionKey = 'students' | 'attendance' | 'points' | 'payments';
+type SectionKey = 'students' | 'warnings' | 'attendance' | 'points' | 'payments';
 interface OverallStatisticsTabProps {
   teacherId?: number;
   classes?: any[];
@@ -21,6 +21,7 @@ interface OverallStatisticsTabProps {
   attendance?: any[];
   grades?: any[];
   payments?: any[];
+  classOptions?: any[];
 }
 
 const palette = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#ec4899'];
@@ -68,6 +69,7 @@ const OverallStatisticsTab = ({
   attendance = [],
   grades = [],
   payments = [],
+  classOptions = [],
 }: OverallStatisticsTabProps) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -287,6 +289,13 @@ const OverallStatisticsTab = ({
       data: studentGroups,
       icon: Users,
     },
+    warnings: {
+      label: 'Warnings',
+      total: '—',
+      detail: 'Attendance and payment warnings',
+      data: [],
+      icon: AlertTriangle,
+    },
     attendance: {
       label: 'Attendance',
       total: `${overallAttendanceRate.toFixed(1)}%`,
@@ -408,8 +417,6 @@ const OverallStatisticsTab = ({
 
   return (
     <div className="space-y-4">
-    {/* The teacher's own groups only; the admin closes each alert. */}
-    <AbsenceAlertsPanel />
     {/* Messages parents and students sent this teacher from the Telegram bot. */}
     <TelegramInboxPanel title={t('Messages from parents')} hideWhenEmpty />
     <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-white/10 dark:bg-slate-950/20">
@@ -417,6 +424,7 @@ const OverallStatisticsTab = ({
         {(
           [
             { key: 'students', label: 'Student count', icon: Users },
+            { key: 'warnings', label: 'Warnings', icon: AlertTriangle },
             { key: 'attendance', label: 'Attendance', icon: CalendarCheck2 },
             { key: 'points', label: 'Points', icon: TrendingUp },
             { key: 'payments', label: 'Payments', icon: CircleDollarSign },
@@ -437,8 +445,17 @@ const OverallStatisticsTab = ({
           </button>
         ))}
       </div>
+      {activeSection === 'warnings' && (
+        <TeacherWarningsTab
+          classOptions={classOptions.map((item) => ({
+            id: Number(item?.class_id ?? item?.id ?? 0),
+            label: String(item?.class_name ?? item?.name ?? item?.group_name ?? item?.title ?? ''),
+            teacher_id: item?.teacher_id ?? item?.teacherId ?? null,
+          })).filter((item) => item.id > 0 && item.label)}
+        />
+      )}
 
-      <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]">
+      {activeSection !== 'warnings' && <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]">
         <div className="min-w-0 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-sky-50 p-4 dark:border-white/10 dark:from-slate-900/50 dark:via-slate-900/70 dark:to-slate-900">
           <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
             <span>{selectedSection.label}</span>
@@ -580,7 +597,7 @@ const OverallStatisticsTab = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
+      </div>}
 
       <div className="mt-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-900/40">
         <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
