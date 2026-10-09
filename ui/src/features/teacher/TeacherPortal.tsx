@@ -317,6 +317,7 @@ const TeacherPortal = () => {
                 attendance={attendanceData}
                 grades={gradesData}
                 payments={paymentsData}
+                classOptions={classesData}
               />
             </TabsContent>
             <TabsContent value="statistics">

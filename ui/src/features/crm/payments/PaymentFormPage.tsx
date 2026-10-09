@@ -610,7 +610,8 @@ const PaymentFormPage = () => {
                       min="0"
                       value={formData.original_amount ?? formData.amount ?? ''}
                       onChange={(e) => {
-                        const value = Number(e.target.value);
+                        // Clearing the field must leave it empty, not 0, or the next digit is typed after a leading 0
+                        const value = e.target.value === '' ? undefined : Number(e.target.value);
                         setFormData((current) => ({ ...current, amount: value, original_amount: value }));
                       }}
                     />
