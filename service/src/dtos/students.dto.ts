@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength, Matches } from 'class-validator';
 
 class StudentListQueryDto {
   @IsOptional()
@@ -41,6 +41,15 @@ class StudentListQueryDto {
   @IsOptional()
   @IsString()
   discount_reason?: string;
+
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  discount_reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  discount_referrer_name?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -166,6 +175,12 @@ class CreateStudentDto {
   @IsString()
   school_class?: string;
 
+  @IsOptional() @IsString() @MaxLength(255) father_name?: string;
+  // Uzbek passport or ID card: two letters and seven digits (AA1234567); empty clears it.
+  @IsOptional() @Matches(/^([A-Z]{2}\d{7})?$/) passport_number?: string;
+  @IsOptional() @IsIn(['school', 'college', 'university', '']) study_place_type?: string;
+  @IsOptional() @IsString() @MaxLength(255) previous_school?: string;
+
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
@@ -199,6 +214,15 @@ class CreateStudentDto {
   @IsOptional()
   @IsString()
   discount_reason?: string;
+
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  discount_reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  discount_referrer_name?: string;
 
   @IsOptional()
   @IsDateString()
@@ -279,6 +303,12 @@ class UpdateStudentDto {
   @IsString()
   school_class?: string;
 
+  @IsOptional() @IsString() @MaxLength(255) father_name?: string;
+  // Uzbek passport or ID card: two letters and seven digits (AA1234567); empty clears it.
+  @IsOptional() @Matches(/^([A-Z]{2}\d{7})?$/) passport_number?: string;
+  @IsOptional() @IsIn(['school', 'college', 'university', '']) study_place_type?: string;
+  @IsOptional() @IsString() @MaxLength(255) previous_school?: string;
+
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
@@ -307,6 +337,15 @@ class UpdateStudentDto {
   @IsOptional()
   @IsString()
   discount_reason?: string;
+
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  discount_reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  discount_referrer_name?: string;
 
   @IsOptional()
   @IsDateString()

@@ -381,7 +381,7 @@ export default function SessionWorkflowPage() {
 
   const completeTab = (tab: WorkflowTab) => {
     if (!isTabComplete(tab)) {
-      showToast.error(`Complete ${ACTION_LABELS[tab].toLowerCase()} for every student first.`);
+      showToast.error('Complete {action} for every student first.', { vars: { action: t(ACTION_LABELS[tab]).toLowerCase() } });
       return;
     }
     if (tab === 'attendance' && !checkAbsenceReasons()) return;
@@ -487,7 +487,7 @@ export default function SessionWorkflowPage() {
     }
     const incompleteTab = selectedTabs.find((tab) => !isTabComplete(tab));
     if (incompleteTab) {
-      showToast.error(`Complete ${ACTION_LABELS[incompleteTab].toLowerCase()} for every student.`);
+      showToast.error('Complete {action} for every student.', { vars: { action: t(ACTION_LABELS[incompleteTab]).toLowerCase() } });
       return;
     }
     if (!checkAbsenceReasons()) return;

@@ -2,6 +2,8 @@
   "name": "rmc",
   "private": true,
   "scripts": {
+    "prepare": "husky",
+    "typecheck": "cd ui && npx tsc -b && cd ../service && npx tsc --noEmit",
     "dev": "npm --prefix ui run dev",
     "dev:full": "concurrently -n backend,ui -c cyan,magenta \"npm --prefix service run dev\" \"npm --prefix ui run dev\"",
     "dev:backend": "npm --prefix service run dev",
@@ -14,7 +16,8 @@
     "start:bot": "npm --prefix bot run start"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "concurrently": "^9.2.1",
-    "@tailwindcss/postcss": "^4.1.18"
+    "husky": "^9.1.7"
   }
 }

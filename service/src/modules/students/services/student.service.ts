@@ -46,6 +46,8 @@ const syncStudentDiscount = async (student: any, body: any, centerId?: number) =
     original_price: originalPrice,
     final_price: calculated.finalAmount,
     reason: body.discount_reason || activeDiscount?.reason || null,
+    reason_category: body.discount_reason_category,
+    referrer_name: body.discount_referrer_name,
     end_date: discountKind === 'monthly_discount'
       ? body.discount_end_date || activeDiscount?.end_date || discountService.monthlyEndDate()
       : body.discount_end_date !== undefined ? body.discount_end_date || null : activeDiscount?.end_date || null,
@@ -83,6 +85,10 @@ const createStudent = async (body: any) => {
     class_id: body.class_id,
     school_name: body.school_name,
     school_class: body.school_class,
+    father_name: body.father_name,
+    passport_number: body.passport_number,
+    study_place_type: body.study_place_type,
+    previous_school: body.previous_school,
     is_frozen: body.is_frozen,
     acquisition_source_id: body.acquisition_source_id,
     acquisition_detail: body.acquisition_detail,

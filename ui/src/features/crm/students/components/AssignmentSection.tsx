@@ -132,7 +132,7 @@ export const AssignmentSection = ({
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure?')) {
+    if (window.confirm(t('Are you sure?'))) {
       try {
         await assignmentAPI.delete(id);
         showToast.success('Assignment deleted successfully');

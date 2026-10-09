@@ -307,14 +307,14 @@ const DashboardPaymentsPage = () => {
                   <TableCell className="text-right font-semibold tabular-nums text-emerald-700">{formatMoney(row.paid_amount)}</TableCell>
                   <TableCell className="text-right font-semibold tabular-nums text-rose-600">{row.remaining > 0 ? formatMoney(row.remaining) : '—'}</TableCell>
                   <TableCell className="text-sm tabular-nums">{formatDay(row.last_payment_date)}</TableCell>
-                  <TableCell><span className={cn('rounded-md px-2 py-0.5 text-xs font-bold', style.className)}>{t(style.label)}</span></TableCell>
+                  <TableCell><span data-keep-bg className={cn('rounded-md px-2 py-0.5 text-xs font-bold', style.className)}>{t(style.label)}</span></TableCell>
                   <TableCell className="text-right">
                     {/* Not paid in full: record a payment with the student and what they owe filled in. */}
                     {row.state !== 'paid' && (
                       <button
                         type="button"
-                        className="payment-action-button relative inline-flex h-7 items-center justify-center overflow-hidden whitespace-nowrap rounded-md px-2 text-xs font-semibold shadow-sm"
-                        style={{ background: '#059669', backgroundColor: '#059669', backgroundImage: 'none', borderColor: '#059669', color: '#ffffff', opacity: 1 }}
+                        className="payment-action-button relative inline-flex h-7 items-center justify-center overflow-hidden whitespace-nowrap rounded-md bg-emerald-600 px-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700"
+                        data-keep-bg
                         data-visual-overrides-disabled="true"
                         onClick={(event) => {
                           event.stopPropagation();

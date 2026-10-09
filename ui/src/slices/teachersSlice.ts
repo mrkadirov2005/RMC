@@ -5,6 +5,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { teacherAPI } from '../shared/api/api';
 import { handleApiError, showToast } from '../utils/toast';
 import type { RootState } from '../store';
+import { translateStatic } from '@/i18n/LanguageContext';
 
 export interface Teacher {
   teacher_id?: number;
@@ -166,7 +167,7 @@ export const deleteTeacher = createAsyncThunk(
       const status = err?.response?.status;
       const data = err?.response?.data;
       if (status === 409 && data?.dependencies && data?.reason !== 'history') {
-        const ok = window.confirm(`${data.message || 'Teacher is assigned to active records.'}\n\nUnassign related records and delete this teacher?`);
+        const ok = window.confirm(`${translateStatic(data.message || 'Teacher is assigned to active records.')}\n\n${translateStatic('Unassign related records and delete this teacher?')}`);
         if (ok) {
           try {
             await teacherAPI.delete(id, { force: true });

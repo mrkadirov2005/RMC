@@ -2,6 +2,7 @@ import { assignmentsLabels } from './assignments';
 import { attendanceLabels } from './attendance';
 import { authLabels } from './auth';
 import { calendarLabels } from './calendar';
+import { cashLabels } from './cash';
 import { centersLabels } from './centers';
 import { classesLabels } from './classes';
 import { componentsLabels } from './components';
@@ -11,6 +12,7 @@ import { dashboardLabels } from './dashboard';
 import { debtsLabels } from './debts';
 import { financeLabels } from './finance';
 import { gradesLabels } from './grades';
+import { miscLabels } from './misc';
 import { ownerLabels } from './owner';
 import { paymentsLabels } from './payments';
 import { publicLabels } from './public';
@@ -27,6 +29,7 @@ export const pageLabelTranslations: Record<string, string> = {
   ...attendanceLabels,
   ...authLabels,
   ...calendarLabels,
+  ...cashLabels,
   ...centersLabels,
   ...classesLabels,
   ...componentsLabels,
@@ -36,6 +39,7 @@ export const pageLabelTranslations: Record<string, string> = {
   ...debtsLabels,
   ...financeLabels,
   ...gradesLabels,
+  ...miscLabels,
   ...ownerLabels,
   ...paymentsLabels,
   ...publicLabels,

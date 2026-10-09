@@ -35,11 +35,13 @@ import {
 import { paginateItems } from '@/components/common/pagination';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Grade, Teacher, Class, Student, Subject, FolderType } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const folderPageSizeOptions = [12, 24, 48];
 const gradePageSizeOptions = [10, 25, 50, 100];
 
 export const useGradesPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
 
   // ---- Redux selectors ----
@@ -188,7 +190,7 @@ export const useGradesPage = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this grade?')) {
+    if (window.confirm(t('Are you sure you want to delete this grade?'))) {
       await dispatch(deleteGrade(id));
     }
   };

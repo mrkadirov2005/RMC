@@ -1692,9 +1692,9 @@ const translations: Record<string, string> = {
   'Reason for discount': 'Chegirma sababi',
   'Discount expiry date': 'Chegirma tugash sanasi',
   'No discount': "Chegirma yo'q",
-  'Serial': 'Seriyali',
-  'Serial discount': 'Seriyali chegirma',
-  'Serial discount enabled': 'Seriyali chegirma yoqilgan',
+  'Serial': 'Doimiy',
+  'Serial discount': 'Doimiy chegirma',
+  'Serial discount enabled': 'Doimiy chegirma yoqilgan',
   'Fixed': 'Belgilangan',
   'Fixed amount': 'Belgilangan miqdor',
   'Current price': 'Joriy narx',
@@ -2048,6 +2048,9 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 
 // The interface is Uzbek only; a language saved by older versions is ignored and cleared.
 const language: AppLanguage = 'uz';
+
+/** For code outside React (Redux thunks); reads the bundled dictionary, not database overrides. */
+export const translateStatic: TranslateFn = (value, vars) => interpolate(translations[value] || value, vars);
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const [remoteTranslations, setRemoteTranslations] = useState<TranslationRow[]>([]);

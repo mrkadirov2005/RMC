@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 class CreateDiscountDto {
   @Type(() => Number)
@@ -48,6 +48,15 @@ class CreateDiscountDto {
   @IsOptional()
   @IsString()
   reason?: string;
+
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  referrer_name?: string;
 
   @IsOptional()
   @IsString()
@@ -99,6 +108,15 @@ class UpdateDiscountDto {
   @IsOptional()
   @IsString()
   reason?: string;
+
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  referrer_name?: string;
 
   @IsOptional()
   @IsString()

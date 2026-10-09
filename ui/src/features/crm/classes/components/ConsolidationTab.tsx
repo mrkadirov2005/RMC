@@ -385,7 +385,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
 
   const handleRegenerateLink = async () => {
     if (!set) return;
-    if (!window.confirm('Regenerate the share link? Students using the old link will no longer be able to access it.')) return;
+    if (!window.confirm(t('Regenerate the share link? Students using the old link will no longer be able to access it.'))) return;
     setRegenerating(true);
     try {
       const { set: updated } = await consolidationApi.regenerateLink(set.consolidation_set_id);
@@ -400,7 +400,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
 
   const handleDeleteSet = async () => {
     if (!set) return;
-    if (!window.confirm('Delete this exercise and start over? The share link stops working immediately. Only possible while no student has attempted it yet.')) return;
+    if (!window.confirm(t('Delete this exercise and start over? The share link stops working immediately. Only possible while no student has attempted it yet.'))) return;
     setDeleting(true);
     try {
       await consolidationApi.deleteSet(set.consolidation_set_id);

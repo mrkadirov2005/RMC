@@ -3,6 +3,7 @@
 
 import { buildStudentOverviewRows, splitStudentOverviewRows } from '../studentOverview';
 import { getListRowBackground } from '../../settings/listAppearance';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type StudentLike = Parameters<typeof buildStudentOverviewRows>[0]['student'];
 
@@ -19,6 +20,7 @@ export const StudentOverviewCards = ({
   teacherName,
   coinBalance = 0,
 }: StudentOverviewCardsProps) => {
+  const { t } = useLanguage();
   const rows = buildStudentOverviewRows({ student, groupName, teacherName, coinBalance });
   const columns = splitStudentOverviewRows(rows);
   const sections = [
@@ -31,7 +33,7 @@ export const StudentOverviewCards = ({
       {sections.map((section) => (
         <section key={section.title} className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
           <div className="border-b bg-slate-50 px-3 py-2 dark:border-border dark:bg-muted/40">
-            <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">{section.title}</h2>
+            <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">{t(section.title)}</h2>
           </div>
           <dl data-alternating-list="true" className="divide-y divide-slate-200 text-sm dark:divide-border">
             {section.rows.map((item, index) => (
@@ -41,7 +43,7 @@ export const StudentOverviewCards = ({
                 className="grid min-h-9 grid-cols-[125px_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid-cols-[170px_minmax(0,1fr)]"
                 style={{ backgroundColor: getListRowBackground(index) }}
               >
-                <dt className="font-medium text-muted-foreground">{item.label}</dt>
+                <dt className="font-medium text-muted-foreground">{t(item.label)}</dt>
                 <dd className="min-w-0 break-words font-semibold text-slate-950 dark:text-card-foreground">
                   {item.value}
                 </dd>

@@ -56,6 +56,8 @@ async function createApp(options: CreateAppOptions = {}) {
   const parentRoutes = require('./routes/parentRoutes');
   const reportRoutes = require('./routes/reportRoutes');
   const absenceAlertRoutes = require('./routes/absenceAlertRoutes');
+  const cashReportRoutes = require('./routes/cashReportRoutes');
+  const watchlistRoutes = require('./routes/watchlistRoutes');
   const telegramBotRoutes = require('./routes/telegramBotRoutes');
   const portalRoutes = require('./routes/portalRoutes');
   const roomsRoutes = require('./routes/roomsRoutes');
@@ -158,6 +160,10 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/grades', requireAuth, requireRole('superuser', 'teacher'), gradeRoutes);
   app.use('/api/attendance', requireAuth, requireRole('superuser', 'teacher'), attendanceRoutes);
   app.use('/api/absence-alerts', requireAuth, requireRole('superuser', 'teacher'), absenceAlertRoutes);
+  // Daily till report and expenses: admins and the owner only.
+  app.use('/api/cash', requireAuth, requireRole('superuser'), cashReportRoutes);
+  // "Doimiy nazorat" list of closely followed students: admins and the owner only.
+  app.use('/api/watchlist', requireAuth, requireRole('superuser'), watchlistRoutes);
   app.use('/api/telegram-bot', requireAuth, requireRole('superuser', 'teacher'), telegramBotRoutes);
   app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
   app.use('/api/teacher-tasks', requireAuth, requireRole('superuser', 'teacher'), teacherTaskRoutes);

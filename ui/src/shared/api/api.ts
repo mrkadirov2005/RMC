@@ -333,6 +333,22 @@ export const classAPI = {
 };
 
 
+/** "Doimiy nazorat": students the director follows personally, and whom to keep informed. */
+export const watchlistAPI = {
+  getAll: () => apiClient.get('/watchlist'),
+  add: (data: { student_id: number; contact_name: string; contact_phone?: string; note?: string }) => apiClient.post('/watchlist', data),
+  update: (id: number, data: { contact_name: string; contact_phone?: string; note?: string }) => apiClient.patch(`/watchlist/${id}`, data),
+  remove: (id: number) => apiClient.delete(`/watchlist/${id}`),
+};
+
+/** Daily till report (payments by method minus expenses) and the expenses admins record. */
+export const cashAPI = {
+  getDaily: (date: string) => apiClient.get('/cash/daily', { params: { date } }),
+  getExpenses: (from: string, to: string) => apiClient.get('/cash/expenses', { params: { from, to } }),
+  createExpense: (data: { expense_date: string; amount: number; payment_method: string; description: string }) => apiClient.post('/cash/expenses', data),
+  deleteExpense: (id: number) => apiClient.delete(`/cash/expenses/${id}`),
+};
+
 export const paymentAPI = {
   /** Every active student's payments over a date range (this month by default), 100 per page. */
   getStudentsSummary: (params: Record<string, unknown>) => apiClient.get('/payments/students-summary', { params }),

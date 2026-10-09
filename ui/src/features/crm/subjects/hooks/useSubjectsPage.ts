@@ -16,9 +16,11 @@ import type { Subject } from '../types';
 import { getStoredActiveCenterId } from '../../../../shared/auth/authStorage';
 import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
 import { buildSubjectSavePayload } from '../subjectForm';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Provides subjects page.
 export const useSubjectsPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const items = useAppSelector((state) => state.subjects.items) as Subject[];
   const loading = useAppSelector((state) => state.subjects.loading);
@@ -95,7 +97,7 @@ export const useSubjectsPage = () => {
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this subject?')) {
+    if (window.confirm(t('Are you sure you want to delete this subject?'))) {
       await dispatch(deleteSubject(id));
     }
   };

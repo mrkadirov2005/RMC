@@ -76,6 +76,10 @@ const studentSelection = {
   end_date: students.endDate,
   school_name: students.schoolName,
   school_class: students.schoolClass,
+  father_name: students.fatherName,
+  passport_number: students.passportNumber,
+  study_place_type: students.studyPlaceType,
+  previous_school: students.previousSchool,
   is_frozen: students.isFrozen,
   coins: students.coins,
   acquisition_source_id: students.acquisitionSourceId,
@@ -104,6 +108,10 @@ const studentInsertValues = (payload: Record<string, unknown>) => ({
   classId: payload.class_id,
   schoolName: payload.school_name,
   schoolClass: payload.school_class,
+  fatherName: payload.father_name,
+  passportNumber: payload.passport_number,
+  studyPlaceType: payload.study_place_type,
+  previousSchool: payload.previous_school,
   isFrozen: payload.is_frozen ?? false,
   acquisitionSourceId: payload.acquisition_source_id,
   acquisitionDetail: payload.acquisition_detail,
@@ -385,6 +393,24 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
         ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
         LIMIT 1
       )`,
+      discount_reason_category: sql`(
+        SELECT d.reason_category FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId}
+          AND d.active = TRUE
+          AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+        ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
+        LIMIT 1
+      )`,
+      discount_referrer_name: sql`(
+        SELECT d.referrer_name FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId}
+          AND d.active = TRUE
+          AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+        ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
+        LIMIT 1
+      )`,
     })
     .from(students)
     .leftJoin(classes, and(eq(students.classId, classes.classId), isNull(classes.deletedAt)))
@@ -508,6 +534,10 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
     is_frozen: 'isFrozen',
     school_name: 'schoolName',
     school_class: 'schoolClass',
+    father_name: 'fatherName',
+    passport_number: 'passportNumber',
+    study_place_type: 'studyPlaceType',
+    previous_school: 'previousSchool',
     acquisition_source_id: 'acquisitionSourceId',
     acquisition_detail: 'acquisitionDetail',
     referred_by_teacher_id: 'referredByTeacherId',
@@ -629,6 +659,10 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         startDate: toDateOnly(transferDate),
         schoolName: source.school_name,
         schoolClass: source.school_class,
+        fatherName: source.father_name,
+        passportNumber: source.passport_number,
+        studyPlaceType: source.study_place_type,
+        previousSchool: source.previous_school,
         acquisitionSourceId: source.acquisition_source_id,
         acquisitionDetail: source.acquisition_detail,
         referredByTeacherId: source.referred_by_teacher_id,
@@ -801,6 +835,10 @@ const assignToGroup = async (id: number, targetClassId: number, centerId?: numbe
         mainStudentId: mainId,
         schoolName: main.school_name,
         schoolClass: main.school_class,
+        fatherName: main.father_name,
+        passportNumber: main.passport_number,
+        studyPlaceType: main.study_place_type,
+        previousSchool: main.previous_school,
         acquisitionSourceId: main.acquisition_source_id,
         acquisitionDetail: main.acquisition_detail,
         referredByTeacherId: main.referred_by_teacher_id,

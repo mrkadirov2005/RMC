@@ -1,4 +1,4 @@
-import { classAPI, dataAPI, studentAPI } from '@/shared/api/api';
+import { classAPI, dataAPI, studentAPI, watchlistAPI } from '@/shared/api/api';
 
 export const studentsApi = {
   getAll: (params?: Record<string, unknown>) => studentAPI.getAll(params),
@@ -12,4 +12,5 @@ export const studentsApi = {
   createActionReason: (type: 'transfer' | 'delete', name: string) => studentAPI.createActionReason(type, name),
   updateGroupTeacher: (classId: number, teacherId: number) => classAPI.update(classId, { teacher_id: teacherId }),
   deleteGroup: (classId: number) => classAPI.delete(classId),
+  watchlist: watchlistAPI,
 };

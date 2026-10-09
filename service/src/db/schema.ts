@@ -309,6 +309,10 @@ const students = pgTable('students', {
   endDate: date('end_date'),
   schoolName: varchar('school_name', { length: 255 }),
   schoolClass: varchar('school_class', { length: 50 }),
+  fatherName: varchar('father_name', { length: 255 }),
+  passportNumber: varchar('passport_number', { length: 20 }),
+  studyPlaceType: varchar('study_place_type', { length: 20 }),
+  previousSchool: varchar('previous_school', { length: 255 }),
   isFrozen: boolean('is_frozen'),
   coins: integer('coins'),
   acquisitionSourceId: integer('acquisition_source_id'),
@@ -475,6 +479,8 @@ const discounts = pgTable('discounts', {
   originalPrice: numeric('original_price'),
   finalPrice: numeric('final_price'),
   reason: text('reason'),
+  reasonCategory: varchar('reason_category', { length: 40 }),
+  referrerName: varchar('referrer_name', { length: 200 }),
   paymentPeriod: varchar('payment_period', { length: 20 }),
   startDate: date('start_date'),
   endDate: date('end_date'),
@@ -641,6 +647,35 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
 }, (table) => [
     index('idx_installments_plan').on(table.planId, table.status),
     index('idx_payment_plan_installments_center_id').on(table.centerId),
+]);
+
+const studentWatchlist = pgTable('student_watchlist', {
+  watchId: serial('watch_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  studentId: integer('student_id').notNull(),
+  contactName: varchar('contact_name', { length: 255 }).notNull(),
+  contactPhone: varchar('contact_phone', { length: 50 }),
+  note: text('note'),
+  addedByName: varchar('added_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+  removedAt: timestamp('removed_at'),
+}, (table) => [
+    uniqueIndex('ux_student_watchlist_active').on(table.studentId).where(sql`removed_at IS NULL`),
+    index('idx_student_watchlist_center').on(table.centerId),
+]);
+
+const expenses = pgTable('expenses', {
+  expenseId: serial('expense_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  expenseDate: date('expense_date').notNull(),
+  amount: numeric('amount').notNull(),
+  paymentMethod: varchar('payment_method', { length: 50 }).notNull(),
+  description: text('description').notNull(),
+  createdByName: varchar('created_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+  deletedAt: timestamp('deleted_at'),
+}, (table) => [
+    index('idx_expenses_center_date').on(table.centerId, table.expenseDate),
 ]);
 
 const payments = pgTable('payments', {
@@ -1062,6 +1097,8 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 ]);
 
 module.exports = {
+  expenses,
+  studentWatchlist,
   absenceAlertResolutions,
   appSettings,
   translations,

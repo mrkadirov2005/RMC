@@ -129,7 +129,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
   };
 
   const handleCancelBooking = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    if (!window.confirm(t('Are you sure you want to cancel this booking?'))) return;
     
     try {
       await cancelBooking(bookingId);
