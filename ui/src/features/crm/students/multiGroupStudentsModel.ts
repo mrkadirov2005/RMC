@@ -3,7 +3,7 @@ import type { Student } from './types';
 export interface MultiGroupStudent {
   key: string;
   name: string;
-  groups: Array<{ key: string; name: string; teacherId: number | null }>;
+  groups: Array<{ key: string; name: string; teacherId: number | null; subjects: string }>;
 }
 
 const normalizeText = (value: unknown) =>
@@ -65,7 +65,7 @@ export const getMultiGroupStudents = (students: Student[]): MultiGroupStudent[] 
     }
   }
 
-  const people = new Map<number, { name: string; groups: Map<string, { key: string; name: string; teacherId: number | null }> }>();
+  const people = new Map<number, { name: string; groups: Map<string, { key: string; name: string; teacherId: number | null; subjects: string }> }>();
   students.forEach((student, index) => {
     const personId = find(index);
     const name = [student.first_name, student.last_name].map((part) => String(part || '').trim()).filter(Boolean).join(' ');
@@ -76,7 +76,7 @@ export const getMultiGroupStudents = (students: Student[]): MultiGroupStudent[] 
       const groupKey = classId > 0 ? `id:${classId}` : `name:${normalizeText(className)}`;
       const groupLabel = className || `Group #${classId}`;
       const teacherId = Number(student.effective_teacher_id || student.class_teacher_id || student.teacher_id || 0) || null;
-      person.groups.set(groupKey, { key: groupKey, name: groupLabel, teacherId });
+      person.groups.set(groupKey, { key: groupKey, name: groupLabel, teacherId, subjects: String(student.class_subjects || '').trim() });
     }
     people.set(personId, person);
   });

@@ -7,6 +7,7 @@ const {
   jsonb,
   numeric,
   pgTable,
+  primaryKey,
   serial,
   text,
   time,
@@ -649,6 +650,26 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
     index('idx_payment_plan_installments_center_id').on(table.centerId),
 ]);
 
+const studentLinkGroups = pgTable('student_link_groups', {
+  linkId: serial('link_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  relationType: varchar('relation_type', { length: 20 }).notNull(),
+  note: text('note'),
+  createdByName: varchar('created_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+  deletedAt: timestamp('deleted_at'),
+}, (table) => [
+    index('idx_student_link_groups_center').on(table.centerId),
+]);
+
+const studentLinkMembers = pgTable('student_link_members', {
+  linkId: integer('link_id').notNull(),
+  studentId: integer('student_id').notNull(),
+}, (table) => [
+    primaryKey({ columns: [table.linkId, table.studentId] }),
+    index('idx_student_link_members_student').on(table.studentId),
+]);
+
 const studentWatchlist = pgTable('student_watchlist', {
   watchId: serial('watch_id').primaryKey(),
   centerId: integer('center_id').notNull(),
@@ -1098,6 +1119,8 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 
 module.exports = {
   expenses,
+  studentLinkGroups,
+  studentLinkMembers,
   studentWatchlist,
   absenceAlertResolutions,
   appSettings,

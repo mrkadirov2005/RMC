@@ -259,6 +259,7 @@ export const MultiGroupStudentsTab = ({
                     <TableRow>
                       <TableHead>{t('Student')}</TableHead>
                       <TableHead>{t('Groups')}</TableHead>
+                      <TableHead>{t('Subjects')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -266,6 +267,7 @@ export const MultiGroupStudentsTab = ({
                       <TableRow key={student.key}>
                         <TableCell className="font-medium">{student.name}</TableCell>
                         <TableCell>{student.groups.map((group) => group.name).join(', ')}</TableCell>
+                        <TableCell>{Array.from(new Set(student.groups.flatMap((group) => group.subjects.split(', ').filter(Boolean)))).join(', ') || '—'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

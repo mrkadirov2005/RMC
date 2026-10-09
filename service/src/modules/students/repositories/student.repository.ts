@@ -312,6 +312,8 @@ const findPaginatedWithClass = async (filters: StudentListFilters = {}, centerId
           class_teacher_id: classes.teacherId,
           effective_teacher_id: effectiveTeacherExpr,
           center_address: centers.address,
+          // Every subject of the group in one string, so a group with two subjects stays one row.
+          class_subjects: sql<string | null>`(SELECT string_agg(DISTINCT sub.subject_name, ', ') FROM ${subjects} sub WHERE sub.class_id = ${classes.classId})`,
         })
         .from(students)
     )

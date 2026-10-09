@@ -341,6 +341,14 @@ export const watchlistAPI = {
   remove: (id: number) => apiClient.delete(`/watchlist/${id}`),
 };
 
+/** Siblings, relatives and friends who come together. */
+export const studentLinkAPI = {
+  getAll: () => apiClient.get('/student-links'),
+  create: (data: { relation_type: string; student_ids: number[]; note?: string }) => apiClient.post('/student-links', data),
+  update: (id: number, data: { relation_type: string; student_ids: number[]; note?: string }) => apiClient.put(`/student-links/${id}`, data),
+  remove: (id: number) => apiClient.delete(`/student-links/${id}`),
+};
+
 /** Daily till report (payments by method minus expenses) and the expenses admins record. */
 export const cashAPI = {
   getDaily: (date: string) => apiClient.get('/cash/daily', { params: { date } }),
