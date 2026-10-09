@@ -1,0 +1,48 @@
+# Local development databases only (used by `npm run dev:local`).
+# Production keeps using docker-compose.yml; nothing here runs on the server.
+#
+# Ports are moved off 5432/27017 so they don't clash with other projects on this machine.
+# The volumes are the existing local RMC ones, so earlier local data is kept.
+# No backup worker or Telegram bot here: those talk to the real Telegram group and bot.
+#
+# Never run `docker compose down -v` against these volumes.
+name: rmc-local
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rmc_local_postgres
+    environment:
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: crm_password
+      POSTGRES_DB: crm_db
+    ports:
+      - "127.0.0.1:${LOCAL_DB_PORT:-5434}:5432"
+    volumes:
+      - rmc_postgres_data:/var/lib/postgresql/data
+      - ./service/docker/postgres-init:/docker-entrypoint-initdb.d
+      - ./service/db/schema:/docker-entrypoint-initdb.d/schema:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm_user -d crm_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mongo:
+    image: mongo:7
+    container_name: rmc_local_mongo
+    ports:
+      - "127.0.0.1:${LOCAL_MONGO_PORT:-27018}:27017"
+    volumes:
+      - rmc_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  rmc_postgres_data:
+    external: true
+  rmc_mongo_data:
+    external: true
