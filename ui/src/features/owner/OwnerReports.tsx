@@ -88,16 +88,18 @@ const OwnerReports = () => {
           nextCollections.classes = toRows(classesRes);
           nextCollections.payments = toRows(paymentsRes);
         } else if (activeTab === 'discounts') {
-          const [discountsRes, paymentsRes, studentsRes, classesRes] = await Promise.all([
+          const [discountsRes, paymentsRes, studentsRes, classesRes, teachersRes] = await Promise.all([
             ownerManagerApi.discounts.getAllAcrossCenters(),
             ownerManagerApi.payments.getAllAcrossCenters(),
             ownerManagerApi.students.getAllAcrossCenters(),
             ownerManagerApi.classes.getAllAcrossCenters(),
+            ownerManagerApi.teachers.getAllAcrossCenters(),
           ]);
           nextCollections.discounts = toRows(discountsRes);
           nextCollections.payments = toRows(paymentsRes);
           nextCollections.students = toRows(studentsRes);
           nextCollections.classes = toRows(classesRes);
+          nextCollections.teachers = toRows(teachersRes);
         } else if (activeTab === 'students') {
           const [studentsRes, classesRes, teachersRes] = await Promise.all([
             ownerManagerApi.students.getAllAcrossCenters(),

@@ -23,6 +23,7 @@ const normalizeStudentFormData = (student: Student): Partial<Student> => ({
   is_discounted: Boolean(student.is_discounted),
   discount_kind: student.discount_kind || 'serial_discount',
   discount_value_type: student.discount_value_type || 'fixed',
+  discount_end_date: student.discount_end_date || null,
 });
 
 const StudentFormPage = () => {

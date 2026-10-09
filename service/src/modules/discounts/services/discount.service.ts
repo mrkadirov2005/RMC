@@ -36,6 +36,18 @@ const getActiveSerialByStudent = (studentId: number, centerId?: number) =>
 const getActiveByStudent = (studentId: number, centerId?: number, discountKind?: string) =>
   discountRepository.findActiveByStudent(studentId, centerId, discountKind);
 
+// A one-month discount lasts one month from the day it was given: Oct 9 -> Nov 9, Jan 31 -> Feb 28
+const monthlyEndDate = (from?: string | null) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(from || ''));
+  const now = new Date();
+  const year = match ? Number(match[1]) : now.getFullYear();
+  const month = match ? Number(match[2]) : now.getMonth() + 1;
+  const day = match ? Number(match[3]) : now.getDate();
+  const next = new Date(year, month, 1);
+  const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(Math.min(day, lastDay)).padStart(2, '0')}`;
+};
+
 const create = async (body: any, centerId?: number) => {
   const {
     student_id,
@@ -73,7 +85,7 @@ const create = async (body: any, centerId?: number) => {
       reason || null,
       payment_period || null,
       start_date || null,
-      end_date || null,
+      end_date || (kind === 'monthly_discount' ? monthlyEndDate(start_date) : null),
       active ?? true,
     ])
     .then((row: any) => ({ row }));
@@ -123,6 +135,6 @@ const update = async (id: number, body: any, centerId?: number, queryable?: any)
 
 const remove = (id: number, centerId?: number) => discountRepository.remove(id, centerId);
 
-module.exports = { list, getById, getActiveSerialByStudent, getActiveByStudent, calculateDiscount, create, update, remove };
+module.exports = { list, getById, getActiveSerialByStudent, getActiveByStudent, calculateDiscount, monthlyEndDate, create, update, remove };
 
 export {};

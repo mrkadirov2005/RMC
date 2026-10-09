@@ -143,6 +143,63 @@ describe('payments service', () => {
     ]);
   });
 
+  describe('expired discounts', () => {
+    it('charges full price when the serial discount the form loaded has expired by save time', async () => {
+      // the active lookup filters by end_date, so an expired discount comes back as null
+      await paymentService.createPayment({
+        student_id: 3,
+        amount: 90000,
+        original_amount: 100000,
+        discount_id: 7,
+        discount_kind: 'serial_discount',
+        discount_value_type: 'percent',
+        discount_value: 10,
+        is_complete: true,
+      }, 2);
+
+      expect(discountService.calculateDiscount).not.toHaveBeenCalled();
+      const payload = paymentRepository.insert.mock.calls[0][0];
+      expect(payload.slice(11, 19)).toEqual([null, null, null, 0, 100000, 0, 100000, false]);
+    });
+
+    it('does not apply or consume a stored monthly discount that has expired', async () => {
+      await paymentService.createPayment({
+        student_id: 5,
+        amount: 75000,
+        original_amount: 100000,
+        discount_id: 12,
+        discount_kind: 'monthly_discount',
+        discount_value_type: 'fixed',
+        discount_value: 25000,
+      }, 8);
+
+      expect(discountService.calculateDiscount).not.toHaveBeenCalled();
+      expect(discountService.update).not.toHaveBeenCalled();
+      const payload = paymentRepository.insert.mock.calls[0][0];
+      expect(payload.slice(11, 19)).toEqual([null, null, null, 0, 100000, 0, 100000, false]);
+    });
+
+    it('applies a stored monthly discount that is still active, using the stored value', async () => {
+      discountService.getActiveByStudent.mockResolvedValue({ discount_id: 12, discount_type: 'fixed', value: 25000 });
+      discountService.calculateDiscount.mockReturnValue({ originalAmount: 100000, discountAmount: 25000, finalAmount: 75000 });
+
+      await paymentService.createPayment({
+        student_id: 5,
+        amount: 75000,
+        original_amount: 100000,
+        discount_id: 12,
+        discount_kind: 'monthly_discount',
+        discount_value_type: 'fixed',
+        discount_value: 99999,
+      }, 8);
+
+      expect(discountService.calculateDiscount).toHaveBeenCalledWith(100000, 'fixed', 25000);
+      expect(discountService.update).toHaveBeenCalledWith(12, { active: false }, 8, expect.any(Object));
+      const payload = paymentRepository.insert.mock.calls[0][0];
+      expect(payload.slice(11, 19)).toEqual([12, 'monthly_discount', 'fixed', 25000, 100000, 25000, 75000, true]);
+    });
+  });
+
   it('stores the cashier name last, and null when there is none', async () => {
     await paymentService.createPayment({ student_id: 9, amount: 340000 }, 4, 'Jalolov Anvar');
     expect(paymentRepository.insert.mock.calls[0][0][19]).toBe('Jalolov Anvar');
