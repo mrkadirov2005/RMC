@@ -595,7 +595,8 @@ export const PaymentFormDialog = ({
                   step="0.01"
                   required
                   value={formData.amount ?? ''}
-                  onChange={(event) => setPaymentField(setFormData, { amount: Number(event.target.value) })}
+                  // Clearing the field must leave it empty, not 0, or the next digit is typed after a leading 0
+                  onChange={(event) => setPaymentField(setFormData, { amount: event.target.value === '' ? undefined : Number(event.target.value) })}
                 />
                 {amountHint ? (
                   <p className="text-xs text-slate-500 dark:text-slate-400">{amountHint}</p>
