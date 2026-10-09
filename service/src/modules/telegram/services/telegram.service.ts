@@ -4,7 +4,7 @@ const telegramRepository = require('../repositories/telegram.repository');
 const settingsRepository = require('../../settings/repositories/settings.repository');
 const settingsService = require('../../settings/services/settings.service');
 const { combineLessonScore, lessonGrade } = require('../../grades/services/lessonScore');
-const { buildLessonMessage } = require('./lessonMessage');
+const { buildLessonMessage, buildParentLessonMessage } = require('./lessonMessage');
 const { computeStandings } = require('./standings');
 
 const UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr'];
@@ -24,12 +24,22 @@ const labelFor = (options: Array<{ label: string; score: number }>, score: unkno
   return { label: option?.label || String(value), score: value };
 };
 
-/** Queues the result of a saved lesson for every student someone follows in Telegram. */
+/**
+ * Queues the result of a saved lesson for every chat following one of its students: a formal
+ * message addressed to each parent by name, and the usual one (score, coins, standing) to the
+ * student. Each goes to that chat only. The score is out of the lesson's real maximum.
+ */
 const enqueueLessonResults = async (sessionId: number) => {
   const rows = await telegramRepository.findSessionResults(sessionId);
   if (rows.length === 0) return 0;
-  const linked = await telegramRepository.findLinkedStudentIds(rows.map((row: any) => Number(row.main_student_id)));
-  const followed = rows.filter((row: any) => linked.has(Number(row.main_student_id)));
+  const chats = await telegramRepository.findLinkedChats(rows.map((row: any) => Number(row.main_student_id)));
+  if (chats.length === 0) return 0;
+  const chatsByStudent = new Map<number, any[]>();
+  chats.forEach((chat: any) => {
+    const id = Number(chat.student_id);
+    chatsByStudent.set(id, [...(chatsByStudent.get(id) || []), chat]);
+  });
+  const followed = rows.filter((row: any) => chatsByStudent.has(Number(row.main_student_id)));
   if (followed.length === 0) return 0;
 
   const first = followed[0];
@@ -38,31 +48,62 @@ const enqueueLessonResults = async (sessionId: number) => {
   const lessonDate = String(first.session_date || '').slice(0, 10);
   const monthRows = centerId && lessonDate ? await telegramRepository.findMonthScores({ centerId, ...monthBounds(lessonDate) }) : [];
 
-  const messages = followed.map((row: any) => {
+  const messages = followed.flatMap((row: any) => {
     const total = combineLessonScore(row);
+    const maxScore = Number(row.total_marks) > 0 ? Number(row.total_marks) : 100;
+    const grade = row.grade_letter || lessonGrade(Math.round((total * 100) / maxScore));
+    const studentName = [row.first_name, row.last_name].filter(Boolean).join(' ');
+    const homework = labelFor(scoring.homework, row.homework_score);
+    const activity = labelFor(scoring.activity, row.activity_score);
+    const pointsScore = row.points_score != null ? Number(row.points_score) : null;
     const reason = String(row.attendance_remarks || '').trim();
-    const standing = computeStandings(monthRows, Number(row.class_id), Number(row.main_student_id));
-    return {
-      centerId: Number(row.center_id) || null,
-      studentId: Number(row.main_student_id),
-      kind: 'lesson_result',
-      text: buildLessonMessage({
-        studentName: [row.first_name, row.last_name].filter(Boolean).join(' '),
-        className: row.class_name || 'Dars',
-        lessonDate: row.session_date,
-        attendanceStatus: row.attendance_status,
-        attendanceScore: row.attendance_score != null ? Number(row.attendance_score) : null,
-        reason: reason && reason !== DEFAULT_REMARK ? reason : null,
-        homework: labelFor(scoring.homework, row.homework_score),
-        activity: labelFor(scoring.activity, row.activity_score),
-        pointsScore: row.points_score != null ? Number(row.points_score) : null,
-        total,
-        grade: lessonGrade(total),
-        coinsDelta: row.coins_delta != null ? Number(row.coins_delta) : null,
-        coinsBalance: row.coins_balance != null ? Number(row.coins_balance) : null,
-        ...standing,
-      }),
-    };
+    const studentId = Number(row.main_student_id);
+    let studentText: string | null = null;
+
+    return (chatsByStudent.get(studentId) || []).map((chat: any) => {
+      const isParent = chat.role === 'parent';
+      if (!isParent && studentText === null) {
+        studentText = buildLessonMessage({
+          studentName,
+          className: row.class_name || 'Dars',
+          lessonDate: row.session_date,
+          attendanceStatus: row.attendance_status,
+          attendanceScore: row.attendance_score != null ? Number(row.attendance_score) : null,
+          reason: reason && reason !== DEFAULT_REMARK ? reason : null,
+          homework,
+          activity,
+          pointsScore,
+          total,
+          maxScore,
+          grade,
+          coinsDelta: row.coins_delta != null ? Number(row.coins_delta) : null,
+          coinsBalance: row.coins_balance != null ? Number(row.coins_balance) : null,
+          ...computeStandings(monthRows, Number(row.class_id), studentId),
+        });
+      }
+      return {
+        centerId: Number(row.center_id) || null,
+        studentId,
+        kind: isParent ? 'lesson_result_parent' : 'lesson_result',
+        telegramChatId: chat.telegram_chat_id,
+        text: isParent
+          ? buildParentLessonMessage({
+            parentName: chat.parent_name,
+            studentName,
+            subject: row.subject_name || row.class_name || 'Dars',
+            lessonDate: row.session_date,
+            attendanceStatus: row.attendance_status,
+            homework,
+            activity,
+            pointsScore,
+            total,
+            maxScore,
+            grade,
+            centerName: row.center_name,
+          })
+          : studentText as string,
+      };
+    });
   });
   return telegramRepository.enqueueMessages(messages);
 };
