@@ -19,9 +19,11 @@ import {
 } from '../../../../store/selectors';
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Debt } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Provides debts page.
 export const useDebtsPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 // Handles is owner.
@@ -104,7 +106,7 @@ export const useDebtsPage = () => {
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this debt record?')) {
+    if (window.confirm(t('Are you sure you want to delete this debt record?'))) {
       await dispatch(deleteDebt(id));
     }
   };

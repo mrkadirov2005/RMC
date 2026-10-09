@@ -54,6 +54,8 @@ export interface LessonMessageInput {
   activity?: { label: string; score: number } | null;
   pointsScore?: number | null;
   total: number;
+  /** The most this lesson could score (attendance only is out of 40); defaults to 100. */
+  maxScore?: number;
   grade: string;
   coinsDelta?: number | null;
   coinsBalance?: number | null;
@@ -68,7 +70,7 @@ const buildLessonMessage = (input: LessonMessageInput) => {
     `📘 <b>${escapeHtml(input.className)}</b> · ${formatDay(input.lessonDate)}`,
     `👤 ${escapeHtml(input.studentName)}`,
     '',
-    `⭐️ <b>Ball: ${input.total}/100</b> (baho: ${input.grade})`,
+    `⭐️ <b>Ball: ${input.total}/${input.maxScore || 100}</b> (baho: ${input.grade})`,
   ];
 
   const status = String(input.attendanceStatus || '').trim().toLowerCase();
@@ -101,6 +103,52 @@ const buildLessonMessage = (input: LessonMessageInput) => {
   return lines.join('\n');
 };
 
-module.exports = { buildLessonMessage };
+export interface ParentLessonMessageInput {
+  parentName?: string | null;
+  studentName: string;
+  subject: string;
+  lessonDate: string;
+  attendanceStatus?: string | null;
+  homework?: { label: string; score: number } | null;
+  activity?: { label: string; score: number } | null;
+  pointsScore?: number | null;
+  total: number;
+  maxScore?: number;
+  grade: string;
+  centerName?: string | null;
+}
+
+const ABSENT_STATUSES = new Set(['absent', 'absent nr', 'absent r', 'excused']);
+
+/**
+ * The formal message a parent gets after each lesson, addressed to them by name:
+ * "Assalomu alaykum, Dilnoza Karimova! Bugun, 09.10.2026, farzandingiz Ali Valiyev Matematika
+ * fanidan 79/100 ball to'pladi (baho: 4)." An absent child gets "darsga kelmadi" instead of a score.
+ */
+const buildParentLessonMessage = (input: ParentLessonMessageInput) => {
+  const greeting = input.parentName ? `Assalomu alaykum, ${escapeHtml(input.parentName)}!` : 'Assalomu alaykum, hurmatli ota-ona!';
+  const intro = `Bugun, ${formatDay(input.lessonDate)}, farzandingiz <b>${escapeHtml(input.studentName)}</b> ${escapeHtml(input.subject)} fanidan`;
+  const status = String(input.attendanceStatus || '').trim().toLowerCase();
+  const lines = [greeting, ''];
+
+  if (ABSENT_STATUSES.has(status)) {
+    const excused = status === 'absent r' || status === 'excused';
+    lines.push(`${intro} ${excused ? 'darsga sababli kelmadi' : 'darsga kelmadi'}.`);
+  } else {
+    lines.push(`${intro} <b>${input.total}/${input.maxScore || 100}</b> ball to'pladi (baho: ${input.grade}).`);
+    const details: string[] = [];
+    if (status) details.push(`• Davomat: ${STATUS_LABELS[status] || escapeHtml(input.attendanceStatus)}`);
+    if (input.homework) details.push(`• Uy vazifasi: ${escapeHtml(uz(input.homework.label))}`);
+    if (input.activity) details.push(`• Darsdagi faollik: ${escapeHtml(uz(input.activity.label))}`);
+    if (input.pointsScore != null) details.push(`• Dars bali: ${input.pointsScore}/100`);
+    if (details.length) lines.push('', ...details);
+  }
+
+  const signature = input.centerName ? `«${escapeHtml(input.centerName)}» o'quv markazi ma'muriyati` : "O'quv markazi ma'muriyati";
+  lines.push('', `Hurmat bilan, ${signature}.`);
+  return lines.join('\n');
+};
+
+module.exports = { buildLessonMessage, buildParentLessonMessage };
 
 export {};

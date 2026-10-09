@@ -57,7 +57,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option.id || option.value} value={option.value.toString()}>
-              {option.label}
+              {t(option.label)}
             </SelectItem>
           ))}
         </SelectContent>

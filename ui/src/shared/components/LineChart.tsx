@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import { useContainerWidth } from '../hooks/useContainerWidth';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export interface LinePoint {
   label: string;
@@ -21,6 +22,7 @@ export const LineChart = memo(({ data, height = 200, color = '#2563eb', showEmpt
   const normalized = useMemo(() => data.map((point) => ({ ...point, value: clampFinite(point.value) })), [data]);
   const hasData = normalized.length > 0;
   const { ref, width: containerWidth } = useContainerWidth(280);
+  const { t } = useLanguage();
 
   if (!hasData && showEmptyState) {
     return (
@@ -28,7 +30,7 @@ export const LineChart = memo(({ data, height = 200, color = '#2563eb', showEmpt
         className="flex items-center justify-center rounded-2xl border border-white/10 bg-slate-950/40 text-sm text-white/55"
         style={{ height }}
       >
-        No data
+        {t('No data')}
       </div>
     );
   }

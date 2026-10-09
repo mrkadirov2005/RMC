@@ -133,7 +133,7 @@ export const AttendanceSection = ({
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure?')) {
+    if (window.confirm(t('Are you sure?'))) {
       try {
         await attendanceAPI.delete(id, { center_id: centerId });
         showToast.success('Attendance deleted successfully');

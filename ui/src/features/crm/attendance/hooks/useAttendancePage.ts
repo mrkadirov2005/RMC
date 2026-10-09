@@ -42,9 +42,11 @@ import {
   getStudentIdsForTeacher,
   getStudentName,
 } from '../queries';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Provides attendance page.
 export const useAttendancePage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
 
   // Pull from Redux store — avoids redundant API calls if siblings already fetched
@@ -148,7 +150,7 @@ export const useAttendancePage = () => {
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this attendance record?')) {
+    if (window.confirm(t('Are you sure you want to delete this attendance record?'))) {
       await dispatch(deleteAttendance(id));
     }
   };

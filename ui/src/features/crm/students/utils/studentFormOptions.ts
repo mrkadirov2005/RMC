@@ -9,3 +9,20 @@ export const studentStatusOptions = [
   { id: 2, label: 'Inactive', value: 'Inactive' },
   { id: 3, label: 'Suspended', value: 'Suspended' },
 ];
+
+// Why a permanent discount was given (the client's three reasons, plus other).
+export const DISCOUNT_REASON_OPTIONS = [
+  { label: 'On the poverty register', value: 'poverty' },
+  { label: 'Relative or acquaintance', value: 'relative' },
+  { label: 'Charity', value: 'charity' },
+  { label: 'Other', value: 'other' },
+];
+
+export const STUDY_PLACE_OPTIONS = [
+  { label: 'School', value: 'school' },
+  { label: 'College', value: 'college' },
+  { label: 'University', value: 'university' },
+];
+
+/** "aa 123 45 67" -> "AA1234567", the format the server accepts. */
+export const normalizePassport = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);

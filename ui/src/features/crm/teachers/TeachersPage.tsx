@@ -191,7 +191,7 @@ const TeachersPage = () => {
   const handleBulkDeleteTeachers = async () => {
     const ids = Array.from(selectedTeacherIds);
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} selected teacher${ids.length === 1 ? '' : 's'}?`)) return;
+    if (!window.confirm(t('Delete {count} selected teacher(s)?', { count: ids.length }))) return;
 
     let failed = 0;
     for (const id of ids) {
@@ -204,9 +204,9 @@ const TeachersPage = () => {
     await refresh();
     clearTeacherSelection();
     if (failed > 0) {
-      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+      showToast.error('Deleted {deleted}; {failed} failed.', { vars: { deleted: ids.length - failed, failed } });
     } else {
-      showToast.success(`Deleted ${ids.length} teacher${ids.length === 1 ? '' : 's'}.`);
+      showToast.success('Deleted {count} teacher(s).', { vars: { count: ids.length } });
     }
   };
   const handleExportTeachers = () => exportCsvEntity('teachers', 'Teachers');

@@ -27,6 +27,13 @@ export interface Student {
   end_date?: string | null;
   school_name?: string | null;
   school_class?: string | null;
+  /** The subjects of the student's group, comma-separated (list endpoint). */
+  class_subjects?: string | null;
+  father_name?: string | null;
+  passport_number?: string | null;
+  /** school | college | university */
+  study_place_type?: string | null;
+  previous_school?: string | null;
   class_name?: string | null;
   class_code?: string | null;
   class_level?: number | null;
@@ -47,6 +54,10 @@ export interface Student {
   discount_value?: number;
   discount_original_price?: number;
   discount_reason?: string;
+  /** Permanent discounts: poverty | relative | charity | other. */
+  discount_reason_category?: string;
+  /** Who the family knows, for a "relative" discount. */
+  discount_referrer_name?: string;
   discount_end_date?: string | null;
   acquisition_source_id?: number;
   acquisition_detail?: string;

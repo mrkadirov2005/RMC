@@ -257,7 +257,7 @@ const SettingsPage = () => {
           </button>
           <button type="button" onClick={() => navigate('/engineering')} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-slate-300 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted">
             <Server className="h-5 w-5 text-slate-500" />
-            <span><strong className="block text-sm">Engineering</strong><small className="text-muted-foreground">Open database and server tools.</small></span>
+            <span><strong className="block text-sm">{t('Engineering')}</strong><small className="text-muted-foreground">{t('Open database and server tools.')}</small></span>
           </button>
         </div>
       </SectionPanel>
@@ -270,7 +270,7 @@ const SettingsPage = () => {
             <p className="text-xs text-muted-foreground">{t('Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.')}</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {ownerPalettePresets.map((palette) => (
-                <button key={palette.id} type="button" onClick={async () => { const selected = saveOwnerPalette(palette); setOwnerPalette(selected); try { await settingsAPI.saveOwnerPalette(selected); showToast.success(`${palette.name} palette saved for this center.`); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette.id === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
+                <button key={palette.id} type="button" onClick={async () => { const selected = saveOwnerPalette(palette); setOwnerPalette(selected); try { await settingsAPI.saveOwnerPalette(selected); showToast.success('{name} palette saved for this center.', { vars: { name: palette.name } }); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette.id === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
                   <span className="mb-2 block text-sm font-semibold">{palette.name}</span>
                   <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title={t('Primary cards')} /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title={t('Secondary tags')} /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title={t('Tertiary cards')} /></span>
                 </button>

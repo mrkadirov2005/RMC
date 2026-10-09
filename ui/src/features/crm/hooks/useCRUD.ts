@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { handleApiError, showToast } from '../../../utils/toast';
+import { translateStatic } from '@/i18n/LanguageContext';
 
 interface CRUDState<T> {
   items: T[];
@@ -77,7 +78,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         await apiService.create(data);
-        showToast.success(`${resourceName} created successfully`);
+        showToast.success('{name} created successfully', { vars: { name: translateStatic(resourceName) } });
         await fetchAll();
         setState((prev) => ({ ...prev, loading: false }));
         return true;
@@ -97,7 +98,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         await apiService.update(Number(id), data);
-        showToast.success(`${resourceName} updated successfully`);
+        showToast.success('{name} updated successfully', { vars: { name: translateStatic(resourceName) } });
         await fetchAll();
         setState((prev) => ({ ...prev, loading: false }));
         return true;
@@ -117,7 +118,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         await apiService.delete(Number(id));
-        showToast.success(`${resourceName} deleted successfully`);
+        showToast.success('{name} deleted successfully', { vars: { name: translateStatic(resourceName) } });
         await fetchAll();
         setState((prev) => ({ ...prev, loading: false }));
         return true;

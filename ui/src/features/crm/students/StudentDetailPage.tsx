@@ -403,7 +403,7 @@ const StudentDetailPage = () => {
     try {
       await studentAPI.update(Number(studentId), { status: nextStatus });
       await loadStudentDetails();
-      showToast.success(`Student account is now ${nextStatus.toLowerCase()}.`);
+      showToast.success('Student account is now {status}.', { vars: { status: t(nextStatus).toLowerCase() } });
     } catch (error: unknown) {
       showToast.error(getErrorMessage(error) || 'Failed to change student status.');
     } finally {

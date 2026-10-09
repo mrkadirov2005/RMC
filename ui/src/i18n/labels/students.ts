@@ -16,7 +16,7 @@ export const studentsLabels: Record<string, string> = {
   'Back to Students': "O'quvchilarga qaytish",
   'Back to classes': 'Guruhlarga qaytish',
   'Back to teachers': "O'qituvchilarga qaytish",
-  'Choose serial or one-time tuition discount.': "Seriyali yoki bir martalik o'qish to'lovi chegirmasini tanlang.",
+  'Choose serial or one-time tuition discount.': "Doimiy yoki bir martalik chegirmani tanlang.",
   'Create a student from a single structured popup instead of leaving the students workspace.': "O'quvchilar bo'limidan chiqmasdan, bitta oynada o'quvchi yarating.",
   'Current group:': 'Joriy guruh:',
   'Edit information': "Ma'lumotlarni tahrirlash",

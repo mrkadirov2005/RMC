@@ -22,6 +22,7 @@ const ConsolidationsOverviewPage = lazy(() => import('./features/crm/consolidati
 const ConsolidationSessionPage = lazy(() => import('./features/student/ConsolidationSessionPage'));
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
 const DashboardPaymentsPage = lazy(() => import('./features/crm/dashboard/DashboardPaymentsPage'));
+const CashReportPage = lazy(() => import('./features/crm/cash/CashReportPage'));
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
 const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
@@ -630,6 +631,19 @@ function AppContent() {
         />
 
         <Route
+          path="/cash"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <CashReportPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/payments"
           element={
             <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
@@ -1088,7 +1102,7 @@ const isTopStatusVariant = (value: unknown): value is TopStatusVariant =>
 // Renders one global status line at the top of the viewport.
 function TopStatusLine() {
   const { t } = useLanguage();
-  const [status, setStatus] = useState<{ message: string; variant: TopStatusVariant }>({
+  const [status, setStatus] = useState<{ message: string; variant: TopStatusVariant; vars?: Record<string, string | number> }>({
     message: '',
     variant: 'info',
   });
@@ -1102,13 +1116,14 @@ function TopStatusLine() {
           message?: string;
           variant?: TopStatusVariant;
           autoClose?: number | false;
+          vars?: Record<string, string | number>;
         }>
       ).detail;
       const nextMessage = detail?.message?.trim() ?? '';
       const nextVariant = isTopStatusVariant(detail?.variant) ? detail.variant : 'info';
 
       window.clearTimeout(timeoutId);
-      setStatus({ message: nextMessage, variant: nextVariant });
+      setStatus({ message: nextMessage, variant: nextVariant, vars: detail?.vars });
 
       if (!nextMessage || detail?.autoClose === false) return;
 
@@ -1134,7 +1149,7 @@ function TopStatusLine() {
       role={status.variant === 'error' ? 'alert' : 'status'}
       className={`fixed left-0 right-0 top-0 z-[10000] px-4 py-2 text-center text-sm font-medium shadow-sm ${topStatusClasses[status.variant]}`}
     >
-      <span className="mx-auto block max-w-screen-xl truncate">{t(status.message)}</span>
+      <span className="mx-auto block max-w-screen-xl truncate">{t(status.message, status.vars)}</span>
     </div>
   );
 }

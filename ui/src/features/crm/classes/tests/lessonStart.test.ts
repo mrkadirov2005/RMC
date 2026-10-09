@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSessionWorkflowPath, findSessionOnDate, hasScoringAction, sessionDateKey } from '../lessonStart';
+import { buildSessionWorkflowPath, findSessionOnDate, hasScoringAction, resolveLessonActions, sessionDateKey, toggleLessonAction } from '../lessonStart';
 
 describe('lesson start helpers', () => {
   it('opens an existing session by id and keeps the teacher return path', () => {
@@ -32,5 +32,17 @@ describe('lesson start helpers', () => {
   it('requires a scoring action besides coins', () => {
     expect(hasScoringAction(['coins'])).toBe(false);
     expect(hasScoringAction(['coins', 'points'])).toBe(true);
+  });
+
+  it('never lets points be chosen together with homework or activity', () => {
+    expect(toggleLessonAction(['attendance', 'homework', 'activity', 'coins'], 'points', true)).toEqual(['attendance', 'coins', 'points']);
+    expect(toggleLessonAction(['attendance', 'points'], 'homework', true)).toEqual(['attendance', 'homework']);
+    expect(toggleLessonAction(['attendance', 'points'], 'coins', true)).toEqual(['attendance', 'points', 'coins']);
+    expect(toggleLessonAction(['attendance', 'points'], 'points', false)).toEqual(['attendance']);
+  });
+
+  it('drops points from an old link that also has homework or activity', () => {
+    expect(resolveLessonActions(['attendance', 'homework', 'points'])).toEqual(['attendance', 'homework']);
+    expect(resolveLessonActions(['attendance', 'points'])).toEqual(['attendance', 'points']);
   });
 });

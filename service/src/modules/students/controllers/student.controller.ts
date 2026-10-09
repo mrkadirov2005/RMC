@@ -5,6 +5,20 @@ const { studentBelongsToTeacher } = require('../../../shared/tenantDb');
 const { hasStudentListParams, parseStudentListQuery } = require('./studentListQuery');
 const studentCoinsController = require('./studentCoins.controller');
 
+// Passport numbers are for admins and the owner (and a student's own profile), never for
+// teachers or classmates.
+const withoutPassport = (row: any) => {
+  if (!row || typeof row !== 'object') return row;
+  const { passport_number: _passport, ...rest } = row;
+  return rest;
+};
+const hidePassports = (req: any, data: any) => {
+  if (req.user?.userType === 'superuser') return data;
+  if (Array.isArray(data)) return data.map(withoutPassport);
+  if (data && Array.isArray(data.data)) return { ...data, data: data.data.map(withoutPassport) };
+  return withoutPassport(data);
+};
+
 const getAcquisitionSources = async (_req: any, res: any) => {
   try { res.json(await studentService.listAcquisitionSources()); }
   catch (error: any) { res.status(500).json({ error: "Manbalarni yuklab bo'lmadi", details: error.message }); }
@@ -55,10 +69,10 @@ const getAllStudents = async (req: any, res: any) => {
     }
     if (hasStudentListParams(req.query)) {
       const result = await studentService.listStudentsPaginated(parseStudentListQuery(req.query), centerId ?? undefined, teacherId);
-      return res.json(result);
+      return res.json(hidePassports(req, result));
     }
     const rows = await studentService.listStudents(centerId ?? undefined, teacherId);
-    res.json(rows);
+    res.json(hidePassports(req, rows));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'quvchilarni yuklab bo'lmadi", details: error.message || String(error) });
@@ -77,7 +91,7 @@ const getStudentById = async (req: any, res: any) => {
     }
     const row = await studentService.getStudent(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
-    res.json(row);
+    res.json(req.user?.userType === 'student' ? row : hidePassports(req, row));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'quvchini yuklab bo'lmadi", details: error.message || String(error) });
@@ -107,7 +121,7 @@ const getClassStudentsWithTransfers = async (req: any, res: any) => {
     }
     const excludeTransferred = ['1', 'true'].includes(String(req.query?.exclude_transferred || '').toLowerCase());
     const rows = await studentService.listClassStudentsWithTransfers(Number(req.params.classId), centerId ?? undefined, teacherId, excludeTransferred);
-    res.json(rows);
+    res.json(hidePassports(req, rows));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Guruh o'quvchilarini yuklab bo'lmadi", details: error.message || String(error) });

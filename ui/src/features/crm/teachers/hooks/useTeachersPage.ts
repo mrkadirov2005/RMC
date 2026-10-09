@@ -11,6 +11,7 @@ import { selectCenterOptions } from '../../../../store/selectors';
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Teacher } from '../types';
 import { getInitials, getStatusColor } from '../queries';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const DEFAULT_TEACHER_PASSWORD = '012345678';
 
@@ -25,6 +26,7 @@ const getEmptyTeacherForm = (centerId: number): Partial<Teacher> => ({
 
 // Provides teachers page.
 export const useTeachersPage = (teacherParams?: TeacherListParams) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -96,7 +98,7 @@ export const useTeachersPage = (teacherParams?: TeacherListParams) => {
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this teacher?')) {
+    if (window.confirm(t('Are you sure you want to delete this teacher?'))) {
       dispatch(deleteTeacher(id));
     }
   };

@@ -1,5 +1,6 @@
 import { dataAPI, type DataEntity } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
+import { translateStatic } from '@/i18n/LanguageContext';
 
 const getErrorText = (error: any, fallback: string) =>
   error?.response?.data?.error || error?.response?.data?.details || fallback;
@@ -14,7 +15,7 @@ export const importCsvEntity = async (entity: DataEntity, label: string, file?: 
   try {
     const csv = await file.text();
     await dataAPI.importEntity(entity, csv);
-    showToast.success(`${label} imported successfully.`);
+    showToast.success('{label} imported successfully.', { vars: { label: translateStatic(label) } });
     return true;
   } catch (error: any) {
     showToast.error(getErrorText(error, `Failed to import ${label.toLowerCase()}.`));
@@ -34,7 +35,7 @@ export const exportCsvEntity = async (entity: DataEntity, label: string) => {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    showToast.success(`${label} exported successfully.`);
+    showToast.success('{label} exported successfully.', { vars: { label: translateStatic(label) } });
   } catch (error: any) {
     showToast.error(getErrorText(error, `Failed to export ${label.toLowerCase()}.`));
   }

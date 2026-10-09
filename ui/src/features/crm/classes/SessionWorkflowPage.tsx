@@ -20,12 +20,13 @@ import {
   clampWorkflowPoints,
   getWorkflowCounts,
   getWorkflowStudentId,
+  getWorkflowMaxScore,
   getWorkflowTotalScore,
   toWorkflowPointMap,
   type LessonSummary,
 } from './sessionWorkflowModel';
 import { sessionWorkflowApi } from './api/sessionWorkflowApi';
-import { buildSessionWorkflowPath, findSessionOnDate, getSessionId, NEW_SESSION_SEGMENT, sessionDateKey } from './lessonStart';
+import { buildSessionWorkflowPath, findSessionOnDate, getSessionId, NEW_SESSION_SEGMENT, resolveLessonActions, sessionDateKey } from './lessonStart';
 import { toDateKey } from './utils/date';
 import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
 import ConsolidationTab from './components/ConsolidationTab';
@@ -108,7 +109,7 @@ export default function SessionWorkflowPage() {
     const raw = searchParams.get('actions');
     const values = raw ? raw.split(',') : DEFAULT_WORKFLOW_ACTIONS;
     const allowed = new Set<WorkflowAction>(['attendance', 'homework', 'activity', 'coins', 'points']);
-    const next = values.filter((value): value is WorkflowAction => allowed.has(value as WorkflowAction));
+    const next = resolveLessonActions(values.filter((value): value is WorkflowAction => allowed.has(value as WorkflowAction)));
     return next.length > 0 ? next : DEFAULT_WORKFLOW_ACTIONS;
   }, [searchParams]);
   const selectedActions = isViewMode && recordedActions?.length ? recordedActions : requestedActions;
@@ -310,6 +311,7 @@ export default function SessionWorkflowPage() {
     return getWorkflowCounts(students.length, attendance, homeworkScores, activityScores, pointsScores);
   }, [activityScores, attendance, homeworkScores, pointsScores, students.length]);
 
+  const maxScore = getWorkflowMaxScore(selectedActions, scoringSettings);
   const getTotalScore = (studentId: number) => getWorkflowTotalScore({
     studentId,
     selectedActions,
@@ -381,7 +383,7 @@ export default function SessionWorkflowPage() {
 
   const completeTab = (tab: WorkflowTab) => {
     if (!isTabComplete(tab)) {
-      showToast.error(`Complete ${ACTION_LABELS[tab].toLowerCase()} for every student first.`);
+      showToast.error('Complete {action} for every student first.', { vars: { action: t(ACTION_LABELS[tab]).toLowerCase() } });
       return;
     }
     if (tab === 'attendance' && !checkAbsenceReasons()) return;
@@ -487,7 +489,7 @@ export default function SessionWorkflowPage() {
     }
     const incompleteTab = selectedTabs.find((tab) => !isTabComplete(tab));
     if (incompleteTab) {
-      showToast.error(`Complete ${ACTION_LABELS[incompleteTab].toLowerCase()} for every student.`);
+      showToast.error('Complete {action} for every student.', { vars: { action: t(ACTION_LABELS[incompleteTab]).toLowerCase() } });
       return;
     }
     if (!checkAbsenceReasons()) return;
@@ -535,7 +537,7 @@ export default function SessionWorkflowPage() {
         teacher_id: teacherId,
         attendance_date: selectedDate,
         subject: classData?.class_name || 'Class Session',
-        total_marks: 100,
+        total_marks: maxScore,
         award_coins: shouldAwardCoins,
         records,
       });
@@ -717,6 +719,7 @@ export default function SessionWorkflowPage() {
                 onToggle={toggleActivity}
                 onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))) && (!stellarLabel || activityScores.get(studentId) !== stellarLabel))}
                 getTotalScore={getTotalScore}
+                maxScore={maxScore}
                 readOnly={isViewMode}
                 action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? t('Complete Activity') : shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}</Button></>}
               />
@@ -729,6 +732,7 @@ export default function SessionWorkflowPage() {
                 onChange={setPointScore}
                 onFillAll={fillPointScores}
                 getTotalScore={getTotalScore}
+                maxScore={maxScore}
                 readOnly={isViewMode}
                 action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}</Button></>}
               />

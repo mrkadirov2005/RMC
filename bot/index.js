@@ -48,10 +48,13 @@ const AUTH_KEYBOARD = {
     [{ text: '📝 Vazifalar' }, { text: "🎁 Sovg'alar" }],
     [{ text: '✉️ Taklif va shikoyat' }, { text: '✍️ Ustozga yozish' }],
     [{ text: '👤 Markaz rahbari' }, { text: '📜 Qonun-qoidalar' }],
-    [{ text: '👥 Farzandni tanlash' }, { text: '🚪 Chiqish' }],
+    [{ text: '👥 Farzandni tanlash' }, { text: "➕ Farzand qo'shish" }],
+    [{ text: '🚪 Chiqish' }],
   ],
   resize_keyboard: true,
 };
+
+const BACK_KEYBOARD = { keyboard: [[{ text: '⬅️ Orqaga' }]], resize_keyboard: true };
 
 const CONTACT_KEYBOARD = {
   keyboard: [[{ text: '📱 Telefon raqamni yuborish', request_contact: true }], [{ text: '⬅️ Orqaga' }]],
@@ -1075,8 +1078,9 @@ async function askToJoinChannel(chatId) {
 
 const lastNineDigits = (value) => String(value || '').replace(/\D/g, '').slice(-9);
 
-async function startParentLink(chatId) {
-  userState.set(chatId, { flow: 'parent_contact' });
+// `adding`: a parent who already follows a child asks for another one, so skip the phone match.
+async function startParentLink(chatId, { adding = false } = {}) {
+  userState.set(chatId, { flow: 'parent_contact', adding });
   await sendMessage(chatId, [
     "👨‍👩‍👧 <b>Ota-ona sifatida ulanish</b>",
     '',
@@ -1096,6 +1100,10 @@ async function handleParentContact(message) {
     await sendMessage(chatId, "⚠️ Telefon raqam noto'g'ri.", { reply_markup: CONTACT_KEYBOARD });
     return;
   }
+  if (userState.get(chatId)?.adding) {
+    await askForChild(chatId, contact.phone_number);
+    return;
+  }
   // Children whose parent phone (or, if a parent phone was never given, own phone) is this number.
   const result = await pool.query(
     `SELECT ${STUDENT_FIELDS},
@@ -1106,15 +1114,11 @@ async function handleParentContact(message) {
             OR RIGHT(regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g'), 9) = $1)`,
     [digits]
   );
-  userState.delete(chatId);
   if (result.rows.length === 0) {
-    await sendMessage(chatId, [
-      "❌ <b>Raqam topilmadi</b>",
-      '',
-      "Bu raqam hech bir o'quvchining ota-ona raqami sifatida saqlanmagan. Markaz administratoriga murojaat qiling — raqamingizni farzandingiz ma'lumotlariga qo'shib beradi.",
-    ].join('\n'), { reply_markup: MAIN_KEYBOARD });
+    await askForChild(chatId, contact.phone_number, "Bu raqam farzandingiz ma'lumotlarida ota-ona raqami sifatida saqlanmagan.");
     return;
   }
+  userState.delete(chatId);
   for (const row of result.rows) {
     await saveLink(chatId, message.from, row, row.is_parent_phone ? 'parent' : 'student', contact.phone_number);
   }
@@ -1128,6 +1132,90 @@ async function handleParentContact(message) {
     '',
     "Endi har bir darsdan keyin natijalar shu yerga avtomatik keladi.",
   ].join('\n'), { reply_markup: AUTH_KEYBOARD });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Parents whose phone isn't saved on the child: they name the child (phone or username) and an
+// admin approves the request in the platform. Nothing about the child is shown before approval.
+// ---------------------------------------------------------------------------------------------
+
+const MAX_OPEN_PARENT_REQUESTS = 5;
+
+async function askForChild(chatId, parentPhone, reason = '') {
+  userState.set(chatId, { flow: 'parent_child', parentPhone });
+  await sendMessage(chatId, [
+    ...(reason ? [`ℹ️ ${reason}`, ''] : []),
+    "👶 Farzandingizning <b>telefon raqami</b> yoki <b>login</b>ini (username) kiriting.",
+    '',
+    "So'rovingiz markaz administratoriga yuboriladi va tasdiqlangach farzandingiz ulanadi.",
+  ].join('\n'), { reply_markup: BACK_KEYBOARD });
+}
+
+async function handleParentChildQuery(message, state) {
+  const chatId = message.chat.id;
+  const query = cleanText(message.text);
+  if (!query) {
+    await sendMessage(chatId, "⚠️ Farzandingizning telefon raqami yoki loginini matn sifatida yuboring.", { reply_markup: BACK_KEYBOARD });
+    return;
+  }
+  const digits = lastNineDigits(query);
+  const byPhone = digits.length === 9 && /^[+\d\s()-]+$/.test(query);
+  const found = await pool.query(
+    `SELECT s.student_id, s.center_id
+     FROM students s
+     WHERE s.deleted_at IS NULL AND s.status = 'Active' AND s.main_student_id IS NULL
+       AND ${byPhone
+         ? "RIGHT(regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g'), 9) = $1"
+         : 'LOWER(s.username) = LOWER($1)'}`,
+    [byPhone ? digits : query]
+  );
+  if (found.rows.length === 0) {
+    await sendMessage(chatId, "❌ Bunday telefon raqam yoki login topilmadi. Tekshirib, qayta kiriting yoki ⬅️ Orqaga bosing.", { reply_markup: BACK_KEYBOARD });
+    return;
+  }
+
+  const open = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM parent_link_requests WHERE telegram_chat_id = $1 AND status = 'Pending'",
+    [chatId]
+  );
+  if (open.rows[0].count >= MAX_OPEN_PARENT_REQUESTS) {
+    userState.delete(chatId);
+    await sendMessage(chatId, "⏳ Sizda ko'rib chiqilayotgan so'rovlar ko'p. Administrator javobini kuting.", { reply_markup: (await getSession(chatId)) ? AUTH_KEYBOARD : MAIN_KEYBOARD });
+    return;
+  }
+
+  const from = message.from || {};
+  const parentName = [from.first_name, from.last_name].filter(Boolean).join(' ').trim() || null;
+  let created = 0;
+  let alreadyLinked = 0;
+  for (const row of found.rows) {
+    const linked = await pool.query(
+      'SELECT 1 FROM telegram_links WHERE telegram_chat_id = $1 AND student_id = $2 AND active',
+      [chatId, row.student_id]
+    );
+    if (linked.rows.length > 0) { alreadyLinked += 1; continue; }
+    const inserted = await pool.query(
+      `INSERT INTO parent_link_requests
+         (center_id, student_id, telegram_chat_id, telegram_user_id, telegram_username, parent_name, parent_phone, child_query)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (telegram_chat_id, student_id) WHERE status = 'Pending' DO NOTHING
+       RETURNING request_id`,
+      [row.center_id, row.student_id, chatId, from.id || null, from.username || null, parentName, state.parentPhone || null, query.slice(0, 100)]
+    );
+    created += inserted.rows.length;
+  }
+
+  userState.delete(chatId);
+  const keyboard = (await getSession(chatId)) ? AUTH_KEYBOARD : MAIN_KEYBOARD;
+  if (created === 0 && alreadyLinked > 0) {
+    await sendMessage(chatId, '✅ Bu farzand allaqachon sizga ulangan.', { reply_markup: keyboard });
+    return;
+  }
+  await sendMessage(chatId, [
+    "📨 <b>So'rov yuborildi</b>",
+    '',
+    "Markaz administratori so'rovingizni ko'rib chiqadi. Tasdiqlangach, shu yerga xabar keladi.",
+  ].join('\n'), { reply_markup: keyboard });
 }
 
 async function showChildPicker(chatId) {
@@ -1299,14 +1387,17 @@ async function deliverOutbox() {
   try {
     await client.query('BEGIN');
     const pending = await client.query(
-      `SELECT message_id, student_id, text FROM telegram_outbox
+      `SELECT message_id, student_id, text, telegram_chat_id FROM telegram_outbox
        WHERE sent_at IS NULL ORDER BY message_id LIMIT 30 FOR UPDATE SKIP LOCKED`
     );
     for (const message of pending.rows) {
-      const chats = await client.query(
-        'SELECT DISTINCT telegram_chat_id FROM telegram_links WHERE student_id = $1 AND active',
-        [message.student_id]
-      );
+      // Addressed to one chat (e.g. a parent's request decision), else every chat following the student.
+      const chats = message.telegram_chat_id
+        ? { rows: [{ telegram_chat_id: message.telegram_chat_id }] }
+        : await client.query(
+          'SELECT DISTINCT telegram_chat_id FROM telegram_links WHERE student_id = $1 AND active',
+          [message.student_id]
+        );
       let delivered = 0;
       let lastError = null;
       for (const row of chats.rows) {
@@ -1375,6 +1466,11 @@ async function handleMessage(message) {
 
   if (message.contact || state?.flow === 'parent_contact') {
     await handleParentContact(message);
+    return;
+  }
+
+  if (state?.flow === 'parent_child') {
+    await handleParentChildQuery(message, state);
     return;
   }
 
@@ -1447,6 +1543,11 @@ async function handleMessage(message) {
 
   if (text === '📜 Qonun-qoidalar') {
     await showCenterText(chatId, 'rules');
+    return;
+  }
+
+  if (text === "➕ Farzand qo'shish") {
+    await startParentLink(chatId, { adding: true });
     return;
   }
 

@@ -12,7 +12,7 @@ export const lessonActionOptions: Array<{ id: LessonAction; label: string; detai
   { id: 'homework', label: 'Homework', detail: 'Score homework completion.', icon: CheckCircle2 },
   { id: 'activity', label: 'Activity', detail: 'Score class activity.', icon: Star },
   { id: 'coins', label: 'Coins', detail: 'Apply coins from the final score.', icon: Coins },
-  { id: 'points', label: 'Points', detail: 'Enter manual points for each student.', icon: PencilLine },
+  { id: 'points', label: 'Points', detail: 'Enter a 100-point score for each student; replaces homework and activity.', icon: PencilLine },
 ];
 
 /** Route segment used in place of a session id for a lesson that has no session row yet. */
@@ -25,6 +25,22 @@ export const getSessionId = (session: any) => Number(session?.session_id || sess
 
 export const findSessionOnDate = (sessions: any[], dateKey: string) =>
   sessions.find((session) => !session?.deleted_at && sessionDateKey(session) === dateKey);
+
+// The 100-point score replaces homework and activity in the lesson total, so they never go together.
+const POINTS_EXCLUDES: LessonAction[] = ['homework', 'activity'];
+
+/** Turns an action on or off; choosing points drops homework and activity, and vice versa. */
+export const toggleLessonAction = (actions: LessonAction[], action: LessonAction, checked: boolean): LessonAction[] => {
+  if (!checked) return actions.filter((item) => item !== action);
+  const kept = action === 'points'
+    ? actions.filter((item) => !POINTS_EXCLUDES.includes(item))
+    : POINTS_EXCLUDES.includes(action) ? actions.filter((item) => item !== 'points') : actions;
+  return Array.from(new Set([...kept, action]));
+};
+
+/** Drops points from an action list that also has homework or activity (e.g. an old link). */
+export const resolveLessonActions = <T extends string>(actions: T[]): T[] =>
+  actions.some((item) => POINTS_EXCLUDES.includes(item as LessonAction)) ? actions.filter((item) => item !== 'points') : actions;
 
 export const hasScoringAction = (actions: LessonAction[]) => actions.some((action) => action !== 'coins');
 

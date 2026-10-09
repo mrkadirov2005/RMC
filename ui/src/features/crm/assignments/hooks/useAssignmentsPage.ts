@@ -27,9 +27,11 @@ import {
   getPersonalAssignments,
 } from '../queries';
 import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Provides assignments page.
 export const useAssignmentsPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
 
   const assignmentItems = useAppSelector((state) => state.assignments.items) as Assignment[];
@@ -143,7 +145,7 @@ export const useAssignmentsPage = () => {
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this assignment?')) {
+    if (window.confirm(t('Are you sure you want to delete this assignment?'))) {
       await dispatch(deleteAssignment(id));
     }
   };

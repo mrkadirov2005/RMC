@@ -8,9 +8,11 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { fetchCentersForce } from '../../../../slices/centersSlice';
 import type { Center } from '../types';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../../../shared/auth/authStorage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Provides centers page.
 export const useCentersPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const items = useAppSelector((state) => state.centers.items) as Center[];
   const loading = useAppSelector((state) => state.centers.loading);
@@ -100,7 +102,7 @@ export const useCentersPage = () => {
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this center?')) {
+    if (window.confirm(t('Are you sure you want to delete this center?'))) {
       try {
         await centerAPI.delete(id);
         if (Number(id) === Number(activeCenterId)) {

@@ -127,7 +127,7 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure?')) {
+    if (window.confirm(t('Are you sure?'))) {
       try {
         await dispatch(deleteGrade(id)).unwrap();
         onRefresh();

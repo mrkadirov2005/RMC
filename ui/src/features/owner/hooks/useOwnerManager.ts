@@ -22,6 +22,7 @@ import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType, 
 import { expandLegacySubPagePermissions, togglePagePermission } from '../../crm/rbac/adminPageAccess';
 import { buildOwnerStudentStatistics, createInitialFormState, getCenterOptionId, getCenterOptionName, getOwnerManagerRowId, normalizePermissions, summarizeOwnerAttendance } from '../utils';
 import { ownerManagerApi } from '../api';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Builds columns.
 const buildColumns = (activeTab: OwnerManagerTabType): OwnerManagerColumnDef[] => {
@@ -56,6 +57,7 @@ const buildColumns = (activeTab: OwnerManagerTabType): OwnerManagerColumnDef[] =
 
 // Provides owner manager.
 export const useOwnerManager = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const ownerManagerUi = useAppSelector(selectOwnerManagerUi);
   const {
@@ -552,7 +554,7 @@ export const useOwnerManager = () => {
       setPendingStudentDelete({ id, hard: false });
       return;
     }
-    if (activeTab !== 'students' && !window.confirm('Are you sure you want to delete this record?')) return;
+    if (activeTab !== 'students' && !window.confirm(t('Are you sure you want to delete this record?'))) return;
 
     dispatch(setOwnerManagerLoading(true));
     try {
@@ -587,14 +589,14 @@ export const useOwnerManager = () => {
 // Memoizes the handle hard delete callback.
   const handleHardDelete = useCallback(async (id: number, studentReasonId?: number, studentReasonNote?: string) => {
     if (!canHardDelete) {
-      showToast.error('You do not have permission to permanently delete records.');
+      showToast.error(t('You do not have permission to permanently delete records.'));
       return;
     }
     if (activeTab === 'students' && !studentReasonId) {
       setPendingStudentDelete({ id, hard: true });
       return;
     }
-    if (activeTab !== 'students' && !window.confirm('Permanently delete this record? This cannot be undone.')) return;
+    if (activeTab !== 'students' && !window.confirm(t('Permanently delete this record? This cannot be undone.'))) return;
 
     dispatch(setOwnerManagerLoading(true));
     try {

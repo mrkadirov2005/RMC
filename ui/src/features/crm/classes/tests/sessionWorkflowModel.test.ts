@@ -5,7 +5,9 @@ import {
   buildSessionWorkflowRecords,
   clampWorkflowPoints,
   getWorkflowCounts,
+  getWorkflowMaxScore,
   getWorkflowTotalScore,
+  toLessonPercent,
 } from '../sessionWorkflowModel';
 
 describe('session workflow model', () => {
@@ -127,5 +129,17 @@ describe('lesson summary', () => {
     expect(summary.topStudents.map((item) => item.name)).toEqual(['Ali Valiyev', 'Bobur']);
     expect(summary.coins).toEqual({ total: 25, students: 3 });
     expect(summary.stellarStudentName).toBe('Ali Valiyev');
+  });
+
+  it('grades a lesson out of the most its chosen actions can score', () => {
+    const settings = defaultLessonScoringSettings;
+    expect(getWorkflowMaxScore(['attendance'], settings)).toBe(40);
+    expect(getWorkflowMaxScore(['attendance', 'homework', 'coins'], settings)).toBe(60);
+    expect(getWorkflowMaxScore(['attendance', 'homework', 'activity'], settings)).toBe(100);
+    expect(getWorkflowMaxScore(['attendance', 'points'], settings)).toBe(100);
+    expect(getWorkflowMaxScore(['coins'], settings)).toBe(100);
+    // A perfect attendance-only lesson is 100%, so a 5, not a 2.
+    expect(toLessonPercent(40, 40)).toBe(100);
+    expect(toLessonPercent(30, 60)).toBe(50);
   });
 });

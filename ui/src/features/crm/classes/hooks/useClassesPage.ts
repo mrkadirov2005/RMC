@@ -17,6 +17,7 @@ import type { Class } from '../types';
 import { parseSchedule, weekDays } from '../queries';
 import { buildAssignableSubjectOptions, buildClassSubjectAssignment, hasPersistedClassSubject } from '../subjectOptions';
 import { findClassRoomConflict } from '../classRoomConflict';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AttendanceRecord {
   attendance_id?: number;
@@ -31,6 +32,7 @@ interface AttendanceRecord {
 
 // Provides classes page.
 export const useClassesPage = (onSaved?: () => void) => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 // Handles is owner.
@@ -151,7 +153,7 @@ export const useClassesPage = (onSaved?: () => void) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (roomConflict) {
-      showToast.error(`Room ${formData.room_number} is already booked by ${roomConflict.group} on ${roomConflict.day}, ${roomConflict.start}–${roomConflict.end}.`);
+      showToast.error('Room {room} is already booked by {group} on {day}, {start}–{end}.', { vars: { room: formData.room_number || '', group: roomConflict.group, day: t(roomConflict.day), start: roomConflict.start, end: roomConflict.end } });
       return;
     }
     const dataToSubmit = {
@@ -198,7 +200,7 @@ export const useClassesPage = (onSaved?: () => void) => {
 
 // Handles delete.
   const handleDelete = async (id: number, className?: string) => {
-    if (!window.confirm('Are you sure you want to delete this class?')) return;
+    if (!window.confirm(t('Are you sure you want to delete this class?'))) return;
     setDeleteLoading(true);
     try {
       await classAPI.delete(id);
@@ -311,7 +313,7 @@ export const useClassesPage = (onSaved?: () => void) => {
 // Handles bulk delete.
   const handleBulkDelete = async (ids: number[]) => {
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} selected class${ids.length === 1 ? '' : 'es'}?`)) return;
+    if (!window.confirm(t('Delete {count} selected group(s)?', { count: ids.length }))) return;
 
     let failed = 0;
     for (const id of ids) {
@@ -323,9 +325,9 @@ export const useClassesPage = (onSaved?: () => void) => {
     }
     dispatch(fetchClassesForce());
     if (failed > 0) {
-      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+      showToast.error('Deleted {deleted}; {failed} failed.', { vars: { deleted: ids.length - failed, failed } });
     } else {
-      showToast.success(`Deleted ${ids.length} class${ids.length === 1 ? '' : 'es'}.`);
+      showToast.success('Deleted {count} group(s).', { vars: { count: ids.length } });
     }
   };
 
