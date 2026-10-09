@@ -2,7 +2,7 @@
 // teacher sees their own groups and tells the admin; the admin (or owner) closes each alert with
 // what happened, and "Sick" also freezes the student.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, ChevronDown, Loader2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,6 +13,7 @@ import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { absenceAlertAPI } from './api';
+import { DeleteStudentDialog } from '../students/components/DeleteStudentDialog';
 
 type AbsenceOutcome = 'sick' | 'not_interested' | 'excused' | 'left';
 
@@ -29,6 +30,8 @@ export interface AbsenceAlert {
   parent_phone: string | null;
   class_name: string | null;
   teacher_name: string | null;
+  teacher_id?: number | null;
+  center_id?: number | null;
 }
 
 const OUTCOMES: Array<{ value: AbsenceOutcome; label: string; detail: string }> = [
@@ -42,7 +45,19 @@ const COLLAPSED_COUNT = 5;
 
 const formatDay = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}`;
 
-export function AbsenceAlertsPanel({ canResolve = false, className }: { canResolve?: boolean; className?: string }) {
+export function AbsenceAlertsPanel({
+  canResolve = false,
+  className,
+  teacherOptions = [],
+  classOptions = [],
+  onArchive,
+}: {
+  canResolve?: boolean;
+  className?: string;
+  teacherOptions?: Array<{ id: number; label: string }>;
+  classOptions?: Array<{ id: number; label: string; teacher_id?: number | null }>;
+  onArchive?: (studentId: number, reasonId: number, note?: string) => Promise<void>;
+}) {
   const { t } = useLanguage();
   const [alerts, setAlerts] = useState<AbsenceAlert[] | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -50,6 +65,9 @@ export function AbsenceAlertsPanel({ canResolve = false, className }: { canResol
   const [outcome, setOutcome] = useState<AbsenceOutcome | ''>('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [teacherFilter, setTeacherFilter] = useState('');
+  const [classFilter, setClassFilter] = useState('');
+  const [archiving, setArchiving] = useState<AbsenceAlert | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -95,9 +113,26 @@ export function AbsenceAlertsPanel({ canResolve = false, className }: { canResol
     }
   };
 
+  const teacherClassOptions = useMemo(
+    () => classOptions.filter((item) => !teacherFilter || Number(item.teacher_id || 0) === Number(teacherFilter)),
+    [classOptions, teacherFilter]
+  );
+  const filteredAlerts = useMemo(
+    () => (alerts || []).filter((alert) =>
+      (!teacherFilter || Number(alert.teacher_id || 0) === Number(teacherFilter)) &&
+      (!classFilter || Number(alert.class_id) === Number(classFilter))
+    ),
+    [alerts, classFilter, teacherFilter]
+  );
+  useEffect(() => {
+    if (classFilter && !teacherClassOptions.some((item) => String(item.id) === classFilter)) {
+      setClassFilter('');
+    }
+  }, [classFilter, teacherClassOptions]);
+
   // Nothing to show while loading or when every student is attending.
   if (!alerts || alerts.length === 0) return null;
-  const visible = expanded ? alerts : alerts.slice(0, COLLAPSED_COUNT);
+  const visible = expanded ? filteredAlerts : filteredAlerts.slice(0, COLLAPSED_COUNT);
 
   return (
     <section className={cn('rounded-xl border border-rose-300 bg-rose-50/70 p-4 shadow-sm dark:border-rose-900 dark:bg-rose-950/30', className)}>
@@ -107,7 +142,7 @@ export function AbsenceAlertsPanel({ canResolve = false, className }: { canResol
             <AlertTriangle className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="font-black text-rose-900 dark:text-rose-200">{t('Attendance alerts ({count})', { count: alerts.length })}</h2>
+            <h2 className="font-black text-rose-900 dark:text-rose-200">{t('Attendance alerts ({count})', { count: filteredAlerts.length })}</h2>
             <p className="text-xs text-rose-800/80 dark:text-rose-300/80">
               {canResolve
                 ? t('Students who missed lessons in a row. Record what happened to close each alert.')
@@ -117,7 +152,38 @@ export function AbsenceAlertsPanel({ canResolve = false, className }: { canResol
         </div>
       </div>
 
-      <ul className="divide-y divide-rose-200/70 overflow-hidden rounded-lg border border-rose-200 bg-white dark:divide-rose-900/60 dark:border-rose-900 dark:bg-slate-950/40">
+      {(teacherOptions.length > 0 || classOptions.length > 0) && (
+        <div className="mb-3 grid gap-2 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-rose-900 dark:text-rose-200">
+            {t('Teacher')}
+            <select
+              value={teacherFilter}
+              onChange={(event) => setTeacherFilter(event.target.value)}
+              className="mt-1 block h-9 w-full rounded-md border border-rose-200 bg-white px-2 text-sm font-medium text-slate-900 dark:border-rose-900 dark:bg-slate-950 dark:text-white"
+            >
+              <option value="">{t('All teachers')}</option>
+              {teacherOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-rose-900 dark:text-rose-200">
+            {t('Class')}
+            <select
+              value={classFilter}
+              onChange={(event) => setClassFilter(event.target.value)}
+              className="mt-1 block h-9 w-full rounded-md border border-rose-200 bg-white px-2 text-sm font-medium text-slate-900 dark:border-rose-900 dark:bg-slate-950 dark:text-white"
+            >
+              <option value="">{t('All classes')}</option>
+              {teacherClassOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+            </select>
+          </label>
+        </div>
+      )}
+
+      {filteredAlerts.length === 0 ? (
+        <p className="rounded-lg border border-rose-200 bg-white p-4 text-sm text-muted-foreground dark:border-rose-900 dark:bg-slate-950/40">
+          {t('No attendance alerts match these filters.')}
+        </p>
+      ) : <ul className="divide-y divide-rose-200/70 overflow-hidden rounded-lg border border-rose-200 bg-white dark:divide-rose-900/60 dark:border-rose-900 dark:bg-slate-950/40">
         {visible.map((alert) => (
           <li key={`${alert.class_id}:${alert.student_id}`} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 space-y-0.5">
@@ -143,16 +209,23 @@ export function AbsenceAlertsPanel({ canResolve = false, className }: { canResol
               )}
             </div>
             {canResolve && (
-              <Button size="sm" variant="outline" className="shrink-0 border-rose-300 text-rose-700 hover:bg-rose-100" onClick={() => openResolve(alert)}>
-                <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                {t('Resolve')}
-              </Button>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Button size="sm" variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-100" onClick={() => openResolve(alert)}>
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  {t('Resolve')}
+                </Button>
+                {onArchive && (
+                  <Button size="sm" variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-100" onClick={() => setArchiving(alert)}>
+                    {t('Arxivlash')}
+                  </Button>
+                )}
+              </div>
             )}
           </li>
         ))}
-      </ul>
+      </ul>}
 
-      {alerts.length > COLLAPSED_COUNT && (
+      {filteredAlerts.length > COLLAPSED_COUNT && (
         <button type="button" onClick={() => setExpanded((value) => !value)} className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-700 hover:underline dark:text-rose-300">
           <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-180')} />
           {expanded ? t('Show less') : t('Show all {count}', { count: alerts.length })}
@@ -201,6 +274,21 @@ export function AbsenceAlertsPanel({ canResolve = false, className }: { canResol
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {onArchive && (
+        <DeleteStudentDialog
+          open={archiving !== null}
+          title={t('Archive student')}
+          description={archiving ? `${archiving.student_name} · ${archiving.class_name || ''}` : ''}
+          onOpenChange={(open) => !open && setArchiving(null)}
+          onConfirm={async (reasonId, note) => {
+            if (!archiving) return;
+            await onArchive(archiving.student_id, reasonId, note);
+            setArchiving(null);
+            await load();
+          }}
+          confirmLabel="Arxivlash"
+        />
+      )}
     </section>
   );
 }

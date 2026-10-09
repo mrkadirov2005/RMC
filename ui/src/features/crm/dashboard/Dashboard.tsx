@@ -12,6 +12,8 @@ import type { DashboardScope } from './types';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { AbsenceAlertsPanel } from '../absenceAlerts/AbsenceAlertsPanel';
 import { TelegramInboxPanel } from '../telegramBot/TelegramInboxPanel';
+import { studentAPI } from '@/shared/api/api';
+import { showToast } from '@/utils/toast';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
@@ -85,7 +87,27 @@ const Dashboard = memo(() => {
         </div>
       </div>
 
-      <AbsenceAlertsPanel canResolve />
+      <AbsenceAlertsPanel
+        canResolve
+        onArchive={async (studentId, reasonId, note) => {
+          try {
+            await studentAPI.delete(studentId, reasonId, note);
+            showToast.success(t('Student archived successfully'));
+          } catch (error: any) {
+            showToast.error(error?.response?.data?.error || error?.response?.data?.details || t('Failed to archive student'));
+            throw error;
+          }
+        }}
+        teacherOptions={scopedCollections.teachers.map((teacher: any) => ({
+          id: Number(teacher.teacher_id || teacher.id),
+          label: [teacher.first_name, teacher.last_name].filter(Boolean).join(' ') || `Teacher #${teacher.teacher_id || teacher.id}`,
+        })).filter((teacher) => teacher.id > 0)}
+        classOptions={scopedCollections.classes.map((item: any) => ({
+          id: Number(item.class_id || item.id),
+          label: item.class_name || `Class #${item.class_id || item.id}`,
+          teacher_id: Number(item.teacher_id || 0) || null,
+        })).filter((item) => item.id > 0)}
+      />
       <TelegramInboxPanel hideWhenEmpty />
 
       <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.04]">

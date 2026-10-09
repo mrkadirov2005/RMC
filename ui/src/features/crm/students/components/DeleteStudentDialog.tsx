@@ -13,10 +13,11 @@ interface Props {
   description: string;
   onOpenChange: (open: boolean) => void;
   onConfirm: (reasonId: number, note?: string) => Promise<void> | void;
+  confirmLabel?: string;
 }
 
 // Renders the delete student dialog.
-export const DeleteStudentDialog = ({ open, title, description, onOpenChange, onConfirm }: Props) => {
+export const DeleteStudentDialog = ({ open, title, description, onOpenChange, onConfirm, confirmLabel }: Props) => {
   const { t } = useLanguage();
   const [reasonId, setReasonId] = useState('');
   const [customReason, setCustomReason] = useState('');
@@ -71,7 +72,7 @@ export const DeleteStudentDialog = ({ open, title, description, onOpenChange, on
           </Button>
           <Button type="button" variant="destructive" onClick={confirm} disabled={deleting || !ready}>
             <Trash2 className="mr-2 h-4 w-4" />
-            {deleting ? t('Deleting...') : t('Delete')}
+            {deleting ? t('Deleting...') : t(confirmLabel || 'Delete')}
           </Button>
         </DialogFooter>
       </DialogContent>
