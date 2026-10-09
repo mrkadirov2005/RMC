@@ -650,6 +650,21 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
     index('idx_payment_plan_installments_center_id').on(table.centerId),
 ]);
 
+// file_data (BYTEA) is read with raw SQL only, never through this table definition.
+const studentCertificates = pgTable('student_certificates', {
+  certificateId: serial('certificate_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  studentId: integer('student_id').notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  fileName: varchar('file_name', { length: 255 }).notNull(),
+  fileSize: integer('file_size').notNull(),
+  uploadedByName: varchar('uploaded_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+  deletedAt: timestamp('deleted_at'),
+}, (table) => [
+    index('idx_student_certificates_student').on(table.studentId),
+]);
+
 const studentLinkGroups = pgTable('student_link_groups', {
   linkId: serial('link_id').primaryKey(),
   centerId: integer('center_id').notNull(),
@@ -1119,6 +1134,7 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 
 module.exports = {
   expenses,
+  studentCertificates,
   studentLinkGroups,
   studentLinkMembers,
   studentWatchlist,

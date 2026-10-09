@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { archiveAPI } from './api';
+import { GraduatesTab } from './GraduatesTab';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
@@ -239,11 +240,16 @@ const ArchivePage = () => {
           <Tabs defaultValue="students">
             <TabsList className="h-auto w-full justify-start rounded-none border-b bg-slate-50 p-2 gap-2 dark:bg-muted/40">
               <TabsTrigger value="students" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Students')}</TabsTrigger>
+              <TabsTrigger value="graduates" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Graduates')}</TabsTrigger>
               <TabsTrigger value="teachers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Teachers')}</TabsTrigger>
               <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Classes')}</TabsTrigger>
               <TabsTrigger value="payments" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Payments')}</TabsTrigger>
               <TabsTrigger value="sessions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Calendar Sessions')}</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="graduates" className="m-0">
+              <GraduatesTab />
+            </TabsContent>
 
             <TabsContent value="students" className="m-0">
               <Table>
