@@ -211,4 +211,9 @@ export const miscLabels: Record<string, string> = {
   'e.g. IELTS 6.5': 'masalan, IELTS 6.5',
   'PDF file': 'PDF fayl',
   Upload: 'Yuklash',
+  'Could not load the student count trend': "O'quvchilar soni trendini yuklab bo'lmadi",
+  'Number of students': "O'quvchilar soni",
+  'The count on the 10th, 20th and 30th of each month.': "Har oyning 10, 20 va 30-sanasidagi o'quvchilar soni.",
+  'since the previous point': 'oldingi nuqtaga nisbatan',
+  Period: 'Davr',
 };

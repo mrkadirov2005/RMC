@@ -7,6 +7,7 @@ import type { OwnerManagerStatisticsCollections } from './types';
 import { OwnerFinancePanel } from './components/OwnerFinancePanel';
 import { DiscountStatsPanel } from './components/discount-stats/DiscountStatsPanel';
 import { StudentStatsCarousel } from './components/student-stats/StudentStatsCarousel';
+import { StudentTrendCard } from './components/student-stats/StudentTrendCard';
 import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel';
 import RetentionPage from '../crm/retention/RetentionPage';
 import { AttendanceReportPanel } from './components/AttendanceReportPanel';
@@ -186,7 +187,12 @@ const OwnerReports = () => {
             {activeTab === 'finance' && <OwnerFinancePanel collections={collections} loading={false} />}
             {activeTab === 'discounts' && <DiscountStatsPanel collections={collections} />}
             {activeTab === 'retention' && <RetentionPage embedded />}
-            {activeTab === 'students' && <StudentStatsCarousel data={collections.students} collections={collections} />}
+            {activeTab === 'students' && (
+              <div className="space-y-4">
+                <StudentTrendCard />
+                <StudentStatsCarousel data={collections.students} collections={collections} />
+              </div>
+            )}
             {activeTab === 'teachers' && <TeacherStatsPanel data={collections.teachers} collections={collections} />}
             {activeTab === 'attendance' && (
               <div className="space-y-4">

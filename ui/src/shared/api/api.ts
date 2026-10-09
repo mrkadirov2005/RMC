@@ -281,6 +281,8 @@ export const archiveAPI = {
 export const reportAPI = {
   retention: (params?: { center_id?: number; month?: string; months?: number; limit?: number; view?: 'retention' | 'intake'; source_id?: number; referred_by_teacher_id?: number; source_detail?: string }) =>
     apiClient.get('/reports/retention', { params }),
+  /** Student count on the 10th, 20th and 30th of each of the last `months` months. */
+  studentTrend: (months: number) => apiClient.get('/reports/student-trend', { params: { months } }),
 };
 
 export const telegramRegistrationAPI = {
