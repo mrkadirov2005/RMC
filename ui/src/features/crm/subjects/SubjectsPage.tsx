@@ -280,24 +280,24 @@ const SubjectsPage = () => {
                     <TableRow key={subject.subject_id || subject.id} className="text-xs hover:bg-violet-50/50">
                       <TableCell className="py-1.5 font-black">
                         <div className="flex items-center gap-1.5">
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-violet-600 text-white">
+                          <span data-keep-bg className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-violet-600 text-white">
                             <BookOpen className="h-3.5 w-3.5" />
                           </span>
                           <span className="truncate">{subject.subject_name}</span>
                         </div>
                       </TableCell>
                       <TableCell className="py-1.5">
-                        <span className={`${infoPillClass} inline-block bg-cyan-600 text-white`}>
+                        <span data-keep-bg className={`${infoPillClass} inline-block bg-cyan-600 text-white`}>
                           {subject.assignments.length.toLocaleString()}
                         </span>
                       </TableCell>
                       <TableCell className="py-1.5">
-                        <span className={`${infoPillClass} inline-block ${getSubjectTeacherCount(subject) ? 'bg-fuchsia-600 text-white' : 'bg-rose-600 text-white'}`}>
+                        <span data-keep-bg className={`${infoPillClass} inline-block ${getSubjectTeacherCount(subject) ? 'bg-fuchsia-600 text-white' : 'bg-rose-600 text-white'}`}>
                           {getSubjectTeacherCount(subject).toLocaleString()}
                         </span>
                       </TableCell>
                       <TableCell className="py-1.5">
-                        <span className={`${infoPillClass} inline-flex items-center bg-emerald-600 text-white`}>
+                        <span data-keep-bg className={`${infoPillClass} inline-flex items-center bg-emerald-600 text-white`}>
                           <CheckCircle2 className="mr-1 h-3 w-3" />
                           {subject.passing_marks}/{subject.total_marks}
                         </span>
@@ -341,7 +341,7 @@ const SubjectsPage = () => {
       </Card>
 
       <Dialog open={Boolean(selectedSubject)} onOpenChange={(open) => !open && setSelectedSubject(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedSubject?.subject_name}</DialogTitle>
           </DialogHeader>

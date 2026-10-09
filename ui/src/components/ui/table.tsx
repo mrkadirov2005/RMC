@@ -24,8 +24,9 @@ const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes
       data-list-body="true"
       className={cn(
         '[&_tr:last-child]:border-0',
-        '[&>tr_button]:!bg-transparent [&>tr_button:hover]:!bg-transparent',
-        '[&>tr_span]:!bg-transparent [&>tr_div]:!bg-transparent',
+        // Row content is flattened to transparent; mark solid badges/buttons with data-keep-bg to opt out
+        '[&>tr_button:not([data-keep-bg])]:!bg-transparent [&>tr_button:not([data-keep-bg]):hover]:!bg-transparent',
+        '[&>tr_span:not([data-keep-bg])]:!bg-transparent [&>tr_div:not([data-keep-bg])]:!bg-transparent',
         className,
       )}
       {...props}
