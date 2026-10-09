@@ -191,7 +191,7 @@ const TeachersPage = () => {
   const handleBulkDeleteTeachers = async () => {
     const ids = Array.from(selectedTeacherIds);
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} selected teacher${ids.length === 1 ? '' : 's'}?`)) return;
+    if (!window.confirm(t('Delete {count} selected teacher(s)?', { count: ids.length }))) return;
 
     let failed = 0;
     for (const id of ids) {

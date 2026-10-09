@@ -110,14 +110,14 @@ export const OwnerSystemSettings = () => {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <DatabaseZap className="h-5 w-5 text-red-600 dark:text-red-300" />
-            Dev data reset
+            {t('Dev data reset')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Alert variant="destructive" className="bg-white/70 dark:bg-background/40">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Clears the selected table with cascade and restarts its IDs. This requires OWNER_DATA_RESET_ENABLED=true on the backend.
+              {t('Clears the selected table with cascade and restarts its IDs. This requires OWNER_DATA_RESET_ENABLED=true on the backend.')}
             </AlertDescription>
           </Alert>
           <div className="grid gap-2 sm:grid-cols-4">
@@ -191,7 +191,7 @@ export const OwnerSystemSettings = () => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                This will truncate {resetTarget?.label.toLowerCase()} and any dependent records through cascade.
+                {t('This will truncate {table} and any dependent records through cascade.', { table: t(resetTarget?.label || '') })}
               </AlertDescription>
             </Alert>
             <div className="space-y-2">

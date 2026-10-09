@@ -236,7 +236,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white">
                       <span className="h-3 w-3 rounded-full" style={{ backgroundColor: row.color }} />
-                      {row.label}
+                      {t(row.label)}
                     </span>
                     <span className="inline-flex items-center gap-1 text-xs font-black text-blue-700">
                       <List className="h-3.5 w-3.5" />

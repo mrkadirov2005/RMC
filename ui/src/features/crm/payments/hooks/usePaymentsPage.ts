@@ -34,11 +34,13 @@ import { paginateItems } from '@/components/common/pagination';
 import type { Payment, Teacher, Class, Student, FolderType, TeacherDetailView } from '../types';
 import { createPaymentDraft, normalizePaymentFormData } from '../utils/paymentForm';
 import { getCreatedPaymentId, printPaymentReceipt } from '../utils/printPaymentReceipt';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const folderPageSizeOptions = [12, 24, 48];
 const paymentPageSizeOptions = [10, 25, 50, 100];
 
 export const usePaymentsPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const isTeacher = user?.userType === 'teacher';
@@ -174,7 +176,7 @@ export const usePaymentsPage = () => {
     if (user?.userType === 'teacher') {
       return false;
     }
-    if (window.confirm('Are you sure you want to delete this payment?')) {
+    if (window.confirm(t('Are you sure you want to delete this payment?'))) {
       await dispatch(deletePayment(id));
       return true;
     }

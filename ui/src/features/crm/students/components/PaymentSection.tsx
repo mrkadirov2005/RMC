@@ -143,7 +143,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
 
 // Handles delete.
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure?')) {
+    if (window.confirm(t('Are you sure?'))) {
       try {
         await paymentAPI.delete(id);
         showToast.success('Payment deleted successfully');

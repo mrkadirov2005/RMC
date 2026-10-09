@@ -257,7 +257,7 @@ const SettingsPage = () => {
           </button>
           <button type="button" onClick={() => navigate('/engineering')} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-slate-300 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted">
             <Server className="h-5 w-5 text-slate-500" />
-            <span><strong className="block text-sm">Engineering</strong><small className="text-muted-foreground">Open database and server tools.</small></span>
+            <span><strong className="block text-sm">{t('Engineering')}</strong><small className="text-muted-foreground">{t('Open database and server tools.')}</small></span>
           </button>
         </div>
       </SectionPanel>

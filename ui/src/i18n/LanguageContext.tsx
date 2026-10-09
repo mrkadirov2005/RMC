@@ -2048,6 +2048,9 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 // The interface is Uzbek only; a language saved by older versions is ignored and cleared.
 const language: AppLanguage = 'uz';
 
+/** For code outside React (Redux thunks); reads the bundled dictionary, not database overrides. */
+export const translateStatic: TranslateFn = (value, vars) => interpolate(translations[value] || value, vars);
+
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const [remoteTranslations, setRemoteTranslations] = useState<TranslationRow[]>([]);
 

@@ -211,7 +211,7 @@ const AttendanceFormDialog = ({
                   <SelectContent>
                     {attendanceStatusOptions.map((opt) => (
                       <SelectItem key={opt.id} value={opt.value}>
-                        {opt.label}
+                        {t(opt.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>

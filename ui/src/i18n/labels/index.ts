@@ -11,6 +11,7 @@ import { dashboardLabels } from './dashboard';
 import { debtsLabels } from './debts';
 import { financeLabels } from './finance';
 import { gradesLabels } from './grades';
+import { miscLabels } from './misc';
 import { ownerLabels } from './owner';
 import { paymentsLabels } from './payments';
 import { publicLabels } from './public';
@@ -36,6 +37,7 @@ export const pageLabelTranslations: Record<string, string> = {
   ...debtsLabels,
   ...financeLabels,
   ...gradesLabels,
+  ...miscLabels,
   ...ownerLabels,
   ...paymentsLabels,
   ...publicLabels,

@@ -66,7 +66,7 @@ export default function TeacherPaymentsTab({
               classItem={classItem}
               iconTone="bg-indigo-600"
               title={classItem.class_name}
-              subtitle={`(${isTeacherOwned ? 'teacher group' : 'student group'}${classItem.level ? `, level ${classItem.level}` : ''})`}
+              subtitle={`(${isTeacherOwned ? t('teacher group') : t('student group')}${classItem.level ? `, ${t('level')} ${classItem.level}` : ''})`}
               students={classStudents}
               payments={payments}
               selectedPaymentMonth={selectedPaymentMonth}

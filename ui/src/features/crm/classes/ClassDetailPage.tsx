@@ -136,7 +136,7 @@ const ClassDetailPage = () => {
     const targetClassId = Number(classData?.class_id || classData?.id || classId || 0);
     const sessionId = Number(session?.session_id || session?.id || 0);
     if (!targetClassId || !sessionId || deletingSessionId) return;
-    if (!window.confirm('Delete this session? This will remove the session from the group schedule.')) return;
+    if (!window.confirm(t('Delete this session? This will remove the session from the group schedule.'))) return;
 
     setDeletingSessionId(sessionId);
     try {
@@ -215,7 +215,7 @@ const ClassDetailPage = () => {
       <DeleteStudentDialog
         open={deleteStudentTarget != null}
         title={t('Delete student')}
-        description={`Pick why ${[deleteStudentTarget?.first_name, deleteStudentTarget?.last_name].filter(Boolean).join(' ') || 'this student'} is being removed.`}
+        description={t('Pick why {name} is being removed.', { name: [deleteStudentTarget?.first_name, deleteStudentTarget?.last_name].filter(Boolean).join(' ') || t('this student') })}
         onOpenChange={(open) => (!open ? setDeleteStudentTarget(null) : undefined)}
         onConfirm={handleDeleteStudent}
       />

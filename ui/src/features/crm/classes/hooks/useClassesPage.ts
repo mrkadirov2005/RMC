@@ -17,6 +17,7 @@ import type { Class } from '../types';
 import { parseSchedule, weekDays } from '../queries';
 import { buildAssignableSubjectOptions, buildClassSubjectAssignment, hasPersistedClassSubject } from '../subjectOptions';
 import { findClassRoomConflict } from '../classRoomConflict';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AttendanceRecord {
   attendance_id?: number;
@@ -31,6 +32,7 @@ interface AttendanceRecord {
 
 // Provides classes page.
 export const useClassesPage = (onSaved?: () => void) => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 // Handles is owner.
@@ -198,7 +200,7 @@ export const useClassesPage = (onSaved?: () => void) => {
 
 // Handles delete.
   const handleDelete = async (id: number, className?: string) => {
-    if (!window.confirm('Are you sure you want to delete this class?')) return;
+    if (!window.confirm(t('Are you sure you want to delete this class?'))) return;
     setDeleteLoading(true);
     try {
       await classAPI.delete(id);
@@ -311,7 +313,7 @@ export const useClassesPage = (onSaved?: () => void) => {
 // Handles bulk delete.
   const handleBulkDelete = async (ids: number[]) => {
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} selected class${ids.length === 1 ? '' : 'es'}?`)) return;
+    if (!window.confirm(t('Delete {count} selected group(s)?', { count: ids.length }))) return;
 
     let failed = 0;
     for (const id of ids) {

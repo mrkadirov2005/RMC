@@ -117,7 +117,7 @@ const CalendarPage = () => {
   };
 
   const deleteSession = async (event: CalendarEvent) => {
-    if (!event.session_id || !window.confirm('Delete this session?')) return;
+    if (!event.session_id || !window.confirm(t('Delete this session?'))) return;
     try { await classAPI.deleteSessionById(event.class_id, event.session_id); setSelectedEvent(null); workspace.refresh(); showToast.success('Session deleted.'); }
     catch { showToast.error('Failed to delete session.'); }
   };

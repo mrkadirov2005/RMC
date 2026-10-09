@@ -76,7 +76,7 @@ const RoomsPage = () => {
   };
 
   const deleteAssignment = async (id: number) => {
-    if (!window.confirm('Delete this room assignment?')) return;
+    if (!window.confirm(t('Delete this room assignment?'))) return;
     dispatch(setRoomsPageSubmitting(true));
     try {
       const row = normalizedRooms.find((item) => item.room_id === id); await roomAPI.delete(id);
@@ -86,7 +86,7 @@ const RoomsPage = () => {
     } catch { showToast.error('Failed to delete room assignment'); } finally { dispatch(setRoomsPageSubmitting(false)); }
   };
   const deleteRoom = async () => {
-    const room = roomGroups.find((item) => item.roomNumber === selectedRoom); if (!room || !window.confirm(`Delete room ${room.roomNumber} and all assignments?`)) return;
+    const room = roomGroups.find((item) => item.roomNumber === selectedRoom); if (!room || !window.confirm(t('Delete room {room} and all assignments?', { room: room.roomNumber }))) return;
     dispatch(setRoomsPageSubmitting(true));
     try {
       const physicalResponse = await roomAPI.getPhysical();
