@@ -14,6 +14,7 @@ import { AbsenceAlertsPanel } from '../absenceAlerts/AbsenceAlertsPanel';
 import { TelegramInboxPanel } from '../telegramBot/TelegramInboxPanel';
 import { studentAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
+import { LeadsReminder } from '../telegram/LeadsReminder';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
@@ -108,6 +109,7 @@ const Dashboard = memo(() => {
           teacher_id: Number(item.teacher_id || 0) || null,
         })).filter((item) => item.id > 0)}
       />
+      <LeadsReminder />
       <TelegramInboxPanel hideWhenEmpty />
 
       <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.04]">

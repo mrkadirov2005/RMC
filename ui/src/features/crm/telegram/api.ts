@@ -1,1 +1,1 @@
-export { classAPI, parentLinkRequestAPI, teacherAPI, telegramRegistrationAPI } from '@/shared/api/api';
+export { classAPI, leadAPI, parentLinkRequestAPI, teacherAPI, telegramRegistrationAPI, type LeadStage } from '@/shared/api/api';

@@ -23,6 +23,7 @@ const ConsolidationSessionPage = lazy(() => import('./features/student/Consolida
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
 const DashboardPaymentsPage = lazy(() => import('./features/crm/dashboard/DashboardPaymentsPage'));
 const CashReportPage = lazy(() => import('./features/crm/cash/CashReportPage'));
+const LessonControlPage = lazy(() => import('./features/crm/lessonControl/LessonControlPage'));
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
 const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
@@ -44,7 +45,7 @@ const SalaryTeacherDetailPage = lazy(() => import('./features/crm/salary/SalaryT
 const RoomsPage = lazy(() => import('./features/crm/rooms/RoomsPage'));
 const ArchivePage = lazy(() => import('./features/crm/archive/ArchivePage'));
 const RetentionPage = lazy(() => import('./features/crm/retention/RetentionPage'));
-const TelegramRegistrationsPage = lazy(() => import('./features/crm/telegram/TelegramRegistrationsPage'));
+const LeadsPage = lazy(() => import('./features/crm/telegram/LeadsPage'));
 const TeacherFinanceDetailPage = lazy(() => import('./features/crm/finance/TeacherFinanceDetailPage'));
 const AssignmentsPage = lazy(() => import('./features/crm/assignments/AssignmentsPage'));
 const TeacherTasksPage = lazy(() => import('./features/crm/teacherTasks/TeacherTasksPage'));
@@ -533,7 +534,7 @@ function AppContent() {
           element={
             <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
               <Layout>
-                <TelegramRegistrationsPage />
+                <LeadsPage />
               </Layout>
             </ProtectedRoute>
           }
@@ -624,6 +625,19 @@ function AppContent() {
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <PaymentFormPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/lesson-control"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_CLASS}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <LessonControlPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>
