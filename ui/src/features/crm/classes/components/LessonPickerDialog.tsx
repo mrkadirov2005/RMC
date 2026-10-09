@@ -17,6 +17,7 @@ import {
   getSessionId,
   hasScoringAction,
   lessonActionOptions,
+  toggleLessonAction,
   type LessonAction,
 } from '../lessonStart';
 
@@ -105,7 +106,7 @@ function LessonPickerBody({ classId, onClose, label, section, initialDate, from 
   const todayKey = toDateKey(new Date());
 
   const toggleAction = (action: LessonAction, checked: boolean) => {
-    setActions((current) => (checked ? Array.from(new Set([...current, action])) : current.filter((item) => item !== action)));
+    setActions((current) => toggleLessonAction(current, action, checked));
   };
 
   const start = () => {
