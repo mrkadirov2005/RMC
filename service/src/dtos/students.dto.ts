@@ -224,6 +224,10 @@ class CreateStudentDto {
   @MaxLength(200)
   discount_referrer_name?: string;
 
+  @IsOptional()
+  @IsDateString()
+  discount_end_date?: string | null;
+
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) acquisition_source_id?: number;
   @IsOptional() @IsString() acquisition_detail?: string;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) referred_by_teacher_id?: number;
@@ -342,6 +346,10 @@ class UpdateStudentDto {
   @IsString()
   @MaxLength(200)
   discount_referrer_name?: string;
+
+  @IsOptional()
+  @IsDateString()
+  discount_end_date?: string | null;
 
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) acquisition_source_id?: number;
   @IsOptional() @IsString() acquisition_detail?: string;

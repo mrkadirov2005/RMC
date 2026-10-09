@@ -56,6 +56,7 @@ export interface Student {
   discount_reason_category?: string;
   /** Who the family knows, for a "relative" discount. */
   discount_referrer_name?: string;
+  discount_end_date?: string | null;
   acquisition_source_id?: number;
   acquisition_detail?: string;
   referred_by_teacher_id?: number;

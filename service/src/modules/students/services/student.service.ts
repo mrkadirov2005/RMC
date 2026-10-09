@@ -48,6 +48,9 @@ const syncStudentDiscount = async (student: any, body: any, centerId?: number) =
     reason: body.discount_reason || activeDiscount?.reason || null,
     reason_category: body.discount_reason_category,
     referrer_name: body.discount_referrer_name,
+    end_date: discountKind === 'monthly_discount'
+      ? body.discount_end_date || activeDiscount?.end_date || discountService.monthlyEndDate()
+      : body.discount_end_date !== undefined ? body.discount_end_date || null : activeDiscount?.end_date || null,
     active: true,
   };
 

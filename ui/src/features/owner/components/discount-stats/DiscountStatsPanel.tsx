@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {  List} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,11 +21,13 @@ type DiscountRecord = {
   studentId: number;
   studentName: string;
   groupName: string;
+  teacherName: string;
   originalAmount: number;
   finalAmount: number;
   discountAmount: number;
   valueLabel: string;
   reason: string;
+  validUntil: string;
   status: string;
   assignedDate: string;
   appliedDate: string;
@@ -109,13 +111,23 @@ const formatMonth = (value: unknown) => {
   return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 };
 
-export const DiscountStatsPanel = ({ collections }: Props) => {
+// A one-month discount lasts one month from the day it was given (Oct 9 -> Nov 9, Jan 31 -> Feb 28)
+const getOneMonthLater = (value: unknown) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
+  if (!match) return null;
+  const next = new Date(Number(match[1]), Number(match[2]), 1);
+  const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(Math.min(Number(match[3]), lastDay)).padStart(2, '0')}`;
+};
+
+export const DiscountStatsPanel =({ collections }: Props) => {
   const { t } = useLanguage();
   const [selectedKind, setSelectedKind] = useState<DiscountKind | null>(null);
 
   const stats = useMemo(() => {
     const studentsById = new Map(collections.students.map((student) => [getId(student, 'student_id', 'id'), student]));
     const classesById = new Map(collections.classes.map((cls) => [getId(cls, 'class_id', 'id'), cls]));
+    const teachersById = new Map(collections.teachers.map((teacher) => [getId(teacher, 'teacher_id', 'id'), teacher]));
     const discountRows = collections.discounts || [];
     const paymentDiscountRows = collections.payments.filter((payment) => Number(payment?.discount_amount || 0) > 0);
     const discountsById = new Map(discountRows.map((discount) => [getId(discount, 'discount_id'), discount]));
@@ -139,11 +151,13 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
         const student = studentsById.get(studentId);
         const classId = getId(item, 'class_id') || getId(student, 'class_id');
         const cls = classesById.get(classId);
+        const teacher = teachersById.get(getId(item, 'teacher_id') || getId(cls, 'teacher_id') || getId(student, 'teacher_id'));
         const discountAmount = getDiscountAmount(item);
         const originalAmount = getOriginalAmount(item, discountAmount);
         const finalAmount = getFinalAmount(item, originalAmount, discountAmount);
         const isApplied = item?._source === 'payment';
-        const assignedAt = item?._discount?.created_at || item?.created_at;
+        const discountSource = item?._discount || item;
+        const assignedAt = discountSource?.created_at || item?.created_at;
         const appliedAt = isApplied ? item?.payment_date || item?.created_at : null;
         const coveredPeriod = isApplied
           ? item?.payment_date
@@ -156,11 +170,17 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
           studentId,
           studentName: getStudentName(item, student, studentId),
           groupName: item?.class_name || cls?.class_name || '-',
+          teacherName: [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ').trim() || item?.teacher_name || cls?.teacher_name || '-',
           originalAmount,
           finalAmount,
           discountAmount,
           valueLabel: getValueLabel(item),
-          reason: describeReason(item, discountsById.get(getId(item, 'discount_id')), t),
+          reason: describeReason(item, discountSource, t),
+          validUntil: discountSource?.end_date
+            ? formatDate(discountSource.end_date)
+            : kind === 'monthly_discount'
+              ? formatDate(getOneMonthLater(discountSource?.start_date || assignedAt))
+              : t('No end date'),
           status: isApplied ? 'Applied' : item?.active === false ? 'Inactive' : 'Pending',
           assignedDate: formatDate(assignedAt),
           appliedDate: formatDate(appliedAt),
@@ -187,7 +207,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
       originalTotal,
       finalTotal,
     };
-  }, [collections.classes, collections.discounts, collections.payments, collections.students, t]);
+  }, [collections.classes, collections.discounts, collections.payments, collections.students, collections.teachers, t]);
 
   const pieRows = [
     { kind: 'serial_discount' as const, label: 'Serial discount', value: stats.serial.length, amount: stats.serialTotal, color: colors.serial },
@@ -294,6 +314,20 @@ const DiscountStudentsDialog = ({
 }) => {
   const { t } = useLanguage();
   const selectedTotal = rows.reduce((sum, row) => sum + row.discountAmount, 0);
+  const [reasonFilter, setReasonFilter] = useState('');
+  const [teacherFilter, setTeacherFilter] = useState('');
+  const [groupFilter, setGroupFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const scrollbarRef = useRef<HTMLDivElement>(null);
+  const teachers = Array.from(new Set(rows.map((row) => row.teacherName).filter((value) => value !== '-'))).sort();
+  const groups = Array.from(new Set(rows.map((row) => row.groupName).filter((value) => value !== '-'))).sort();
+  const filteredRows = rows.filter((row) =>
+    (!reasonFilter || row.reason.toLowerCase().includes(reasonFilter.toLowerCase())) &&
+    (!teacherFilter || row.teacherName === teacherFilter) &&
+    (!groupFilter || row.groupName === groupFilter) &&
+    (!statusFilter || row.status === statusFilter)
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -308,8 +342,32 @@ const DiscountStudentsDialog = ({
           <ModalStat label={t('Serial / One-month')} value={`${formatMoney(serialTotal)} / ${formatMoney(monthlyTotal)}`} />
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-white/10">
-          <Table>
+        <div className="grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03] sm:grid-cols-2 lg:grid-cols-4">
+          <input value={reasonFilter} onChange={(event) => setReasonFilter(event.target.value)} placeholder={t('Filter by reason')} className="h-9 rounded-md border bg-background px-3 text-sm" />
+          <select value={teacherFilter} onChange={(event) => setTeacherFilter(event.target.value)} className="h-9 rounded-md border bg-background px-2 text-sm">
+            <option value="">{t('All teachers')}</option>
+            {teachers.map((teacher) => <option key={teacher} value={teacher}>{teacher}</option>)}
+          </select>
+          <select value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)} className="h-9 rounded-md border bg-background px-2 text-sm">
+            <option value="">{t('All classes')}</option>
+            {groups.map((group) => <option key={group} value={group}>{group}</option>)}
+          </select>
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-9 rounded-md border bg-background px-2 text-sm">
+            <option value="">{t('All statuses')}</option>
+            <option value="Applied">{t('Applied')}</option>
+            <option value="Pending">{t('Pending')}</option>
+            <option value="Inactive">{t('Inactive')}</option>
+          </select>
+        </div>
+
+        <div
+          ref={tableScrollRef}
+          onScroll={(event) => {
+            if (scrollbarRef.current) scrollbarRef.current.scrollLeft = event.currentTarget.scrollLeft;
+          }}
+          className="overflow-x-auto overflow-y-hidden rounded-lg border border-slate-200 [scrollbar-gutter:stable] dark:border-white/10"
+        >
+          <Table className="min-w-[1500px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('Student')}</TableHead>
@@ -319,20 +377,22 @@ const DiscountStudentsDialog = ({
                 <TableHead>{t('Discount')}</TableHead>
                 <TableHead>{t('Final')}</TableHead>
                 <TableHead>{t('Given on')}</TableHead>
+                <TableHead>{t('Reason')}</TableHead>
                 <TableHead>{t('Applied on')}</TableHead>
                 <TableHead>{t('Discount month')}</TableHead>
+                <TableHead>{t('Valid until')}</TableHead>
                 <TableHead>{t('Status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.length === 0 ? (
+              {filteredRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-8 text-center text-sm font-semibold text-muted-foreground">
+                  <TableCell colSpan={12} className="py-8 text-center text-sm font-semibold text-muted-foreground">
                     {t('No students found for this discount type.')}
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((row) => (
+                filteredRows.map((row) => (
                   <TableRow key={row.key}>
                     <TableCell className="font-black">{row.studentName}</TableCell>
                     <TableCell>{row.groupName}</TableCell>
@@ -341,8 +401,10 @@ const DiscountStudentsDialog = ({
                     <TableCell className="font-black text-amber-700">-{formatMoney(row.discountAmount)}</TableCell>
                     <TableCell>{formatMoney(row.finalAmount)}</TableCell>
                     <TableCell>{row.assignedDate}</TableCell>
+                    <TableCell className="max-w-48 whitespace-normal">{row.reason}</TableCell>
                     <TableCell>{row.appliedDate}</TableCell>
                     <TableCell className="font-semibold">{row.coveredMonth}</TableCell>
+                    <TableCell className="whitespace-nowrap">{row.validUntil}</TableCell>
                     <TableCell>
                       <span className={`rounded-md px-2 py-1 text-xs font-black ${row.status === 'Applied' ? 'bg-emerald-100 text-emerald-700' : row.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                         {row.status}
@@ -353,6 +415,18 @@ const DiscountStudentsDialog = ({
               )}
             </TableBody>
           </Table>
+        </div>
+        <div className="sticky bottom-0 z-10 -mx-1 bg-background px-1 py-1">
+          <div
+            ref={scrollbarRef}
+            onScroll={(event) => {
+              if (tableScrollRef.current) tableScrollRef.current.scrollLeft = event.currentTarget.scrollLeft;
+            }}
+            className="overflow-x-auto overflow-y-hidden rounded-md border border-slate-200 [scrollbar-gutter:stable] dark:border-white/10"
+            aria-label={t('Scroll discount table horizontally')}
+          >
+            <div className="h-px min-w-[1500px]" />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

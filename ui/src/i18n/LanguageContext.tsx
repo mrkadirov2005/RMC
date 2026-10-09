@@ -1690,6 +1690,7 @@ const translations: Record<string, string> = {
   'Discount type': 'Chegirma turi',
   'Discount value': 'Chegirma qiymati',
   'Reason for discount': 'Chegirma sababi',
+  'Discount expiry date': 'Chegirma tugash sanasi',
   'No discount': "Chegirma yo'q",
   'Serial': 'Doimiy',
   'Serial discount': 'Doimiy chegirma',
