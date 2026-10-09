@@ -357,6 +357,16 @@ export const studentLinkAPI = {
   remove: (id: number) => apiClient.delete(`/student-links/${id}`),
 };
 
+export type LeadStage = 'waiting_group' | 'new_group';
+/** People an admin talked to who are not in a group yet, with the day to call them back. */
+export const leadAPI = {
+  getAll: (stage: LeadStage) => apiClient.get('/leads', { params: { stage } }),
+  dueCount: () => apiClient.get('/leads/due-count'),
+  create: (data: Record<string, unknown>) => apiClient.post('/leads', data),
+  update: (id: number, data: Record<string, unknown>) => apiClient.put(`/leads/${id}`, data),
+  close: (id: number, outcome: 'enrolled' | 'lost', note?: string) => apiClient.post(`/leads/${id}/close`, { outcome, note }),
+};
+
 /** Daily till report (payments by method minus expenses) and the expenses admins record. */
 export const cashAPI = {
   getDaily: (date: string) => apiClient.get('/cash/daily', { params: { date } }),

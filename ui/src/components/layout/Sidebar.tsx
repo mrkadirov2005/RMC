@@ -229,7 +229,7 @@ const Sidebar = memo(() => {
     { label: 'My Portal', path: '/student-portal', iconName: 'PortalStudent', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
     { label: 'Students', path: '/students', iconName: 'Students', roles: ['superuser'], permission: 'CRUD_STUDENT' },
-    { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'VIEW_TELEGRAM_LEADS' },
+    { label: 'Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'VIEW_TELEGRAM_LEADS' },
     { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'], permission: 'VIEW_ARCHIVE' },
     {
       label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'], permission: 'VIEW_RETENTION',
