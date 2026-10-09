@@ -1744,6 +1744,7 @@ const translations: Record<string, string> = {
   'Your exercise is being submitted automatically because you left the screen too many times.': "Ekrandan tez-tez chiqqaningiz uchun mashqingiz avtomatik topshirilmoqda.",
   'Learning flow': "O'rganish jarayoni",
   'Enter manual points for each student.': "Har bir o'quvchi uchun ballarni qo'lda kiriting.",
+  'Enter a 100-point score for each student; replaces homework and activity.': "Har bir o'quvchiga 100 ballik baho kiriting; uy ishi va faollik o'rniga hisoblanadi.",
 
   // ── Misc strings ────────────────────────────────────────────
   'Branch Admin': 'Filial admini',

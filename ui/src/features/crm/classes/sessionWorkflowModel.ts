@@ -82,6 +82,25 @@ export const getWorkflowTotalScore = ({
   });
 };
 
+const maxOptionScore = (options: ScoreOption[]) => Math.max(0, ...options.map((option) => option.score));
+
+/**
+ * The most a lesson can score with the chosen actions, matching the server's lessonMaxScore:
+ * attendance only is out of 40, and points stand in for homework and activity (60 next to attendance).
+ */
+export const getWorkflowMaxScore = (selectedActions: WorkflowScoringAction[], settings: LessonScoringSettings) => {
+  const has = (action: WorkflowScoringAction) => selectedActions.includes(action);
+  const max = has('points')
+    ? (has('attendance') ? maxOptionScore(settings.attendance) + Math.round(100 * POINTS_WEIGHT_WITH_ATTENDANCE) : 100)
+    : (has('attendance') ? maxOptionScore(settings.attendance) : 0)
+      + (has('homework') ? maxOptionScore(settings.homework) : 0)
+      + (has('activity') ? maxOptionScore(settings.activity) : 0);
+  return max > 0 ? max : 100;
+};
+
+/** A score as a percentage of the lesson's maximum, which is what the 2-5 grade is based on. */
+export const toLessonPercent = (score: number, maxScore: number) => (maxScore > 0 ? Math.round((score * 100) / maxScore) : 0);
+
 /** Workflow attendance labels → stored attendance statuses. */
 export const WORKFLOW_ATTENDANCE_STATUS: Record<string, string> = { 'On time': 'Present', Late: 'Late', Excused: 'Absent R', Absent: 'Absent' };
 
@@ -165,8 +184,6 @@ const breakdownOf = (options: ScoreOption[], values: WorkflowScoreMap, ids: numb
     count: ids.filter((id) => values.get(id) === option.label).length,
   }));
 
-const maxOptionScore = (options: ScoreOption[]) => Math.max(0, ...options.map((option) => option.score));
-
 const isPresentStatus = (label: string) => {
   const status = WORKFLOW_ATTENDANCE_STATUS[label] || label;
   return status === 'Present' || status === 'Late';
@@ -203,12 +220,7 @@ export const buildLessonSummary = ({
   const ids = counted.map(getWorkflowStudentId);
   const has = (action: WorkflowScoringAction) => selectedActions.includes(action);
 
-  // Points stand in for homework and activity: next to attendance they count for 60.
-  const maxScore = has('points')
-    ? (has('attendance') ? maxOptionScore(settings.attendance) + Math.round(100 * POINTS_WEIGHT_WITH_ATTENDANCE) : 100)
-    : (has('attendance') ? maxOptionScore(settings.attendance) : 0)
-      + (has('homework') ? maxOptionScore(settings.homework) : 0)
-      + (has('activity') ? maxOptionScore(settings.activity) : 0);
+  const maxScore = getWorkflowMaxScore(selectedActions, settings);
   const scored = counted.map((student) => {
     const id = getWorkflowStudentId(student);
     return {

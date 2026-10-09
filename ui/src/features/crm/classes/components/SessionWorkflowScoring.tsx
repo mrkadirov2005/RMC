@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { optionToneClasses } from './scoreTones';
 import { getLessonGrade } from '../utils/points';
+import { toLessonPercent } from '../sessionWorkflowModel';
 
 const stepToneClasses = {
   emerald: 'border-emerald-300 bg-emerald-50',
@@ -109,6 +110,7 @@ export const ScoreTable = ({
   onToggle,
   onFillAll,
   getTotalScore,
+  maxScore = 100,
   stellarStudentId,
   onToggleStellar,
   stellarBonusCoins = 30,
@@ -123,6 +125,8 @@ export const ScoreTable = ({
   onToggle: (studentId: number, value: string) => void;
   onFillAll: (value: string) => void;
   getTotalScore?: (studentId: number) => number;
+  /** The lesson's maximum for the chosen actions; the grade is the score as a share of it. */
+  maxScore?: number;
   stellarStudentId?: number | null;
   onToggleStellar?: (studentId: number) => void;
   stellarBonusCoins?: number;
@@ -211,8 +215,8 @@ export const ScoreTable = ({
               })}
               {getTotalScore && (
                 <TableCell className="px-3 py-1.5 text-center text-base font-bold">
-                  {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ 100</span>
-                  <span className="ml-1.5 rounded-md bg-muted px-1.5 py-0.5 text-xs font-black" title={t('Grade')}>{getLessonGrade(getTotalScore(studentId))}</span>
+                  {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ {maxScore}</span>
+                  <span className="ml-1.5 rounded-md bg-muted px-1.5 py-0.5 text-xs font-black" title={t('Grade')}>{getLessonGrade(toLessonPercent(getTotalScore(studentId), maxScore))}</span>
                 </TableCell>
               )}
               {onToggleStellar && (
@@ -255,6 +259,7 @@ export const ManualPointsTable = ({
   onChange,
   onFillAll,
   getTotalScore,
+  maxScore = 100,
   action,
   readOnly = false,
 }: {
@@ -263,6 +268,7 @@ export const ManualPointsTable = ({
   onChange: (studentId: number, value: string) => void;
   onFillAll: (value: string) => void;
   getTotalScore: (studentId: number) => number;
+  maxScore?: number;
   action?: ReactNode;
   readOnly?: boolean;
 }) => {
@@ -326,7 +332,7 @@ export const ManualPointsTable = ({
                 </span>
               </TableCell>
               <TableCell className="px-3 py-1.5 text-center text-base font-bold">
-                {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ 100</span>
+                {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ {maxScore}</span>
               </TableCell>
             </TableRow>
           );

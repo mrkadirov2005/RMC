@@ -426,6 +426,7 @@ describe('grade service', () => {
       const client = createClient();
       client.queueSelect([{ student_id: 9 }]);
       client.queueSelect([]);
+      client.queueSelect([]); // stored attendance for the lesson (none)
       client.queueSelect([{ student_id: 9, center_id: 3, coins: 10 }]);
       client.queueSelect([]);
       mockDb.transaction.mockImplementation(async (callback) => callback(client));
@@ -440,6 +441,7 @@ describe('grade service', () => {
       const client = createClient();
       client.queueSelect([{ student_id: 9 }]);
       client.queueSelect([]);
+      client.queueSelect([]); // stored attendance for the lesson (none)
       client.queueSelect([{ student_id: 9, center_id: 3, coins: 0 }]);
       client.queueSelect([]);
       mockDb.transaction.mockImplementation(async (callback) => callback(client));
@@ -457,6 +459,7 @@ describe('grade service', () => {
       const client = createClient();
       client.queueSelect([{ student_id: 9 }]);
       client.queueSelect([]);
+      client.queueSelect([]); // stored attendance for the lesson (none)
       client.queueSelect([{ student_id: 9, center_id: 3, coins: 12 }]);
       client.queueSelect([{ transaction_id: 4, delta: 7 }]);
       mockDb.transaction.mockImplementation(async (callback) => callback(client));
@@ -464,6 +467,36 @@ describe('grade service', () => {
       const result = await gradeService.saveSessionWorkflow(baseBody(), 3);
 
       // The stored balance already contains the old award of 7, so it moves to 12 - 7 + 5.
+      expect(result.coins[0].balance).toBe(10);
+    });
+
+    it('gives an absent student no coins instead of the negative band, and no stellar bonus', async () => {
+      const client = createClient();
+      client.queueSelect([{ student_id: 9 }]);
+      client.queueSelect([]);
+      client.queueSelect([]);
+      client.queueSelect([{ student_id: 9, center_id: 3, coins: 10 }]);
+      client.queueSelect([]);
+      mockDb.transaction.mockImplementation(async (callback) => callback(client));
+
+      const body = baseBody({ records: [{ student_id: 9, attendance_status: 'Absent', attendance_score: 0, is_stellar_student: true }] });
+      const result = await gradeService.saveSessionWorkflow(body, 3);
+
+      expect(result.coins[0].balance).toBe(10);
+      expect(client.inserts.some((values) => values.delta === 0 && String(values.reason).includes('no coins'))).toBe(true);
+    });
+
+    it('treats a student marked absent in an earlier save of the lesson as absent', async () => {
+      const client = createClient();
+      client.queueSelect([{ student_id: 9 }]);
+      client.queueSelect([]);
+      client.queueSelect([{ status: 'Absent R' }]);
+      client.queueSelect([{ student_id: 9, center_id: 3, coins: 10 }]);
+      client.queueSelect([]);
+      mockDb.transaction.mockImplementation(async (callback) => callback(client));
+
+      const result = await gradeService.saveSessionWorkflow(baseBody({ records: [{ student_id: 9, homework_score: 0 }] }), 3);
+
       expect(result.coins[0].balance).toBe(10);
     });
 
