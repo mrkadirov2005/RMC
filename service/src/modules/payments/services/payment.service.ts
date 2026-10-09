@@ -280,6 +280,9 @@ const listStudentPaymentSummary = async (query: any, centerId?: number) => {
       paid_amount: num(item.paid_amount),
       expected: num(item.expected),
       remaining: Math.max(0, num(item.expected) - num(item.paid_amount)),
+      // What to enter as the original amount when recording the rest: the payment form applies the
+      // student's active discount itself, so this is before the serial discount.
+      remaining_before_discount: num(item.remaining_before_discount),
     })),
   };
 };

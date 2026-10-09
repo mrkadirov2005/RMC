@@ -33,6 +33,8 @@ interface SummaryRow {
   paid_amount: number;
   expected: number;
   remaining: number;
+  /** Remaining before the active serial discount; the payment form applies the discount itself. */
+  remaining_before_discount?: number;
   payments_count: number;
   last_payment_date: string | null;
   state: PaymentState;
@@ -318,7 +320,7 @@ const DashboardPaymentsPage = () => {
                         data-visual-overrides-disabled="true"
                         onClick={(event) => {
                           event.stopPropagation();
-                          paymentHook.handleOpenModalForStudent(row.student_id, { amount: row.remaining > 0 ? row.remaining : row.monthly_fee || undefined });
+                          paymentHook.handleOpenModalForStudent(row.student_id, { amount: (row.remaining_before_discount ?? row.remaining) || row.monthly_fee || undefined });
                         }}
                       >
                         <span className="relative z-10">{t("To'lov")}</span>

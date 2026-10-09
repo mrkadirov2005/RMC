@@ -1,22 +1,28 @@
 # Docker (Full Stack)
 
-## Local development (`develop` branch)
+## Local development: main vs develop
 
-Run everything on your machine against local databases, never the production API:
+The dev commands decide by the branch you are on:
 
-```bash
-npm run dev:local        # local Postgres + Mongo, backend on :4000, UI on Vite's port
-npm run dev:local:stop   # stop the local databases (data is kept)
-```
+| Command | On `main` | On `develop` / any other branch |
+|---|---|---|
+| `npm run dev`, `dev:ui` | as before: UI against the production API (`ui/.env`) | UI against the local backend |
+| `npm run dev:backend` | as before: backend with `service/.env` | local databases + backend on :4000 |
+| `npm run dev:full` | as before | everything local |
+| `npm run dev:local` | everything local | everything local |
+
+`npm run dev` inside `ui/` follows the same rule (see `ui/vite.config.ts`). `vite build` and the
+production deploy are never affected. `npm run dev:local:stop` stops the local databases (data
+is kept).
 
 - Databases come from `docker-compose.local.yml`: Postgres on `127.0.0.1:5434`, Mongo on
   `127.0.0.1:27018` (off the default ports so other projects can keep 5432/27017). They use
   the existing `rmc_postgres_data` / `rmc_mongo_data` volumes.
-- `scripts/dev-local.sh` points the backend at those databases and the UI at
-  `http://localhost:4000/api` through environment variables, so `service/.env` and `ui/.env*`
-  stay as they are.
+- `scripts/local-env.sh` holds the local settings and sets them as environment variables, so
+  `service/.env` and `ui/.env*` stay as they are.
 - Telegram, backups to the Telegram group, the Google Sheets export and the Engineering
-  redeploy button are switched off locally. The bot and backup containers are not started.
+  redeploy button are switched off locally. The bot and backup containers are not started, and
+  `npm run dev:bot` is not local: it would use the production bot token.
 - Never run `docker compose down -v` on these volumes.
 
 
