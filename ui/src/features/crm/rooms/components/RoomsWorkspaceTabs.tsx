@@ -3,6 +3,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 
 const tabs: Array<{ id: RoomsTab; label: string }> = [
   { id: 'statistics', label: 'Statistics' },
+  { id: 'weekly', label: 'Free rooms this week' },
   { id: 'management', label: 'Room management' },
   { id: 'reports', label: 'Room reports' },
 ];

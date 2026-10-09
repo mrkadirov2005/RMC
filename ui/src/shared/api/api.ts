@@ -627,6 +627,8 @@ export const roomAPI = {
   update: (id: number, data: any) => apiClient.put(`/rooms/${id}`, data),
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/rooms/${id}`, { params }),
   getOverview: (params?: Record<string, unknown>) => apiClient.get('/rooms/overview', { params }),
+  /** Each room's week: lessons, free windows, free seats and groups larger than the room. */
+  getWeekly: () => apiClient.get('/rooms/weekly'),
   getAvailability: (params?: Record<string, unknown>) => apiClient.get('/rooms/availability', { params }),
   getSchedule: (params?: Record<string, unknown>) => apiClient.get('/rooms/schedule', { params }),
   getUtilization: (params?: Record<string, unknown>) => apiClient.get('/rooms/reports/utilization', { params }),

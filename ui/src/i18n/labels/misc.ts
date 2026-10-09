@@ -240,4 +240,18 @@ export const miscLabels: Record<string, string> = {
   '{count} people are waiting for your call today.': "Bugun {count} kishi qo'ng'irog'ingizni kutmoqda.",
   'Open the list': "Ro'yxatni ochish",
 
+  'Free rooms this week': "Haftalik bo'sh xonalar",
+  'Could not load the rooms': "Xonalarni yuklab bo'lmadi",
+  'Busy all day': "Kun bo'yi band",
+  'Free seats in lessons this week': "Shu haftadagi darslarda bo'sh o'rinlar",
+  'Groups larger than their room': 'Xonasidan katta guruhlar',
+  'More students than seats': "O'quvchi soni o'rindan ko'p",
+  '{group} in room {room}: {students} students, {capacity} seats': "{room} xonada {group}: {students} o'quvchi, {capacity} o'rin",
+  '{count} rooms have no capacity set, so their free seats are not counted.': "{count} ta xonaning sig'imi kiritilmagan, shuning uchun ularning bo'sh o'rinlari hisoblanmadi.",
+  'Whole week': 'Butun hafta',
+  Seats: "O'rinlar",
+  'Lessons a week': 'Haftasiga darslar',
+  'Free seats a week': "Haftasiga bo'sh o'rinlar",
+  'Free hours a week': "Haftasiga bo'sh soatlar",
+  Free: "Bo'sh",
 };

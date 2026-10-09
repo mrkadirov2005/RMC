@@ -1,6 +1,6 @@
 import type { RoomAssignment } from './roomModel';
 
-export type RoomsTab = 'statistics' | 'management' | 'reports';
+export type RoomsTab = 'statistics' | 'weekly' | 'management' | 'reports';
 
 export type RoomWorkspaceFilters = {
   date: string;
