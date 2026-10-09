@@ -24,6 +24,7 @@ import type { Student } from './types';
 import { showToast } from '@/utils/toast';
 import { studentGenderOptions, studentStatusOptions } from './utils/studentFormOptions';
 import { studentsApi } from './api/studentsApi';
+import { WatchlistTab } from './components/WatchlistTab';
 
 const headerActionClass = 'h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-white shadow-sm';
 const headerActionIconClass = 'h-3.5 w-3.5';
@@ -155,9 +156,9 @@ const StudentsPage = () => {
     }
     await refreshStudents();
     if (failed > 0) {
-      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+      showToast.error('Deleted {deleted}; {failed} failed.', { vars: { deleted: ids.length - failed, failed } });
     } else {
-      showToast.success(`Deleted ${ids.length} student${ids.length === 1 ? '' : 's'}.`);
+      showToast.success('Deleted {count} student(s).', { vars: { count: ids.length } });
     }
   };
   const handleTransferStudent = async (student: Student, targetClassId: number, reasonId: number) => {
@@ -201,9 +202,9 @@ const StudentsPage = () => {
     }
     await refreshStudents();
     if (failed > 0) {
-      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+      showToast.error('Deleted {deleted}; {failed} failed.', { vars: { deleted: ids.length - failed, failed } });
     } else {
-      showToast.success(`Deleted ${ids.length} group${ids.length === 1 ? '' : 's'}.`);
+      showToast.success('Deleted {count} group(s).', { vars: { count: ids.length } });
     }
   };
   const handleExportStudents = () => exportCsvEntity('students', 'Students');
@@ -217,6 +218,7 @@ const StudentsPage = () => {
             <TabsTrigger value="students">{t('Students')}</TabsTrigger>
             <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
             <TabsTrigger value="multi-group-students">{t('Multiple groups')}</TabsTrigger>
+            <TabsTrigger value="watchlist">{t('Close watch')}</TabsTrigger>
             <TabsTrigger value="teachers">{t('Teachers')}</TabsTrigger>
           </TabsList>
           <div className="owner-primary-card flex h-10 min-w-[145px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-sm dark:border-border dark:bg-card">
@@ -344,6 +346,10 @@ const StudentsPage = () => {
             active={activeTab === 'statistics'}
           />
         </TabsContent>
+        <TabsContent value="watchlist" className="mt-0">
+          <WatchlistTab active={activeTab === 'watchlist'} />
+        </TabsContent>
+
         <TabsContent value="multi-group-students" className="mt-0">
           <MultiGroupStudentsTab
             queryParams={s.studentParams}

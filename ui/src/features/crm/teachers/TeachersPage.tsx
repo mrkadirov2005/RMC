@@ -204,9 +204,9 @@ const TeachersPage = () => {
     await refresh();
     clearTeacherSelection();
     if (failed > 0) {
-      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+      showToast.error('Deleted {deleted}; {failed} failed.', { vars: { deleted: ids.length - failed, failed } });
     } else {
-      showToast.success(`Deleted ${ids.length} teacher${ids.length === 1 ? '' : 's'}.`);
+      showToast.success('Deleted {count} teacher(s).', { vars: { count: ids.length } });
     }
   };
   const handleExportTeachers = () => exportCsvEntity('teachers', 'Teachers');

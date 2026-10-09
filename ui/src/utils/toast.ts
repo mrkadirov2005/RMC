@@ -2,6 +2,8 @@
 
 type TopMessageOptions = {
   autoClose?: number | false;
+  /** Values for {placeholders}: the message stays a dictionary key and is translated on screen. */
+  vars?: Record<string, string | number>;
 };
 
 export type TopMessageVariant = 'success' | 'error' | 'warning' | 'info';
@@ -27,6 +29,7 @@ const showTopStatusMessage = (
       detail: {
         message,
         variant,
+        vars: options?.vars,
         autoClose: options?.autoClose ?? defaultAutoClose[variant],
       },
     }),

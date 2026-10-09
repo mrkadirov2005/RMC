@@ -150,7 +150,7 @@ const CalendarPage = () => {
       await calendarAPI.moveRecurring(event.class_id, { room_name: room, pattern, start_time: start, end_time: end });
       await dispatch(fetchClassesForce());
       workspace.refresh();
-      showToast.success(`${event.class_name} moved to ${room}.`);
+      showToast.success('{group} moved to {room}.', { vars: { group: event.class_name, room } });
     } catch (error: any) { showToast.error(error?.response?.data?.error || 'Could not move this lesson.'); }
   };
 

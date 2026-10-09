@@ -153,7 +153,7 @@ export const useClassesPage = (onSaved?: () => void) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (roomConflict) {
-      showToast.error(`Room ${formData.room_number} is already booked by ${roomConflict.group} on ${roomConflict.day}, ${roomConflict.start}–${roomConflict.end}.`);
+      showToast.error('Room {room} is already booked by {group} on {day}, {start}–{end}.', { vars: { room: formData.room_number || '', group: roomConflict.group, day: t(roomConflict.day), start: roomConflict.start, end: roomConflict.end } });
       return;
     }
     const dataToSubmit = {
@@ -325,9 +325,9 @@ export const useClassesPage = (onSaved?: () => void) => {
     }
     dispatch(fetchClassesForce());
     if (failed > 0) {
-      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+      showToast.error('Deleted {deleted}; {failed} failed.', { vars: { deleted: ids.length - failed, failed } });
     } else {
-      showToast.success(`Deleted ${ids.length} class${ids.length === 1 ? '' : 'es'}.`);
+      showToast.success('Deleted {count} group(s).', { vars: { count: ids.length } });
     }
   };
 

@@ -649,6 +649,21 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
     index('idx_payment_plan_installments_center_id').on(table.centerId),
 ]);
 
+const studentWatchlist = pgTable('student_watchlist', {
+  watchId: serial('watch_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  studentId: integer('student_id').notNull(),
+  contactName: varchar('contact_name', { length: 255 }).notNull(),
+  contactPhone: varchar('contact_phone', { length: 50 }),
+  note: text('note'),
+  addedByName: varchar('added_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+  removedAt: timestamp('removed_at'),
+}, (table) => [
+    uniqueIndex('ux_student_watchlist_active').on(table.studentId).where(sql`removed_at IS NULL`),
+    index('idx_student_watchlist_center').on(table.centerId),
+]);
+
 const expenses = pgTable('expenses', {
   expenseId: serial('expense_id').primaryKey(),
   centerId: integer('center_id').notNull(),
@@ -1083,6 +1098,7 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 
 module.exports = {
   expenses,
+  studentWatchlist,
   absenceAlertResolutions,
   appSettings,
   translations,

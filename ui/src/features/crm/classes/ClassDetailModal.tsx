@@ -347,7 +347,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
     setSubmittingGrades(true);
     try {
       await gradeAPI.bulkCreate(gradesToSubmit);
-      showToast.success(`${gradesToSubmit.length} grades submitted successfully!`);
+      showToast.success('{count} grades submitted successfully!', { vars: { count: gradesToSubmit.length } });
       setGradeMarks(new Map());
       setGradeSubject('');
       setGradeTotalMarks(100);

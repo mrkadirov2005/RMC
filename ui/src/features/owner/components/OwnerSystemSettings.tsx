@@ -66,7 +66,7 @@ export const OwnerSystemSettings = () => {
   const resetTable = async () => {
     if (!resetTarget) return;
     if (resetConfirmation !== RESET_CONFIRMATION) {
-      showToast.error(`Type ${RESET_CONFIRMATION} to confirm.`);
+      showToast.error('Type {word} to confirm.', { vars: { word: RESET_CONFIRMATION } });
       return;
     }
 
@@ -75,7 +75,7 @@ export const OwnerSystemSettings = () => {
       const response = await resetTarget.endpoint(resetConfirmation);
       const data = (response as any).data ?? response;
       const before = Number(data?.before ?? 0);
-      showToast.success(`${resetTarget.label} table cleared. Removed ${before.toLocaleString()} row${before === 1 ? '' : 's'}.`);
+      showToast.success('{table} table cleared. Removed {count} row(s).', { vars: { table: t(resetTarget.label), count: before.toLocaleString() } });
       closeReset();
     } catch (error: any) {
       showToast.error(error?.response?.data?.error || `Could not clear ${resetTarget.label.toLowerCase()} table.`);
