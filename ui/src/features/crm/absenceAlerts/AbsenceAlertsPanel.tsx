@@ -153,8 +153,8 @@ export function AbsenceAlertsPanel({
       </div>
 
       {(teacherOptions.length > 0 || classOptions.length > 0) && (
-        <div className="mb-3 grid gap-2 sm:grid-cols-2">
-          <label className="text-xs font-semibold text-rose-900 dark:text-rose-200">
+        <div className={cn('mb-3 grid gap-2', teacherOptions.length > 0 ? 'sm:grid-cols-2' : 'sm:max-w-sm')}>
+          {teacherOptions.length > 0 && <label className="text-xs font-semibold text-rose-900 dark:text-rose-200">
             {t('Teacher')}
             <select
               value={teacherFilter}
@@ -164,7 +164,7 @@ export function AbsenceAlertsPanel({
               <option value="">{t('All teachers')}</option>
               {teacherOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
             </select>
-          </label>
+          </label>}
           <label className="text-xs font-semibold text-rose-900 dark:text-rose-200">
             {t('Class')}
             <select
