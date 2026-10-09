@@ -6,7 +6,7 @@ const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
 const studentService = require('../../students/services/student.service');
 const { calculateCoins } = require('../../../utils/coinCalculator');
 const settingsService = require('../../settings/services/settings.service');
-const { combineLessonScore, lessonGrade } = require('./lessonScore');
+const { combineLessonScore, lessonGrade, lessonMaxScore } = require('./lessonScore');
 const db = pool.db;
 
 const listGrades = (centerId?: number, teacherId?: number, studentId?: number) =>
@@ -244,11 +244,14 @@ const coinTransactionSelection = {
   updated_at: studentCoinTransactions.updatedAt,
 };
 
-const calculateSessionScore = (payload: any) => {
-  const totalMarks = Number(payload.total_marks || 100);
+// With the center's scoring settings the total comes from the categories actually recorded
+// (attendance only is out of 40); without them it falls back to the given total_marks.
+const calculateSessionScore = (payload: any, scoringSettings?: any) => {
+  const totalMarks = scoringSettings ? lessonMaxScore(payload, scoringSettings) : Number(payload.total_marks || 100);
   const marks = combineLessonScore(payload);
   const percentage = totalMarks > 0 ? Number(((marks * 100) / totalMarks).toFixed(2)) : null;
   return {
+    totalMarks,
     marksObtained: marks,
     percentage,
     gradeLetter: percentage === null ? null : lessonGrade(percentage),
@@ -279,7 +282,7 @@ const upsertAttendanceInTransaction = async (tx: any, payload: any) => {
   return rows[0];
 };
 
-const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
+const upsertSessionScoreInTransaction = async (tx: any, payload: any, scoringSettings?: any) => {
   const normalized = {
     ...payload,
     subject: payload.subject || 'Session',
@@ -289,7 +292,7 @@ const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
     activity_score: payload.activity_score ?? null,
     points_score: payload.points_score ?? null,
   };
-  const totals = calculateSessionScore(normalized);
+  const totals = calculateSessionScore(normalized, scoringSettings);
   const existing = await tx
     .select(gradeSelection)
     .from(grades)
@@ -303,7 +306,7 @@ const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
       points_score: normalized.points_score ?? existing[0].points_score,
       total_marks: normalized.total_marks ?? existing[0].total_marks ?? 100,
     };
-    const mergedTotals = calculateSessionScore(merged);
+    const mergedTotals = calculateSessionScore(merged, scoringSettings);
     const rows = await tx
       .update(grades)
       .set({
@@ -311,7 +314,7 @@ const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
         homeworkScore: merged.homework_score,
         activityScore: merged.activity_score,
         pointsScore: merged.points_score,
-        totalMarks: merged.total_marks,
+        totalMarks: mergedTotals.totalMarks,
         subject: normalized.subject ?? existing[0].subject,
         teacherId: normalized.teacher_id ?? existing[0].teacher_id,
         classId: normalized.class_id ?? existing[0].class_id,
@@ -335,7 +338,7 @@ const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
       subject: normalized.subject,
       classId: normalized.class_id,
       sessionId: normalized.session_id,
-      totalMarks: normalized.total_marks,
+      totalMarks: totals.totalMarks,
       academicYear: normalized.academic_year,
       term: normalized.term,
       centerId: normalized.center_id,
@@ -351,6 +354,9 @@ const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
   return rows[0];
 };
 
+/** Stored attendance statuses that mean the student was not in the lesson (Excused is `Absent R`). */
+const ABSENT_STATUSES = new Set(['Absent', 'Absent R', 'Absent NR']);
+
 const calculateCoinsFromMapping = (marksObtained: number, totalMarks: number, mapping: any[]) => {
   if (!totalMarks || totalMarks <= 0) return 0;
   const score = Math.min(100, Math.max(0, (marksObtained / totalMarks) * 100));
@@ -361,12 +367,16 @@ const calculateCoinsFromMapping = (marksObtained: number, totalMarks: number, ma
   return Number(rows[rows.length - 1]?.coins || 0);
 };
 
-const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId: number | null, scoringSettings: any, stellarBonusCoins = 0) => {
+const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId: number | null, scoringSettings: any, stellarBonusCoins = 0, isAbsent = false) => {
   const marksNum = Number(grade.marks_obtained);
   const totalNum = Number(grade.total_marks);
-  const baseCoins = calculateCoinsFromMapping(marksNum, totalNum, scoringSettings.coinScoreMapping);
-  const coinsToAdd = baseCoins + stellarBonusCoins;
-  const reason = `Academic performance: ${marksNum}/${totalNum} in ${grade.subject}${stellarBonusCoins > 0 ? ` | Stellar student bonus: +${stellarBonusCoins}` : ''}`;
+  // A student who missed the lesson gets no coins either way; the coin table is for performance in class.
+  const baseCoins = isAbsent ? 0 : calculateCoinsFromMapping(marksNum, totalNum, scoringSettings.coinScoreMapping);
+  const bonusCoins = isAbsent ? 0 : stellarBonusCoins;
+  const coinsToAdd = baseCoins + bonusCoins;
+  const reason = isAbsent
+    ? `Absent from ${grade.subject}: no coins`
+    : `Academic performance: ${marksNum}/${totalNum} in ${grade.subject}${bonusCoins > 0 ? ` | Stellar student bonus: +${bonusCoins}` : ''}`;
 
   const studentRows = await client
     .select({ student_id: students.studentId, center_id: students.centerId, coins: students.coins })
@@ -530,12 +540,19 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
         homework_score: record.homework_score ?? null,
         activity_score: record.activity_score ?? null,
         points_score: record.points_score ?? null,
-      });
+      }, scoringSettings);
       gradeRows.push(gradeRow);
 
       if (award_coins !== false) {
         const stellarBonusCoins = record.is_stellar_student ? Number(scoringSettings.stellarBonusCoins || 0) : 0;
-        const coinRow = await upsertLessonCoinsInTransaction(client, gradeRow, teacher_id ?? null, scoringSettings, stellarBonusCoins);
+        // Attendance may have been taken in an earlier save of this lesson, so fall back to the stored status.
+        const attendanceStatus = record.attendance_status || (await client
+          .select({ status: attendance.status })
+          .from(attendance)
+          .where(and(eq(attendance.studentId, studentId), eq(attendance.sessionId, session_id)))
+          .limit(1))[0]?.status;
+        const isAbsent = ABSENT_STATUSES.has(String(attendanceStatus || ''));
+        const coinRow = await upsertLessonCoinsInTransaction(client, gradeRow, teacher_id ?? null, scoringSettings, stellarBonusCoins, isAbsent);
         if (coinRow?.error) throw new Error(`Failed to save coins for student ${studentId}: ${coinRow.error}`);
         coinRows.push(coinRow);
       } else {
