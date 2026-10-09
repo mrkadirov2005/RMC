@@ -1,0 +1,2 @@
+# TypeScript must be clean in the frontend and the backend before a commit.
+npm run typecheck
