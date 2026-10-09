@@ -14,6 +14,8 @@ const selection = {
   original_price: discounts.originalPrice,
   final_price: discounts.finalPrice,
   reason: discounts.reason,
+  reason_category: discounts.reasonCategory,
+  referrer_name: discounts.referrerName,
   payment_period: discounts.paymentPeriod,
   start_date: discounts.startDate,
   end_date: discounts.endDate,
@@ -88,6 +90,8 @@ const insert = async (params: any[]) => {
       startDate: params[9],
       endDate: params[10],
       active: params[11],
+      reasonCategory: params[12] ?? null,
+      referrerName: params[13] ?? null,
     })
     .returning(selection);
   return rows[0];
@@ -109,6 +113,8 @@ const update = async (id: number, params: any[], centerId?: number, queryable: a
       startDate: sql`COALESCE(${params[7] ?? null}, ${discounts.startDate})`,
       endDate: sql`COALESCE(${params[8] ?? null}, ${discounts.endDate})`,
       active: sql`COALESCE(${params[9] ?? null}, ${discounts.active})`,
+      reasonCategory: sql`COALESCE(${params[10] ?? null}, ${discounts.reasonCategory})`,
+      referrerName: sql`COALESCE(${params[11] ?? null}, ${discounts.referrerName})`,
       updatedAt: sql`CURRENT_TIMESTAMP`,
     })
     .where(and(...conditions))

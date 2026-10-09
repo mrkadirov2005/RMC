@@ -40,8 +40,27 @@ describe('discount service', () => {
     await expect(service.create({ student_id: 7, original_price: 1000, value: 200 }, 2))
       .resolves.toEqual({ row: { discount_id: 1 } });
     expect(repository.insert).toHaveBeenCalledWith([
-      7, 2, 'fixed', 'serial_discount', 200, 1000, 800, null, null, null, null, true,
+      7, 2, 'fixed', 'serial_discount', 200, 1000, 800, null, null, null, null, true, null, null,
     ]);
+  });
+
+  it('keeps the reason category, and the referrer name only for "relative"', async () => {
+    await service.create({ student_id: 7, value: 100, reason_category: 'relative', referrer_name: '  Akmal aka ' }, 2);
+    expect(repository.insert.mock.calls.at(-1)[0].slice(12)).toEqual(['relative', 'Akmal aka']);
+
+    await service.create({ student_id: 7, value: 100, reason_category: 'charity', referrer_name: 'ignored' }, 2);
+    expect(repository.insert.mock.calls.at(-1)[0].slice(12)).toEqual(['charity', null]);
+
+    await service.create({ student_id: 7, value: 100, reason_category: 'made-up' }, 2);
+    expect(repository.insert.mock.calls.at(-1)[0].slice(12)).toEqual([null, null]);
+  });
+
+  it('clears an old referrer name when an update moves away from "relative"', async () => {
+    await service.update(5, { reason_category: 'poverty' }, 2);
+    expect(repository.update.mock.calls.at(-1)[1].slice(10)).toEqual(['poverty', '']);
+
+    await service.update(5, { value: 50 }, 2);
+    expect(repository.update.mock.calls.at(-1)[1].slice(10)).toEqual([undefined, undefined]);
   });
 
   test('forwards update and delete with center scope', () => {

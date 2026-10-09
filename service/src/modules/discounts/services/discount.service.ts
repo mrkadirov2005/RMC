@@ -13,6 +13,16 @@ const list = (query: { student_id?: string; center_id?: string; active?: string;
 
 const getById = (id: number, centerId?: number) => discountRepository.findById(id, centerId);
 
+/** Why a permanent discount was given; the referrer's name is kept only for "relative". */
+const REASON_CATEGORIES = ['poverty', 'relative', 'charity', 'other'];
+const reasonFields = (body: any) => {
+  if (body.reason_category === undefined && body.referrer_name === undefined) return { category: undefined, referrer: undefined };
+  const category = REASON_CATEGORIES.includes(body.reason_category) ? body.reason_category : null;
+  const referrer = category === 'relative' ? String(body.referrer_name || '').trim().slice(0, 200) : '';
+  // '' (not null) so an update clears an old name: the repository keeps the old value for null.
+  return { category: category ?? '', referrer };
+};
+
 const clampPercentValue = (value: number) => Math.min(100, Math.max(0, Number(value || 0)));
 
 const calculateDiscount = (originalAmount: number, valueType: string, value: number) => {
@@ -75,6 +85,8 @@ const create = async (body: any, centerId?: number) => {
       start_date || null,
       end_date || null,
       active ?? true,
+      reasonFields(body).category || null,
+      reasonFields(body).referrer || null,
     ])
     .then((row: any) => ({ row }));
 };
@@ -115,6 +127,8 @@ const update = async (id: number, body: any, centerId?: number, queryable?: any)
       start_date,
       end_date,
       active,
+      reasonFields(body).category,
+      reasonFields(body).referrer,
     ],
     centerId,
     queryable

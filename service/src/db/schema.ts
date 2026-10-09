@@ -475,6 +475,8 @@ const discounts = pgTable('discounts', {
   originalPrice: numeric('original_price'),
   finalPrice: numeric('final_price'),
   reason: text('reason'),
+  reasonCategory: varchar('reason_category', { length: 40 }),
+  referrerName: varchar('referrer_name', { length: 200 }),
   paymentPeriod: varchar('payment_period', { length: 20 }),
   startDate: date('start_date'),
   endDate: date('end_date'),

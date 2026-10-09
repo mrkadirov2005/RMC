@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import type { Class, Student } from '../types';
 import { SelectField } from './SelectField';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { DISCOUNT_REASON_OPTIONS } from '../utils/studentFormOptions';
 
 interface Option { id?: number; label: string; value: string | number }
 interface Props { formData: Partial<Student>; setFormData: (value: Partial<Student>) => void; centerOptions: Option[]; classOptions: Option[]; teacherOptions: Option[]; classes?: Class[]; acquisitionSourceOptions?: Option[]; genderOptions: Option[]; statusOptions: Option[]; showCenterField?: boolean }
@@ -243,8 +244,8 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
               value={formData.discount_kind || 'serial_discount'}
               onChange={(value) => setFormData({ ...formData, discount_kind: value as 'serial_discount' | 'monthly_discount' })}
               options={[
-                { label: 'Serial', value: 'serial_discount' },
-                { label: 'One-time', value: 'monthly_discount' },
+                { label: 'Permanent', value: 'serial_discount' },
+                { label: 'One-time (grant)', value: 'monthly_discount' },
               ]}
             />
             <SelectField
@@ -261,6 +262,20 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             <TextField label={t('Current price')} type="number" value={formData.discount_original_price} onChange={(value) => setFormData({ ...formData, discount_original_price: Number(value) })} />
             <TextField label={t('Discount value')} type="number" value={formData.discount_value} onChange={(value) => setFormData({ ...formData, discount_value: Number(value) })} />
             <TextField label={t('Final price')} value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} readOnly />
+            {(formData.discount_kind || 'serial_discount') === 'serial_discount' && (
+              <SelectField
+                compact
+                label={t('Reason type')}
+                name="discount_reason_category"
+                value={formData.discount_reason_category || ''}
+                onChange={(value) => setFormData({ ...formData, discount_reason_category: value })}
+                placeholder={t('Choose a reason')}
+                options={DISCOUNT_REASON_OPTIONS}
+              />
+            )}
+            {(formData.discount_kind || 'serial_discount') === 'serial_discount' && formData.discount_reason_category === 'relative' && (
+              <TextField label={t('Whose relative or acquaintance')} value={formData.discount_referrer_name} onChange={(value) => setFormData({ ...formData, discount_referrer_name: value })} placeholder={t('Full name')} />
+            )}
             <div className="sm:col-span-2 lg:col-span-5">
               <TextField label={t('Reason')} value={formData.discount_reason} onChange={(value) => setFormData({ ...formData, discount_reason: value })} placeholder={t('Reason for discount')} />
             </div>

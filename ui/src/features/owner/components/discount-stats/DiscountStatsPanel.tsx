@@ -6,6 +6,7 @@ import { PieChart } from '@/shared/components/PieChart';
 import { formatMoney } from '@/utils/helpers';
 import type { OwnerManagerStatisticsCollections } from '../../types';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { DISCOUNT_REASON_OPTIONS } from '../../../crm/students/utils/studentFormOptions';
 
 interface Props {
   collections: OwnerManagerStatisticsCollections;
@@ -39,6 +40,14 @@ const colors = {
 const kindLabels: Record<DiscountKind, string> = {
   serial_discount: 'Serial discount',
   monthly_discount: 'One-month discount',
+};
+
+// Permanent discounts carry a reason type, and for "relative" the name of who the family knows.
+const describeReason = (item: any, linked: any, t: (value: string) => string) => {
+  const source = item?.reason_category ? item : linked || item;
+  const label = DISCOUNT_REASON_OPTIONS.find((option) => option.value === source?.reason_category)?.label;
+  const parts = [label && t(label), source?.referrer_name && `(${source.referrer_name})`, item?.reason || item?.notes || linked?.reason];
+  return parts.filter(Boolean).join(' · ') || '-';
 };
 
 const getId = (item: any, ...keys: string[]) => {
@@ -151,7 +160,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
           finalAmount,
           discountAmount,
           valueLabel: getValueLabel(item),
-          reason: String(item?.reason || item?.notes || '-'),
+          reason: describeReason(item, discountsById.get(getId(item, 'discount_id')), t),
           status: isApplied ? 'Applied' : item?.active === false ? 'Inactive' : 'Pending',
           assignedDate: formatDate(assignedAt),
           appliedDate: formatDate(appliedAt),
@@ -178,7 +187,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
       originalTotal,
       finalTotal,
     };
-  }, [collections.classes, collections.discounts, collections.payments, collections.students]);
+  }, [collections.classes, collections.discounts, collections.payments, collections.students, t]);
 
   const pieRows = [
     { kind: 'serial_discount' as const, label: 'Serial discount', value: stats.serial.length, amount: stats.serialTotal, color: colors.serial },

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength } from 'class-validator';
 
 class StudentListQueryDto {
   @IsOptional()
@@ -41,6 +41,15 @@ class StudentListQueryDto {
   @IsOptional()
   @IsString()
   discount_reason?: string;
+
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  discount_reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  discount_referrer_name?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -200,6 +209,15 @@ class CreateStudentDto {
   @IsString()
   discount_reason?: string;
 
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  discount_reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  discount_referrer_name?: string;
+
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) acquisition_source_id?: number;
   @IsOptional() @IsString() acquisition_detail?: string;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) referred_by_teacher_id?: number;
@@ -303,6 +321,15 @@ class UpdateStudentDto {
   @IsOptional()
   @IsString()
   discount_reason?: string;
+
+  @IsOptional()
+  @IsIn(['poverty', 'relative', 'charity', 'other', ''])
+  discount_reason_category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  discount_referrer_name?: string;
 
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) acquisition_source_id?: number;
   @IsOptional() @IsString() acquisition_detail?: string;

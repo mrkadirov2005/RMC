@@ -119,4 +119,13 @@ export const miscLabels: Record<string, string> = {
   'On Leave': "Ta'tilda",
   'Unassign related records and delete this teacher?': "Bog'liq yozuvlar ajratilib, o'qituvchi o'chirilsinmi?",
   'Contact & additional information': "Aloqa va qo'shimcha ma'lumotlar",
+  Permanent: 'Doimiy',
+  'One-time (grant)': 'Bir martalik (grant)',
+  'Reason type': 'Sabab turi',
+  'Choose a reason': 'Sababni tanlang',
+  'Whose relative or acquaintance': 'Kimning qarindoshi yoki tanishi',
+  'Full name': 'Ism familiya',
+  'On the poverty register': "Kambag'allik reyestrida turadi",
+  'Relative or acquaintance': 'Qarindosh yoki tanish',
+  Charity: 'Xayriya, savob uchun',
 };

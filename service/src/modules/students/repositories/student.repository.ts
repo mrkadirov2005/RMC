@@ -375,6 +375,24 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
         ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
         LIMIT 1
       )`,
+      discount_reason_category: sql`(
+        SELECT d.reason_category FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId}
+          AND d.active = TRUE
+          AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+        ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
+        LIMIT 1
+      )`,
+      discount_referrer_name: sql`(
+        SELECT d.referrer_name FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId}
+          AND d.active = TRUE
+          AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+        ORDER BY CASE d.discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END, d.created_at DESC
+        LIMIT 1
+      )`,
     })
     .from(students)
     .leftJoin(classes, and(eq(students.classId, classes.classId), isNull(classes.deletedAt)))
