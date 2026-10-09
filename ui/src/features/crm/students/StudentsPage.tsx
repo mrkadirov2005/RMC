@@ -15,7 +15,7 @@ import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
 import { StudentFormDialog } from './components/StudentFormDialog';
 import { StudentsStatisticsTab } from './components/StudentsStatisticsTab';
-import { MultiGroupStudentsTab } from './components/MultiGroupStudentsTab';
+import { MultiGroupSection } from './components/MultiGroupSection';
 import { StudentsTableView } from './components/StudentsTableView';
 import { StudentsTeacherGroupsTab } from './components/StudentsTeacherGroupsTab';
 import { useStudentsPage } from './hooks/useStudentsPage';
@@ -351,7 +351,7 @@ const StudentsPage = () => {
         </TabsContent>
 
         <TabsContent value="multi-group-students" className="mt-0">
-          <MultiGroupStudentsTab
+          <MultiGroupSection
             queryParams={s.studentParams}
             active={activeTab === 'multi-group-students'}
             searchTerm={s.searchTerm}

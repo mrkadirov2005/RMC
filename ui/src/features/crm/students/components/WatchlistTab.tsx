@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
+import { getApiPayload } from '@/shared/api/response';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { studentsApi } from '../api/studentsApi';
+import { useStudentSearch, type StudentHit } from '../hooks/useStudentSearch';
 
 type WatchRow = {
   watch_id: number;
@@ -31,7 +32,6 @@ type WatchRow = {
   note?: string | null;
   rating: { group_place: number | null; group_size: number; center_place: number | null; average_score: number | null };
 };
-type StudentHit = { student_id: number; first_name: string; last_name: string; class_name?: string | null };
 
 const EMPTY_FORM = { contact_name: '', contact_phone: '', note: '' };
 
@@ -40,7 +40,6 @@ export function WatchlistTab({ active }: { active: boolean }) {
   const [rows, setRows] = useState<WatchRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
-  const [hits, setHits] = useState<StudentHit[]>([]);
   const [picked, setPicked] = useState<StudentHit | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -59,18 +58,7 @@ export function WatchlistTab({ active }: { active: boolean }) {
 
   useEffect(() => { if (active) void load(); }, [active, load]);
 
-  // Student search for adding, after a short pause in typing.
-  useEffect(() => {
-    if (picked || query.trim().length < 2) { setHits([]); return; }
-    const timer = window.setTimeout(async () => {
-      try {
-        setHits(unwrapApiRows<StudentHit>(await studentsApi.getAll({ q: query.trim(), page: 1, limit: 8 })));
-      } catch {
-        setHits([]);
-      }
-    }, 300);
-    return () => window.clearTimeout(timer);
-  }, [query, picked]);
+  const { hits, clear: clearHits } = useStudentSearch(query, !picked);
 
   const reset = () => { setEditingId(null); setPicked(null); setQuery(''); setForm(EMPTY_FORM); };
 
@@ -134,7 +122,7 @@ export function WatchlistTab({ active }: { active: boolean }) {
             <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-md border bg-popover shadow-lg">
               {hits.map((hit) => (
                 <li key={hit.student_id}>
-                  <button type="button" className="w-full px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => { setPicked(hit); setHits([]); }}>
+                  <button type="button" className="w-full px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => { setPicked(hit); clearHits(); }}>
                     {hit.last_name} {hit.first_name}{hit.class_name ? <span className="text-muted-foreground"> · {hit.class_name}</span> : null}
                   </button>
                 </li>
