@@ -9,6 +9,7 @@ import { OwnerOverviewPanel } from './components/OwnerOverviewPanel';
 import { OwnerWelcomeHero } from './components/OwnerWelcomeHero';
 import { DeleteStudentDialog } from '../crm/students/components/DeleteStudentDialog';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { OwnerExecutiveDashboard } from './components/OwnerExecutiveDashboard';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -39,6 +40,7 @@ const OwnerManager = memo(() => {
           activeCenterLabel={vm.overviewCenterLabel}
           loading={vm.overviewLoading}
         />
+        <OwnerExecutiveDashboard collections={vm.overviewCollections} kpis={vm.overviewKpis} loading={vm.overviewLoading} />
 
         <OwnerManagerTable
           activeTab={vm.activeTab}

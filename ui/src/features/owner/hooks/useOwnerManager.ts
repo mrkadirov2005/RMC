@@ -18,7 +18,7 @@ import {
 } from '../../../slices/pagesUiSlice';
 import { selectOwnerManagerUi } from '../selectors';
 import { OWNER_MANAGER_TAB_META } from '../constants';
-import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType, OwnerOverviewCollections } from '../types';
+import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType, OwnerOverviewCollections, OwnerOverviewKpiRow } from '../types';
 import { expandLegacySubPagePermissions, togglePagePermission } from '../../crm/rbac/adminPageAccess';
 import { buildOwnerStudentStatistics, createInitialFormState, getCenterOptionId, getCenterOptionName, getOwnerManagerRowId, normalizePermissions, summarizeOwnerAttendance } from '../utils';
 import { ownerManagerApi } from '../api';
@@ -86,6 +86,7 @@ export const useOwnerManager = () => {
     payments: [],
     discounts: [],
     deletedStudents: [],
+    salaries: [],
   });
   const [overviewSummary, setOverviewSummary] = useState({
     totalStudents: 0,
@@ -104,6 +105,7 @@ export const useOwnerManager = () => {
     collected: 0,
   });
   const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewKpis, setOverviewKpis] = useState<OwnerOverviewKpiRow[]>([]);
   const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
   const [pendingStudentDelete, setPendingStudentDelete] = useState<{ id: number; hard: boolean } | null>(null);
 
@@ -276,26 +278,45 @@ export const useOwnerManager = () => {
   const fetchOverview = useCallback(async () => {
     setOverviewLoading(true);
     try {
+      const now = new Date();
       const [
         centersRes,
         ownersRes,
         superusersRes,
         summariesRes,
-        deletedStudentsRes,
         attendanceRes,
+        kpisRes,
+        salariesRes,
       ] = await Promise.all([
         ownerManagerApi.centers.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.owners.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.superusers.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.centerSummaries.getAllAcrossCenters().catch(() => ({ data: [] })),
-        canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
         activeCenterId ? ownerManagerApi.attendance.getAllForCenter(Number(activeCenterId)).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        ownerManagerApi.kpis.getOverviewAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.salaries.getOverviewAcrossCenters({
+          year: now.getFullYear(),
+          month: now.getMonth() + 1,
+        }).catch(() => ({ data: [] })),
       ]);
       const summaries = toRows(summariesRes);
       const selectedSummary = summaries.find(
         (row: any) => Number(row.center_id || row.centerId) === Number(activeCenterId),
       );
       const attendanceRows = toRows(attendanceRes);
+      const kpiPayload = Array.isArray(kpisRes) ? kpisRes : kpisRes?.data;
+      const kpiRows = Array.isArray(kpiPayload)
+        ? kpiPayload
+        : Array.isArray(kpiPayload?.teachers)
+          ? kpiPayload.teachers
+          : [];
+      setOverviewKpis(kpiRows);
+      const salaryPayload = Array.isArray(salariesRes) ? salariesRes : salariesRes?.data;
+      const salaryRows = Array.isArray(salaryPayload)
+        ? salaryPayload
+        : Array.isArray(salaryPayload?.teachers)
+          ? salaryPayload.teachers
+          : [];
       const attendanceFallback = summarizeOwnerAttendance(attendanceRows);
       setOverviewSummary({
         totalStudents: Number(selectedSummary?.students || 0),
@@ -317,21 +338,30 @@ export const useOwnerManager = () => {
           : Number(selectedSummary.attendance_absent || 0),
         collected: Number(selectedSummary?.collected || 0),
       });
-
+      const [
+        studentsRes,
+        teachersRes,
+        classesRes,
+        paymentsRes,
+        deletedAcrossCentersRes,
+      ] = await Promise.all([
+        ownerManagerApi.students.getAllAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.teachers.getAllAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.classes.getAllAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.payments.getAllAcrossCenters().catch(() => ({ data: [] })),
+        canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+      ]);
       setOverviewCollections({
-        centers: toRows(centersRes).filter(
-          (center: any) => getCenterOptionId(center) === Number(activeCenterId),
-        ),
+        centers: toRows(centersRes),
         owners: toRows(ownersRes),
-        superusers: toRows(superusersRes).filter(
-          (admin: any) => Number(admin.center_id || admin.centerId) === Number(activeCenterId),
-        ),
-        students: [],
-        teachers: [],
-        classes: [],
-        payments: [],
+        superusers: toRows(superusersRes),
+        students: toRows(studentsRes),
+        teachers: toRows(teachersRes),
+        classes: toRows(classesRes),
+        payments: toRows(paymentsRes),
         discounts: [],
-        deletedStudents: toRows(deletedStudentsRes),
+        deletedStudents: toRows(deletedAcrossCentersRes),
+        salaries: salaryRows,
         attendance: attendanceRows,
       });
     } finally {
@@ -690,6 +720,7 @@ export const useOwnerManager = () => {
     statisticsCollections,
     overviewCollections,
     overviewSummary,
+    overviewKpis,
     overviewLoading,
     statistics,
     crossCounts,
