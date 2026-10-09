@@ -651,6 +651,33 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
 ]);
 
 // file_data (BYTEA) is read with raw SQL only, never through this table definition.
+const lessonDaysOff = pgTable('lesson_days_off', {
+  dayOffId: serial('day_off_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  offDate: date('off_date').notNull(),
+  classId: integer('class_id'),
+  note: text('note'),
+  createdByName: varchar('created_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+});
+
+const lessonReschedules = pgTable('lesson_reschedules', {
+  rescheduleId: serial('reschedule_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  classId: integer('class_id').notNull(),
+  teacherId: integer('teacher_id').notNull(),
+  originalDate: date('original_date').notNull(),
+  newDate: date('new_date').notNull(),
+  newTime: time('new_time'),
+  reason: text('reason'),
+  status: varchar('status', { length: 20 }).notNull(),
+  decidedByName: varchar('decided_by_name', { length: 255 }),
+  decidedAt: timestamp('decided_at'),
+  createdAt: timestamp('created_at'),
+}, (table) => [
+    index('idx_lesson_reschedules_center_status').on(table.centerId, table.status),
+]);
+
 const leads = pgTable('leads', {
   leadId: serial('lead_id').primaryKey(),
   centerId: integer('center_id').notNull(),
@@ -1157,6 +1184,8 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 
 module.exports = {
   expenses,
+  lessonDaysOff,
+  lessonReschedules,
   leads,
   studentCertificates,
   studentLinkGroups,

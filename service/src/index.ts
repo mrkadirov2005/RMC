@@ -60,6 +60,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const watchlistRoutes = require('./routes/watchlistRoutes');
   const studentLinkRoutes = require('./routes/studentLinkRoutes');
   const leadRoutes = require('./routes/leadRoutes');
+  const lessonControlRoutes = require('./routes/lessonControlRoutes');
   const telegramBotRoutes = require('./routes/telegramBotRoutes');
   const portalRoutes = require('./routes/portalRoutes');
   const roomsRoutes = require('./routes/roomsRoutes');
@@ -170,6 +171,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/student-links', requireAuth, requireRole('superuser'), studentLinkRoutes);
   // Leads waiting for a group or gathered for a new one, with call-back reminders.
   app.use('/api/leads', requireAuth, requireRole('superuser'), leadRoutes);
+  // Scoring deadlines, lesson moves and days off; each handler limits what teachers may do.
+  app.use('/api/lesson-control', requireAuth, requireRole('superuser', 'teacher'), lessonControlRoutes);
   app.use('/api/telegram-bot', requireAuth, requireRole('superuser', 'teacher'), telegramBotRoutes);
   app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
   app.use('/api/teacher-tasks', requireAuth, requireRole('superuser', 'teacher'), teacherTaskRoutes);

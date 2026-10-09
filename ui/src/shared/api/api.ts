@@ -367,6 +367,19 @@ export const leadAPI = {
   close: (id: number, outcome: 'enrolled' | 'lost', note?: string) => apiClient.post(`/leads/${id}/close`, { outcome, note }),
 };
 
+/** Scoring deadlines (two hours from the lesson start), lesson moves and days off. */
+export const lessonControlAPI = {
+  discipline: (params?: { month?: string; teacher_id?: number }) => apiClient.get('/lesson-control/discipline', { params }),
+  myDue: () => apiClient.get('/lesson-control/my-due'),
+  daysOff: (month: string) => apiClient.get('/lesson-control/days-off', { params: { month } }),
+  addDayOff: (data: { off_date: string; class_id?: number | null; note?: string }) => apiClient.post('/lesson-control/days-off', data),
+  removeDayOff: (id: number) => apiClient.delete(`/lesson-control/days-off/${id}`),
+  reschedules: () => apiClient.get('/lesson-control/reschedules'),
+  requestReschedule: (data: { class_id: number; original_date: string; new_date: string; new_time?: string; reason?: string }) =>
+    apiClient.post('/lesson-control/reschedules', data),
+  decide: (id: number, approve: boolean) => apiClient.post(`/lesson-control/reschedules/${id}/decide`, { approve }),
+};
+
 /** Daily till report (payments by method minus expenses) and the expenses admins record. */
 export const cashAPI = {
   getDaily: (date: string) => apiClient.get('/cash/daily', { params: { date } }),
