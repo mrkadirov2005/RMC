@@ -30,6 +30,7 @@ interface Props {
   statusOptions: Option[];
   schoolOptions: string[];
   classOptions: Option[];
+  showUnassignedClassOption?: boolean;
   teacherOptions: Option[];
   subjectOptions: Option[];
   levelOptions: Array<string | number>;
@@ -63,6 +64,7 @@ export const StudentsFilterPanel = ({
   statusOptions,
   schoolOptions,
   classOptions,
+  showUnassignedClassOption = true,
   teacherOptions,
   subjectOptions,
   levelOptions,
@@ -90,7 +92,7 @@ export const StudentsFilterPanel = ({
             <SelectTrigger><SelectValue placeholder="Hamma sinflar" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Hamma sinflar</SelectItem>
-              <SelectItem value="-1">Sinf biriktirilmagan</SelectItem>
+              {showUnassignedClassOption && <SelectItem value="-1">Sinf biriktirilmagan</SelectItem>}
               {classOptions.map((opt) => <SelectItem key={opt.id || opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}
             </SelectContent>
           </Select>
