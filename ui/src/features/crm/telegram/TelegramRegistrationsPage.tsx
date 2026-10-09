@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TelegramInboxPanel } from '../telegramBot/TelegramInboxPanel';
+import { ParentLinkRequestsPanel } from './ParentLinkRequestsPanel';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { telegramRegistrationAPI, classAPI, teacherAPI } from './api';
@@ -186,6 +187,9 @@ const TelegramRegistrationsPage = () => {
           <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       )}
+
+      {/* Parents asking to follow a child whose saved parent phone isn't theirs. */}
+      <ParentLinkRequestsPanel />
 
       {/* Suggestions and complaints to the director, and messages to teachers, from the bot. */}
       <TelegramInboxPanel />

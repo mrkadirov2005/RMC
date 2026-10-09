@@ -291,6 +291,13 @@ export const telegramRegistrationAPI = {
   reject: (id: number) => apiClient.post(`/telegram-registrations/${id}/reject`),
 };
 
+// Parents asking in the Telegram bot to follow a child; an admin approves or rejects.
+export const parentLinkRequestAPI = {
+  getAll: (params?: { status?: string }) => apiClient.get('/parent-link-requests', { params }),
+  approve: (id: number) => apiClient.post(`/parent-link-requests/${id}/approve`),
+  reject: (id: number) => apiClient.post(`/parent-link-requests/${id}/reject`),
+};
+
 export const teacherAPI = {
   getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/teachers', {
