@@ -207,6 +207,7 @@ export const MultiGroupStudentsTab = ({
         ]}
         schoolOptions={schoolOptions}
         classOptions={classOptions}
+        showUnassignedClassOption={!filters.teacherId}
         teacherOptions={teacherOptions}
         subjectOptions={subjectOptions}
         levelOptions={levelOptions}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { studentAPI } from '@/shared/api/api';
+import type { StudentListParams } from '@/slices/studentsSlice';
 import { useStudentsData } from './useStudentsData';
 import { useStudentsFilters } from './useStudentsFilters';
 import { useStudentsModal } from './useStudentsModal';
@@ -12,21 +13,11 @@ const toPositiveId = (value: unknown) => {
   return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
 };
 
-const getStudentTeacherId = (student: Student, classTeacherMap: Map<number, number>) => {
-  const effectiveTeacherId = toPositiveId(student.effective_teacher_id);
-  if (effectiveTeacherId) return effectiveTeacherId;
-
-  const classTeacherId = toPositiveId(student.class_teacher_id);
-  if (classTeacherId) return classTeacherId;
-
-  const classId = toPositiveId(student.class_id);
-  if (classId) {
-    const teacherId = classTeacherMap.get(classId);
-    if (teacherId) return teacherId;
-  }
-
-  return toPositiveId(student.teacher_id);
-};
+const getStudentTeacherIds = (student: Student) => [
+  student.effective_teacher_id,
+  student.class_teacher_id,
+  student.teacher_id,
+].map(toPositiveId).filter((id): id is number => id !== null);
 
 // Provides students page.
 export const useStudentsPage = () => {
@@ -35,15 +26,24 @@ export const useStudentsPage = () => {
   const modal = useStudentsModal(filters.selectedClass, data.actions.fetchAll);
   const [teacherFallbackStudents, setTeacherFallbackStudents] = useState<Student[] | null>(null);
   const [teacherFallbackLoading, setTeacherFallbackLoading] = useState(false);
-  const classTeacherMap = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const classItem of data.classes) {
-      const classId = toPositiveId(classItem.class_id || classItem.id);
-      const teacherId = toPositiveId(classItem.teacher_id);
-      if (classId && teacherId) map.set(classId, teacherId);
+  const selectedTeacherId = toPositiveId(filters.filterTeacherId);
+  const filteredClassOptions = useMemo(() => {
+    if (!selectedTeacherId) return data.classOptions;
+
+    const teacherClassIds = new Set(
+      data.classes
+        .filter((item) => toPositiveId(item.teacher_id) === selectedTeacherId)
+        .map((item) => toPositiveId(item.class_id || item.id))
+        .filter((id): id is number => id !== null)
+    );
+    return data.classOptions.filter((option) => teacherClassIds.has(Number(option.value)));
+  }, [data.classes, data.classOptions, selectedTeacherId]);
+
+  useEffect(() => {
+    if (filters.filterClassId && !filteredClassOptions.some((option) => String(option.value) === filters.filterClassId)) {
+      filters.setFilterClassId('');
     }
-    return map;
-  }, [data.classes]);
+  }, [filteredClassOptions, filters.filterClassId, filters.setFilterClassId]);
 
   useEffect(() => {
     const teacherId = toPositiveId(filters.filterTeacherId);
@@ -54,39 +54,50 @@ export const useStudentsPage = () => {
     }
 
     let cancelled = false;
-    setTeacherFallbackLoading(true);
-    studentAPI.getAll()
-      .then((response) => {
-        if (cancelled) return;
-        const payload = (response as any).data ?? response;
-        const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
-        setTeacherFallbackStudents(rows as Student[]);
-      })
-      .catch(() => {
+    const loadFilteredRoster = async () => {
+      setTeacherFallbackLoading(true);
+      try {
+        const params: StudentListParams = {
+          ...filters.studentParams,
+          teacher_id: undefined,
+          page: 1,
+          limit: 100,
+        };
+        const rows: Student[] = [];
+        let page = 1;
+        let total = Number.POSITIVE_INFINITY;
+        while (rows.length < total) {
+          const response = await studentAPI.getAll({ ...params, page });
+          const payload = (response as any).data ?? response;
+          const pageRows = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
+          rows.push(...(pageRows as Student[]));
+          total = Array.isArray(payload) ? rows.length : Number(payload?.total) || rows.length;
+          if (pageRows.length === 0 || pageRows.length < 100) break;
+          page += 1;
+        }
+        if (!cancelled) {
+          setTeacherFallbackStudents(
+            rows.filter((student) => getStudentTeacherIds(student).includes(teacherId))
+          );
+        }
+      } catch {
         if (!cancelled) setTeacherFallbackStudents(null);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setTeacherFallbackLoading(false);
-      });
+      }
+    };
 
+    void loadFilteredRoster();
     return () => {
       cancelled = true;
     };
-  }, [filters.filterTeacherId]);
-
-  const teacherFilteredStudents = useMemo(() => {
-    const teacherId = toPositiveId(filters.filterTeacherId);
-    const source = teacherFallbackStudents ?? data.state.items;
-    if (!teacherId) return source;
-    return source.filter((student) => getStudentTeacherId(student, classTeacherMap) === teacherId);
-  }, [classTeacherMap, data.state.items, filters.filterTeacherId, teacherFallbackStudents]);
+  }, [filters.filterTeacherId, filters.studentParams]);
 
   const displayedStudents = useMemo(() => {
-    const teacherId = toPositiveId(filters.filterTeacherId);
-    if (!teacherId || !teacherFallbackStudents) return teacherFilteredStudents;
+    if (!toPositiveId(filters.filterTeacherId) || !teacherFallbackStudents) return data.state.items;
     const start = (filters.page - 1) * filters.limit;
-    return teacherFilteredStudents.slice(start, start + filters.limit);
-  }, [filters.limit, filters.page, filters.filterTeacherId, teacherFallbackStudents, teacherFilteredStudents]);
+    return teacherFallbackStudents.slice(start, start + filters.limit);
+  }, [data.state.items, filters.filterTeacherId, filters.limit, filters.page, teacherFallbackStudents]);
 
   const state = useMemo(() => {
     if (!toPositiveId(filters.filterTeacherId) || !teacherFallbackStudents) {
@@ -96,23 +107,9 @@ export const useStudentsPage = () => {
       ...data.state,
       items: displayedStudents,
       loading: data.state.loading || teacherFallbackLoading,
-      meta: {
-        ...data.state.meta,
-        total: teacherFilteredStudents.length,
-        page: filters.page,
-        limit: filters.limit,
-      },
+      meta: { ...data.state.meta, total: teacherFallbackStudents.length, page: filters.page, limit: filters.limit },
     };
-  }, [
-    data.state,
-    displayedStudents,
-    filters.filterTeacherId,
-    filters.limit,
-    filters.page,
-    teacherFallbackLoading,
-    teacherFallbackStudents,
-    teacherFilteredStudents.length,
-  ]);
+  }, [data.state, displayedStudents, filters.filterTeacherId, filters.limit, filters.page, teacherFallbackLoading, teacherFallbackStudents]);
 
   return {
     ...data,
@@ -120,6 +117,7 @@ export const useStudentsPage = () => {
     ...modal,
     state,
     displayedStudents,
+    filteredClassOptions,
     genderOptions: [
       { id: 1, label: 'Male', value: 'Male' },
       { id: 2, label: 'Female', value: 'Female' },
@@ -128,7 +126,9 @@ export const useStudentsPage = () => {
     statusOptions: [
       { id: 1, label: 'Active', value: 'Active' },
       { id: 2, label: 'Inactive', value: 'Inactive' },
-      { id: 3, label: 'Suspended', value: 'Suspended' },
+      { id: 3, label: 'Graduated', value: 'Graduated' },
+      { id: 4, label: 'Removed', value: 'Removed' },
+      { id: 5, label: 'Transferred', value: 'Transferred' },
     ],
   };
 };

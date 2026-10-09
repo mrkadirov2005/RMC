@@ -297,7 +297,8 @@ const StudentsPage = () => {
             genderOptions={s.genderOptions}
             statusOptions={s.statusOptions}
             schoolOptions={schoolOptions}
-            classOptions={s.classOptions}
+            classOptions={s.filteredClassOptions}
+            showUnassignedClassOption={!s.filterTeacherId}
             teacherOptions={s.teacherOptions}
             subjectOptions={s.subjectOptions}
             levelOptions={levelOptions}
@@ -374,7 +375,7 @@ const StudentsPage = () => {
               onAge: s.setFilterAge,
             }}
             schoolOptions={schoolOptions}
-            classOptions={s.classOptions}
+            classOptions={s.filteredClassOptions}
             teacherOptions={s.teacherOptions}
             subjectOptions={s.subjectOptions}
             levelOptions={levelOptions}

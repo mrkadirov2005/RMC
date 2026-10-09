@@ -8,7 +8,8 @@ const getOverview = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
-    if (!centerId && isGlobal) {
+    // Owners may request the cross-center salary register for owner-level finance summaries.
+    if (!centerId && isGlobal && String(req.user?.role || '').toLowerCase() !== 'owner') {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const year = req.query.year ? Number(req.query.year) : undefined;

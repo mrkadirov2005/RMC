@@ -111,6 +111,11 @@ const studentInsertValues = (payload: Record<string, unknown>) => ({
 
 const effectiveTeacherExpr = sql`COALESCE(${classes.teacherId}, ${students.teacherId})`;
 
+const matchesTeacher = (teacherId: number) => or(
+  eq(classes.teacherId, teacherId),
+  eq(students.teacherId, teacherId),
+);
+
 // A transferred-out record stays on its old group's roster until the month it ended is over.
 // Records transferred before end dates existed have no end_date and keep showing as before.
 const stillOnOldRoster = () => {
@@ -213,9 +218,9 @@ const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, 
   if (centerId) conditions.push(eq(students.centerId, centerId));
 
   if (teacherId) {
-    conditions.push(eq(effectiveTeacherExpr, teacherId));
+    conditions.push(matchesTeacher(teacherId));
   } else if (filters.teacher_id != null) {
-    conditions.push(eq(effectiveTeacherExpr, filters.teacher_id));
+    conditions.push(matchesTeacher(filters.teacher_id));
   }
 
   const search = String(filters.q || '').trim();

@@ -2,7 +2,7 @@
 // page, filtered by status, dates, teacher, subject and group.
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Plus, RotateCcw, Search } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, RotateCcw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -311,16 +311,18 @@ const DashboardPaymentsPage = () => {
                   <TableCell className="text-right">
                     {/* Not paid in full: record a payment with the student and what they owe filled in. */}
                     {row.state !== 'paid' && (
-                      <Button
-                        size="sm"
-                        className="h-7 px-2 text-xs"
+                      <button
+                        type="button"
+                        className="payment-action-button relative inline-flex h-7 items-center justify-center overflow-hidden whitespace-nowrap rounded-md px-2 text-xs font-semibold shadow-sm"
+                        style={{ background: '#059669', backgroundColor: '#059669', backgroundImage: 'none', borderColor: '#059669', color: '#ffffff', opacity: 1 }}
+                        data-visual-overrides-disabled="true"
                         onClick={(event) => {
                           event.stopPropagation();
                           paymentHook.handleOpenModalForStudent(row.student_id, { amount: row.remaining > 0 ? row.remaining : row.monthly_fee || undefined });
                         }}
                       >
-                        <Plus className="mr-1 h-3.5 w-3.5" /> {t("To'lov")}
-                      </Button>
+                        <span className="relative z-10">{t("To'lov")}</span>
+                      </button>
                     )}
                   </TableCell>
                 </TableRow>

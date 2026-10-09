@@ -1,6 +1,6 @@
 // Source file for the api.ts area in the owner feature.
 
-import { attendanceAPI, classAPI, centerAPI, discountAPI, ownerAPI, paymentAPI, superuserAPI, studentAPI, teacherAPI } from '../../shared/api/api';
+import { attendanceAPI, classAPI, centerAPI, discountAPI, kpiAPI, ownerAPI, paymentAPI, salaryAPI, superuserAPI, studentAPI, teacherAPI } from '../../shared/api/api';
 
 export const ownerManagerApi = {
   centers: centerAPI,
@@ -33,5 +33,13 @@ export const ownerManagerApi = {
   attendance: {
     ...attendanceAPI,
     getAllForCenter: (centerId: number) => attendanceAPI.getAll({ center_id: centerId }),
+  },
+  kpis: {
+    getOverviewAcrossCenters: (params?: { year?: number; month?: number }) =>
+      kpiAPI.getOverview(params),
+  },
+  salaries: {
+    getOverviewAcrossCenters: (params?: { year?: number; month?: number }) =>
+      salaryAPI.getOverview(params, { skipCenterScope: true }),
   },
 };

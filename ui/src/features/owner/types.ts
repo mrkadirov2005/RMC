@@ -62,6 +62,16 @@ export interface OwnerOverviewCollections extends OwnerManagerStatisticsCollecti
   centers: any[];
   owners: any[];
   superusers: any[];
+  salaries: any[];
+}
+
+export interface OwnerOverviewKpiRow {
+  teacher_id: number;
+  first_name?: string;
+  last_name?: string;
+  center_id?: number | null;
+  kpi?: { final_score?: number | string | null } | null;
+  preview?: { student_score?: number | string | null; retention_score?: number | string | null };
 }
 
 export type OwnerManagerStatisticsSection = 'overview' | 'payments' | 'teachers' | 'statistics';

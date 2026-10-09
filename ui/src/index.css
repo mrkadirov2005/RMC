@@ -175,6 +175,34 @@ tbody[data-list-body='true'] > tr {
 }
 
 @layer utilities {
+  button.payment-action-button,
+  button.payment-action-button:hover,
+  button.payment-action-button:focus-visible {
+    background: #059669 !important;
+    background-color: #059669 !important;
+    background-image: none !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+  button.payment-action-button::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    content: '';
+    background: #059669 !important;
+    background-image: none !important;
+  }
+
+  [data-visual-overrides-disabled='true'] {
+    background: #059669 !important;
+    background-color: #059669 !important;
+    background-image: none !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
   .owner-primary-card {
     background: var(--owner-primary-card, #2563eb) !important;
     border-color: color-mix(in srgb, var(--owner-primary-card, #2563eb) 70%, white) !important;
@@ -273,17 +301,50 @@ tbody[data-list-body='true'] > tr {
   }
 }
 
+html {
+  scrollbar-width: auto;
+  scrollbar-color: hsl(var(--primary) / 0.55) hsl(var(--muted));
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
+html,
+body,
+#root,
+[class*='overflow-auto'],
+[class*='overflow-scroll'],
+[class*='overflow-y-auto'],
+[class*='overflow-y-scroll'],
+[class*='overflow-x-auto'],
+[class*='overflow-x-scroll'] {
+  scrollbar-gutter: stable;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 12px;
+  height: 12px;
+  display: block;
 }
 ::-webkit-scrollbar-track {
   background: hsl(var(--muted));
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.4);
+  min-height: 36px;
+  background: hsl(var(--primary) / 0.55);
+  border: 3px solid hsl(var(--muted));
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.6);
+  background: hsl(var(--primary) / 0.8);
+}
+.dark {
+  scrollbar-color: hsl(var(--primary) / 0.7) hsl(var(--muted));
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.7);
+  border-color: hsl(var(--muted));
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.95);
 }

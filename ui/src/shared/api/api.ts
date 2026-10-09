@@ -434,8 +434,11 @@ export const absenceAlertAPI = {
 };
 
 export const salaryAPI = {
-  getOverview: (params?: { year?: number; month?: number; center_id?: number }) =>
-    apiClient.get('/salaries', { params }),
+  getOverview: (params?: { year?: number; month?: number; center_id?: number }, options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/salaries', {
+      params,
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   getTeacherDetail: (teacherId: number, params?: { months?: number; center_id?: number }) =>
     apiClient.get(`/salaries/teacher/${teacherId}`, { params }),
   markPaid: (data: { teacher_id: number; salary_year: number; salary_month: number; amount: number; payment_method?: string; notes?: string }) =>
