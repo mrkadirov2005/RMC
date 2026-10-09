@@ -69,6 +69,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const settingsRoutes = require('./routes/settingsRoutes');
   const archiveRoutes = require('./routes/archiveRoutes');
   const telegramRegistrationRoutes = require('./routes/telegramRegistrationRoutes');
+  const parentLinkRequestRoutes = require('./routes/parentLinkRequestRoutes');
   const telegramStudentRoutes = require('./routes/telegramStudentRoutes');
   const consolidationRoutes = require('./routes/consolidationRoutes');
   const consolidatePublicRoutes = require('./routes/consolidatePublicRoutes');
@@ -196,6 +197,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/system', systemRoutes);
   app.use('/api/archive', requireAuth, requireRole('superuser'), archiveRoutes);
   app.use('/api/telegram-registrations', requireAuth, requireRole('superuser'), telegramRegistrationRoutes);
+  app.use('/api/parent-link-requests', requireAuth, requireRole('superuser'), parentLinkRequestRoutes);
   app.use('/api/telegram/student', telegramStudentRoutes);
   app.use('/api/consolidations', requireAuth, requireRole('superuser', 'teacher', 'student'), consolidationRoutes);
   app.use('/api/consolidate', consolidatePublicRateLimiter, consolidatePublicRoutes);
