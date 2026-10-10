@@ -137,7 +137,10 @@ export const ScoreTable = ({
   renderRowNote?: (studentId: number) => ReactNode;
 }) => {
   const { t } = useLanguage();
-  const columnCount = options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + 1;
+  // Without a score or stellar column the table's spare width would spread the option buttons far
+  // apart (attendance, homework); an empty last column takes it so they sit together as on activity.
+  const needsFiller = !getTotalScore && !onToggleStellar;
+  const columnCount = options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + (needsFiller ? 1 : 0) + 1;
   return (
   <div className="overflow-x-auto rounded-lg border">
     {!readOnly && <div className="flex flex-wrap items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
@@ -172,6 +175,7 @@ export const ScoreTable = ({
           ))}
           {getTotalScore && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">{t('Combined Score')}</TableHead>}
           {onToggleStellar && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">{t('Stellar')}</TableHead>}
+          {needsFiller && <TableHead aria-hidden="true" className="h-9 w-full p-0" />}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -237,6 +241,7 @@ export const ScoreTable = ({
                   </button>
                 </TableCell>
               )}
+              {needsFiller && <TableCell aria-hidden="true" className="w-full p-0" />}
             </TableRow>
             {note && (
               <TableRow className="hover:bg-transparent">
