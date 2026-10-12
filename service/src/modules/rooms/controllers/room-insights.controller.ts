@@ -1,4 +1,5 @@
 const service = require('../services/room-insights.service');
+const roomWeeklyService = require('../services/room-weekly.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 const { logAudit } = require('../../../utils/audit');
 
@@ -28,6 +29,8 @@ const handle = (operation: (req: any, centerId: number) => Promise<any>) => asyn
 };
 
 module.exports = {
+  // The week of each room: lessons, free windows, free seats and groups larger than the room.
+  weekly: handle((_req, centerId) => roomWeeklyService.getWeekly(centerId)),
   physicalRooms: handle((_req, centerId) => service.getPhysicalRooms(centerId)),
   updatePhysicalRoom: handle(async (req, centerId) => {
     const result = await service.updatePhysicalRoom(Number(req.params.id), centerId, req.body);

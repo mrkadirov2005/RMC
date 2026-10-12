@@ -22,6 +22,7 @@ import { RoomManagementTab } from './components/RoomManagementTab';
 import { RoomHistoryTab } from './components/RoomHistoryTab';
 import { RoomAssignmentDialog, type RoomFormData } from './components/RoomAssignmentDialog';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { WeeklyRoomsTab } from './components/WeeklyRoomsTab';
 
 const emptyForm = (): RoomFormData => ({ room_number: '', capacity: '', class_id: '', day: 'Monday', time: '09:00', end_time: '10:00' });
 
@@ -109,6 +110,7 @@ const RoomsPage = () => {
       <RoomsWorkspaceTabs active={tab} onChange={setTab} />
       {(storeLoading && !rooms.length) ? <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div> : <div role="tabpanel" id={`rooms-panel-${tab}`}>
         {tab === 'statistics' && <RoomStatisticsTab rooms={roomGroups} classes={classes} students={students} />}
+        {tab === 'weekly' && <WeeklyRoomsTab />}
         {tab === 'management' && <RoomManagementTab rooms={roomGroups} selected={selectedRoom} onSelect={setSelectedRoom} onAssign={() => openDialog({ room_number: selectedRoom, room_id: 0 }, 'assignment')} onEdit={(row) => openDialog(row)} onDeleteAssignment={deleteAssignment} onDeleteRoom={deleteRoom} />}
         {tab === 'reports' && <RoomHistoryTab rooms={roomGroups} selected={selectedRoom} />}
       </div>}

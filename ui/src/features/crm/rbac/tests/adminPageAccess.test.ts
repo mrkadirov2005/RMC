@@ -11,7 +11,7 @@ import { ROUTE_PERMISSIONS } from '../permissions';
 describe('branch admin page access catalog', () => {
   it('lists every sidebar page an admin can be given, in sidebar order', () => {
     expect(ADMIN_PAGE_ACCESS.map((page) => page.label)).toEqual([
-      'Dashboard', 'Students', 'Telegram Leads', 'Archive', 'Retention', 'Teachers', 'Classes', 'Consolidations',
+      'Dashboard', 'Students', 'Leads', 'Archive', 'Retention', 'Teachers', 'Classes', 'Consolidations',
       'Rooms', 'Calendar', 'Tests', 'Payments', 'Salary', 'Assignments', 'Teacher Tasks', 'Subjects', 'Debts', 'Reports', 'Centers', 'Settings',
     ]);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total', 'Monthly', 'List']);

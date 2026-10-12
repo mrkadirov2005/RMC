@@ -21,7 +21,7 @@ export interface AdminPageAccess {
 export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
   { label: 'Dashboard', path: '/dashboard', permission: PERMISSION_CODES.VIEW_DASHBOARD },
   { label: 'Students', path: '/students', permission: PERMISSION_CODES.CRUD_STUDENT },
-  { label: 'Telegram Leads', path: '/telegram-registrations', permission: PERMISSION_CODES.VIEW_TELEGRAM_LEADS },
+  { label: 'Leads', path: '/telegram-registrations', permission: PERMISSION_CODES.VIEW_TELEGRAM_LEADS },
   { label: 'Archive', path: '/archive', permission: PERMISSION_CODES.VIEW_ARCHIVE },
   {
     label: 'Retention',

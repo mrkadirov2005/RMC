@@ -229,7 +229,7 @@ const Sidebar = memo(() => {
     { label: 'My Portal', path: '/student-portal', iconName: 'PortalStudent', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
     { label: 'Students', path: '/students', iconName: 'Students', roles: ['superuser'], permission: 'CRUD_STUDENT' },
-    { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'VIEW_TELEGRAM_LEADS' },
+    { label: 'Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'VIEW_TELEGRAM_LEADS' },
     { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'], permission: 'VIEW_ARCHIVE' },
     {
       label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'], permission: 'VIEW_RETENTION',
@@ -240,6 +240,7 @@ const Sidebar = memo(() => {
     },
     { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
+    { label: 'Lesson control', path: '/lesson-control', iconName: 'Calendar', roles: ['superuser'], permission: 'CRUD_CLASS' },
     { label: 'Consolidations', path: '/consolidations', iconName: 'MdQuiz', roles: ['superuser'], permission: 'VIEW_CONSOLIDATIONS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'student'], permission: 'VIEW_CALENDAR' },

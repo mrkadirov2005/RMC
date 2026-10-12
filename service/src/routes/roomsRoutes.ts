@@ -16,6 +16,7 @@ router.get('/physical', requireAuth, insightsController.physicalRooms);
 router.patch('/physical/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdatePhysicalRoomDto), insightsController.updatePhysicalRoom);
 router.delete('/physical/:id', requireAuth, validateParams(IdParamDto), insightsController.deletePhysicalRoom);
 router.get('/overview', requireAuth, insightsController.overview);
+router.get('/weekly', requireAuth, insightsController.weekly);
 router.get('/availability', requireAuth, insightsController.availability);
 router.get('/schedule', requireAuth, insightsController.schedule);
 router.get('/by-teacher', requireAuth, insightsController.byTeacher);

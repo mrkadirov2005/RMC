@@ -12,6 +12,7 @@ import { LessonPickerDialog } from '../../crm/classes/components/LessonPickerDia
 import { buildSessionWorkflowPath, defaultLessonActions } from '../../crm/classes/lessonStart';
 import { TelegramInboxPanel } from '../../crm/telegramBot/TelegramInboxPanel';
 import TeacherWarningsTab from './TeacherWarningsTab';
+import { TeacherGradingPanel } from '../../crm/lessonControl/components/TeacherGradingPanel';
 
 type SectionKey = 'students' | 'warnings' | 'attendance' | 'points' | 'payments';
 interface OverallStatisticsTabProps {
@@ -417,6 +418,7 @@ const OverallStatisticsTab = ({
 
   return (
     <div className="space-y-4">
+    <TeacherGradingPanel classes={teacherClasses} />
     {/* Messages parents and students sent this teacher from the Telegram bot. */}
     <TelegramInboxPanel title={t('Messages from parents')} hideWhenEmpty />
     <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-white/10 dark:bg-slate-950/20">

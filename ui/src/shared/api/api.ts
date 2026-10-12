@@ -364,6 +364,29 @@ export const studentLinkAPI = {
   remove: (id: number) => apiClient.delete(`/student-links/${id}`),
 };
 
+export type LeadStage = 'waiting_group' | 'new_group';
+/** People an admin talked to who are not in a group yet, with the day to call them back. */
+export const leadAPI = {
+  getAll: (stage: LeadStage) => apiClient.get('/leads', { params: { stage } }),
+  dueCount: () => apiClient.get('/leads/due-count'),
+  create: (data: Record<string, unknown>) => apiClient.post('/leads', data),
+  update: (id: number, data: Record<string, unknown>) => apiClient.put(`/leads/${id}`, data),
+  close: (id: number, outcome: 'enrolled' | 'lost', note?: string) => apiClient.post(`/leads/${id}/close`, { outcome, note }),
+};
+
+/** Scoring deadlines (two hours from the lesson start), lesson moves and days off. */
+export const lessonControlAPI = {
+  discipline: (params?: { month?: string; teacher_id?: number }) => apiClient.get('/lesson-control/discipline', { params }),
+  myDue: () => apiClient.get('/lesson-control/my-due'),
+  daysOff: (month: string) => apiClient.get('/lesson-control/days-off', { params: { month } }),
+  addDayOff: (data: { off_date: string; class_id?: number | null; note?: string }) => apiClient.post('/lesson-control/days-off', data),
+  removeDayOff: (id: number) => apiClient.delete(`/lesson-control/days-off/${id}`),
+  reschedules: () => apiClient.get('/lesson-control/reschedules'),
+  requestReschedule: (data: { class_id: number; original_date: string; new_date: string; new_time?: string; reason?: string }) =>
+    apiClient.post('/lesson-control/reschedules', data),
+  decide: (id: number, approve: boolean) => apiClient.post(`/lesson-control/reschedules/${id}/decide`, { approve }),
+};
+
 /** Daily till report (payments by method minus expenses) and the expenses admins record. */
 export const cashAPI = {
   getDaily: (date: string) => apiClient.get('/cash/daily', { params: { date } }),
@@ -624,6 +647,8 @@ export const roomAPI = {
   update: (id: number, data: any) => apiClient.put(`/rooms/${id}`, data),
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/rooms/${id}`, { params }),
   getOverview: (params?: Record<string, unknown>) => apiClient.get('/rooms/overview', { params }),
+  /** Each room's week: lessons, free windows, free seats and groups larger than the room. */
+  getWeekly: () => apiClient.get('/rooms/weekly'),
   getAvailability: (params?: Record<string, unknown>) => apiClient.get('/rooms/availability', { params }),
   getSchedule: (params?: Record<string, unknown>) => apiClient.get('/rooms/schedule', { params }),
   getUtilization: (params?: Record<string, unknown>) => apiClient.get('/rooms/reports/utilization', { params }),

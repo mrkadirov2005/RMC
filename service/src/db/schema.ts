@@ -651,6 +651,56 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
 ]);
 
 // file_data (BYTEA) is read with raw SQL only, never through this table definition.
+const lessonDaysOff = pgTable('lesson_days_off', {
+  dayOffId: serial('day_off_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  offDate: date('off_date').notNull(),
+  classId: integer('class_id'),
+  note: text('note'),
+  createdByName: varchar('created_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+});
+
+const lessonReschedules = pgTable('lesson_reschedules', {
+  rescheduleId: serial('reschedule_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  classId: integer('class_id').notNull(),
+  teacherId: integer('teacher_id').notNull(),
+  originalDate: date('original_date').notNull(),
+  newDate: date('new_date').notNull(),
+  newTime: time('new_time'),
+  reason: text('reason'),
+  status: varchar('status', { length: 20 }).notNull(),
+  decidedByName: varchar('decided_by_name', { length: 255 }),
+  decidedAt: timestamp('decided_at'),
+  createdAt: timestamp('created_at'),
+}, (table) => [
+    index('idx_lesson_reschedules_center_status').on(table.centerId, table.status),
+]);
+
+const leads = pgTable('leads', {
+  leadId: serial('lead_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  stage: varchar('stage', { length: 20 }).notNull(),
+  fullName: varchar('full_name', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }).notNull(),
+  parentPhone: varchar('parent_phone', { length: 50 }),
+  subject: varchar('subject', { length: 255 }),
+  level: varchar('level', { length: 50 }),
+  preferredTime: varchar('preferred_time', { length: 255 }),
+  note: text('note'),
+  callBackOn: date('call_back_on'),
+  outcome: varchar('outcome', { length: 20 }),
+  outcomeNote: text('outcome_note'),
+  closedAt: timestamp('closed_at'),
+  createdByName: varchar('created_by_name', { length: 255 }),
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
+  deletedAt: timestamp('deleted_at'),
+}, (table) => [
+    index('idx_leads_center_open').on(table.centerId, table.stage).where(sql`closed_at IS NULL AND deleted_at IS NULL`),
+]);
+
 const studentCertificates = pgTable('student_certificates', {
   certificateId: serial('certificate_id').primaryKey(),
   centerId: integer('center_id').notNull(),
@@ -1134,6 +1184,9 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 
 module.exports = {
   expenses,
+  lessonDaysOff,
+  lessonReschedules,
+  leads,
   studentCertificates,
   studentLinkGroups,
   studentLinkMembers,
