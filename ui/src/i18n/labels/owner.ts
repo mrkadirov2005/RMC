@@ -28,6 +28,7 @@ export const ownerLabels: Record<string, string> = {
   Normal: 'Oddiy',
   Large: 'Katta',
   'Extra large': 'Juda katta',
+  Largest: 'Eng katta',
   "View and edit this branch's details (address, phone)": "Shu filial ma'lumotlarini ko'rish va tahrirlash (manzil, telefon)",
   'Applied on': "Qo'llangan sana",
   'Class filling': "Guruh to'lishi",

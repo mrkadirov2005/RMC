@@ -1,7 +1,7 @@
 // Text size per account type, chosen in Settings by the owner or an admin. The interface is sized
 // in rem, so changing the root font size scales all text (and the spacing sized with it).
 
-export type TextSize = 'normal' | 'large' | 'xlarge';
+export type TextSize = 'normal' | 'large' | 'xlarge' | 'xxlarge';
 export type TextSizeRole = 'owner' | 'admin' | 'teacher' | 'student';
 export type TextSizes = Record<TextSizeRole, TextSize>;
 
@@ -10,8 +10,12 @@ export const TEXT_SIZE_OPTIONS: Array<{ value: TextSize; label: string; scale: n
   { value: 'normal', label: 'Normal', scale: 1 },
   { value: 'large', label: 'Large', scale: 1.15 },
   { value: 'xlarge', label: 'Extra large', scale: 1.3 },
+  // About Word 14-16 for body text, as the center asked.
+  { value: 'xxlarge', label: 'Largest', scale: 1.45 },
 ];
-export const DEFAULT_TEXT_SIZES: TextSizes = { owner: 'normal', admin: 'normal', teacher: 'normal', student: 'normal' };
+// Text was too small for everyone, so it starts larger until the owner chooses otherwise.
+export const DEFAULT_TEXT_SIZE: TextSize = 'large';
+export const DEFAULT_TEXT_SIZES: TextSizes = { owner: DEFAULT_TEXT_SIZE, admin: DEFAULT_TEXT_SIZE, teacher: DEFAULT_TEXT_SIZE, student: DEFAULT_TEXT_SIZE };
 
 const STORAGE_KEY = 'rmc-text-size';
 const BASE_FONT_PX = 16;
@@ -27,7 +31,7 @@ export const normalizeTextSizes = (value: unknown): TextSizes => {
   const source = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
   return Object.fromEntries(TEXT_SIZE_ROLES.map((role) => [
     role,
-    TEXT_SIZE_OPTIONS.some((option) => option.value === source[role]) ? source[role] : 'normal',
+    TEXT_SIZE_OPTIONS.some((option) => option.value === source[role]) ? source[role] : DEFAULT_TEXT_SIZE,
   ])) as TextSizes;
 };
 
@@ -45,7 +49,7 @@ export const applyTextSize = (size: TextSize) => {
 export const applyRememberedTextSize = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'large' || saved === 'xlarge') applyTextSize(saved);
+    if (saved === 'large' || saved === 'xlarge' || saved === 'xxlarge') applyTextSize(saved);
   } catch {
     // Nothing remembered.
   }

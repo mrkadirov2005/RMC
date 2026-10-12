@@ -55,7 +55,7 @@ const buildWeekly = (rooms: any[], bookings: any[]) => {
       free_seats_per_week: capacity == null ? null : lessons.reduce((sum, lesson) => sum + Math.max(0, lesson.free_seats ?? 0), 0),
       free_hours_per_week: Math.round(days.reduce((sum, day) => sum + day.free_minutes, 0) / 6) / 10,
       over_capacity: lessons.filter((lesson) => lesson.free_seats != null && lesson.free_seats < 0)
-        .map((lesson) => ({ class_name: lesson.class_name, students: lesson.students, capacity })),
+        .map((lesson) => ({ class_id: lesson.class_id, class_name: lesson.class_name, students: lesson.students, capacity })),
     };
   });
   return {

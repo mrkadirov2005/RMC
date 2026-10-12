@@ -2007,34 +2007,76 @@ const translateExact = (value: string, translationMap: Record<string, string>) =
   return translated ? value.replace(trimmed, translated) : value;
 };
 
-const translateStaticDom = (translationMap: Record<string, string>) => {
-  if (typeof document === 'undefined' || !document.body) return;
+const translateTextNode = (node: Text, translationMap: Record<string, string>) => {
+  if (node.parentElement?.closest('[data-translation-skip]')) return;
+  const currentValue = node.nodeValue || '';
+  const nextValue = translateExact(currentValue, translationMap);
+  if (nextValue !== currentValue) {
+    node.nodeValue = nextValue;
+  }
+};
 
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+const translateAttributes = (element: Element, translationMap: Record<string, string>) => {
+  if (element.closest('[data-translation-skip]')) return;
+  ['placeholder', 'aria-label', 'title'].forEach((attribute) => {
+    const value = element.getAttribute(attribute);
+    if (!value) return;
+    const nextValue = translateExact(value, translationMap);
+    if (nextValue !== value) {
+      element.setAttribute(attribute, nextValue);
+    }
+  });
+};
+
+/** Translates text typed straight into the page (not through t()) under `root`, exact matches only. */
+export const translateStaticDom = (translationMap: Record<string, string>, root: Node | null = typeof document === 'undefined' ? null : document.body) => {
+  if (!root) return;
+  if (root.nodeType === Node.TEXT_NODE) {
+    translateTextNode(root as Text, translationMap);
+    return;
+  }
+  if (root.nodeType !== Node.ELEMENT_NODE) return;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const textNodes: Text[] = [];
   while (walker.nextNode()) {
     textNodes.push(walker.currentNode as Text);
   }
-  textNodes.forEach((node) => {
-    if (node.parentElement?.closest('[data-translation-skip]')) return;
-    const currentValue = node.nodeValue || '';
-    const nextValue = translateExact(currentValue, translationMap);
-    if (nextValue !== currentValue) {
-      node.nodeValue = nextValue;
-    }
-  });
+  textNodes.forEach((node) => translateTextNode(node, translationMap));
 
-  document.querySelectorAll<HTMLElement>('[placeholder], [aria-label], [title]').forEach((element) => {
-    if (element.closest('[data-translation-skip]')) return;
-    ['placeholder', 'aria-label', 'title'].forEach((attribute) => {
-      const value = element.getAttribute(attribute);
-      if (!value) return;
-      const nextValue = translateExact(value, translationMap);
-      if (nextValue !== value) {
-        element.setAttribute(attribute, nextValue);
-      }
+  const element = root as Element;
+  if (element.matches('[placeholder], [aria-label], [title]')) translateAttributes(element, translationMap);
+  element.querySelectorAll<HTMLElement>('[placeholder], [aria-label], [title]').forEach((child) => translateAttributes(child, translationMap));
+};
+
+/**
+ * Keeps translating as pages render: only the content that was just added or changed, batched once
+ * per frame, so text typed straight into a page that opens later is translated too.
+ */
+export const watchStaticDom = (translationMap: Record<string, string>) => {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined' || !document.body) return () => {};
+  const pending = new Set<Node>();
+  let frame = 0;
+  const flush = () => {
+    frame = 0;
+    const nodes = Array.from(pending);
+    pending.clear();
+    nodes.forEach((node) => {
+      if (node.isConnected) translateStaticDom(translationMap, node);
     });
+  };
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'characterData') pending.add(mutation.target);
+      mutation.addedNodes.forEach((node) => pending.add(node));
+    });
+    if (pending.size && !frame) frame = window.requestAnimationFrame(flush);
   });
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  return () => {
+    observer.disconnect();
+    if (frame) window.cancelAnimationFrame(frame);
+  };
 };
 
 interface LanguageContextValue {
@@ -2115,6 +2157,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     translateStaticDom(activeTranslations);
+    return watchStaticDom(activeTranslations);
   }, [activeTranslations]);
 
   const t = useCallback(

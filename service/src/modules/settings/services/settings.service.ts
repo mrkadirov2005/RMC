@@ -58,13 +58,15 @@ const saveLessonScoring = async (settings: any, centerId?: number) => {
 };
 
 // Text size per account type, chosen by the owner or an admin in Settings and applied when that
-// person signs in. Sizes scale the whole interface: normal 100%, large 115%, extra large 130%.
+// person signs in. Sizes scale the whole interface: normal 100%, large 115%, extra large 130%,
+// largest 145% (about Word 14-16 for body text). Large unless chosen: text was too small for everyone.
 const TEXT_SIZE_KEY = 'text_size';
 const TEXT_SIZE_ROLES = ['owner', 'admin', 'teacher', 'student'] as const;
-const TEXT_SIZES = ['normal', 'large', 'xlarge'];
+const TEXT_SIZES = ['normal', 'large', 'xlarge', 'xxlarge'];
+const DEFAULT_TEXT_SIZE = 'large';
 
 const normalizeTextSizes = (value: any) =>
-  Object.fromEntries(TEXT_SIZE_ROLES.map((role) => [role, TEXT_SIZES.includes(value?.[role]) ? value[role] : 'normal']));
+  Object.fromEntries(TEXT_SIZE_ROLES.map((role) => [role, TEXT_SIZES.includes(value?.[role]) ? value[role] : DEFAULT_TEXT_SIZE]));
 
 const getTextSizes = async (centerId?: number) => normalizeTextSizes(await settingsRepository.getSetting(TEXT_SIZE_KEY, centerId));
 

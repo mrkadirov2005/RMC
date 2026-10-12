@@ -12,8 +12,9 @@ describe('text size', () => {
     expect(getTextSizeRole(null)).toBeNull();
   });
 
-  it('keeps valid sizes and defaults the rest to normal', () => {
-    expect(normalizeTextSizes({ teacher: 'xlarge', student: 'giant' })).toEqual({ owner: 'normal', admin: 'normal', teacher: 'xlarge', student: 'normal' });
+  it('keeps valid sizes and starts the rest at large', () => {
+    expect(normalizeTextSizes({ teacher: 'xlarge', student: 'giant', admin: 'xxlarge', owner: 'normal' })).toEqual({ owner: 'normal', admin: 'xxlarge', teacher: 'xlarge', student: 'large' });
+    expect(normalizeTextSizes(null)).toEqual({ owner: 'large', admin: 'large', teacher: 'large', student: 'large' });
   });
 
   it('scales the root font size, and normal clears it', () => {
@@ -21,6 +22,8 @@ describe('text size', () => {
     expect(document.documentElement.style.fontSize).toBe('18.4px');
     applyTextSize('xlarge');
     expect(document.documentElement.style.fontSize).toBe('20.8px');
+    applyTextSize('xxlarge');
+    expect(document.documentElement.style.fontSize).toBe('23.2px');
     applyTextSize('normal');
     expect(document.documentElement.style.fontSize).toBe('');
   });

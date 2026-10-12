@@ -713,7 +713,7 @@ export const settingsAPI = {
   getLessonScoring: () => apiClient.get('/settings/lesson-scoring'),
   saveLessonScoring: (data: any) => apiClient.put('/settings/lesson-scoring', data),
   getTextSizes: () => apiClient.get('/settings/text-size'),
-  saveTextSizes: (sizes: Record<'owner' | 'admin' | 'teacher' | 'student', 'normal' | 'large' | 'xlarge'>) => apiClient.put('/settings/text-size', { sizes }),
+  saveTextSizes: (sizes: Record<'owner' | 'admin' | 'teacher' | 'student', 'normal' | 'large' | 'xlarge' | 'xxlarge'>) => apiClient.put('/settings/text-size', { sizes }),
   getSidebarOrder: () => apiClient.get('/settings/sidebar-order'),
   saveSidebarOrder: (order: string[]) => apiClient.put('/settings/sidebar-order', { order }),
 };
