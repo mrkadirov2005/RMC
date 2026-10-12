@@ -1,13 +1,14 @@
 // Source file for the students area in the crm feature.
 
 import type { ReactNode } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { BadgePercent, Building2, GraduationCap, KeyRound, Megaphone, UserRound } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import type { Class, Student } from '../types';
 import { SelectField } from './SelectField';
+import { useGroupRoomFits } from '../../rooms/roomCapacity';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { DISCOUNT_REASON_OPTIONS, STUDY_PLACE_OPTIONS, normalizePassport } from '../utils/studentFormOptions';
 
@@ -108,6 +109,16 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
 ], genderOptions, statusOptions, showCenterField = true }: Props) => {
   const { t } = useLanguage();
   const selectedTeacherId = Number(formData.teacher_id) || 0;
+  // Warn when the chosen group's room has no seat left. A student already in the group is already
+  // counted, so for them only an over-full room is worth a warning.
+  const roomFits = useGroupRoomFits();
+  const loadedClassId = useRef<number | null>(null);
+  if (loadedClassId.current === null && formData.class_id && (formData.student_id || (formData as any).id)) {
+    loadedClassId.current = Number(formData.class_id);
+  }
+  const selectedFit = roomFits.get(Number(formData.class_id) || 0);
+  const joiningGroup = Number(formData.class_id) !== loadedClassId.current;
+  const roomFull = selectedFit ? (joiningGroup ? selectedFit.freeSeats <= 0 : selectedFit.freeSeats < 0) : false;
   const classesByTeacher = useMemo(() => {
     const map = new Map<number, number>();
     for (const cls of classes) {
@@ -198,6 +209,11 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             placeholder={selectedTeacherId ? t('Select class') : t('Select a teacher first')}
             disabled={!selectedTeacherId}
           />
+          {roomFull && selectedFit && (
+            <p role="alert" className="mt-1.5 rounded-md border border-rose-200 bg-rose-50 px-2 py-1.5 text-xs font-semibold text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+              {t('The room of this group is full: {students} students, {capacity} seats ({room}).', { students: selectedFit.students, capacity: selectedFit.capacity, room: selectedFit.room })}
+            </p>
+          )}
         </div>
       </FormSection>
 

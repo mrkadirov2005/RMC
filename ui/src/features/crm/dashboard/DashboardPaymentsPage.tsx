@@ -18,6 +18,8 @@ import { PaymentFormDialog } from '../payments/components/PaymentFormDialog';
 
 type PaymentState = 'paid' | 'partial' | 'unpaid';
 const ALL = 'all';
+// Unpaid or partly paid: everyone who still owes for the period.
+const OWING = 'owing';
 
 interface SummaryRow {
   student_id: number;
@@ -69,7 +71,8 @@ const DashboardPaymentsPage = () => {
   const thisMonth = centerToday().slice(0, 7);
   const [from, setFrom] = useState(`${thisMonth}-01`);
   const [to, setTo] = useState(lastDayOf(thisMonth));
-  const [status, setStatus] = useState<string>(ALL);
+  // Opens on who still owes money; paid students show only when the admin picks "Paid" or "All".
+  const [status, setStatus] = useState<string>(OWING);
   const [teacherId, setTeacherId] = useState<string>(ALL);
   const [subject, setSubject] = useState<string>(ALL);
   const [classId, setClassId] = useState<string>(ALL);
@@ -161,7 +164,7 @@ const DashboardPaymentsPage = () => {
   };
   const reset = () => {
     setRange(`${thisMonth}-01`, lastDayOf(thisMonth));
-    setStatus(ALL);
+    setStatus(OWING);
     setTeacherId(ALL);
     setSubject(ALL);
     setClassId(ALL);
@@ -214,7 +217,7 @@ const DashboardPaymentsPage = () => {
           <div className="space-y-1">
             <Label className="text-xs">{t('Status')}</Label>
             <div className="inline-flex rounded-lg border bg-muted/40 p-1" role="radiogroup" aria-label={t('Status')}>
-              {[ALL, 'paid', 'partial', 'unpaid'].map((value) => (
+              {[OWING, 'unpaid', 'partial', 'paid', ALL].map((value) => (
                 <button
                   key={value}
                   type="button"
@@ -223,7 +226,7 @@ const DashboardPaymentsPage = () => {
                   onClick={() => change(setStatus)(value)}
                   className={cn('rounded-md px-3 py-1.5 text-xs font-semibold transition', status === value ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')}
                 >
-                  {value === ALL ? t('All') : t(STATE_STYLE[value as PaymentState].label)}
+                  {value === ALL ? t('All') : value === OWING ? t('Owing') : t(STATE_STYLE[value as PaymentState].label)}
                 </button>
               ))}
             </div>

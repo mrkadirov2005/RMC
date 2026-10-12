@@ -41,4 +41,5 @@ export const paymentsLabels: Record<string, string> = {
   'Unpaid amount': "To'lanmagan summa",
   'Verifying...': 'Tekshirilmoqda...',
   'discount applied automatically': "chegirma avtomatik qo'llandi",
+  Owing: 'Qarzdorlar',
 };

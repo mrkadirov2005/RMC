@@ -65,7 +65,8 @@ describe('dashboard payments page', () => {
     const first = api.getStudentsSummary.mock.calls[0][0];
     expect(first).toMatchObject({ page: 1 });
     expect(first.from).toMatch(/-01$/);
-    expect(first.status).toBeUndefined();
+    // Opens on everyone who still owes (unpaid or partly paid).
+    expect(first.status).toBe('owing');
   });
 
   it('filters by status and pages through 100 at a time', async () => {
