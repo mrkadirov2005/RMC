@@ -320,7 +320,10 @@ const DashboardPaymentsPage = () => {
                         data-visual-overrides-disabled="true"
                         onClick={(event) => {
                           event.stopPropagation();
-                          paymentHook.handleOpenModalForStudent(row.student_id, { amount: (row.remaining_before_discount ?? row.remaining) || row.monthly_fee || undefined });
+                          // One payment is at most the group's fee, even when more than a month is owed.
+                          const owed = (row.remaining_before_discount ?? row.remaining) || row.monthly_fee || 0;
+                          const amount = row.monthly_fee > 0 ? Math.min(owed, row.monthly_fee) : owed;
+                          paymentHook.handleOpenModalForStudent(row.student_id, { amount: amount || undefined });
                         }}
                       >
                         <span className="relative z-10">{t("To'lov")}</span>
