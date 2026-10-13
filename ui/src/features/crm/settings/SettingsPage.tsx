@@ -12,6 +12,7 @@ import { showToast } from '@/utils/toast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DEFAULT_TEXT_SIZES, normalizeTextSizes, TEXT_SIZE_OPTIONS, TEXT_SIZE_ROLES, type TextSizeRole, type TextSizes } from './textSize';
 import { BotContentSettings } from '../telegramBot/BotContentSettings';
+import { SmsSettings } from '../telegramBot/SmsSettings';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -289,6 +290,8 @@ const SettingsPage = () => {
         </SectionPanel>
 
         <BotContentSettings />
+
+        <SmsSettings />
 
         <SectionPanel
           title={

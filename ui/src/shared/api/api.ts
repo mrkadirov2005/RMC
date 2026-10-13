@@ -496,6 +496,15 @@ export const telegramBotAPI = {
   getStats: () => apiClient.get('/telegram-bot/stats'),
 };
 
+// SMS to parents who are not on the Telegram bot, sent through the center's phone (admins only).
+export type SmsKindSettings = { absence: boolean; payment_reminder: boolean; teacher_feedback: boolean };
+export const smsAPI = {
+  getStatus: () => apiClient.get('/sms/status'),
+  saveSettings: (data: SmsKindSettings) => apiClient.put('/sms/settings', data),
+  getMessages: () => apiClient.get('/sms/messages'),
+  sendTest: (phone: string) => apiClient.post('/sms/test', { phone }),
+};
+
 // Students who missed their group's latest lessons in a row; admins close each with an outcome.
 export const absenceAlertAPI = {
   getAll: () => apiClient.get('/absence-alerts'),

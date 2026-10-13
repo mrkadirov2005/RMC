@@ -6,6 +6,7 @@ const settingsService = require('../../settings/services/settings.service');
 const { combineLessonScore, lessonGrade } = require('../../grades/services/lessonScore');
 const { buildLessonMessage, buildParentLessonMessage } = require('./lessonMessage');
 const { computeStandings } = require('./standings');
+const smsService = require('../../sms/services/sms.service');
 
 const UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr'];
 const DEFAULT_REMARK = 'Daily Session Grading';
@@ -32,6 +33,10 @@ const labelFor = (options: Array<{ label: string; score: number }>, score: unkno
 const enqueueLessonResults = async (sessionId: number) => {
   const rows = await telegramRepository.findSessionResults(sessionId);
   if (rows.length === 0) return 0;
+  // Parents not on the bot hear about a missed lesson by SMS. Never holds up the Telegram messages.
+  await smsService.queueLessonAbsences(sessionId, rows).catch((error: any) => {
+    console.error('Absence SMS not queued:', error?.message || error);
+  });
   const chats = await telegramRepository.findLinkedChats(rows.map((row: any) => Number(row.main_student_id)));
   if (chats.length === 0) return 0;
   const chatsByStudent = new Map<number, any[]>();
@@ -116,8 +121,9 @@ const sendFeedback = async ({ studentId, text, actingUser, senderName }: { stude
   if (!body) return { error: 'empty' };
   const student = await telegramRepository.findStudent(studentId);
   if (!student) return { error: 'not_found' };
+  const smsQueued = await smsService.queueTeacherFeedback(Number(student.main_student_id), body, senderName ?? null, actingUser);
   const linked = await telegramRepository.findLinkedStudentIds([Number(student.main_student_id)]);
-  if (!linked.has(Number(student.main_student_id))) return { queued: 0, linked: false };
+  if (!linked.has(Number(student.main_student_id))) return { queued: 0, linked: false, sms_queued: smsQueued };
   const from = senderName ? ` (${senderName})` : '';
   await telegramRepository.enqueueMessages([{
     centerId: student.center_id ?? null,
@@ -127,7 +133,7 @@ const sendFeedback = async ({ studentId, text, actingUser, senderName }: { stude
     createdById: Number(actingUser?.id) || null,
     createdByType: actingUser?.userType || null,
   }]);
-  return { queued: 1, linked: true };
+  return { queued: 1, linked: true, sms_queued: smsQueued };
 };
 
 /** "Payment for <month> is not made yet" to the chosen students and their parents. */
@@ -149,7 +155,13 @@ const sendPaymentReminders = async ({ studentIds, month, actingUser }: { student
       createdByType: actingUser?.userType || null,
     }));
   await telegramRepository.enqueueMessages(messages);
-  return { requested: studentIds.length, queued: messages.length };
+  // Parents who are not on the bot get it by SMS.
+  const smsQueued = await smsService.queuePaymentReminders(
+    Array.from(new Set(students.map((student: any) => Number(student.main_student_id)))),
+    month,
+    actingUser
+  );
+  return { requested: studentIds.length, queued: messages.length, sms_queued: smsQueued };
 };
 
 // What the bot shows under "About the director", "Center rules" and "Prizes".

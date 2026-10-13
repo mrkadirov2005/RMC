@@ -57,6 +57,10 @@ services:
       REQUEST_LOG_TTL_DAYS: "90"
       OWNER_DATA_RESET_ENABLED: "${OWNER_DATA_RESET_ENABLED:-true}"
       CORS_ALLOWED_ORIGINS: "*"
+      # SMS to parents through the center's Android phone (SMS Gateway app). Empty: SMS is off.
+      SMS_GATEWAY_USERNAME: "${SMS_GATEWAY_USERNAME:-}"
+      SMS_GATEWAY_PASSWORD: "${SMS_GATEWAY_PASSWORD:-}"
+      SMS_DAILY_LIMIT: "${SMS_DAILY_LIMIT:-30}"
     depends_on:
       postgres:
         condition: service_healthy
