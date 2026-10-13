@@ -16,6 +16,7 @@ import { ClassReportsPanel } from './components/ClassReportsPanel';
 import { PERMISSION_CODES } from '@/types';
 import { useRBAC } from '../crm/hooks/useRBAC';
 import { resolveSubPageView } from '../crm/rbac/adminPageAccess';
+import { getStoredActiveCenterId } from '@/shared/auth/authStorage';
 
 type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention' | 'attendance' | 'classes';
 
@@ -41,6 +42,14 @@ const OwnerReports = () => {
   const [collections, setCollections] = useState<OwnerManagerStatisticsCollections>(emptyCollections);
   const [summaryCounts, setSummaryCounts] = useState({ students: 0, teachers: 0, classes: 0, payments: 0 });
   const [loading, setLoading] = useState(false);
+  // The branch picked in the sidebar: every report shows that branch only, and reloads on a switch.
+  const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
+
+  useEffect(() => {
+    const sync = () => setActiveCenterId(getStoredActiveCenterId());
+    window.addEventListener('active-center-changed', sync);
+    return () => window.removeEventListener('active-center-changed', sync);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -68,6 +77,7 @@ const OwnerReports = () => {
 
   useEffect(() => {
     let alive = true;
+    const branchParams = activeCenterId ? { center_id: activeCenterId } : undefined;
     const loadActiveReport = async () => {
       setLoading(true);
       try {
@@ -79,10 +89,10 @@ const OwnerReports = () => {
         }
         if (activeTab === 'finance') {
           const [studentsRes, teachersRes, classesRes, paymentsRes] = await Promise.all([
-            ownerManagerApi.students.getAllAcrossCenters(),
-            ownerManagerApi.teachers.getAllAcrossCenters(),
-            ownerManagerApi.classes.getAllAcrossCenters(),
-            ownerManagerApi.payments.getAllAcrossCenters(),
+            ownerManagerApi.students.getAll(branchParams),
+            ownerManagerApi.teachers.getAll(branchParams),
+            ownerManagerApi.classes.getAll(branchParams),
+            ownerManagerApi.payments.getAll(branchParams),
           ]);
           nextCollections.students = toRows(studentsRes);
           nextCollections.teachers = toRows(teachersRes);
@@ -90,11 +100,11 @@ const OwnerReports = () => {
           nextCollections.payments = toRows(paymentsRes);
         } else if (activeTab === 'discounts') {
           const [discountsRes, paymentsRes, studentsRes, classesRes, teachersRes] = await Promise.all([
-            ownerManagerApi.discounts.getAllAcrossCenters(),
-            ownerManagerApi.payments.getAllAcrossCenters(),
-            ownerManagerApi.students.getAllAcrossCenters(),
-            ownerManagerApi.classes.getAllAcrossCenters(),
-            ownerManagerApi.teachers.getAllAcrossCenters(),
+            ownerManagerApi.discounts.getAll(branchParams),
+            ownerManagerApi.payments.getAll(branchParams),
+            ownerManagerApi.students.getAll(branchParams),
+            ownerManagerApi.classes.getAll(branchParams),
+            ownerManagerApi.teachers.getAll(branchParams),
           ]);
           nextCollections.discounts = toRows(discountsRes);
           nextCollections.payments = toRows(paymentsRes);
@@ -103,29 +113,30 @@ const OwnerReports = () => {
           nextCollections.teachers = toRows(teachersRes);
         } else if (activeTab === 'students') {
           const [studentsRes, classesRes, teachersRes] = await Promise.all([
-            ownerManagerApi.students.getAllAcrossCenters(),
-            ownerManagerApi.classes.getAllAcrossCenters(),
-            ownerManagerApi.teachers.getAllAcrossCenters(),
+            ownerManagerApi.students.getAll(branchParams),
+            ownerManagerApi.classes.getAll(branchParams),
+            ownerManagerApi.teachers.getAll(branchParams),
           ]);
           nextCollections.students = toRows(studentsRes);
           nextCollections.classes = toRows(classesRes);
           nextCollections.teachers = toRows(teachersRes);
         } else if (activeTab === 'teachers') {
           const [teachersRes, studentsRes, classesRes, paymentsRes] = await Promise.all([
-            ownerManagerApi.teachers.getAllAcrossCenters(),
-            ownerManagerApi.students.getAllAcrossCenters(),
-            ownerManagerApi.classes.getAllAcrossCenters(),
-            ownerManagerApi.payments.getAllAcrossCenters(),
+            ownerManagerApi.teachers.getAll(branchParams),
+            ownerManagerApi.students.getAll(branchParams),
+            ownerManagerApi.classes.getAll(branchParams),
+            ownerManagerApi.payments.getAll(branchParams),
           ]);
           nextCollections.teachers = toRows(teachersRes);
           nextCollections.students = toRows(studentsRes);
           nextCollections.classes = toRows(classesRes);
           nextCollections.payments = toRows(paymentsRes);
         } else if (activeTab === 'attendance') {
-          const centersRes = await ownerManagerApi.centers.getAll();
-          const centerIds = toRows(centersRes)
-            .map((center: any) => Number(center.center_id || center.centerId || center.id || 0))
-            .filter(Boolean);
+          const centerIds = activeCenterId
+            ? [activeCenterId]
+            : toRows(await ownerManagerApi.centers.getAll())
+              .map((center: any) => Number(center.center_id || center.centerId || center.id || 0))
+              .filter(Boolean);
           const [attendanceResults, teacherResults, classResults, studentResults] = await Promise.all([
             Promise.allSettled(centerIds.map((centerId: number) => ownerManagerApi.attendance.getAllForCenter(centerId))),
             Promise.allSettled(centerIds.map((centerId: number) => ownerManagerApi.teachers.getAll({ center_id: centerId }))),
@@ -143,8 +154,8 @@ const OwnerReports = () => {
           nextCollections.students = mergeSuccessful(studentResults);
         } else if (activeTab === 'classes') {
           const [classesRes, studentsRes] = await Promise.all([
-            ownerManagerApi.classes.getAllAcrossCenters(),
-            ownerManagerApi.students.getAllAcrossCenters(),
+            ownerManagerApi.classes.getAll(branchParams),
+            ownerManagerApi.students.getAll(branchParams),
           ]);
           nextCollections.classes = toRows(classesRes);
           nextCollections.students = toRows(studentsRes);
@@ -160,7 +171,7 @@ const OwnerReports = () => {
     return () => {
       alive = false;
     };
-  }, [activeTab]);
+  }, [activeTab, activeCenterId]);
 
   const summary = useMemo(
     () => [
@@ -183,7 +194,8 @@ const OwnerReports = () => {
             <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
           </div>
         ) : (
-          <>
+          // Keyed by branch so panels that load their own data (retention, alerts) reload on a switch.
+          <div key={activeCenterId ?? 'all'} className="space-y-4">
             {activeTab === 'finance' && <OwnerFinancePanel collections={collections} loading={false} />}
             {activeTab === 'discounts' && <DiscountStatsPanel collections={collections} />}
             {activeTab === 'retention' && <RetentionPage embedded />}
@@ -201,7 +213,7 @@ const OwnerReports = () => {
               </div>
             )}
             {activeTab === 'classes' && <ClassReportsPanel classes={collections.classes} students={collections.students} />}
-          </>
+          </div>
         )}
       </div>
     </div>
