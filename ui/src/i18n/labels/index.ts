@@ -19,6 +19,7 @@ import { publicLabels } from './public';
 import { roomsLabels } from './rooms';
 import { salaryLabels } from './salary';
 import { settingsLabels } from './settings';
+import { smsLabels } from './sms';
 import { studentLabels } from './student';
 import { studentsLabels } from './students';
 import { teacherLabels } from './teacher';
@@ -46,6 +47,7 @@ export const pageLabelTranslations: Record<string, string> = {
   ...roomsLabels,
   ...salaryLabels,
   ...settingsLabels,
+  ...smsLabels,
   ...studentLabels,
   ...studentsLabels,
   ...teacherLabels,

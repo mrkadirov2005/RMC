@@ -176,8 +176,9 @@ async function createApp(options: CreateAppOptions = {}) {
   // Scoring deadlines, lesson moves and days off; each handler limits what teachers may do.
   app.use('/api/lesson-control', requireAuth, requireRole('superuser', 'teacher'), lessonControlRoutes);
   app.use('/api/telegram-bot', requireAuth, requireRole('superuser', 'teacher'), telegramBotRoutes);
-  // SMS to parents not on the bot, through the center's phone: admins and the owner only.
-  app.use('/api/sms', requireAuth, requireRole('superuser'), smsRoutes);
+  // SMS to parents through the center's phone, sent by hand: payment notices by admins, missed
+  // lessons by teachers and admins, the full list for the owner. Each handler checks the role.
+  app.use('/api/sms', requireAuth, requireRole('superuser', 'teacher'), smsRoutes);
   app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
   app.use('/api/teacher-tasks', requireAuth, requireRole('superuser', 'teacher'), teacherTaskRoutes);
   app.use('/api/salaries', requireAuth, requireRole('superuser', 'teacher'), salaryRoutes);

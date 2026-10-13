@@ -30,13 +30,11 @@ export function TelegramFeedbackDialog({
     if (!studentId || !text.trim()) return;
     setSending(true);
     try {
-      const result = getApiPayload<{ linked?: boolean; sms_queued?: number }>(await telegramBotAPI.sendFeedback({ student_id: studentId, text: text.trim() }));
-      const bySms = Number(result?.sms_queued || 0) > 0;
-      if (result?.linked === false && !bySms) {
+      const result = getApiPayload<{ linked?: boolean }>(await telegramBotAPI.sendFeedback({ student_id: studentId, text: text.trim() }));
+      if (result?.linked === false) {
         showToast.info(t('This student and their parents have not joined the Telegram bot yet.'));
       } else {
-        if (result?.linked === false) showToast.success(t('Sent to the parents by SMS'));
-        else showToast.success(t(bySms ? 'Sent on Telegram and to the parents by SMS' : 'Sent to the student and parents on Telegram'));
+        showToast.success(t('Sent to the student and parents on Telegram'));
         setText('');
         onOpenChange(false);
       }

@@ -145,14 +145,12 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
   const sendPaymentReminders = async () => {
     setSendingReminders(true);
     try {
-      const result = getApiPayload<{ queued?: number; sms_queued?: number }>(await telegramBotAPI.sendPaymentReminders({
+      const result = getApiPayload<{ queued?: number }>(await telegramBotAPI.sendPaymentReminders({
         student_ids: unpaidGroupRows.map((row) => row.studentId),
         month: groupPaymentMonth,
       }));
       const queued = Number(result?.queued || 0);
-      const smsQueued = Number(result?.sms_queued || 0);
-      if (smsQueued > 0) showToast.success(t('Reminder sent: {telegram} on Telegram, {sms} by SMS', { telegram: queued, sms: smsQueued }));
-      else if (queued > 0) showToast.success(t('Reminder sent on Telegram to {count} students and their parents', { count: queued }));
+      if (queued > 0) showToast.success(t('Reminder sent on Telegram to {count} students and their parents', { count: queued }));
       else showToast.info(t('None of these students or parents have joined the Telegram bot yet.'));
     } catch (error) {
       showToast.error(getErrorMessage(error) || t("Couldn't send the reminders"));

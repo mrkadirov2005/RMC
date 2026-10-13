@@ -1,1 +1,2 @@
-export { absenceAlertAPI } from '@/shared/api/api';
+export { absenceAlertAPI, smsAPI } from '@/shared/api/api';
+export type { SmsSendResult } from '@/shared/api/api';

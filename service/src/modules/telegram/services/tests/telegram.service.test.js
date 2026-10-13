@@ -6,11 +6,6 @@ jest.mock('../../repositories/telegram.repository', () => ({
   enqueueMessages: jest.fn((rows) => Promise.resolve(rows.length)),
   findStudent: jest.fn(),
 }));
-jest.mock('../../../sms/services/sms.service', () => ({
-  queueLessonAbsences: jest.fn(async () => 0),
-  queuePaymentReminders: jest.fn(async () => 2),
-  queueTeacherFeedback: jest.fn(async () => 0),
-}));
 jest.mock('../../../settings/repositories/settings.repository', () => ({ getSetting: jest.fn(), saveSetting: jest.fn() }));
 jest.mock('../../../settings/services/settings.service', () => ({
   getLessonScoring: jest.fn(async () => ({ homework: [{ label: 'Good', score: 15 }], activity: [{ label: 'Stellar', score: 40 }] })),
@@ -18,7 +13,6 @@ jest.mock('../../../settings/services/settings.service', () => ({
 
 const repository = require('../../repositories/telegram.repository');
 const settingsRepository = require('../../../settings/repositories/settings.repository');
-const smsService = require('../../../sms/services/sms.service');
 const service = require('../telegram.service');
 
 describe('telegram service', () => {
@@ -33,7 +27,6 @@ describe('telegram service', () => {
     repository.findMonthScores.mockResolvedValue([]);
 
     expect(await service.enqueueLessonResults(77)).toBe(1);
-    expect(smsService.queueLessonAbsences).toHaveBeenCalledWith(77, expect.arrayContaining([expect.objectContaining({ attendance_status: 'Absent' })]));
     const [[queued]] = repository.enqueueMessages.mock.calls;
     expect(queued).toHaveLength(1);
     expect(queued[0]).toMatchObject({ studentId: 10, kind: 'lesson_result', centerId: 1, telegramChatId: 501 });
@@ -94,7 +87,7 @@ describe('telegram service', () => {
     repository.findStudent.mockResolvedValue({ student_id: 12, main_student_id: 10, first_name: 'Ali', last_name: 'V', center_id: 1 });
     repository.findLinkedStudentIds.mockResolvedValue(new Set([10]));
     expect(await service.sendFeedback({ studentId: 12, text: '  ', actingUser: {} })).toEqual({ error: 'empty' });
-    expect(await service.sendFeedback({ studentId: 12, text: 'Barakalla!', actingUser: { id: 3, userType: 'teacher' }, senderName: 'Ibrohim M' })).toEqual({ queued: 1, linked: true, sms_queued: 0 });
+    expect(await service.sendFeedback({ studentId: 12, text: 'Barakalla!', actingUser: { id: 3, userType: 'teacher' }, senderName: 'Ibrohim M' })).toEqual({ queued: 1, linked: true });
     expect(repository.enqueueMessages.mock.calls[0][0][0]).toMatchObject({ studentId: 10, kind: 'teacher_feedback', createdById: 3 });
   });
 
@@ -102,9 +95,7 @@ describe('telegram service', () => {
     repository.findStudent.mockImplementation(async (id) => ({ student_id: id, main_student_id: id === 2 ? 1 : id, first_name: 'S', center_id: 1 }));
     repository.findLinkedStudentIds.mockResolvedValue(new Set([1]));
     const out = await service.sendPaymentReminders({ studentIds: [1, 2, 3], month: '2026-10', actingUser: { id: 2 } });
-    expect(out).toEqual({ requested: 3, queued: 1, sms_queued: 2 });
-    // Every chosen child goes to SMS too; the SMS side keeps only parents who are not on the bot.
-    expect(smsService.queuePaymentReminders).toHaveBeenCalledWith(expect.any(Array), expect.any(String), expect.anything());
+    expect(out).toEqual({ requested: 3, queued: 1 });
     expect(repository.enqueueMessages.mock.calls[0][0][0].text).toContain('Oktyabr oyi uchun');
   });
 

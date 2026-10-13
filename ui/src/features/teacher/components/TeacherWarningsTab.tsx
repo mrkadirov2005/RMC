@@ -171,7 +171,7 @@ export default function TeacherWarningsTab({ classOptions = [] }: { classOptions
         </TabsTrigger>
       </TabsList>
       <TabsContent value="attendance">
-        <AbsenceAlertsPanel classOptions={classOptions} />
+        <AbsenceAlertsPanel classOptions={classOptions} canSendSms />
       </TabsContent>
       <TabsContent value="payments">
         <UnpaidStudentsPanel classOptions={classOptions} />

@@ -15,7 +15,10 @@ const api = vi.hoisted(() => ({
   teachers: vi.fn(async () => ({ data: [{ teacher_id: 7, first_name: 'Ibrohim', last_name: 'M' }] })),
   classes: vi.fn(async () => ({ data: [{ class_id: 3, class_name: 'English A', teacher_id: 7 }] })),
   subjects: vi.fn(async () => ({ data: [{ subject_name: 'English' }, { subject_name: 'English' }] })),
+  sendPayment: vi.fn(),
 }));
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
+vi.mock('@/utils/toast', () => ({ showToast: toast }));
 const paymentHook = vi.hoisted(() => ({
   handleOpenModalForStudent: vi.fn(),
   handleCloseModal: vi.fn(),
@@ -38,7 +41,11 @@ vi.mock('../api', () => ({
   teacherAPI: { getAll: () => api.teachers() },
   classAPI: { getAll: () => api.classes() },
   subjectAPI: { getAll: () => api.subjects() },
+  smsAPI: { sendPayment: (body: unknown) => api.sendPayment(body) },
 }));
+
+// Radix menus open on a keyboard press in jsdom.
+const openMenu = (trigger: HTMLElement) => fireEvent.keyDown(trigger, { key: 'Enter' });
 
 const response = (page: number, total: number) => ({ data: {
   period: { from: '2026-10-01', to: '2026-10-31', months: 1 },
@@ -53,6 +60,8 @@ const response = (page: number, total: number) => ({ data: {
 describe('dashboard payments page', () => {
   beforeEach(() => {
     api.getStudentsSummary.mockReset();
+    api.sendPayment.mockReset();
+    Object.values(toast).forEach((fn) => fn.mockReset());
     api.getStudentsSummary.mockImplementation(async (params: { page: number }) => response(params.page, 250));
   });
 
@@ -88,5 +97,43 @@ describe('dashboard payments page', () => {
     expect(buttons).toHaveLength(1);
     fireEvent.click(buttons[0]);
     expect(paymentHook.handleOpenModalForStudent).toHaveBeenCalledWith(2, { amount: 300000 });
+  });
+
+  it('texts one parent "payment waiting" from the row, for the period on screen', async () => {
+    api.sendPayment.mockResolvedValue({ data: { queued: 1, already_sent: 0, no_phone: 0, not_applicable: 0, daily_limit: 30, sent_today: 3, waiting: 1, sending_now: true } });
+    render(<MemoryRouter><DashboardPaymentsPage /></MemoryRouter>);
+    await screen.findByText('Karimov Bek');
+
+    const rowMenus = screen.getAllByRole('button', { name: 'SMS to parents' }).filter((button) => button.textContent === '');
+    openMenu(rowMenus[1]);
+    // Bek owes the whole fee: nothing was paid to confirm.
+    expect((await screen.findByRole('menuitem', { name: 'Payment received' })).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Payment waiting' }));
+
+    await waitFor(() => expect(api.sendPayment).toHaveBeenCalledWith(expect.objectContaining({ type: 'waiting', student_ids: [2] })));
+    expect(api.sendPayment.mock.calls[0][0].from).toMatch(/-01$/);
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('1 SMS queued'));
+  });
+
+  it('asks before texting everyone on the page who still owes', async () => {
+    const twoOwing = response(1, 3);
+    twoOwing.data.rows.push({ ...twoOwing.data.rows[1], student_id: 3, first_name: 'Sardor', state: 'partial', paid_amount: 100000, remaining: 200000 });
+    api.getStudentsSummary.mockResolvedValue(twoOwing);
+    api.sendPayment.mockResolvedValue({ data: { queued: 2, already_sent: 0, no_phone: 0, not_applicable: 0, daily_limit: 30, sent_today: 29, waiting: 2, sending_now: true } });
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    render(<MemoryRouter><DashboardPaymentsPage /></MemoryRouter>);
+    await screen.findByText('Karimov Sardor');
+    const bulk = () => screen.getAllByRole('button', { name: /SMS to parents/ }).find((button) => button.textContent === 'SMS to parents')!;
+
+    openMenu(bulk());
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Payment waiting (2)' }));
+    expect(confirm).toHaveBeenCalledWith('Send a "payment waiting" SMS to the parents of 2 students?');
+    expect(api.sendPayment).not.toHaveBeenCalled();
+
+    openMenu(bulk());
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Payment waiting (2)' }));
+    await waitFor(() => expect(api.sendPayment).toHaveBeenCalledWith(expect.objectContaining({ type: 'waiting', student_ids: [2, 3] })));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('2 SMS queued · Daily limit is 30; the rest go out tomorrow'));
+    confirm.mockRestore();
   });
 });
