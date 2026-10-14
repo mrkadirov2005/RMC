@@ -13,7 +13,7 @@ const DEFAULT_LESSON_SCORING_SETTINGS = {
     { label: 'None', score: 0, symbol: '😞', fill: 0, tone: 'rose' },
   ],
   activity: [
-    // Only one student per lesson can be the stellar student.
+    // The stellar level: any number of students per lesson, each gets the stellar bonus coins.
     { label: 'Stellar', score: 40, symbol: '🌟', fill: 100, tone: 'violet', stellar: true },
     { label: 'Very active', score: 30, symbol: '★', fill: 75, tone: 'emerald' },
     { label: 'Good', score: 20, symbol: '●', fill: 50, tone: 'sky' },

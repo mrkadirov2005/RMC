@@ -24,7 +24,7 @@ export type ScoreOption = {
   symbol: string;
   fill: number;
   tone: ScoreTone;
-  /** The stellar activity level: one student per lesson, so it is never in "Fill all". */
+  /** The stellar activity level: given one student at a time, so it is never in "Fill all". */
   stellar?: boolean;
 };
 

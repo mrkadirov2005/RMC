@@ -111,7 +111,7 @@ export const buildSessionWorkflowRecords = ({
   homework,
   activity,
   points,
-  stellarStudentId,
+  stellarStudentIds,
   settings,
   attendanceReasons,
 }: {
@@ -121,7 +121,7 @@ export const buildSessionWorkflowRecords = ({
   homework: WorkflowScoreMap;
   activity: WorkflowScoreMap;
   points: WorkflowScoreMap;
-  stellarStudentId: number | null;
+  stellarStudentIds: number[];
   settings: LessonScoringSettings;
   /** Reasons written for students absent from the previous lessons in a row; saved as remarks. */
   attendanceReasons?: WorkflowScoreMap;
@@ -140,8 +140,8 @@ export const buildSessionWorkflowRecords = ({
     const pointsScore = Number(points.get(studentId) || 0);
     return {
       student_id: studentId,
-      is_stellar_student: awardsCoins && stellarStudentId === studentId,
-      stellar_bonus_coins: awardsCoins && stellarStudentId === studentId ? settings.stellarBonusCoins : 0,
+      is_stellar_student: awardsCoins && stellarStudentIds.includes(studentId),
+      stellar_bonus_coins: awardsCoins && stellarStudentIds.includes(studentId) ? settings.stellarBonusCoins : 0,
       attendance_status: selectedActions.includes('attendance') ? (statusMap[attendanceStatus] || attendanceStatus) : null,
       attendance_remarks: selectedActions.includes('attendance') ? (attendanceReasons?.get(studentId)?.trim() || DEFAULT_ATTENDANCE_REMARK) : null,
       attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
@@ -169,7 +169,7 @@ export type LessonSummary = {
   topStudents: Array<{ id: number; name: string; score: number }>;
   missedStudents: Array<{ id: number; name: string; status: string }>;
   coins: { total: number; students: number } | null;
-  stellarStudentName: string | null;
+  stellarStudentNames: string[];
   skipped: number;
 };
 
@@ -197,7 +197,7 @@ export const buildLessonSummary = ({
   homework,
   activity,
   points,
-  stellarStudentId,
+  stellarStudentIds,
   settings,
   saveResult,
 }: {
@@ -207,7 +207,7 @@ export const buildLessonSummary = ({
   homework: WorkflowScoreMap;
   activity: WorkflowScoreMap;
   points: WorkflowScoreMap;
-  stellarStudentId: number | null;
+  stellarStudentIds: number[];
   settings: LessonScoringSettings;
   saveResult?: { coins?: Array<{ transaction?: { student_id?: number; delta?: number } }>; skipped_student_ids?: number[] } | null;
 }): LessonSummary => {
@@ -237,7 +237,7 @@ export const buildLessonSummary = ({
   const pointValues = ids.map((id) => points.get(id)).filter((value): value is string => value !== undefined && value !== '').map(Number);
 
   const coinRows = (saveResult?.coins || []).filter((row) => row?.transaction);
-  const stellar = stellarStudentId && (has('activity') || has('coins')) ? counted.find((student) => getWorkflowStudentId(student) === stellarStudentId) : null;
+  const stellar = has('activity') || has('coins') ? counted.filter((student) => stellarStudentIds.includes(getWorkflowStudentId(student))) : [];
 
   return {
     total: counted.length,
@@ -262,7 +262,7 @@ export const buildLessonSummary = ({
     coins: has('coins')
       ? { total: coinRows.reduce((sum, row) => sum + Number(row.transaction?.delta || 0), 0), students: coinRows.length }
       : null,
-    stellarStudentName: stellar ? studentName(stellar) : null,
+    stellarStudentNames: stellar.map(studentName),
     skipped: skippedIds.size,
   };
 };
