@@ -447,12 +447,15 @@ export default function SessionWorkflowPage() {
     }), { replace: true });
   };
 
-  // "Suratni yuklash": the class's attendance for the lesson's month, including the lesson just saved.
+  // "Suratni yuklash": the class's attendance and lesson points for the lesson's month, including the lesson just saved.
   const downloadMonthlyAttendanceImage = async () => {
     const monthKey = (selectedDate || toDateKey(new Date())).slice(0, 7);
     try {
-      const records = await sessionWorkflowApi.loadClassAttendance(numericClassId);
-      const grid = buildMonthlyAttendanceGrid({ students, records, monthKey });
+      const [records, scores] = await Promise.all([
+        sessionWorkflowApi.loadClassAttendance(numericClassId),
+        sessionWorkflowApi.loadClassMonthScores(numericClassId, monthKey),
+      ]);
+      const grid = buildMonthlyAttendanceGrid({ students, records, scores, monthKey });
       const className = classData?.class_name || `#${numericClassId}`;
       const canvas = drawMonthlyAttendanceImage(grid, {
         title: className,

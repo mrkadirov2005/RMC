@@ -62,6 +62,16 @@ export const sessionWorkflowApi = {
     );
     return { sessions: unwrapApiRows<any>(sessionsResponse), attendanceDates };
   },
+  /** The class's lesson grades in one month, each with its lesson date (for the monthly image). */
+  async loadClassMonthScores(classId: number, monthKey: string) {
+    const sessions = unwrapApiRows<any>(await classAPI.getSessions(classId).catch(() => ({ data: [] })))
+      .filter((session) => String(session?.session_date || '').startsWith(monthKey) && Number(session?.session_id) > 0);
+    const perSession = await Promise.all(sessions.map(async (session) =>
+      unwrapApiRows<any>(await gradeAPI.getBySession(Number(session.session_id)).catch(() => ({ data: [] })))
+        .map((grade) => ({ ...grade, session_date: session.session_date }))
+    ));
+    return perSession.flat();
+  },
   /** All of the class's attendance records, fresh from the server (for the monthly attendance image). */
   async loadClassAttendance(classId: number) {
     return unwrapApiRows<any>(await attendanceAPI.getByClass(classId));
