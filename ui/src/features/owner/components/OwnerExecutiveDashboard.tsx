@@ -3,6 +3,7 @@ import { Award, Banknote, GraduationCap, TrendingDown, Users, Wallet } from 'luc
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatMoney } from '@/utils/helpers';
 import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
+import { kpiScoreOf } from '../utils';
 import type { OwnerOverviewCollections, OwnerOverviewKpiRow } from '../types';
 
 interface Props {
@@ -73,7 +74,7 @@ export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) =
       collectionRate: expected > 0 ? Math.round((collected / expected) * 100) : 0,
       expenses: paidSalaries,
       cash: collected - paidSalaries,
-      topTeachers: [...kpis].sort((a, b) => Number(b.kpi?.final_score || 0) - Number(a.kpi?.final_score || 0)).slice(0, 3),
+      topTeachers: kpis.map((row) => ({ row, score: kpiScoreOf(row) })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, 3),
       topStudents: [...collections.students].sort((a, b) => Number(b.coins || b.points || 0) - Number(a.coins || a.points || 0)).slice(0, 3),
       lostTeachers: [...lossMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([teacherId, count]) => ({ teacherId, count, name: teacherNames.get(teacherId) || `Ustoz #${teacherId}` })),
     };
@@ -93,7 +94,7 @@ export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) =
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <RankingCard title="KPI bo‘yicha top 3 ustoz" rows={metrics.topTeachers.map((row) => ({ name: nameOf(row, `Ustoz #${row.teacher_id}`), value: Number(row.kpi?.final_score || 0), suffix: 'ball' }))} empty="KPI maʼlumotlari topilmadi" />
+        <RankingCard title="KPI bo‘yicha top 3 ustoz" rows={metrics.topTeachers.map(({ row, score }) => ({ name: nameOf(row, `Ustoz #${row.teacher_id}`), value: score, suffix: 'ball' }))} empty="Bu oy KPI ball olgan ustoz yo‘q" />
         <RankingCard title="Ball bo‘yicha top 3 o‘quvchi" rows={metrics.topStudents.map((row) => ({ name: nameOf(row, 'Nomaʼlum o‘quvchi'), value: Number(row.coins || row.points || 0), suffix: 'ball' }))} empty="O‘quvchi ballari topilmadi" />
         <RankingCard title="Eng ko‘p o‘quvchi yo‘qotgan ustozlar" rows={metrics.lostTeachers.map((row) => ({ name: row.name, value: row.count, suffix: 'o‘quvchi' }))} empty="Yo‘qotilgan o‘quvchilar topilmadi" />
       </div>
