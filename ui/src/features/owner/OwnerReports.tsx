@@ -8,6 +8,7 @@ import { OwnerFinancePanel } from './components/OwnerFinancePanel';
 import { DiscountStatsPanel } from './components/discount-stats/DiscountStatsPanel';
 import { StudentStatsCarousel } from './components/student-stats/StudentStatsCarousel';
 import { StudentTrendCard } from './components/student-stats/StudentTrendCard';
+import { StudentRankingCard } from './components/student-stats/StudentRankingCard';
 import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel';
 import RetentionPage from '../crm/retention/RetentionPage';
 import { AttendanceReportPanel } from './components/AttendanceReportPanel';
@@ -201,6 +202,7 @@ const OwnerReports = () => {
             {activeTab === 'retention' && <RetentionPage embedded />}
             {activeTab === 'students' && (
               <div className="space-y-4">
+                <StudentRankingCard />
                 <StudentTrendCard />
                 <StudentStatsCarousel data={collections.students} collections={collections} />
               </div>

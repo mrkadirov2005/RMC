@@ -283,6 +283,8 @@ export const reportAPI = {
     apiClient.get('/reports/retention', { params }),
   /** Student count on the 10th, 20th and 30th of each of the last `months` months. */
   studentTrend: (months: number) => apiClient.get('/reports/student-trend', { params: { months } }),
+  /** This month's lesson points per child and group, ranked on the page. */
+  studentRankings: (month?: string) => apiClient.get('/reports/student-rankings', { params: { month } }),
 };
 
 export const telegramRegistrationAPI = {

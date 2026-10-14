@@ -1,5 +1,6 @@
 const reportService = require('../services/report.service');
 const studentTrendService = require('../services/studentTrend.service');
+const studentRankingService = require('../services/studentRanking.service');
 const { getCenterScope, sendError, sendScopeError } = require('../../../shared/controller');
 
 const getOverviewReport = async (req: any, res: any) => {
@@ -64,7 +65,18 @@ const getStudentTrend = async (req: any, res: any) => {
   }
 };
 
+const getStudentRankings = async (req: any, res: any) => {
+  try {
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    res.json(await studentRankingService.studentRankings(req.query, scope.centerId ?? undefined));
+  } catch (error: any) {
+    sendError(res, error, "O'quvchilar reytingini yuklab bo'lmadi");
+  }
+};
+
 module.exports = {
+  getStudentRankings,
   getStudentTrend,
   getOverviewReport,
   getPaymentsReport,
