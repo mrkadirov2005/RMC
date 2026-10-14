@@ -40,4 +40,11 @@ export const attendanceLabels: Record<string, string> = {
   'Set the attendance status and leave a short note if anything unusual happened.': "Davomat holatini belgilang va g'ayrioddiy narsa bo'lsa, qisqa izoh qoldiring.",
   'Unique Students': "Noyob o'quvchilar",
   'total records': 'jami yozuv',
+  // Weak students: homework done halfway or worse in two or more lessons this month
+  'Weak students': "Sust o'quvchilar",
+  'Weak students ({count})': "Sust o'quvchilar ({count})",
+  'Homework done halfway or worse in 2 or more lessons this month.': "Bu oy kamida 2 ta darsda vazifani chala yoki undan yomon bajargan o'quvchilar.",
+  'No weak students this month.': "Bu oy sust o'quvchilar yo'q.",
+  '{count} lessons': '{count} ta dars',
+  Parent: 'Ota-ona',
 };

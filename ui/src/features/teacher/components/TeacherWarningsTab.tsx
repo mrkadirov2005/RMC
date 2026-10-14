@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CircleDollarSign, Loader2 } from 'lucide-react';
+import { AlertTriangle, CircleDollarSign, Loader2, TrendingDown } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getCenterMonthKey } from '@/shared/billingPeriod';
 import { formatMoney } from '@/utils/helpers';
 import { AbsenceAlertsPanel } from '../../crm/absenceAlerts/AbsenceAlertsPanel';
+import { WeakStudentsPanel } from '../../crm/absenceAlerts/WeakStudentsPanel';
 import { useMyGroupPayments } from '../payments/useMyGroupPayments';
 import type { GroupPaymentStudent } from '../payments/types';
 
@@ -155,7 +156,7 @@ export default function TeacherWarningsTab({ classOptions = [] }: { classOptions
 
   return (
     <Tabs defaultValue="attendance" className="space-y-4">
-      <TabsList className="grid h-auto w-full grid-cols-2">
+      <TabsList className="grid h-auto w-full grid-cols-3">
         <TabsTrigger value="attendance" className="gap-2 py-2.5">
           <AlertTriangle className="h-4 w-4" />
           {t('Attendance warnings')}
@@ -164,12 +165,19 @@ export default function TeacherWarningsTab({ classOptions = [] }: { classOptions
           <CircleDollarSign className="h-4 w-4" />
           {t('Payment warnings')}
         </TabsTrigger>
+        <TabsTrigger value="weak" className="gap-2 py-2.5">
+          <TrendingDown className="h-4 w-4" />
+          {t('Weak students')}
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="attendance">
         <AbsenceAlertsPanel classOptions={classOptions} />
       </TabsContent>
       <TabsContent value="payments">
         <UnpaidStudentsPanel classOptions={classOptions} />
+      </TabsContent>
+      <TabsContent value="weak">
+        <WeakStudentsPanel />
       </TabsContent>
     </Tabs>
   );
