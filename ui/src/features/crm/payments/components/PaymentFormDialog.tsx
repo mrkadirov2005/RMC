@@ -104,6 +104,8 @@ export const PaymentFormDialog = ({
 }: PaymentFormDialogProps) => {
   const { t } = useLanguage();
   const normalizedAmount = Number(formData.amount || 0);
+  // A payment can't be more than what the student pays for the group.
+  const maxAmount = Number(selectedStudent?.amount || 0) > 0 ? Number(selectedStudent?.amount) : null;
   const isEditing = Boolean(formData.payment_id || formData.id);
   const [studentSearch, setStudentSearch] = useState('');
   const [studentPickerOpen, setStudentPickerOpen] = useState(false);
@@ -594,10 +596,22 @@ export const PaymentFormDialog = ({
                   min="0"
                   step="0.01"
                   required
+                  max={maxAmount ?? undefined}
                   value={formData.amount ?? ''}
-                  // Clearing the field must leave it empty, not 0, or the next digit is typed after a leading 0
-                  onChange={(event) => setPaymentField(setFormData, { amount: event.target.value === '' ? undefined : Number(event.target.value) })}
+                  // Clearing the field must leave it empty, not 0, or the next digit is typed after a leading 0.
+                  // Typing more than the student's fee stops at the fee.
+                  onChange={(event) => {
+                    if (event.target.value === '') {
+                      setPaymentField(setFormData, { amount: undefined });
+                      return;
+                    }
+                    const value = Number(event.target.value);
+                    setPaymentField(setFormData, { amount: maxAmount != null && value > maxAmount ? maxAmount : value });
+                  }}
                 />
+                {maxAmount != null ? (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('At most {amount} for this student.', { amount: maxAmount.toLocaleString() })}</p>
+                ) : null}
                 {amountHint ? (
                   <p className="text-xs text-slate-500 dark:text-slate-400">{amountHint}</p>
                 ) : null}

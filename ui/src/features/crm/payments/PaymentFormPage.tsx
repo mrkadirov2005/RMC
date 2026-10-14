@@ -154,6 +154,8 @@ const PaymentFormPage = () => {
   }, [historyMonths, paymentHistory]);
   const canMoveHistoryForward = getMonthKey(historyWindowEnd) < getMonthKey(getMonthStart());
   const expectedMonthlyPayment = Number(selectedClass?.payment_amount || formData.original_amount || formData.amount || 0);
+  // A payment can't be more than the student's group fee.
+  const groupFee = Number(selectedClass?.payment_amount || 0) > 0 ? Number(selectedClass?.payment_amount) : null;
 
   useEffect(() => {
     if (isOwner) dispatch(fetchCenters());
@@ -608,16 +610,20 @@ const PaymentFormPage = () => {
                       required
                       step="0.01"
                       min="0"
+                      max={groupFee ?? undefined}
                       value={formData.original_amount ?? formData.amount ?? ''}
                       onChange={(e) => {
-                        // Clearing the field must leave it empty, not 0, or the next digit is typed after a leading 0
-                        const value = e.target.value === '' ? undefined : Number(e.target.value);
+                        // Clearing the field must leave it empty, not 0, or the next digit is typed after a leading 0.
+                        // Typing more than the group's fee stops at the fee.
+                        const typed = e.target.value === '' ? undefined : Number(e.target.value);
+                        const value = typed != null && groupFee != null && typed > groupFee ? groupFee : typed;
                         setFormData((current) => ({ ...current, amount: value, original_amount: value }));
                       }}
                     />
                     {selectedClass?.payment_amount != null && (
                       <p className="text-xs text-muted-foreground">
                         {t('Filled from {group} monthly fee. You can edit it for this payment.', { group: selectedClass.class_name || t('selected group') })}
+                        {groupFee != null ? ` ${t('At most {amount} for this student.', { amount: groupFee.toLocaleString() })}` : ''}
                       </p>
                     )}
                   </div>
