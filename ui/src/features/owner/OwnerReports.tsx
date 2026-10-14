@@ -13,7 +13,6 @@ import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel'
 import RetentionPage from '../crm/retention/RetentionPage';
 import { AttendanceReportPanel } from './components/AttendanceReportPanel';
 import { AbsenceAlertsPanel } from '../crm/absenceAlerts/AbsenceAlertsPanel';
-import { WeakStudentsPanel } from '../crm/absenceAlerts/WeakStudentsPanel';
 import { ClassReportsPanel } from './components/ClassReportsPanel';
 import { PERMISSION_CODES } from '@/types';
 import { useRBAC } from '../crm/hooks/useRBAC';
@@ -212,7 +211,6 @@ const OwnerReports = () => {
             {activeTab === 'attendance' && (
               <div className="space-y-4">
                 <AbsenceAlertsPanel canResolve />
-                <WeakStudentsPanel showContacts />
                 <AttendanceReportPanel collections={collections} />
               </div>
             )}

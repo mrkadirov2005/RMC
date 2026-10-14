@@ -1,5 +1,4 @@
 const absenceAlertService = require('../services/absenceAlert.service');
-const weakStudentsService = require('../services/weakStudents.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 
 // Teachers see their own groups' alerts; admins their branch; the owner the active branch, or
@@ -47,21 +46,6 @@ const resolveAlert = async (req: any, res: any) => {
   }
 };
 
-// Students doing their homework halfway or worse this month: teachers see their own groups.
-const getWeakStudents = async (req: any, res: any) => {
-  try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
-    }
-    const teacherId = req.user?.userType === 'teacher' ? Number(req.user.id) : undefined;
-    res.json(await weakStudentsService.listWeakStudents({ centerId: centerId ?? undefined, teacherId }));
-  } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: "Sust o'quvchilarni yuklab bo'lmadi", details: error.message || String(error) });
-  }
-};
-
-module.exports = { getAlerts, resolveAlert, getWeakStudents };
+module.exports = { getAlerts, resolveAlert };
 
 export {};
