@@ -476,9 +476,6 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
   if (!class_id || !session_id || !Array.isArray(records) || records.length === 0) {
     return { error: 'invalid_payload' as const };
   }
-  if (award_coins !== false && records.filter((record: any) => record.is_stellar_student).length > 1) {
-    return { error: 'multiple_stellar_students' as const };
-  }
 
   const resolvedCenterId = centerId ?? body.center_id;
   if (resolvedCenterId) {

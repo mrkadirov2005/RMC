@@ -1,6 +1,6 @@
 const { asc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { attendance, centers, classes, payments, students, teachers } = require('../../../db/schema');
+const { centers } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -18,81 +18,67 @@ const findById = async (id: number, centerId?: number) => {
   return rows[0] || null;
 };
 
+// Each branch's counts. Written as plain SQL with aliases: drizzle prints columns inside sql``
+// without their table, so "students.center_id = edu_centers.center_id" came out as
+// "center_id" = "center_id" (always true) and every branch showed the totals of all branches.
+const PAID = "LOWER(COALESCE(p.payment_status::text, '')) IN ('completed', 'paid')";
+const BRANCH = '"edu_centers"."center_id"';
+
 const getSummaries = (centerId?: number) => {
   const query = db
     .select({
       center_id: centers.centerId,
-      students: sql`(SELECT COUNT(*)::int FROM ${students} WHERE ${students.centerId} = ${centers.centerId} AND ${students.deletedAt} IS NULL)`,
-      teachers: sql`(SELECT COUNT(*)::int FROM ${teachers} WHERE ${teachers.centerId} = ${centers.centerId} AND ${teachers.deletedAt} IS NULL)`,
-      classes: sql`(SELECT COUNT(*)::int FROM ${classes} WHERE ${classes.centerId} = ${centers.centerId} AND ${classes.deletedAt} IS NULL)`,
-      payments: sql`(SELECT COUNT(*)::int FROM ${payments} WHERE ${payments.centerId} = ${centers.centerId} AND ${payments.deletedAt} IS NULL)`,
-      current_month_payments: sql`(
-        SELECT COUNT(*)::int FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId}
-          AND ${payments.deletedAt} IS NULL
-          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
-          AND ${payments.paymentDate} >= DATE_TRUNC('month', CURRENT_DATE)
-          AND ${payments.paymentDate} < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
-      )`,
-      previous_month_payments: sql`(
-        SELECT COUNT(*)::int FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId}
-          AND ${payments.deletedAt} IS NULL
-          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
-          AND ${payments.paymentDate} >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
-          AND ${payments.paymentDate} < DATE_TRUNC('month', CURRENT_DATE)
-      )`,
-      paid_students_this_month: sql`(
-        SELECT COUNT(DISTINCT ${payments.studentId})::int FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId}
-          AND ${payments.deletedAt} IS NULL
-          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
-          AND ${payments.paymentDate} >= DATE_TRUNC('month', CURRENT_DATE)
-          AND ${payments.paymentDate} < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
-      )`,
-      today_payments: sql`(
-        SELECT COUNT(*)::int FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId}
-          AND ${payments.deletedAt} IS NULL
-          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
-          AND ${payments.paymentDate} = CURRENT_DATE
-      )`,
-      yesterday_payments: sql`(
-        SELECT COUNT(*)::int FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId}
-          AND ${payments.deletedAt} IS NULL
-          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
-          AND ${payments.paymentDate} = CURRENT_DATE - 1
-      )`,
-      paid_students_today: sql`(
-        SELECT COUNT(DISTINCT ${payments.studentId})::int FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId}
-          AND ${payments.deletedAt} IS NULL
-          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
-          AND ${payments.paymentDate} = CURRENT_DATE
-      )`,
-      paid_students_yesterday: sql`(
-        SELECT COUNT(DISTINCT ${payments.studentId})::int FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId}
-          AND ${payments.deletedAt} IS NULL
-          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
-          AND ${payments.paymentDate} = CURRENT_DATE - 1
-      )`,
-      attendance_present: sql`(
-        SELECT COUNT(*)::int FROM ${attendance}
-        WHERE ${attendance.centerId} = ${centers.centerId}
-          AND LOWER(COALESCE(${attendance.status}::text, '')) IN ('present', 'late')
-      )`,
-      attendance_absent: sql`(
-        SELECT COUNT(*)::int FROM ${attendance}
-        WHERE ${attendance.centerId} = ${centers.centerId}
-          AND LOWER(COALESCE(${attendance.status}::text, '')) IN ('absent', 'absent nr', 'absent r')
-      )`,
-      collected: sql`(
-        SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid') THEN COALESCE(${payments.amount}, 0) ELSE 0 END), 0)::numeric
-        FROM ${payments}
-        WHERE ${payments.centerId} = ${centers.centerId} AND ${payments.deletedAt} IS NULL
-      )`,
+      students: sql.raw(`(SELECT COUNT(*)::int FROM students s WHERE s.center_id = ${BRANCH} AND s.deleted_at IS NULL)`),
+      teachers: sql.raw(`(SELECT COUNT(*)::int FROM teachers t WHERE t.center_id = ${BRANCH} AND t.deleted_at IS NULL)`),
+      classes: sql.raw(`(SELECT COUNT(*)::int FROM classes c WHERE c.center_id = ${BRANCH} AND c.deleted_at IS NULL)`),
+      payments: sql.raw(`(SELECT COUNT(*)::int FROM payments p WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL)`),
+      current_month_payments: sql.raw(`(
+        SELECT COUNT(*)::int FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL AND ${PAID}
+          AND p.payment_date >= DATE_TRUNC('month', CURRENT_DATE)
+          AND p.payment_date < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+      )`),
+      previous_month_payments: sql.raw(`(
+        SELECT COUNT(*)::int FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL AND ${PAID}
+          AND p.payment_date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
+          AND p.payment_date < DATE_TRUNC('month', CURRENT_DATE)
+      )`),
+      paid_students_this_month: sql.raw(`(
+        SELECT COUNT(DISTINCT p.student_id)::int FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL AND ${PAID}
+          AND p.payment_date >= DATE_TRUNC('month', CURRENT_DATE)
+          AND p.payment_date < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+      )`),
+      today_payments: sql.raw(`(
+        SELECT COUNT(*)::int FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL AND ${PAID} AND p.payment_date = CURRENT_DATE
+      )`),
+      yesterday_payments: sql.raw(`(
+        SELECT COUNT(*)::int FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL AND ${PAID} AND p.payment_date = CURRENT_DATE - 1
+      )`),
+      paid_students_today: sql.raw(`(
+        SELECT COUNT(DISTINCT p.student_id)::int FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL AND ${PAID} AND p.payment_date = CURRENT_DATE
+      )`),
+      paid_students_yesterday: sql.raw(`(
+        SELECT COUNT(DISTINCT p.student_id)::int FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL AND ${PAID} AND p.payment_date = CURRENT_DATE - 1
+      )`),
+      attendance_present: sql.raw(`(
+        SELECT COUNT(*)::int FROM attendance a
+        WHERE a.center_id = ${BRANCH} AND LOWER(COALESCE(a.status::text, '')) IN ('present', 'late')
+      )`),
+      attendance_absent: sql.raw(`(
+        SELECT COUNT(*)::int FROM attendance a
+        WHERE a.center_id = ${BRANCH} AND LOWER(COALESCE(a.status::text, '')) IN ('absent', 'absent nr', 'absent r')
+      )`),
+      collected: sql.raw(`(
+        SELECT COALESCE(SUM(CASE WHEN ${PAID} THEN COALESCE(p.amount, 0) ELSE 0 END), 0)::numeric
+        FROM payments p
+        WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL
+      )`),
     })
     .from(centers)
     .orderBy(asc(centers.centerId));

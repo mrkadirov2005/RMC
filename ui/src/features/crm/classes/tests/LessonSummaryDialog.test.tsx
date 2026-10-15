@@ -18,7 +18,7 @@ const summary = buildLessonSummary({
   homework: new Map(),
   activity: new Map(),
   points: new Map(),
-  stellarStudentId: null,
+  stellarStudentIds: [],
   settings: defaultLessonScoringSettings,
   saveResult: { coins: [{ transaction: { student_id: 1, delta: 20 } }] },
 });

@@ -1,8 +1,12 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Award, Banknote, GraduationCap, TrendingDown, Users, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatMoney } from '@/utils/helpers';
 import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
+import { kpiScoreOf } from '../utils';
+import { useStudentRankings } from '../hooks/useStudentRankings';
+import { rankStudents } from '../studentRankingModel';
 import type { OwnerOverviewCollections, OwnerOverviewKpiRow } from '../types';
 
 interface Props {
@@ -43,6 +47,8 @@ const StatCard = ({ label, value, detail, icon: Icon, className }: { label: stri
 
 export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) => {
   const month = new Date().toISOString().slice(0, 7);
+  const rankings = useStudentRankings();
+  const topStudents = useMemo(() => rankStudents(rankings.rows, 'center').filter((item) => item.score > 0).slice(0, 3), [rankings.rows]);
   const metrics = useMemo(() => {
     const classFees = new Map<number, number>();
     collections.classes.forEach((item) => classFees.set(idOf(item, 'class_id', 'id'), Number(item?.payment_amount || 0)));
@@ -73,8 +79,7 @@ export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) =
       collectionRate: expected > 0 ? Math.round((collected / expected) * 100) : 0,
       expenses: paidSalaries,
       cash: collected - paidSalaries,
-      topTeachers: [...kpis].sort((a, b) => Number(b.kpi?.final_score || 0) - Number(a.kpi?.final_score || 0)).slice(0, 3),
-      topStudents: [...collections.students].sort((a, b) => Number(b.coins || b.points || 0) - Number(a.coins || a.points || 0)).slice(0, 3),
+      topTeachers: kpis.map((row) => ({ row, score: kpiScoreOf(row) })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, 3),
       lostTeachers: [...lossMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([teacherId, count]) => ({ teacherId, count, name: teacherNames.get(teacherId) || `Ustoz #${teacherId}` })),
     };
   }, [collections, kpis]);
@@ -93,17 +98,20 @@ export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) =
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <RankingCard title="KPI bo‘yicha top 3 ustoz" rows={metrics.topTeachers.map((row) => ({ name: nameOf(row, `Ustoz #${row.teacher_id}`), value: Number(row.kpi?.final_score || 0), suffix: 'ball' }))} empty="KPI maʼlumotlari topilmadi" />
-        <RankingCard title="Ball bo‘yicha top 3 o‘quvchi" rows={metrics.topStudents.map((row) => ({ name: nameOf(row, 'Nomaʼlum o‘quvchi'), value: Number(row.coins || row.points || 0), suffix: 'ball' }))} empty="O‘quvchi ballari topilmadi" />
+        <RankingCard title="KPI bo‘yicha top 3 ustoz" rows={metrics.topTeachers.map(({ row, score }) => ({ name: nameOf(row, `Ustoz #${row.teacher_id}`), value: score, suffix: 'ball' }))} empty="Bu oy KPI ball olgan ustoz yo‘q" />
+        <RankingCard title="Ball bo‘yicha top 3 o‘quvchi" rows={topStudents.map((item) => ({ name: item.name, value: item.score, suffix: 'ball' }))} empty={rankings.loading ? 'Yuklanmoqda...' : rankings.error ? 'Ballarni yuklab bo‘lmadi' : 'Bu oy dars ballari yo‘q'} link={{ to: '/owner/reports?section=students', label: 'To‘liq ro‘yxat' }} />
         <RankingCard title="Eng ko‘p o‘quvchi yo‘qotgan ustozlar" rows={metrics.lostTeachers.map((row) => ({ name: row.name, value: row.count, suffix: 'o‘quvchi' }))} empty="Yo‘qotilgan o‘quvchilar topilmadi" />
       </div>
     </section>
   );
 };
 
-const RankingCard = ({ title, rows, empty }: { title: string; rows: Array<{ name: string; value: number; suffix: string }>; empty: string }) => (
+const RankingCard = ({ title, rows, empty, link }: { title: string; rows: Array<{ name: string; value: number; suffix: string }>; empty: string; link?: { to: string; label: string } }) => (
   <Card>
-    <CardHeader className="pb-2"><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
+    <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 pb-2">
+      <CardTitle className="text-sm">{title}</CardTitle>
+      {link && <Link to={link.to} className="text-xs font-semibold text-primary hover:underline">{link.label}</Link>}
+    </CardHeader>
     <CardContent className="space-y-2">
       {rows.length ? rows.map((row, index) => (
         <div key={`${row.name}-${index}`} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">

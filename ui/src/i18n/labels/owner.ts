@@ -65,4 +65,16 @@ export const ownerLabels: Record<string, string> = {
   'Scroll discount table horizontally': "Chegirmalar jadvalini gorizontal aylantirish",
   'groups assigned to this subject.': 'ta guruh shu fanga biriktirilgan.',
   'total attendance records': 'jami davomat yozuvi',
+  // Reports -> O'quvchilar: the full student ranking
+  'Student ranking by points': "Ball bo'yicha o'quvchilar reytingi",
+  'Sum of lesson points for the month, the same as the Telegram bot.': "Oy davomidagi dars ballari yig'indisi, Telegram botdagi bilan bir xil.",
+  'Whole center': "O'quv markaz bo'yicha",
+  'By group': "Guruh bo'yicha",
+  'By level': "Daraja bo'yicha",
+  Ranking: 'Reyting',
+  Student: "O'quvchi",
+  Lessons: 'Darslar',
+  Search: 'Qidirish',
+  'No lesson points this month.': "Bu oy dars ballari yo'q.",
+  'Could not load the student ranking': "O'quvchilar reytingini yuklab bo'lmadi",
 };

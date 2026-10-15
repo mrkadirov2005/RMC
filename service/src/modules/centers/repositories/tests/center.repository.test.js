@@ -27,6 +27,17 @@ describe('centers repository summaries', () => {
     expect(rendered).toContain('COALESCE(');
   });
 
+  it('counts each branch on its own rows, never the totals of all branches', () => {
+    centerRepository.getSummaries();
+    const selection = mockDb.select.mock.calls[0][0];
+    for (const field of ['students', 'teachers', 'classes', 'payments', 'collected', 'attendance_present', 'today_payments']) {
+      const { sql: rendered } = dialect.sqlToQuery(selection[field].getSQL());
+      // Inner row's branch against the outer branch row; an unqualified "center_id" = "center_id" is always true.
+      expect(rendered).toMatch(/\b[stcpa]\.center_id = "edu_centers"\."center_id"/);
+      expect(rendered).not.toContain('"center_id" = "center_id"');
+    }
+  });
+
   describe('falsy-but-valid centerId scoping (RMC-024)', () => {
     // Before the fix, findById/update/remove resolved scope with `centerId || id`, so a
     // legitimately falsy-but-valid centerId (e.g. 0) fell through to `id` instead. The fix

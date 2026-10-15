@@ -44,19 +44,20 @@ describe('session workflow model', () => {
     })).toBe(70);
   });
 
-  it('builds the API record and awards the stellar bonus once', () => {
+  it('builds the API record and awards the stellar bonus to every stellar student', () => {
     const records = buildSessionWorkflowRecords({
-      students: [{ student_id: 7 }, { student_id: 8 }],
+      students: [{ student_id: 7 }, { student_id: 8 }, { student_id: 9 }],
       selectedActions: ['attendance', 'homework', 'activity', 'coins'],
       attendance: new Map([[7, 'On time'], [8, 'Absent']]),
       homework: new Map([[7, 'Excellent'], [8, 'None']]),
       activity: new Map([[7, 'Very active'], [8, 'No activity']]),
       points: new Map(),
-      stellarStudentId: 7,
+      stellarStudentIds: [7, 9],
       settings: defaultLessonScoringSettings,
     });
     expect(records[0]).toMatchObject({ student_id: 7, attendance_status: 'Present', homework_score: 20, activity_score: 30, stellar_bonus_coins: 30 });
     expect(records[1].stellar_bonus_coins).toBe(0);
+    expect(records[2]).toMatchObject({ is_stellar_student: true, stellar_bonus_coins: 30 });
   });
 
   it('saves a written absence reason as the attendance remarks', () => {
@@ -67,7 +68,7 @@ describe('session workflow model', () => {
       homework: new Map(),
       activity: new Map(),
       points: new Map(),
-      stellarStudentId: null,
+      stellarStudentIds: [],
       settings: defaultLessonScoringSettings,
       attendanceReasons: new Map([[7, ' Kasal, ota-onasi bilan gaplashildi ']]),
     });
@@ -93,7 +94,7 @@ describe('lesson summary', () => {
     homework,
     activity: new Map(),
     points: new Map(),
-    stellarStudentId: 1,
+    stellarStudentIds: [1, 2],
     settings: defaultLessonScoringSettings,
     saveResult: {
       coins: [{ transaction: { student_id: 1, delta: 50 } }, { transaction: { student_id: 2, delta: -5 } }, { transaction: { student_id: 3, delta: -20 } }],
@@ -128,7 +129,7 @@ describe('lesson summary', () => {
   it('ranks top students and reports the saved coins', () => {
     expect(summary.topStudents.map((item) => item.name)).toEqual(['Ali Valiyev', 'Bobur']);
     expect(summary.coins).toEqual({ total: 25, students: 3 });
-    expect(summary.stellarStudentName).toBe('Ali Valiyev');
+    expect(summary.stellarStudentNames).toEqual(['Ali Valiyev', 'Bobur']);
   });
 
   it('grades a lesson out of the most its chosen actions can score', () => {

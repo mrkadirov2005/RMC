@@ -7,7 +7,9 @@ export type SessionWorkflowDraft = {
   homeworkScores: [number, string][];
   activityScores: [number, string][];
   pointsScores: [number, string][];
-  stellarStudentId: number | null;
+  stellarStudentIds?: number[];
+  /** Drafts saved before several stellar students were allowed. */
+  stellarStudentId?: number | null;
   activeTab: SessionWorkflowTab;
   /** Reasons typed for students absent from the previous lessons in a row. */
   absenceReasons?: [number, string][];

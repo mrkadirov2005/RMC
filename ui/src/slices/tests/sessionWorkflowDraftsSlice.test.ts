@@ -6,7 +6,7 @@ const draft = {
   homeworkScores: [[1, 'Good']] as [number, string][],
   activityScores: [[1, 'Average']] as [number, string][],
   pointsScores: [[1, '10']] as [number, string][],
-  stellarStudentId: 1,
+  stellarStudentIds: [1],
   activeTab: 'activity' as const,
 };
 
