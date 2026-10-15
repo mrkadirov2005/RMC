@@ -216,9 +216,6 @@ const saveSessionWorkflow = async (req: any, res: any) => {
     if (out && out.error === 'invalid_payload') {
       return res.status(400).json({ error: "Dars jarayoni ma'lumotlari noto'g'ri." });
     }
-    if (out && out.error === 'multiple_stellar_students') {
-      return res.status(400).json({ error: "Bitta darsda faqat bitta a'lochi o'quvchi tanlanishi mumkin." });
-    }
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });
     }

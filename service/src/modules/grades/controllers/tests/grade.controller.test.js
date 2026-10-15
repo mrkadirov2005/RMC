@@ -449,7 +449,6 @@ describe('grades controller', () => {
 
     it.each([
       ['invalid_payload', "Dars jarayoni ma'lumotlari noto'g'ri."],
-      ['multiple_stellar_students', "Bitta darsda faqat bitta a'lochi o'quvchi tanlanishi mumkin."],
       ['invalid_center', 'Guruh bu markazga tegishli emas.'],
     ])('maps the %s result to a 400', async (error, message) => {
       const res = createResponse();

@@ -146,7 +146,7 @@ export function LessonSummaryDialog({ summary, className, date, doneLabel, onDon
                     <span className="flex min-w-0 items-center gap-2">
                       <span className="w-4 shrink-0 text-xs font-black text-muted-foreground">{index + 1}</span>
                       <span className="truncate font-semibold">{student.name}</span>
-                      {student.name === summary.stellarStudentName && <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-500" />}
+                      {summary.stellarStudentNames.includes(student.name) && <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-500" />}
                     </span>
                     <span className="font-black tabular-nums">{student.score}</span>
                   </div>

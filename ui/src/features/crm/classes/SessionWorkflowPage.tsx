@@ -73,7 +73,7 @@ export default function SessionWorkflowPage() {
   const [homeworkScores, setHomeworkScores] = useState<Map<number, string>>(new Map());
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
   const [pointsScores, setPointsScores] = useState<Map<number, string>>(new Map());
-  const [stellarStudentId, setStellarStudentId] = useState<number | null>(null);
+  const [stellarStudentIds, setStellarStudentIds] = useState<number[]>([]);
   // Students absent from the class's previous two lessons in a row need a written reason.
   const [absenceStreakIds, setAbsenceStreakIds] = useState<Set<number>>(new Set());
   const [absenceReasons, setAbsenceReasons] = useState<Map<number, string>>(new Map());
@@ -180,7 +180,7 @@ export default function SessionWorkflowPage() {
         const nextHomework = new Map<number, string>();
         const nextActivity = new Map<number, string>();
         const nextPoints = new Map<number, string>();
-        let nextStellarStudentId: number | null = null;
+        const nextStellarIds = new Set<number>();
         const statusMap: Record<string, string> = { Present: 'On time', 'Absent R': 'Excused', 'Absent NR': 'Absent' };
 
         nextStudents.forEach((student) => {
@@ -202,8 +202,8 @@ export default function SessionWorkflowPage() {
           if (id && homework) nextHomework.set(id, homework);
           if (id && activity) nextActivity.set(id, activity);
           if (id && grade.points_score !== null && grade.points_score !== undefined) nextPoints.set(id, String(Number(grade.points_score || 0)));
-          if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarStudentId = id;
-          if (id && activity && nextScoringSettings.activity.find((option) => option.label === activity)?.stellar) nextStellarStudentId = id;
+          if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarIds.add(id);
+          if (id && activity && nextScoringSettings.activity.find((option) => option.label === activity)?.stellar) nextStellarIds.add(id);
         });
 
         // A read-only view shows what is saved, never an unsaved draft.
@@ -231,7 +231,10 @@ export default function SessionWorkflowPage() {
               restoredActivity.forEach((value, key) => nextActivity.set(key, value));
               nextPoints.clear();
               restoredPoints.forEach((value, key) => nextPoints.set(key, value));
-              nextStellarStudentId = draft.stellarStudentId && studentIds.has(Number(draft.stellarStudentId)) ? Number(draft.stellarStudentId) : null;
+              nextStellarIds.clear();
+              (draft.stellarStudentIds ?? (draft.stellarStudentId ? [draft.stellarStudentId] : [])).forEach((studentId) => {
+                if (studentIds.has(Number(studentId))) nextStellarIds.add(Number(studentId));
+              });
               (draft.absenceReasons || []).forEach(([studentId, reason]) => {
                 if (studentIds.has(Number(studentId))) nextReasons.set(Number(studentId), String(reason ?? ''));
               });
@@ -260,7 +263,7 @@ export default function SessionWorkflowPage() {
         setHomeworkScores(nextHomework);
         setActivityScores(nextActivity);
         setPointsScores(nextPoints);
-        setStellarStudentId(nextStellarStudentId);
+        setStellarStudentIds(Array.from(nextStellarIds));
         setAbsenceStreakIds(nextStreakIds);
         setAbsenceReasons(nextReasons);
         setShowReasonErrors(false);
@@ -293,12 +296,12 @@ export default function SessionWorkflowPage() {
       homeworkScores: Array.from(homeworkScores.entries()),
       activityScores: Array.from(activityScores.entries()),
       pointsScores: Array.from(pointsScores.entries()),
-      stellarStudentId,
+      stellarStudentIds,
       activeTab: activeTab === 'consolidation' ? 'attendance' : activeTab,
       absenceReasons: Array.from(absenceReasons.entries()),
     };
     dispatch(saveSessionWorkflowDraft({ key: draftKey, draft }));
-  }, [absenceReasons, activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, isViewMode, loadedDraftKey, loading, pointsScores, stellarStudentId]);
+  }, [absenceReasons, activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, isViewMode, loadedDraftKey, loading, pointsScores, stellarStudentIds]);
 
   useEffect(() => {
     if (selectedTabs.length === 0) return;
@@ -350,31 +353,13 @@ export default function SessionWorkflowPage() {
     return false;
   };
 
-  // Stellar is an activity level for one student per lesson: giving it to a student takes it away
-  // from the previous one, whose activity is cleared so the teacher picks a new level for them.
+  // Stellar is the top activity level; any number of students can get it in one lesson.
   const stellarLabel = scoringSettings.activity.find((option) => option.stellar)?.label || '';
   const toggleActivity = (studentId: number, value: string) => {
     if (isViewMode) return;
-    if (!stellarLabel || value !== stellarLabel) {
-      toggleMapValue(setActivityScores, studentId, value);
-      if (stellarStudentId === studentId) setStellarStudentId(null);
-      return;
-    }
-    const becomesStellar = activityScores.get(studentId) !== stellarLabel;
-    const previous = Array.from(activityScores.entries()).find(([id, label]) => label === stellarLabel && id !== studentId)?.[0];
-    setActivityScores((current) => {
-      const next = new Map(current);
-      if (becomesStellar && previous) next.set(previous, '');
-      next.set(studentId, becomesStellar ? stellarLabel : '');
-      return next;
-    });
-    setStellarStudentId(becomesStellar ? studentId : null);
-    if (becomesStellar && previous) {
-      const previousStudent = students.find((student) => getStudentId(student) === previous);
-      showToast.info(t('Only one stellar student per lesson. Choose a new activity for {name}.', {
-        name: [previousStudent?.first_name, previousStudent?.last_name].filter(Boolean).join(' ') || `#${previous}`,
-      }));
-    }
+    const becomesStellar = Boolean(stellarLabel) && value === stellarLabel && activityScores.get(studentId) !== stellarLabel;
+    toggleMapValue(setActivityScores, studentId, value);
+    setStellarStudentIds((current) => (becomesStellar ? [...current, studentId] : current.filter((id) => id !== studentId)));
   };
 
   const setAbsenceReason = (studentId: number, value: string) => {
@@ -462,12 +447,15 @@ export default function SessionWorkflowPage() {
     }), { replace: true });
   };
 
-  // "Suratni yuklash": the class's attendance for the lesson's month, including the lesson just saved.
+  // "Suratni yuklash": the class's attendance and lesson points for the lesson's month, including the lesson just saved.
   const downloadMonthlyAttendanceImage = async () => {
     const monthKey = (selectedDate || toDateKey(new Date())).slice(0, 7);
     try {
-      const records = await sessionWorkflowApi.loadClassAttendance(numericClassId);
-      const grid = buildMonthlyAttendanceGrid({ students, records, monthKey });
+      const [records, scores] = await Promise.all([
+        sessionWorkflowApi.loadClassAttendance(numericClassId),
+        sessionWorkflowApi.loadClassMonthScores(numericClassId, monthKey),
+      ]);
+      const grid = buildMonthlyAttendanceGrid({ students, records, scores, monthKey });
       const className = classData?.class_name || `#${numericClassId}`;
       const canvas = drawMonthlyAttendanceImage(grid, {
         title: className,
@@ -510,7 +498,7 @@ export default function SessionWorkflowPage() {
         homework: homeworkScores,
         activity: activityScores,
         points: pointsScores,
-        stellarStudentId,
+        stellarStudentIds,
         settings: scoringSettings,
         attendanceReasons: absenceReasons,
       });
@@ -550,7 +538,7 @@ export default function SessionWorkflowPage() {
         homework: homeworkScores,
         activity: activityScores,
         points: pointsScores,
-        stellarStudentId,
+        stellarStudentIds,
         settings: scoringSettings,
         saveResult: getApiPayload(saveResponse),
       }));

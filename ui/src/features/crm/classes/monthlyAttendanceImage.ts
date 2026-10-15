@@ -1,14 +1,25 @@
-// "Suratni yuklash": a PNG of a class's attendance for one month, drawn on a canvas so it needs
-// no image library. One row per student, one column per lesson date that has attendance.
+// "Suratni yuklash": a PNG of a class's month, drawn on a canvas so it needs no image library. One
+// row per student, one column per lesson date: each lesson's points on its attendance colour, then
+// how many lessons were scored and the month's total points.
 
 import { getWorkflowStudentId, type WorkflowStudent } from './sessionWorkflowModel';
+import { getCombinedLessonPoints, type LessonPointRecord } from './utils/points';
 
 export type AttendanceMark = 'present' | 'late' | 'excused' | 'absent';
 
 export interface MonthlyAttendanceGrid {
   monthKey: string;
   dates: string[];
-  rows: Array<{ id: number; name: string; marks: Array<AttendanceMark | null>; attended: number; recorded: number }>;
+  rows: Array<{
+    id: number;
+    name: string;
+    marks: Array<AttendanceMark | null>;
+    scores: Array<number | null>;
+    attended: number;
+    recorded: number;
+    lessons: number;
+    total: number;
+  }>;
 }
 
 const UZ_MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
@@ -33,10 +44,13 @@ export const toAttendanceMark = (status: unknown): AttendanceMark | null => {
 export const buildMonthlyAttendanceGrid = ({
   students,
   records,
+  scores = [],
   monthKey,
 }: {
   students: WorkflowStudent[];
   records: Array<{ student_id?: unknown; attendance_date?: unknown; status?: unknown }>;
+  /** The month's lesson grades, each with its lesson date. */
+  scores?: Array<LessonPointRecord & { student_id?: unknown; session_date?: unknown }>;
   monthKey: string;
 }): MonthlyAttendanceGrid => {
   const byKey = new Map<string, AttendanceMark>();
@@ -48,6 +62,14 @@ export const buildMonthlyAttendanceGrid = ({
     dates.add(date);
     byKey.set(`${Number(record.student_id)}:${date}`, mark);
   });
+  const pointsByKey = new Map<string, number>();
+  scores.forEach((grade) => {
+    const date = String(grade.session_date || '').slice(0, 10);
+    const points = getCombinedLessonPoints(grade);
+    if (!date.startsWith(monthKey) || points === null) return;
+    dates.add(date);
+    pointsByKey.set(`${Number(grade.student_id)}:${date}`, points);
+  });
   const sortedDates = Array.from(dates).sort();
 
   const rows = students
@@ -55,13 +77,18 @@ export const buildMonthlyAttendanceGrid = ({
     .map((student) => {
       const id = getWorkflowStudentId(student);
       const marks = sortedDates.map((date) => byKey.get(`${id}:${date}`) || null);
+      const lessonScores = sortedDates.map((date) => pointsByKey.get(`${id}:${date}`) ?? null);
+      const scored = lessonScores.filter((score): score is number => score !== null);
       return {
         id,
         name: [student.last_name, student.first_name].filter(Boolean).join(' ').trim() || `#${id}`,
         marks,
+        scores: lessonScores,
         // Late still counts as attended, as in the lesson summary.
         attended: marks.filter((mark) => mark === 'present' || mark === 'late').length,
         recorded: marks.filter(Boolean).length,
+        lessons: scored.length,
+        total: scored.reduce((sum, score) => sum + score, 0),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -76,6 +103,9 @@ const MARK_STYLE: Record<AttendanceMark, { text: string; fill: string; color: st
   absent: { text: '✗', fill: '#ffe4e6', color: '#be123c', label: 'Kelmadi' },
 };
 
+// A scored lesson with no attendance taken.
+const NO_MARK_STYLE = { text: '', fill: '#f1f5f9', color: '#334155' };
+
 const FONT = 'Arial, Helvetica, sans-serif';
 
 /** Draws the grid; returns null when the browser has no 2D canvas. */
@@ -85,14 +115,15 @@ export const drawMonthlyAttendanceImage = (grid: MonthlyAttendanceGrid, { title,
   const numW = 30;
   const nameW = 200;
   const dateW = 38;
+  const lessonsW = 64;
   const minTotalW = 90;
   const rowH = 30;
   const headH = 84;
   const tableHeadH = 44;
   const legendH = 44;
-  const width = Math.max(pad * 2 + numW + nameW + grid.dates.length * dateW + minTotalW, 520);
+  const width = Math.max(pad * 2 + numW + nameW + grid.dates.length * dateW + lessonsW + minTotalW, 640);
   // With only a few lessons the total column takes up the rest, so the table spans the image.
-  const totalW = width - pad * 2 - numW - nameW - grid.dates.length * dateW;
+  const totalW = width - pad * 2 - numW - nameW - grid.dates.length * dateW - lessonsW;
   const height = pad + headH + tableHeadH + Math.max(grid.rows.length, 1) * rowH + legendH + pad;
 
   const canvas = document.createElement('canvas');
@@ -113,14 +144,15 @@ export const drawMonthlyAttendanceImage = (grid: MonthlyAttendanceGrid, { title,
   ctx.fillText(title, pad, pad + 24);
   ctx.font = `14px ${FONT}`;
   ctx.fillStyle = '#475569';
-  ctx.fillText(`Davomat · ${formatAttendanceMonth(grid.monthKey)}`, pad, pad + 48);
+  ctx.fillText(`Davomat va ballar · ${formatAttendanceMonth(grid.monthKey)}`, pad, pad + 48);
   if (subtitle) ctx.fillText(subtitle, pad, pad + 68);
 
   const tableTop = pad + headH;
   const tableLeft = pad;
   const tableRight = width - pad;
   const xDate = tableLeft + numW + nameW;
-  const xTotal = xDate + grid.dates.length * dateW;
+  const xLessons = xDate + grid.dates.length * dateW;
+  const xTotal = xLessons + lessonsW;
 
   // Header row.
   ctx.fillStyle = '#f1f5f9';
@@ -141,7 +173,8 @@ export const drawMonthlyAttendanceImage = (grid: MonthlyAttendanceGrid, { title,
     ctx.fillText(date.slice(5, 7), x, tableTop + 31);
   });
   ctx.font = `bold 12px ${FONT}`;
-  ctx.fillText('Jami', xTotal + totalW / 2, tableTop + tableHeadH / 2);
+  ctx.fillText('Darslar', xLessons + lessonsW / 2, tableTop + tableHeadH / 2);
+  ctx.fillText('Jami ball', xTotal + totalW / 2, tableTop + tableHeadH / 2);
 
   // Student rows.
   const fitText = (text: string, maxWidth: number) => {
@@ -165,23 +198,27 @@ export const drawMonthlyAttendanceImage = (grid: MonthlyAttendanceGrid, { title,
     ctx.textAlign = 'left';
     ctx.fillText(fitText(row.name, nameW - 12), tableLeft + numW + 6, y + rowH / 2);
 
+    // The lesson's points on its attendance colour; the attendance symbol when it was not scored.
     row.marks.forEach((mark, index) => {
-      if (!mark) return;
-      const style = MARK_STYLE[mark];
+      const score = row.scores[index];
+      if (!mark && score === null) return;
+      const style = mark ? MARK_STYLE[mark] : NO_MARK_STYLE;
       const x = xDate + index * dateW;
       ctx.fillStyle = style.fill;
-      ctx.fillRect(x + 4, y + 4, dateW - 8, rowH - 8);
+      ctx.fillRect(x + 3, y + 4, dateW - 6, rowH - 8);
       ctx.fillStyle = style.color;
-      ctx.font = `bold 14px ${FONT}`;
+      ctx.font = score === null ? `bold 14px ${FONT}` : `bold 12px ${FONT}`;
       ctx.textAlign = 'center';
-      ctx.fillText(style.text, x + dateW / 2, y + rowH / 2 + 1);
+      ctx.fillText(score === null ? style.text : String(score), x + dateW / 2, y + rowH / 2 + 1);
     });
 
-    const percent = row.recorded ? Math.round((row.attended / row.recorded) * 100) : 0;
-    ctx.fillStyle = row.recorded === 0 ? '#94a3b8' : percent >= 80 ? '#047857' : percent >= 50 ? '#b45309' : '#be123c';
-    ctx.font = `bold 12px ${FONT}`;
     ctx.textAlign = 'center';
-    ctx.fillText(row.recorded ? `${row.attended}/${row.recorded} · ${percent}%` : '—', xTotal + totalW / 2, y + rowH / 2);
+    ctx.fillStyle = row.lessons ? '#334155' : '#94a3b8';
+    ctx.font = `600 12px ${FONT}`;
+    ctx.fillText(row.lessons ? String(row.lessons) : '—', xLessons + lessonsW / 2, y + rowH / 2);
+    ctx.fillStyle = row.lessons ? '#0f172a' : '#94a3b8';
+    ctx.font = `bold 13px ${FONT}`;
+    ctx.fillText(row.lessons ? String(row.total) : '—', xTotal + totalW / 2, y + rowH / 2);
   });
   if (grid.rows.length === 0) {
     ctx.fillStyle = '#64748b';
@@ -196,7 +233,7 @@ export const drawMonthlyAttendanceImage = (grid: MonthlyAttendanceGrid, { title,
   ctx.lineWidth = 1;
   ctx.strokeRect(tableLeft + 0.5, tableTop + 0.5, tableRight - tableLeft - 1, tableBottom - tableTop - 1);
   ctx.beginPath();
-  [tableLeft + numW, xDate, ...grid.dates.map((_, index) => xDate + (index + 1) * dateW)].forEach((x) => {
+  [tableLeft + numW, xDate, ...grid.dates.map((_, index) => xDate + (index + 1) * dateW), xTotal].forEach((x) => {
     ctx.moveTo(Math.round(x) + 0.5, tableTop);
     ctx.lineTo(Math.round(x) + 0.5, tableBottom);
   });
@@ -221,6 +258,8 @@ export const drawMonthlyAttendanceImage = (grid: MonthlyAttendanceGrid, { title,
     ctx.fillText(style.label, legendX + 26, legendY + 1);
     legendX += 26 + ctx.measureText(style.label).width + 18;
   });
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('Raqam: dars bali', legendX, legendY + 1);
 
   return canvas;
 };

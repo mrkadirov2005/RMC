@@ -1,6 +1,7 @@
 // Shared utility helpers.
 
 import type {
+  OwnerOverviewKpiRow,
   OwnerManagerDailyIncomeRow,
   OwnerManagerFormData,
   OwnerManagerPaymentMonthStats,
@@ -300,4 +301,14 @@ export const buildOwnerTeacherEarnings = (
     })
     .filter((row): row is OwnerManagerTeacherEarningRow => Boolean(row))
     .sort((a, b) => b.earnedAmount - a.earnedAmount);
+};
+
+// The saved monthly KPI; until an admin saves one, the auto part (lesson results + retention).
+// No lesson results means no score, so a teacher without lessons is not ranked on retention alone.
+export const kpiScoreOf = (row: OwnerOverviewKpiRow) => {
+  const saved = Number(row.kpi?.final_score);
+  if (row.kpi && Number.isFinite(saved)) return saved;
+  const studentScore = Number(row.preview?.student_score || 0);
+  if (!(studentScore > 0)) return 0;
+  return Math.round(((studentScore + Number(row.preview?.retention_score || 0)) / 2) * 100) / 100;
 };

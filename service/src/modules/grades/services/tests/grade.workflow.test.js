@@ -353,18 +353,9 @@ describe('grade service', () => {
       await expect(gradeService.saveSessionWorkflow(baseBody(overrides), 3)).resolves.toEqual({ error: 'invalid_payload' });
     });
 
-    it('refuses more than one stellar student in a lesson', async () => {
-      const body = baseBody({
-        records: [{ student_id: 9, is_stellar_student: true }, { student_id: 10, is_stellar_student: true }],
-      });
-
-      await expect(gradeService.saveSessionWorkflow(body, 3)).resolves.toEqual({ error: 'multiple_stellar_students' });
-    });
-
-    it('allows several stellar flags when coins are switched off', async () => {
+    it('allows several stellar students in one lesson', async () => {
       classInCenter.mockResolvedValue(false);
       const body = baseBody({
-        award_coins: false,
         records: [{ student_id: 9, is_stellar_student: true }, { student_id: 10, is_stellar_student: true }],
       });
 

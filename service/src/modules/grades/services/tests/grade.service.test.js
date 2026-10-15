@@ -53,10 +53,8 @@ describe('grade service', () => {
     expect(result.percentage).toBe(0);
   });
 
-  test('rejects invalid workflow shape, multiple stellar students, and cross-center class', async () => {
+  test('rejects invalid workflow shape and cross-center class', async () => {
     await expect(service.saveSessionWorkflow({}, 2)).resolves.toEqual({ error: 'invalid_payload' });
-    const base = { class_id: 1, session_id: 2, records: [{ student_id: 1, is_stellar_student: true }, { student_id: 2, is_stellar_student: true }] };
-    await expect(service.saveSessionWorkflow(base, 2)).resolves.toEqual({ error: 'multiple_stellar_students' });
     tenantDb.classInCenter.mockResolvedValue(false);
     await expect(service.saveSessionWorkflow({ class_id: 1, session_id: 2, records: [{ student_id: 1 }] }, 2)).resolves.toEqual({ error: 'invalid_center' });
     expect(transaction).not.toHaveBeenCalled();
