@@ -495,6 +495,8 @@ export const absenceAlertAPI = {
   getAll: () => apiClient.get('/absence-alerts'),
   resolve: (data: { student_id: number; class_id: number; outcome: 'sick' | 'not_interested' | 'excused' | 'left'; note?: string }) =>
     apiClient.post('/absence-alerts/resolve', data),
+  /** This month's students with homework not done or done partly in two or more lessons. */
+  getHomeworkWarnings: () => apiClient.get('/absence-alerts/homework'),
 };
 
 export const salaryAPI = {

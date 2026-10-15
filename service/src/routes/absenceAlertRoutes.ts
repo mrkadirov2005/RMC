@@ -6,6 +6,7 @@ const absenceAlertController = require('../modules/absence_alerts/controllers/ab
 const { requireRole } = require('../middleware/auth');
 
 router.get('/', absenceAlertController.getAlerts);
+router.get('/homework', absenceAlertController.getHomeworkWarnings);
 router.post('/resolve', requireRole('superuser'), absenceAlertController.resolveAlert);
 
 module.exports = router;
