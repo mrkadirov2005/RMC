@@ -40,4 +40,14 @@ export const attendanceLabels: Record<string, string> = {
   'Set the attendance status and leave a short note if anything unusual happened.': "Davomat holatini belgilang va g'ayrioddiy narsa bo'lsa, qisqa izoh qoldiring.",
   'Unique Students': "Noyob o'quvchilar",
   'total records': 'jami yozuv',
+  // Homework warnings: homework not done or done partly in two or more lessons this month
+  'Homework warnings': 'Uy vazifasi ogohlantirishlari',
+  'Homework warnings ({count})': 'Uy vazifasi ogohlantirishlari ({count})',
+  'Homework not done or done partly in 2 or more lessons this month.': "Bu oy kamida 2 ta darsda uy vazifasini bajarmagan yoki chala bajargan o'quvchilar.",
+  'No homework warnings this month.': "Bu oy uy vazifasi bo'yicha ogohlantirish yo'q.",
+  'No homework warnings match these filters.': "Bu filtrlarga mos ogohlantirish yo'q.",
+  'Search by student name': "O'quvchi ismi bo'yicha qidirish",
+  'Homework status': 'Uy vazifasi holati',
+  '{count} lessons': '{count} ta dars',
+  Parent: 'Ota-ona',
 };
