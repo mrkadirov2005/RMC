@@ -9,6 +9,8 @@ export const dashboardLabels: Record<string, string> = {
   'Monthly payment activity': "Oylik to'lov faolligi",
   'No records found for this card.': 'Bu karta uchun yozuvlar topilmadi.',
   'Number of completed student payments per day.': "Kuniga bajarilgan o'quvchi to'lovlari soni.",
+  'Money collected each day. Hover over a day to see how much came in.': "Har kuni yig'ilgan pul. Qancha tushganini ko'rish uchun kun ustiga olib boring.",
+  '{count} payments': "{count} ta to'lov",
   'Open attendance management': 'Davomat boshqaruvini ochish',
   'Open payments management': "To'lovlar boshqaruvini ochish",
   'Operations dashboard': 'Operatsiyalar paneli',

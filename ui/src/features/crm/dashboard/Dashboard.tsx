@@ -15,6 +15,8 @@ import { TelegramInboxPanel } from '../telegramBot/TelegramInboxPanel';
 import { studentAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 import { LeadsReminder } from '../telegram/LeadsReminder';
+import { formatMoney } from '@/utils/helpers';
+import { buildPaymentDays, centerDayKey, previousCenterDayKey } from './dailyPayments';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
@@ -40,37 +42,22 @@ const Dashboard = memo(() => {
       ),
     [paymentHook.formData.student_id, paymentHook.state.items]
   );
-  const today = new Date();
-  const dateKey = (date: Date) => date.toISOString().slice(0, 10);
-  const todayKey = dateKey(today);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = dateKey(yesterday);
+  const today = selectedMonth;
+  // Days in Tashkent time: a UTC date would put each bar on the day before.
+  const todayKey = centerDayKey(today);
+  const yesterdayKey = previousCenterDayKey(today);
   const payments = scopedCollections.payments;
   const attendance = scopedCollections.attendance;
-  const isPaid = (payment: Record<string, unknown>) =>
-    payment.is_complete === true ||
-    ['paid', 'completed', 'complete', 'success'].includes(String(payment.status || payment.payment_status || '').toLowerCase());
-  const paymentDays = useMemo(() => {
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    return Array.from({ length: daysInMonth }, (_, index) => {
-      const day = new Date(year, month, index + 1);
-      const key = dateKey(day);
-      return {
-        key,
-        label: String(index + 1),
-        count: payments.filter((payment) => isPaid(payment) && String(payment.payment_date || '').slice(0, 10) === key).length,
-      };
-    });
-  }, [payments, today]);
-  const paidToday = paymentDays.find((day) => day.key === todayKey)?.count || 0;
-  const paidYesterday = payments.filter((payment) => isPaid(payment) && String(payment.payment_date || '').slice(0, 10) === yesterdayKey).length;
+  const paymentDays = useMemo(() => buildPaymentDays(payments, today), [payments, today]);
+  const [hoveredDayKey, setHoveredDayKey] = useState<string | null>(null);
+  const paidToday = paymentDays.find((day) => day.key === todayKey) || { amount: 0, count: 0 };
+  // Yesterday can be last month (on the 1st), so it is counted from the month it falls in.
+  const paidYesterday = buildPaymentDays(payments, new Date(`${yesterdayKey}T12:00:00+05:00`)).find((day) => day.key === yesterdayKey) || { amount: 0, count: 0 };
+  const shownDay = paymentDays.find((day) => day.key === hoveredDayKey) || paymentDays.find((day) => day.key === todayKey);
   const attendanceToday = attendance.filter((record) => String(record.attendance_date || '').slice(0, 10) === todayKey);
   const presentToday = attendanceToday.filter((record) => ['Present', 'Late'].includes(String(record.status))).length;
   const absentToday = attendanceToday.filter((record) => String(record.status).toLowerCase().startsWith('absent')).length;
-  const maxPaymentCount = Math.max(1, ...paymentDays.map((day) => day.count));
+  const maxPaymentAmount = Math.max(1, ...paymentDays.map((day) => day.amount));
   const { handleOpenModal, handleCloseModal, handleSubmit, isModalOpen, formData, setFormData, studentOptions, centerOptions, isLoadingOptions, state } = paymentHook;
 
   return (
@@ -123,13 +110,38 @@ const Dashboard = memo(() => {
       {loading ? <div className="rounded-xl border p-10 text-center text-sm text-slate-500">{t('Loading dashboard data...')}</div> : activeTab === 'payments' ? (
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-3">
-            <Metric icon={CircleDollarSign} label={t('Paid yesterday')} value={paidYesterday} tone="text-amber-600 bg-amber-50" />
-            <Metric icon={CheckCircle2} label={t('Paid today')} value={paidToday} tone="text-emerald-600 bg-emerald-50" />
+            <Metric icon={CircleDollarSign} label={t('Paid yesterday')} value={formatMoney(paidYesterday.amount)} hint={t('{count} payments', { count: paidYesterday.count })} tone="text-amber-600 bg-amber-50" />
+            <Metric icon={CheckCircle2} label={t('Paid today')} value={formatMoney(paidToday.amount)} hint={t('{count} payments', { count: paidToday.count })} tone="text-emerald-600 bg-emerald-50" />
             <Metric icon={Users} label={t('Students this month')} value={stats.totalStudents} tone="text-cyan-600 bg-cyan-50" />
           </div>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="mb-5 flex items-center justify-between"><div><h2 className="font-black">{t('Monthly payment activity')}</h2><p className="text-sm text-slate-500">{t('Number of completed student payments per day.')}</p></div><BarChart3 className="h-5 w-5 text-cyan-600" /></div>
-            <div className="flex h-48 items-end gap-1 overflow-x-auto pb-6">{paymentDays.map((day) => <div key={day.key} className="flex min-w-[14px] flex-1 flex-col items-center justify-end gap-1"><div title={`${day.key}: ${day.count}`} className={`w-full rounded-t-sm ${day.key === todayKey ? 'bg-emerald-500' : day.key === yesterdayKey ? 'bg-amber-500' : 'bg-cyan-500/70'}`} style={{ height: `${Math.max(4, (day.count / maxPaymentCount) * 140)}px` }} /><span className="text-[0.5625rem] text-slate-400">{day.label}</span></div>)}</div>
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div><h2 className="font-black">{t('Monthly payment activity')}</h2><p className="text-sm text-slate-500">{t('Money collected each day. Hover over a day to see how much came in.')}</p></div>
+              {shownDay ? (
+                <div className="rounded-lg bg-slate-50 px-3 py-2 text-right dark:bg-white/[0.06]" aria-live="polite">
+                  <p className="text-xs font-bold text-slate-500">{new Date(`${shownDay.key}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}</p>
+                  <p className="text-lg font-black text-slate-950 dark:text-white">{formatMoney(shownDay.amount)}</p>
+                  <p className="text-xs text-slate-500">{t('{count} payments', { count: shownDay.count })}</p>
+                </div>
+              ) : <BarChart3 className="h-5 w-5 text-cyan-600" />}
+            </div>
+            <div className="flex h-48 items-end gap-1 overflow-x-auto pb-6" onMouseLeave={() => setHoveredDayKey(null)}>
+              {paymentDays.map((day) => (
+                <button
+                  key={day.key}
+                  type="button"
+                  aria-label={`${day.key}: ${formatMoney(day.amount)}`}
+                  title={`${formatMoney(day.amount)} · ${t('{count} payments', { count: day.count })}`}
+                  onMouseEnter={() => setHoveredDayKey(day.key)}
+                  onFocus={() => setHoveredDayKey(day.key)}
+                  onClick={() => setHoveredDayKey(day.key)}
+                  className="group flex h-full min-w-[14px] flex-1 flex-col items-center justify-end gap-1"
+                >
+                  <div className={`w-full rounded-t-sm transition-opacity group-hover:opacity-80 ${day.key === hoveredDayKey ? 'ring-2 ring-slate-900/30 dark:ring-white/40' : ''} ${day.key === todayKey ? 'bg-emerald-500' : day.key === yesterdayKey ? 'bg-amber-500' : 'bg-cyan-500/70'}`} style={{ height: `${Math.max(4, (day.amount / maxPaymentAmount) * 140)}px` }} />
+                  <span className="text-[0.5625rem] text-slate-400">{day.label}</span>
+                </button>
+              ))}
+            </div>
           </section>
           <Button variant="outline" onClick={() => navigate('/payments')}>{t('Open payments management')}</Button>
         </div>
@@ -188,8 +200,8 @@ const Dashboard = memo(() => {
   );
 });
 
-const Metric = ({ icon: Icon, label, value, tone }: { icon: typeof Users; label: string; value: number; tone: string }) => (
-  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"><div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${tone}`}><Icon className="h-4 w-4" /></div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 text-2xl font-black">{value.toLocaleString()}</p></div>
+const Metric = ({ icon: Icon, label, value, hint, tone }: { icon: typeof Users; label: string; value: number | string; hint?: string; tone: string }) => (
+  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"><div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${tone}`}><Icon className="h-4 w-4" /></div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 text-2xl font-black">{value.toLocaleString()}</p>{hint && <p className="mt-0.5 text-xs text-slate-500">{hint}</p>}</div>
 );
 
 Dashboard.displayName = 'Dashboard';
