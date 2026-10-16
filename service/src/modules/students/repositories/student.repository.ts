@@ -439,6 +439,17 @@ const findDeletedWithClassAndTeacher = async (centerId?: number) => {
     .orderBy(desc(students.deletedAt), desc(students.studentId));
 };
 
+// An active discount (serial or one-month) that takes the group's whole fee off: the student
+// studies for free, so no payment is ever entered for them.
+const fullyDiscountedExpr = sql`(COALESCE(${classes.paymentAmount}, 0) > 0 AND EXISTS (
+  SELECT 1 FROM ${discounts} d
+  WHERE d.student_id = ${students.studentId} AND d.active = TRUE
+    AND d.discount_kind IN ('serial_discount', 'monthly_discount')
+    AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+    AND (${effectiveEndDate('d')} IS NULL OR ${effectiveEndDate('d')} >= CURRENT_DATE)
+    AND CASE WHEN d.discount_type = 'percent' THEN d.value >= 100 ELSE d.value >= ${classes.paymentAmount} END
+))`;
+
 // Billing and lesson pages need a transferred-out student for the days they were still in the
 // group; student lists pass excludeTransferred to show only who is in the group now.
 const findByClassIncludingTransferred = async (classId: number, centerId?: number, teacherId?: number, excludeTransferred = false) => {
@@ -473,7 +484,9 @@ const findByClassIncludingTransferred = async (classId: number, centerId?: numbe
           AND p.payment_date >= DATE_TRUNC('month', CURRENT_DATE)::date
           AND p.payment_date < (DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month')::date
       ), 0)::int`,
-      paid_this_month: sql`COALESCE((
+      free_this_month: fullyDiscountedExpr,
+      // A student whose discount covers the whole fee owes nothing, so they count as paid.
+      paid_this_month: sql`(COALESCE((
         SELECT COUNT(*) FILTER (WHERE LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid'))
         FROM ${payments} p
         WHERE p.student_id = ${students.studentId}
@@ -481,7 +494,7 @@ const findByClassIncludingTransferred = async (classId: number, centerId?: numbe
           AND COALESCE(p.payment_type, '') <> 'Transfer Adjustment'
           AND p.payment_date >= DATE_TRUNC('month', CURRENT_DATE)::date
           AND p.payment_date < (DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month')::date
-      ), 0)::int > 0`,
+      ), 0)::int > 0 OR ${fullyDiscountedExpr})`,
       last_payment_date_this_month: sql`(
         SELECT MAX(p.payment_date) FILTER (WHERE LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid'))
         FROM ${payments} p

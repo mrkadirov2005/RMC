@@ -129,6 +129,8 @@ const translations: Record<string, string> = {
   'Outstanding debt': 'Qolgan qarz',
   'Paid': "To'langan",
   Unpaid: "To'lanmagan",
+  Free: 'Bepul',
+  'Discount covers the whole fee': "Chegirma butun to'lovni qoplaydi",
   'Still unpaid': "Hali to'lanmagan",
   'Should pay': "To'lashi kerak",
   'Student Payments': "O'quvchi to'lovlari",
