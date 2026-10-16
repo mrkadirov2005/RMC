@@ -98,6 +98,7 @@ const findActiveStudents = (center_id?: string, teacherId?: number) => {
       last_name: students.lastName,
       enrollment_number: students.enrollmentNumber,
       center_id: students.centerId,
+      start_date: students.startDate,
     })
     .from(students)
     .where(and(...conditions));

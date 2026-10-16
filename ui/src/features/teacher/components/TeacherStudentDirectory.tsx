@@ -323,7 +323,7 @@ export default function TeacherStudentDirectory({
   };
 
   const getPaymentLabel = (student: TeacherStudentItem) => {
-    if (student.free_this_month) return t('Free');
+    if (student.free_this_month) return t('Free of charge');
     if (!student.paid_this_month) return t('Unpaid');
     const amount = formatMoney(student.payment_amount_this_month);
     return amount ? `${t('Paid')} ${amount}` : t('Paid');

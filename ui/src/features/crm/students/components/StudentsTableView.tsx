@@ -293,7 +293,7 @@ export const StudentsTableView = ({
     return date.toLocaleDateString();
   };
   const getPaymentLabel = (student: Student) => {
-    if (student.free_this_month) return 'Free';
+    if (student.free_this_month) return 'Free of charge';
     if (!student.paid_this_month) return 'Unpaid';
     const amount = formatMoney(student.payment_amount_this_month);
     return amount ? `Paid ${amount}` : 'Paid';

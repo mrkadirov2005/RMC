@@ -13,6 +13,7 @@ import { PaymentFormDialog } from '../../payments/components/PaymentFormDialog';
 import { createPaymentDraft, normalizePaymentFormData } from '../../payments/utils/paymentForm';
 import { getCreatedPaymentId, printPaymentReceipt } from '../../payments/utils/printPaymentReceipt';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { getFeeToCollectThisMonth } from '@/shared/billingPeriod';
 
 interface Payment {
   payment_id?: number;
@@ -76,13 +77,13 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Payment>>(
-    createPaymentDraft(defaultCenterId, { amount: classData?.payment_amount || 0 })
+    createPaymentDraft(defaultCenterId, { amount: getFeeToCollectThisMonth(student, classData?.payment_amount) })
   );
   const [loading, setLoading] = useState(false);
 
   const getNewPaymentDraft = (): Partial<Payment> => ({
     ...createPaymentDraft(defaultCenterId),
-    amount: classData?.payment_amount || 0,
+    amount: getFeeToCollectThisMonth(student, classData?.payment_amount),
   });
 
 // Handles open modal.

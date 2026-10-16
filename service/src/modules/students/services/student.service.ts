@@ -77,6 +77,7 @@ const createStudent = async (body: any) => {
     email: body.email,
     phone: body.phone,
     date_of_birth: body.date_of_birth,
+    start_date: body.start_date,
     parent_name: body.parent_name,
     parent_phone: body.parent_phone,
     gender: body.gender,

@@ -100,6 +100,7 @@ const studentInsertValues = (payload: Record<string, unknown>) => ({
   email: payload.email,
   phone: payload.phone,
   dateOfBirth: payload.date_of_birth,
+  startDate: payload.start_date || null,
   parentName: payload.parent_name,
   parentPhone: payload.parent_phone,
   gender: payload.gender,
@@ -540,6 +541,7 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
     email: 'email',
     phone: 'phone',
     date_of_birth: 'dateOfBirth',
+    start_date: 'startDate',
     parent_name: 'parentName',
     parent_phone: 'parentPhone',
     gender: 'gender',
@@ -560,6 +562,8 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
   for (const [snake, camel] of Object.entries(mapping)) {
     if (payload[snake] !== undefined && payload[snake] !== null) setData[camel] = payload[snake];
   }
+  // An emptied start date field clears it: the student is billed for whole months again.
+  if (payload.start_date === '') setData.startDate = null;
   // Only the main record carries a login; a group record keeps its (empty) username.
   if (setData.username !== undefined) {
     setData.username = sql`CASE WHEN ${students.mainStudentId} IS NULL THEN ${setData.username} ELSE ${students.username} END`;

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength, Matches, ValidateIf } from 'class-validator';
 
 class StudentListQueryDto {
   @IsOptional()
@@ -139,6 +139,12 @@ class CreateStudentDto {
   @IsDateString()
   date_of_birth?: string;
 
+  // The day the student starts in the group: their first month is billed from this day.
+  @IsOptional()
+  @ValidateIf((_, value) => value !== '')
+  @IsDateString()
+  start_date?: string;
+
   @IsOptional()
   @IsString()
   parent_name?: string;
@@ -261,6 +267,12 @@ class UpdateStudentDto {
   @IsOptional()
   @IsDateString()
   date_of_birth?: string;
+
+  // The day the student starts in the group: their first month is billed from this day.
+  @IsOptional()
+  @ValidateIf((_, value) => value !== '')
+  @IsDateString()
+  start_date?: string;
 
   @IsOptional()
   @IsString()
