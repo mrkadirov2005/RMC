@@ -81,6 +81,7 @@ export interface TeacherStudentItem {
   coins?: number;
   deleted_at?: string | null;
   paid_this_month?: boolean;
+  free_this_month?: boolean;
   payment_amount_this_month?: number | string | null;
   payment_count_this_month?: number;
   payment_status_this_month?: string | null;
@@ -322,6 +323,7 @@ export default function TeacherStudentDirectory({
   };
 
   const getPaymentLabel = (student: TeacherStudentItem) => {
+    if (student.free_this_month) return t('Free of charge');
     if (!student.paid_this_month) return t('Unpaid');
     const amount = formatMoney(student.payment_amount_this_month);
     return amount ? `${t('Paid')} ${amount}` : t('Paid');
@@ -330,6 +332,7 @@ export default function TeacherStudentDirectory({
   const getPaymentTitle = (student: TeacherStudentItem) => {
     const date = formatDate(student.last_payment_date_this_month);
     const status = String(student.payment_status_this_month || '').trim();
+    if (student.free_this_month) return t('Discount covers the whole fee');
     if (!student.paid_this_month) return t('No completed payment recorded this month');
     return [status || t('Completed'), date].filter(Boolean).join(' / ');
   };

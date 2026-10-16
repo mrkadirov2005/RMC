@@ -322,7 +322,8 @@ const DashboardPaymentsPage = () => {
                           event.stopPropagation();
                           // One payment is at most the group's fee, even when more than a month is owed.
                           const owed = (row.remaining_before_discount ?? row.remaining) || row.monthly_fee || 0;
-                          const amount = row.monthly_fee > 0 ? Math.min(owed, row.monthly_fee) : owed;
+                          // Rounded up to whole so'm: a first month billed from the start day can end in tiyin.
+                          const amount = Math.ceil(row.monthly_fee > 0 ? Math.min(owed, row.monthly_fee) : owed);
                           paymentHook.handleOpenModalForStudent(row.student_id, { amount: amount || undefined });
                         }}
                       >

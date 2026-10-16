@@ -199,6 +199,10 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             disabled={!selectedTeacherId}
           />
         </div>
+        <div className={fieldClass}>
+          <TextField label={t('Start date')} type="date" value={String(formData.start_date || '').slice(0, 10)} onChange={(value) => setFormData({ ...formData, start_date: value })} />
+          <p className="text-xs text-slate-500">{t('The first month is charged from this day. Leave empty to charge whole months.')}</p>
+        </div>
       </FormSection>
 
       <FormSection

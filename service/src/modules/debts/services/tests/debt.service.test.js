@@ -37,6 +37,14 @@ describe('debt service', () => {
     expect(result.summary.total_unpaid_instances).toBe(2);
   });
 
+  test('does not count months before the student started as unpaid', async () => {
+    repository.findActiveStudents.mockResolvedValue([{ student_id: 1, first_name: 'A', last_name: 'B', enrollment_number: 'E1', center_id: 2, start_date: '2026-02-20' }]);
+    repository.findPaymentsForStudentsInRange.mockResolvedValue([]);
+    repository.findOpenDebtsForStudents.mockResolvedValue([]);
+    const result = await service.analyzeUnpaidMonths('2', '2026-01-01', '2026-03-31');
+    expect(result.results[0].unpaid_months.map((m) => m.month)).toEqual([2, 3]);
+  });
+
   test('generates debt only for teacher-visible students and resolves their center', async () => {
     repository.getStudentCenter.mockResolvedValue(2);
     repository.findByStudent.mockResolvedValueOnce([]).mockResolvedValueOnce([{ student_id: 2 }]);

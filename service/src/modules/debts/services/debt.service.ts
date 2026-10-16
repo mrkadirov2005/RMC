@@ -74,7 +74,10 @@ const analyzeUnpaidMonths = async (center_id?: string, start_date?: string, end_
       paidMonths.add(`${date.getFullYear()}-${date.getMonth() + 1}`);
     });
 
-    const unpaidMonths = monthsToCheck.filter((m) => !paidMonths.has(`${m.year}-${m.month}`));
+    // Months before the student's start date aren't owed.
+    const startMonth = String(student.start_date || '').slice(0, 7);
+    const unpaidMonths = monthsToCheck.filter((m) =>
+      !paidMonths.has(`${m.year}-${m.month}`) && (!startMonth || `${m.year}-${String(m.month).padStart(2, '0')}` >= startMonth));
     const debtsResult = (debtsByStudent.get(student.student_id) || []).map(({ student_id, ...rest }: any) => rest);
     const totalDebt = debtsResult.reduce((sum: number, d: any) => sum + parseFloat(d.balance || 0), 0);
 

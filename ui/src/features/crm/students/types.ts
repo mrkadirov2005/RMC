@@ -42,6 +42,7 @@ export interface Student {
   coins?: number;
   class_payment_amount?: number | string | null;
   paid_this_month?: boolean;
+  free_this_month?: boolean;
   payment_amount_this_month?: number | string | null;
   payment_count_this_month?: number;
   payment_status_this_month?: string | null;

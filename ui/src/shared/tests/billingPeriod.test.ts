@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   coversExpectedAmount,
+  getFeeToCollectThisMonth,
   getCenterMonthKey,
   getDaysInGroupForMonth,
   getExpectedAmountForMonth,
@@ -60,5 +61,23 @@ describe('billing period', () => {
   it('reads the month in Tashkent time', () => {
     expect(getCenterMonthKey(new Date('2026-09-30T18:59:00Z'))).toBe('2026-09');
     expect(getCenterMonthKey(new Date('2026-09-30T19:00:00Z'))).toBe('2026-10');
+  });
+});
+
+describe('getFeeToCollectThisMonth', () => {
+  const october20 = new Date('2026-10-20T09:00:00Z');
+
+  it('fills in only the days from the start date, rounded up to whole so\'m', () => {
+    // 12 of 31 days of 320,000 is 123,870.97.
+    expect(getFeeToCollectThisMonth({ start_date: '2026-10-20' }, 320000, october20)).toBe(123871);
+  });
+
+  it('fills in the whole fee without a start date or once the start month is over', () => {
+    expect(getFeeToCollectThisMonth({}, 320000, october20)).toBe(320000);
+    expect(getFeeToCollectThisMonth({ start_date: '2026-09-10' }, 320000, october20)).toBe(320000);
+  });
+
+  it('fills in the whole fee for a student paying ahead of a later start', () => {
+    expect(getFeeToCollectThisMonth({ start_date: '2026-11-05' }, 320000, october20)).toBe(320000);
   });
 });

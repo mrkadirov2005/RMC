@@ -1,5 +1,6 @@
-// A student record's time in its group. Only transfers set these dates: the old record gets an
-// end_date, the new one a start_date. Records without them are billed for whole months, as before.
+// A student record's time in its group. A transfer gives the old record an end_date and the new
+// one a start_date; a start date can also be entered for a new student. Records without them are
+// billed for whole months.
 export interface BillingPeriodRecord {
   start_date?: unknown;
   end_date?: unknown;
@@ -40,6 +41,17 @@ export const getExpectedAmountForMonth = (
   if (!monthly || !/^\d{4}-\d{2}$/.test(monthKey)) return monthly;
   const { days, totalDays } = getDaysInGroupForMonth(record, monthKey);
   return days === totalDays ? monthly : roundMoney((monthly * days) / totalDays);
+};
+
+/**
+ * What the payment form fills in this month: the fee for the days in the group this month (a
+ * student who starts on the 20th owes 12 of 31 days), rounded up to whole so'm for cash. A
+ * student who hasn't started yet is paying ahead, so they get the whole fee.
+ */
+export const getFeeToCollectThisMonth = (record: BillingPeriodRecord | null | undefined, monthlyAmount: unknown, now = new Date()) => {
+  const monthly = Number(monthlyAmount || 0);
+  const expected = getExpectedAmountForMonth(record, monthly, getCenterMonthKey(now));
+  return expected > 0 ? Math.ceil(expected) : monthly;
 };
 
 /** Paid at least the expected amount, allowing for cent rounding in transfer splits. */

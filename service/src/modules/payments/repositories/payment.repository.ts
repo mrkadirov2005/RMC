@@ -215,7 +215,8 @@ const findStaffName = async (table: 'owners' | 'superusers', id: number) => {
 
 // Every active student's payments over a date range, with their group, teacher and subject, for
 // the dashboard's payments page: filtered and paged (100 per page) in SQL, plus totals for the
-// whole filtered list. Expected = the group's monthly fee x the months the range touches, less
+// whole filtered list. Expected = the group's monthly fee x the months the range touches (from the
+// student's start date, if set), less
 // discounts: what payments in the range already took off (serial or one-month), and the active
 // serial discount for each month in the range that has no payment yet.
 const findStudentPaymentSummary = async (filters: {
@@ -232,7 +233,8 @@ const findStudentPaymentSummary = async (filters: {
   offset: number;
 }) => {
   const params: any[] = [filters.from, filters.to, filters.months];
-  const where: string[] = ['s.deleted_at IS NULL', "LOWER(COALESCE(s.status::text, 'Active')) = 'active'"];
+  // A student who starts after the range isn't in the group yet, so they owe nothing in it.
+  const where: string[] = ['s.deleted_at IS NULL', "LOWER(COALESCE(s.status::text, 'Active')) = 'active'", '(s.start_date IS NULL OR s.start_date <= $2::date)'];
   const add = (value: any) => { params.push(value); return `$${params.length}`; };
   if (filters.centerId) where.push(`s.center_id = ${add(filters.centerId)}`);
   if (filters.teacherId) where.push(`COALESCE(c.teacher_id, s.teacher_id) = ${add(filters.teacherId)}`);
@@ -256,6 +258,14 @@ const findStudentPaymentSummary = async (filters: {
               (SELECT string_agg(DISTINCT sub.subject_name, ', ') FROM subjects sub WHERE sub.class_id = s.class_id) AS subject,
               COALESCE(p.paid, 0)::numeric AS paid_amount, COALESCE(p.payments_count, 0)::int AS payments_count, p.last_payment_date,
               COALESCE(p.discounts, 0)::numeric AS discount_applied, COALESCE(p.paid_months, 0)::int AS paid_months,
+              -- Months billed in the range: none before the start date, and the start month only
+              -- for the days from the start date (as a transfer splits a month).
+              LEAST((SELECT COALESCE(SUM(CASE
+                  WHEN s.start_date IS NULL OR s.start_date <= m::date THEN 1
+                  WHEN s.start_date >= (m + interval '1 month')::date THEN 0
+                  ELSE ((m + interval '1 month')::date - s.start_date)::numeric / ((m + interval '1 month')::date - m::date)
+                END), 0)
+                FROM generate_series(date_trunc('month', $1::date), date_trunc('month', $2::date), interval '1 month') m), $3::int)::numeric AS billed_months,
               CASE
                 WHEN sd.discount_type = 'percent' THEN LEAST(COALESCE(c.payment_amount, 0), COALESCE(c.payment_amount, 0) * LEAST(GREATEST(sd.value, 0), 100) / 100)
                 WHEN sd.value IS NOT NULL THEN LEAST(COALESCE(c.payment_amount, 0), GREATEST(sd.value, 0))
@@ -286,8 +296,8 @@ const findStudentPaymentSummary = async (filters: {
      ),
      owed AS (
        SELECT *,
-              monthly_fee * $3::int AS expected_before_discount,
-              serial_discount_per_month * GREATEST($3::int - paid_months, 0) AS pending_discount
+              ROUND(monthly_fee * billed_months, 2) AS expected_before_discount,
+              ROUND(serial_discount_per_month * GREATEST(billed_months - paid_months, 0), 2) AS pending_discount
        FROM base
      ),
      netted AS (

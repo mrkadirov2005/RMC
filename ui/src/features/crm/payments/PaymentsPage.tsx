@@ -21,6 +21,7 @@ import { PaymentTeacherDetail } from './components/PaymentTeacherDetail';
 import { PaymentListView } from './components/PaymentListView';
 import { PaymentFormDialog } from './components/PaymentFormDialog';
 import { getPaymentStudentGroupOptions } from './utils/paymentStudentGroups';
+import { getFeeToCollectThisMonth } from '@/shared/billingPeriod';
 
 // Renders the payments page screen.
 const PaymentsPage = () => {
@@ -78,7 +79,7 @@ const PaymentsPage = () => {
       const next = { ...current };
 
       if ((!current.amount || Number(current.amount) === 0) && selectedClass?.payment_amount) {
-        next.amount = Number(selectedClass.payment_amount);
+        next.amount = getFeeToCollectThisMonth(selectedStudent, selectedClass.payment_amount);
         changed = true;
       }
 
@@ -103,7 +104,7 @@ const PaymentsPage = () => {
       ...current,
       student_id: studentId,
       center_id: Number(targetStudent.center_id || current.center_id || 0),
-      amount: Number(targetClass?.payment_amount || 0) || undefined,
+      amount: getFeeToCollectThisMonth(targetStudent, targetClass?.payment_amount) || undefined,
       discount_id: null,
       discount_kind: null,
       discount_value_type: null,
