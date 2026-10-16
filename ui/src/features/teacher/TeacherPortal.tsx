@@ -45,7 +45,7 @@ import { useAppDispatch } from '../crm/hooks';
 import type { RootState } from '../../store';
 import { setTeacherPortalTabValue } from '../../slices/pagesUiSlice';
 import { fetchTests } from '../../slices/testsSlice';
-import { fetchStudents } from '../../slices/studentsSlice';
+import { fetchStudentsForce } from '../../slices/studentsSlice';
 import { fetchClasses } from '../../slices/classesSlice';
 import { fetchAttendance } from '../../slices/attendanceSlice';
 import { fetchAssignments } from '../../slices/assignmentsSlice';
@@ -117,7 +117,9 @@ const TeacherPortal = () => {
   const loadStats = useCallback(() => {
     const scopedParams = user?.id ? { teacher_id: Number(user.id), page: 1, limit: 100 } : undefined;
     dispatch(fetchTests());
-    dispatch(fetchStudents(scopedParams));
+    // The full list, not one page: a teacher with more than 100 students otherwise sees only part
+    // of each group here. The server limits it to this teacher's students.
+    dispatch(fetchStudentsForce());
     dispatch(fetchClasses(scopedParams));
     dispatch(fetchAttendance());
     dispatch(fetchAssignments());
