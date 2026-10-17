@@ -392,6 +392,13 @@ class DeleteStudentDto {
   @IsInt()
   @Min(1)
   reason_id!: number;
+
+  // Some reasons need a note (the result reached, which center they went to); without it
+  // declared here the note was dropped and those reasons could never be saved.
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason_note?: string;
 }
 
 class StudentCoinTransactionDto {
