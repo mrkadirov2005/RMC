@@ -1,5 +1,5 @@
-// Homework warnings (Ogohlantirishlar -> Uy vazifasi): students with homework not done or done
-// partly in two or more lessons this month, and the teacher's filters over them.
+// Red list (Ogohlantirishlar -> Qizil ro'yxat): students with homework not done or done partly,
+// or a lesson score under 70%, in two or more lessons this month, and the teacher's filters.
 
 export interface HomeworkWarning {
   student_id: number;
@@ -10,7 +10,13 @@ export interface HomeworkWarning {
   class_id: number;
   class_name: string | null;
   teacher_name: string | null;
-  lessons: Array<{ date: string; homework_score: number; homework_label: string | null }>;
+  lessons: Array<{
+    date: string;
+    homework_score: number | null;
+    homework_label: string | null;
+    score_percent: number;
+    reasons: Array<'homework' | 'low_score'>;
+  }>;
 }
 
 export interface HomeworkWarningFilters {
