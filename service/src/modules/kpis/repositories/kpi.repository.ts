@@ -163,6 +163,10 @@ const monthlyStudentScore = async ({
   return Number(rows[0]?.average) || 0;
 };
 
+// Transfer reasons that are about the teacher, so the move counts against the teacher who lost
+// the student.
+const TEACHER_FAULT_TRANSFER_REASONS = ['teacher_change', 'disliked_teacher'];
+
 const monthlyRetentionCounts = async ({
   centerId,
   teacherId,
@@ -189,10 +193,20 @@ const monthlyRetentionCounts = async ({
   ];
   if (centerId) startConditions.push(eq(students.centerId, centerId));
 
+  // Lost this month: archived students, and students moved out of the teacher's group because of
+  // the teacher (the old group record keeps its class and teacher; the new record starts on the
+  // transfer date).
   const leftConditions: any[] = [
     teacherScope,
-    gte(sql`${students.deletedAt}::date`, start),
-    lt(sql`${students.deletedAt}::date`, end),
+    or(
+      and(gte(sql`${students.deletedAt}::date`, start), lt(sql`${students.deletedAt}::date`, end)),
+      and(
+        eq(students.status, 'Transferred'),
+        sql`${students.transferReasonId} IN (SELECT r.reason_id FROM student_action_reasons r WHERE r.reason_type = 'transfer' AND r.reason_code IN (${sql.join(TEACHER_FAULT_TRANSFER_REASONS.map((code) => sql`${code}`), sql`, `)}))`,
+        sql`EXISTS (SELECT 1 FROM students moved WHERE moved.transferred_from_student_id = ${students.studentId}
+          AND moved.start_date >= ${start}::date AND moved.start_date < ${end}::date)`
+      )
+    ),
   ];
   if (centerId) leftConditions.push(eq(students.centerId, centerId));
 
