@@ -15,7 +15,7 @@ const findMonthHomework = async ({ centerId, teacherId, monthStart, monthEnd }: 
      JOIN sessions ses ON ses.session_id = g.session_id
      JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL
      JOIN students s ON s.student_id = g.student_id AND s.class_id = g.class_id
-      AND s.deleted_at IS NULL AND NOT COALESCE(s.is_frozen, false) AND lower(COALESCE(s.status, 'Active')) = 'active'
+      AND s.deleted_at IS NULL AND NOT COALESCE(s.is_frozen, false) AND lower(COALESCE(s.status::text, 'Active')) = 'active'
      LEFT JOIN teachers t ON t.teacher_id = c.teacher_id
      WHERE ses.session_date >= $1::date AND ses.session_date < $2::date
        AND ($3::int IS NULL OR c.center_id = $3)
