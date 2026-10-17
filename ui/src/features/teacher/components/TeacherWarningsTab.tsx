@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CircleDollarSign, Loader2, TrendingDown } from 'lucide-react';
+import { AlertTriangle, CircleDollarSign, Loader2, ShieldAlert } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getCenterMonthKey } from '@/shared/billingPeriod';
@@ -166,8 +166,8 @@ export default function TeacherWarningsTab({ classOptions = [] }: { classOptions
           {t('Payment warnings')}
         </TabsTrigger>
         <TabsTrigger value="homework" className="gap-2 py-2.5">
-          <TrendingDown className="h-4 w-4" />
-          {t('Homework warnings')}
+          <ShieldAlert className="h-4 w-4" />
+          {t('Red list')}
         </TabsTrigger>
       </TabsList>
       <TabsContent value="attendance">

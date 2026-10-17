@@ -4,7 +4,7 @@ import { filterHomeworkWarnings, homeworkStatusLabel, homeworkWarningOptions, ty
 const warning = (id: number, name: string, classId: number, labels: string[]): HomeworkWarning => ({
   student_id: id, student_name: name, phone: null, parent_name: null, parent_phone: null,
   class_id: classId, class_name: `G${classId}`, teacher_name: null,
-  lessons: labels.map((label, index) => ({ date: `2026-10-0${index + 1}`, homework_score: 0, homework_label: label })),
+  lessons: labels.map((label, index) => ({ date: `2026-10-0${index + 1}`, homework_score: 0, homework_label: label, score_percent: 50, reasons: ['homework' as const] })),
 });
 
 const warnings = [warning(1, 'Valiyev Ali', 10, ['None', 'Half']), warning(2, 'Isomova Ziyoda', 20, ['Weak', 'Weak'])];
