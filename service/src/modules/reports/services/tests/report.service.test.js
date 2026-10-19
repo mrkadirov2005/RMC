@@ -5,6 +5,7 @@ jest.mock('../../repositories/report.repository', () => ({
   deletedStudentsByClass: jest.fn(), recentDeletedStudents: jest.fn(), countIntakeStudents: jest.fn(),
   intakeStudentsByMonth: jest.fn(), intakeStudentsByTeacherWithStudents: jest.fn(), intakeStudentsByClass: jest.fn(), recentIntakeStudents: jest.fn(),
   deletedStudentsByReason: jest.fn(async () => []),
+  studentsLostToTeacher: jest.fn(async () => []),
 }));
 const repository = require('../../repositories/report.repository');
 const service = require('../report.service');
@@ -241,5 +242,41 @@ describe('report service', () => {
     ]);
     expect(result.worst_teachers.map((row) => [row.teacher_id, row.teacher_fault_count])).toEqual([[8, 2], [7, 1]]);
     expect(result.worst_teachers[0].students[1].reason_note).toBe("Qattiqqo'l");
+  });
+
+  test('a move out of the group because of the teacher counts on that teacher and goes on the call-back list', async () => {
+    repository.countDeletedStudents.mockResolvedValue({ total: 1 });
+    repository.deletedStudentsByMonth.mockResolvedValue([]);
+    repository.deletedStudentsByClass.mockResolvedValue([]);
+    repository.recentDeletedStudents.mockResolvedValue([]);
+    repository.deletedStudentsByReason.mockResolvedValue([{ reason_id: 35, reason_code: 'disliked_teacher', reason_name: 'Ustoz yoqmagani uchun ketdi', left_count: 1 }]);
+    repository.deletedStudentsByTeacherWithStudents.mockResolvedValue([
+      { teacher_id: 7, teacher_first_name: 'A', teacher_last_name: 'B', left_count: 1, students: [{ student_id: 1, first_name: 'Ali', reason_code: 'disliked_teacher' }] },
+    ]);
+    repository.studentsLostToTeacher.mockResolvedValue([
+      { kind: 'transferred', student_id: 848, first_name: 'Mushtariy', last_name: 'Ahmadova', phone: '901234567', parent_phone: null, class_name: 'IELTS 1', new_class_name: 'IELTS 2', teacher_id: 9, teacher_first_name: 'Shodiyev', teacher_last_name: 'Odiljon', happened_on: new Date('2026-10-16T00:00:00Z'), reason_name: 'Ustoz yoqmadi' },
+      { kind: 'left', student_id: 1, first_name: 'Ali', last_name: 'V', phone: null, parent_phone: '911112233', class_name: 'English A', teacher_id: 7, teacher_first_name: 'A', teacher_last_name: 'B', happened_on: '2026-10-03', reason_name: 'Ustoz yoqmagani uchun ketdi', reason_note: 'Qattiqqo\'l' },
+    ]);
+
+    const result = await service.retentionReport({ month: '2026-10' }, 2);
+    expect(repository.studentsLostToTeacher).toHaveBeenCalledWith({ centerId: 2, start: '2026-10-01', end: '2026-10-31' });
+    expect(result.worst_teachers.map((row) => [row.teacher_id, row.teacher_name, row.teacher_fault_count])).toEqual([[7, 'A B', 1], [9, 'Shodiyev Odiljon', 1]]);
+    expect(result.worst_teachers[1].students[0]).toMatchObject({ student_id: 848, reason_note: 'Ustoz yoqmadi' });
+    expect(result.lost_to_teacher.map((row) => [row.kind, row.student_id, row.happened_on, row.new_class_name])).toEqual([
+      ['transferred', 848, '2026-10-16', 'IELTS 2'],
+      ['left', 1, '2026-10-03', null],
+    ]);
+  });
+
+  test('the intake view has no call-back list', async () => {
+    repository.countIntakeStudents.mockResolvedValue({ total: 0 });
+    repository.intakeStudentsByMonth.mockResolvedValue([]);
+    repository.intakeStudentsByTeacherWithStudents.mockResolvedValue([]);
+    repository.intakeStudentsByClass.mockResolvedValue([]);
+    repository.recentIntakeStudents.mockResolvedValue([]);
+    repository.studentsLostToTeacher.mockClear();
+    const result = await service.retentionReport({ month: '2026-10', view: 'intake' }, 2);
+    expect(result.lost_to_teacher).toBeUndefined();
+    expect(repository.studentsLostToTeacher).not.toHaveBeenCalled();
   });
 });

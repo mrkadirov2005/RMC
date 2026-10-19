@@ -165,7 +165,7 @@ const monthlyStudentScore = async ({
 
 // Transfer reasons that are about the teacher, so the move counts against the teacher who lost
 // the student.
-const TEACHER_FAULT_TRANSFER_REASONS = ['teacher_change', 'disliked_teacher'];
+const { TEACHER_FAULT_TRANSFER_REASONS } = require('../../../shared/teacherFaultReasons');
 
 const monthlyRetentionCounts = async ({
   centerId,

@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { studentMonthChange } from './monthChange';
 
 type RetentionMode = 'overview' | 'teachers';
 
@@ -67,7 +68,24 @@ interface RetentionReport {
   by_reason?: Array<{ reason_id: number | null; reason_code: string | null; reason_name: string | null; left_count: number; percent: number; teacher_fault: boolean }>;
   /** Teachers ranked by students who left because of the teacher. */
   worst_teachers?: Array<{ teacher_id: number | null; teacher_name: string; teacher_fault_count: number; left_count: number; students: Array<Record<string, any>> }>;
+  /** Students lost because of the teacher this month (left the center or moved group), to call back. */
+  lost_to_teacher?: LostStudent[];
 }
+
+type LostStudent = {
+  kind: 'left' | 'transferred';
+  student_id: number;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone: string | null;
+  parent_phone: string | null;
+  class_name: string | null;
+  new_class_name: string | null;
+  teacher_name: string | null;
+  happened_on: string | null;
+  reason_name: string | null;
+  reason_note: string | null;
+};
 
 // "Reason · note" for a student who left, e.g. "Muvaffaqiyatli tugatib natijaga erishdi · B2 oldi".
 const reasonText = (student: Record<string, any>) =>
@@ -202,8 +220,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
   );
 
   const topTeacher = report.by_teacher.find((row) => Number(row.left_count || 0) > 0);
-  const trendUp = report.summary.trend === 'up';
-  const trendDown = report.summary.trend === 'down';
+  const monthChange = studentMonthChange(isIntake ? 'intake' : 'retention', report.summary.delta, report.summary.delta_percent);
 
   return (
     <div className={cn(!embedded && 'min-h-screen bg-slate-50 p-4 text-slate-950 dark:bg-slate-950 dark:text-white')}>
@@ -304,10 +321,10 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
               <Metric label={t('Previous month')} value={report.summary.previous_month_left} Icon={CalendarDays} tone="bg-slate-700" />
               <Metric
                 label={t('Month change')}
-                value={`${report.summary.delta > 0 ? '+' : ''}${report.summary.delta}`}
-                detail={`${report.summary.delta_percent > 0 ? '+' : ''}${report.summary.delta_percent}%`}
-                Icon={trendUp ? ArrowUpRight : trendDown ? ArrowDownRight : BarChart3}
-                tone={trendUp ? 'bg-red-600' : trendDown ? 'bg-emerald-600' : 'bg-blue-600'}
+                value={monthChange.value}
+                detail={monthChange.percent}
+                Icon={monthChange.direction === 'gain' ? ArrowUpRight : monthChange.direction === 'loss' ? ArrowDownRight : BarChart3}
+                tone={monthChange.direction === 'gain' ? 'bg-emerald-600' : monthChange.direction === 'loss' ? 'bg-red-600' : 'bg-blue-600'}
               />
               <Metric label={t('Top teacher')} value={topTeacher?.left_count || 0} detail={topTeacher?.teacher_name || t('No teacher')} Icon={Users} tone="bg-cyan-700" />
             </div>
@@ -327,6 +344,8 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
                 <WorstTeachersPanel rows={report.worst_teachers || []} />
               </div>
             )}
+
+            {!isIntake && <CallBackPanel rows={report.lost_to_teacher || []} />}
 
             <RecentStudents rows={report.recent_students} intake={isIntake} />
             <TeacherStudentsDialog teacher={selectedTeacher} intake={isIntake} onOpenChange={(open) => !open && setSelectedTeacher(null)} />
@@ -590,6 +609,61 @@ const WorstTeachersPanel = ({ rows }: { rows: NonNullable<RetentionReport['worst
             </li>
           ))}
         </ol>
+      )}
+    </div>
+  );
+};
+
+const CallBackPanel = ({ rows }: { rows: LostStudent[] }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm dark:border-amber-900/60 dark:bg-white/[0.04]">
+      <h3 className="text-base font-black text-slate-900 dark:text-white">{t('Call back to keep them')}</h3>
+      <p className="mb-3 text-xs text-slate-500">{t('Students who left the center or were moved to another group because of the teacher this month.')}</p>
+      {rows.length === 0 ? (
+        <p className="py-6 text-center text-sm text-slate-500">{t('No student was lost because of a teacher this month.')}</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('Student')}</TableHead>
+                <TableHead>{t('Phone')}</TableHead>
+                <TableHead>{t('Teacher')}</TableHead>
+                <TableHead>{t('What happened')}</TableHead>
+                <TableHead className="text-right">{t('Date')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((student) => (
+                <TableRow key={`${student.kind}-${student.student_id}`}>
+                  <TableCell className="font-bold">
+                    {getName(student)}
+                    <div className="text-xs font-normal text-slate-500">{student.class_name || '-'}</div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm">
+                    {student.phone ? <a className="font-semibold text-sky-700 hover:underline dark:text-sky-300" href={`tel:${student.phone}`}>{student.phone}</a> : '-'}
+                    {student.parent_phone && (
+                      <div className="text-xs text-slate-500">
+                        {t('Parent')}: <a className="hover:underline" href={`tel:${student.parent_phone}`}>{student.parent_phone}</a>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>{student.teacher_name || '-'}</TableCell>
+                  <TableCell>
+                    <span className={cn('rounded-full px-2 py-0.5 text-xs font-bold', student.kind === 'left' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300')}>
+                      {student.kind === 'left'
+                        ? t('Left the center')
+                        : student.new_class_name ? t('Moved to {group}', { group: student.new_class_name }) : t('Moved to another group')}
+                    </span>
+                    <div className="mt-1 text-xs text-slate-500">{reasonText(student)}</div>
+                  </TableCell>
+                  <TableCell className="text-right">{formatDate(student.happened_on)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );
