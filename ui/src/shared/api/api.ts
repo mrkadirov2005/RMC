@@ -319,6 +319,7 @@ export const teacherAPI = {
   changePassword: (id: number, data: { old_password: string; new_password: string }) =>
     apiClient.post(`/teachers/${id}/change-password`, data),
   getMyProfile: () => apiClient.get('/teachers/me'),
+  updateMyPreferences: (data: { top_students_color: string | null }) => apiClient.put('/teachers/me/preferences', data),
 };
 
 export const classAPI = {
@@ -435,6 +436,8 @@ export const gradeAPI = {
   getById: (id: number) => apiClient.get(`/grades/${id}`),
   getByStudent: (studentId: number) => apiClient.get(`/grades/student/${studentId}`),
   getBySession: (sessionId: number, params?: { center_id?: number }) => apiClient.get(`/grades/session/${sessionId}`, { params }),
+  /** The group's students by points over all its lessons, with place and trend. */
+  getClassStandings: (classId: number) => apiClient.get(`/grades/class/${classId}/standings`),
   create: (data: any) => apiClient.post('/grades', data),
   bulkCreate: (grades: any[]) => apiClient.post('/grades/bulk', { grades }),
   update: (id: number, data: any) => apiClient.put(`/grades/${id}`, data),

@@ -5,7 +5,7 @@ const router_grade = express_grade.Router();
 const gradeController = require('../modules/grades/controllers/grade.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody, validateParams } = require('../middleware/validation');
-const { BulkGradesDto, CreateGradeDto, UpdateGradeDto, IdParamDto, SessionIdParamDto, StudentIdParamDto } = require('../dtos/request.dto');
+const { BulkGradesDto, CreateGradeDto, UpdateGradeDto, IdParamDto, ClassIdParamDto, SessionIdParamDto, StudentIdParamDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -165,6 +165,23 @@ router_grade.get('/student/:studentId', requireAuth, validateParams(StudentIdPar
  *         description: Grade not found
  */
 router_grade.delete('/:id', requireAuth, validateParams(IdParamDto), gradeController.deleteGrade);
+/**
+ * @swagger
+ * /grades/class/{classId}/standings:
+ *   get:
+ *     summary: A group's students ranked by points over all its lessons, with place and trend
+ *     tags: [Grades]
+ *     parameters:
+ *       - in: path
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Students, highest points first
+ */
+router_grade.get('/class/:classId/standings', requireAuth, validateParams(ClassIdParamDto), gradeController.getClassStandings);
 router_grade.get('/session/:sessionId', requireAuth, validateParams(SessionIdParamDto), gradeController.getGradesBySession);
 router_grade.post('/session-scores', requireAuth, gradeController.upsertSessionScores);
 router_grade.post('/session-workflow', requireAuth, gradeController.saveSessionWorkflow);

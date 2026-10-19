@@ -255,6 +255,7 @@ const teachers = pgTable('teachers', {
   salaryPercentage: numeric('salary_percentage'),
   status: varchar('status', { length: 50 }),
   roles: jsonb('roles'),
+  topStudentsColor: varchar('top_students_color', { length: 20 }),
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),

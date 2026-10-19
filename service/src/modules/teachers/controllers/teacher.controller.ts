@@ -43,10 +43,29 @@ const getMyProfile = async (req: any, res: any) => {
       phone: teacher.phone,
       status: teacher.status,
       center_id: teacher.center_id,
+      top_students_color: teacher.top_students_color || null,
     });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Profilni yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+const updateMyPreferences = async (req: any, res: any) => {
+  try {
+    const teacherId = Number(req.user?.id);
+    if (!teacherId) {
+      return res.status(400).json({ error: "O'qituvchi ID sini aniqlab bo'lmadi." });
+    }
+    const { centerId } = getScopedCenterId(req);
+    const updated = await teacherService.setTopStudentsColor(teacherId, req.body?.top_students_color, centerId ?? undefined);
+    if (!updated) {
+      return res.status(404).json({ error: "O'qituvchi topilmadi." });
+    }
+    res.json(updated);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Sozlamani saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -328,6 +347,7 @@ const changeTeacherPassword = async (req: any, res: any) => {
 
 module.exports = {
   getMyProfile,
+  updateMyPreferences,
   getAllTeachers,
   getTeacherById,
   createTeacher,

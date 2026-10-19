@@ -59,6 +59,9 @@ const listTeachersPaginated = (filters: Record<string, unknown>, centerId?: numb
 
 const getTeacher = (id: number, centerId?: number) => teacherRepository.findById(id, centerId);
 
+const setTopStudentsColor = (id: number, color: string | null | undefined, centerId?: number) =>
+  teacherRepository.setTopStudentsColor(id, color ? color.toUpperCase() : null, centerId);
+
 const createTeacher = async (body: any) => {
   const defaultUsername = buildUsername(body?.first_name);
   const explicitUsername = String(body?.username || '').trim();
@@ -158,6 +161,7 @@ module.exports = {
   listTeachers,
   listTeachersPaginated,
   getTeacher,
+  setTopStudentsColor,
   createTeacher,
   updateTeacher,
   deleteTeacher,

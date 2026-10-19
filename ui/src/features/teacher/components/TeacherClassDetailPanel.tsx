@@ -161,6 +161,7 @@ export default function TeacherClassDetailPanel({
           emptyMessage={t('No students enrolled.')}
           defaultClassName={className}
           paymentStates={paymentStates}
+          classId={Number(classData?.class_id || classData?.id || 0) || undefined}
         />
       </div>
 

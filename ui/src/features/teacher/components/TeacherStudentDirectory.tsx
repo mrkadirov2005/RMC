@@ -13,6 +13,9 @@ import {
   Trash2,
   X,
   Send,
+  ArrowDown,
+  ArrowUp,
+  ArrowRight,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { PaymentStateBadge } from '../payments/PaymentStateBadge';
@@ -20,6 +23,7 @@ import { TelegramFeedbackDialog } from '../../crm/telegramBot/TelegramFeedbackDi
 import { MonthlyRankBadge } from '../../crm/classes/components/MonthlyRankBadge';
 import { getMonthlyTotals, rankMonthlyTotals, rankRowClassName } from '../../crm/classes/utils/monthlyRanking';
 import type { GroupPaymentStudent } from '../payments/types';
+import { isTopPlace, sortStudents, topRowStyle, useClassStandings, useTopStudentsColor, type Standing, type StandingsSort } from '../standings';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,6 +120,34 @@ interface TeacherStudentDirectoryProps {
   monthlySessionsByDate?: Map<string, any>;
   /** This month's payment per student id (prorated, after discounts); used by the Payment column when details are shown. */
   paymentStates?: Map<number, GroupPaymentStudent>;
+  /** The group on screen: rows go in order of points over all its lessons, top five in the teacher's colour. */
+  classId?: number;
+}
+
+// ▲ / ▼ / ▬: the student's last lessons against the ones before (see standings.ts).
+function TrendArrow({ standing }: { standing?: Standing }) {
+  const { t } = useLanguage();
+  const trend = standing?.trend;
+  if (!trend) return <span className="text-muted-foreground">—</span>;
+  const title = t('Last lessons: {recent} · Before: {previous}', { recent: String(trend.recent_average), previous: String(trend.previous_average) });
+  if (trend.direction === 'up') return <ArrowUp aria-label={t('Getting better')} className="mx-auto h-4 w-4 text-emerald-600" strokeWidth={3}><title>{title}</title></ArrowUp>;
+  if (trend.direction === 'down') return <ArrowDown aria-label={t('Getting worse')} className="mx-auto h-4 w-4 text-rose-600" strokeWidth={3}><title>{title}</title></ArrowDown>;
+  return <ArrowRight aria-label={t('No change')} className="mx-auto h-4 w-4 text-slate-400" strokeWidth={3}><title>{title}</title></ArrowRight>;
+}
+
+// "1-o'rin" in the teacher's colour for the top five.
+function PlaceBadge({ standing, color }: { standing?: Standing; color: string }) {
+  const { t } = useLanguage();
+  if (!standing || !isTopPlace(standing)) return null;
+  return (
+    <span
+      className="inline-flex h-5 shrink-0 items-center rounded-full px-1.5 text-[0.625rem] font-black leading-none text-slate-900"
+      style={{ backgroundColor: color }}
+      title={t('Place {place} over all lessons', { place: standing.place })}
+    >
+      {t('{place}-place', { place: standing.place })}
+    </span>
+  );
 }
 
 export default function TeacherStudentDirectory({
@@ -130,6 +162,7 @@ export default function TeacherStudentDirectory({
   monthlyPointsBySessionStudent = new Map(),
   monthlySessionsByDate = new Map(),
   paymentStates,
+  classId,
 }: TeacherStudentDirectoryProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -151,6 +184,10 @@ export default function TeacherStudentDirectory({
   const [coinBalance, setCoinBalance] = useState(0);
   const [coinTransactions, setCoinTransactions] = useState<CoinTransaction[]>([]);
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
+  const [sortMode, setSortMode] = useState<StandingsSort>('all_time');
+  const standings = useClassStandings(classId);
+  const topColor = useTopStudentsColor();
+  const showStandings = Boolean(classId);
 
   const normalizedStudents = useMemo(
     () =>
@@ -204,6 +241,30 @@ export default function TeacherStudentDirectory({
     monthlyLessonDates.map((date) => Number(monthlySessionsByDate.get(date)?.session_id || monthlySessionsByDate.get(date)?.id || 0)),
     monthlyPointsBySessionStudent
   )), [monthlyLessonDates, monthlyPointsBySessionStudent, monthlySessionsByDate, normalizedStudents]);
+
+  // Each student's score in the latest lesson of the month that has scores.
+  const lastLessonScores = useMemo(() => {
+    const scores = new Map<number, number>();
+    for (const date of [...monthlyLessonDates].reverse()) {
+      const session = monthlySessionsByDate.get(date);
+      const sessionId = Number(session?.session_id || session?.id || 0);
+      if (!sessionId) continue;
+      normalizedStudents.forEach((student) => {
+        const studentId = Number(student.student_id || student.id || 0);
+        const points = getCombinedLessonPoints(monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`) as any);
+        if (points !== null && points !== undefined) scores.set(studentId, Number(points) || 0);
+      });
+      if (scores.size > 0) break;
+    }
+    return scores;
+  }, [monthlyLessonDates, monthlyPointsBySessionStudent, monthlySessionsByDate, normalizedStudents]);
+
+  const canSortByLastLesson = monthlyLessonDates.length > 0;
+  const effectiveSort: StandingsSort = sortMode === 'last_lesson' && !canSortByLastLesson ? 'all_time' : sortMode;
+  const orderedStudents = useMemo(
+    () => (showStandings ? sortStudents(filteredStudents, effectiveSort, standings, lastLessonScores) : filteredStudents),
+    [effectiveSort, filteredStudents, lastLessonScores, showStandings, standings]
+  );
 
   const hasActiveFilters =
     paymentFilter !== 'all' || statusFilter !== 'all' || classFilter !== 'all';
@@ -398,6 +459,19 @@ export default function TeacherStudentDirectory({
           </SelectContent>
         </Select>
 
+        {showStandings ? (
+          <Select value={effectiveSort} onValueChange={(value) => setSortMode(value as StandingsSort)}>
+            <SelectTrigger className="h-9 w-[200px] bg-white dark:bg-background" aria-label={t('Sort students')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all_time">{t('By points (all lessons)')}</SelectItem>
+              {canSortByLastLesson && <SelectItem value="last_lesson">{t('By last lesson')}</SelectItem>}
+              <SelectItem value="name">{t('By name (A–Z)')}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : null}
+
         {classOptions.length > 1 ? (
           <Select value={classFilter} onValueChange={setClassFilter}>
             <SelectTrigger className="h-9 w-[190px] bg-white dark:bg-background">
@@ -444,6 +518,12 @@ export default function TeacherStudentDirectory({
                 <TableHeader className="bg-slate-50/95">
                   <TableRow>
                     <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] px-2 text-[0.6875rem] font-bold uppercase tracking-wide">{t('Student')}</TableHead>
+                    {showStandings && (
+                      <>
+                        <TableHead className="h-9 w-10 px-1 text-center text-[0.6875rem] font-bold uppercase tracking-wide" title={t('Last lessons against the ones before')}>{t('Trend')}</TableHead>
+                        <TableHead className="h-9 min-w-[64px] px-1 text-center text-[0.6875rem] font-bold uppercase tracking-wide" title={t('Points over all lessons in this group')}>{t('All lessons')}</TableHead>
+                      </>
+                    )}
                     {monthlyLessonDates.map((d) => {
                       const date = new Date(d);
                       const day = date.getDate();
@@ -461,23 +541,37 @@ export default function TeacherStudentDirectory({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStudents.length === 0 ? (
-                    <TableRow><TableCell colSpan={monthlyLessonDates.length + 2} className="py-10 text-center text-muted-foreground">{t('No students enrolled.')}</TableCell></TableRow>
+                  {orderedStudents.length === 0 ? (
+                    <TableRow><TableCell colSpan={monthlyLessonDates.length + (showStandings ? 4 : 2)} className="py-10 text-center text-muted-foreground">{t('No students enrolled.')}</TableCell></TableRow>
                   ) : (
-                    filteredStudents.map((student, index) => {
+                    orderedStudents.map((student, index) => {
                       const studentId = Number(student.student_id || student.id || 0);
                       let studentTotalPoints = 0;
                       let studentAttendanceCount = 0;
-                      const rank = monthlyRanks.get(studentId);
+                      // With the group's standings the top five (all lessons) get the teacher's colour;
+                      // otherwise this month's places and red list as before.
+                      const standing = standings.get(studentId);
+                      const rank = showStandings ? undefined : monthlyRanks.get(studentId);
+                      const top = showStandings && isTopPlace(standing);
                       return (
-                        <TableRow key={studentId || index} className={`group h-9 ${rankRowClassName(rank)}`}>
+                        <TableRow key={studentId || index} className={`group h-9 ${rankRowClassName(rank)}`} style={top ? topRowStyle(topColor) : undefined} data-top-place={top ? standing?.place : undefined}>
                           <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold">
                             <div className="flex min-w-0 items-center gap-1.5">
                               <div>{index + 1}</div>
                               <span className="max-w-[180px] truncate text-[0.6875rem]">{student.last_name} {student.first_name}</span>
-                              <MonthlyRankBadge rank={rank} />
+                              {showStandings ? <PlaceBadge standing={standing} color={topColor} /> : <MonthlyRankBadge rank={rank} />}
                             </div>
                           </TableCell>
+                          {showStandings && (
+                            <>
+                              <TableCell className="px-1 py-1 text-center"><TrendArrow standing={standing} /></TableCell>
+                              <TableCell className="px-1 py-1 text-center">
+                                <span className="inline-flex h-6 min-w-[46px] items-center justify-center rounded-md bg-slate-100 px-1.5 text-[0.6875rem] font-black tabular-nums text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+                                  {standing && standing.lessons > 0 ? standing.total_points : '-'}
+                                </span>
+                              </TableCell>
+                            </>
+                          )}
                           {monthlyLessonDates.map((d) => {
                             // prefer session-grade based combined points
                             const session = monthlySessionsByDate.get(d);
@@ -540,18 +634,28 @@ export default function TeacherStudentDirectory({
                 <TableHeader>
                   <TableRow className="bg-muted/50 w-full">
                     <TableHead>{t('Student')}</TableHead>
+                    {showStandings && (
+                      <>
+                        <TableHead className="w-12 text-center" title={t('Last lessons against the ones before')}>{t('Trend')}</TableHead>
+                        <TableHead className="text-center" title={t('Points over all lessons in this group')}>{t('All lessons')}</TableHead>
+                      </>
+                    )}
                   {isViewDetails && <TableHead>{t('Payment')}</TableHead>}
                     <TableHead>{t('Status')}</TableHead>
                     <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStudents.map((student, index) => {
+                  {orderedStudents.map((student, index) => {
                     const studentId = Number(student.student_id || student.id || 0);
+                    const standing = standings.get(studentId);
+                    const top = showStandings && isTopPlace(standing);
                     return (
                       <TableRow
                         key={studentId}
                         className="cursor-pointer hover:bg-muted/30"
+                        style={top ? topRowStyle(topColor) : undefined}
+                        data-top-place={top ? standing?.place : undefined}
                         onClick={() => handleViewDetails(student)}
                       >
                         <TableCell>
@@ -559,13 +663,20 @@ export default function TeacherStudentDirectory({
                            <div>
                             {index+1}
                            </div>
-                            <div>
+                            <div className="flex min-w-0 items-center gap-2">
                               <p className="font-semibold">
                                 {student.first_name} {student.last_name}
                               </p>
+                              {showStandings && <PlaceBadge standing={standing} color={topColor} />}
                             </div>
                           </div>
                         </TableCell>
+                        {showStandings && (
+                          <>
+                            <TableCell className="text-center"><TrendArrow standing={standing} /></TableCell>
+                            <TableCell className="text-center font-black tabular-nums">{standing && standing.lessons > 0 ? standing.total_points : '-'}</TableCell>
+                          </>
+                        )}
                         {isViewDetails && paymentStates ? (
                           <TableCell>
                             {paymentStates.get(studentId) ? (

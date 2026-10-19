@@ -11,6 +11,7 @@ import { useMySalaryDetail } from '../hooks/useMySalaryDetail';
 import TeacherSalaryStatsView from './TeacherSalaryStatsView';
 import TeacherSalaryTab from './TeacherSalaryTab';
 import TeacherPaymentsOverview from '../payments/TeacherPaymentsOverview';
+import TopStudentsColorSetting from './TopStudentsColorSetting';
 import { cn } from '@/lib/utils';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -146,6 +147,8 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
             </div>
           )}
         </div>
+
+        <TopStudentsColorSetting />
 
         <div className="rounded-lg border bg-card p-5 shadow-sm">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">

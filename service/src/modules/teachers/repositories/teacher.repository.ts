@@ -37,6 +37,7 @@ const teacherSelection = {
   salary_percentage: teachers.salaryPercentage,
   status: teachers.status,
   roles: teachers.roles,
+  top_students_color: teachers.topStudentsColor,
   username: teachers.username,
   password_hash: teachers.passwordHash,
   deleted_at: teachers.deletedAt,
@@ -204,6 +205,18 @@ const countByEmail = (email: string) =>
     .where(and(eq(teachers.email, email), isNull(teachers.deletedAt)))
     .then((rows: any[]) => Number(rows[0]?.count || 0));
 
+// The teacher's own colour for a group's top five students; null goes back to the default.
+const setTopStudentsColor = async (id: number, color: string | null, centerId?: number) => {
+  const conditions: any[] = [eq(teachers.teacherId, id), isNull(teachers.deletedAt)];
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
+  const rows = await db
+    .update(teachers)
+    .set({ topStudentsColor: color, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(...conditions))
+    .returning({ teacher_id: teachers.teacherId, top_students_color: teachers.topStudentsColor });
+  return rows[0] || null;
+};
+
 const update = (id: number, fields: any[], centerId?: number) => {
   const setData: any = { updatedAt: sql`CURRENT_TIMESTAMP` };
   if (fields[0] != null) setData.firstName = fields[0];
@@ -360,6 +373,7 @@ module.exports = {
   countByEmployeeId,
   countByEmail,
   update,
+  setTopStudentsColor,
   getDeleteDependencies,
   hasDeleteDependencies,
   unassignDeleteDependencies,

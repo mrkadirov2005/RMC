@@ -14,6 +14,7 @@ const {
   PaymentPasswordDto,
   SetPasswordDto,
   UpdateTeacherDto,
+  UpdateTeacherPreferencesDto,
 } = require('../dtos/request.dto');
 
 /**
@@ -42,6 +43,24 @@ router_teacher.get('/', requireAuth, requireRole('superuser'), teacherController
  *     tags: [Teachers]
  */
 router_teacher.get('/me', requireAuth, requireRole('teacher'), teacherController.getMyProfile);
+
+/**
+ * @swagger
+ * /teachers/me/preferences:
+ *   put:
+ *     summary: Save the logged-in teacher's own settings (top-five colour)
+ *     tags: [Teachers]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               top_students_color:
+ *                 type: string
+ *                 example: '#FACC15'
+ */
+router_teacher.put('/me/preferences', requireAuth, requireRole('teacher'), validateBody(UpdateTeacherPreferencesDto), teacherController.updateMyPreferences);
 
 /**
  * @swagger

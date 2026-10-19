@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
+import { IsArray, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, Min, MinLength, ValidateIf } from 'class-validator';
 
 class CreateTeacherDto {
   @IsOptional()
@@ -114,9 +114,18 @@ class UpdateTeacherDto {
   roles?: string[];
 }
 
+// A teacher's own settings. top_students_color is a #RRGGBB colour; null or '' is the default.
+class UpdateTeacherPreferencesDto {
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null && value !== '')
+  @Matches(/^#[0-9a-fA-F]{6}$/, { message: "Rang #RRGGBB ko'rinishida bo'lishi kerak" })
+  top_students_color?: string | null;
+}
+
 module.exports = {
   CreateTeacherDto,
   UpdateTeacherDto,
+  UpdateTeacherPreferencesDto,
 };
 
 export {};

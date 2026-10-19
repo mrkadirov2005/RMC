@@ -464,6 +464,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                   attendanceMap={attendanceMap}
                   monthlyPointsBySessionStudent={monthlyPointsBySessionStudent}
                   monthlySessionsByDate={monthlySessionsByDate}
+                  classId={selectedGroup?.id}
                 />
               </div>
             )}

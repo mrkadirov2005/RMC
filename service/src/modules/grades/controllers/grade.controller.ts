@@ -1,4 +1,5 @@
 const gradeService = require('../services/grade.service');
+const classStandingsService = require('../services/classStandings.service');
 const telegramService = require('../../telegram/services/telegram.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 const { studentBelongsToTeacher } = require('../../../shared/tenantDb');
@@ -180,6 +181,22 @@ const getGradesBySession = async (req: any, res: any) => {
   }
 };
 
+// A group's students by points over all its lessons, with each one's place and trend.
+const getClassStandings = async (req: any, res: any) => {
+  try {
+    if (req.user?.userType === 'student') return res.status(403).json({ error: 'Kirish rad etildi.' });
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    }
+    res.json(await classStandingsService.classStandings(Number(req.params.classId), centerId ?? undefined, teacherId));
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Guruh reytingini yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
 const upsertSessionScores = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -237,6 +254,7 @@ module.exports = {
   updateGrade,
   getGradesByStudent,
   getGradesBySession,
+  getClassStandings,
   deleteGrade,
   createBulkGrades,
   upsertSessionScores,
