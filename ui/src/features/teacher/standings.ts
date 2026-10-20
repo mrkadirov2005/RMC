@@ -105,11 +105,11 @@ const loadTopColor = () => {
   return loading;
 };
 
-/** The logged-in teacher's colour for the top places (yellow until they pick one). */
-export const useTopStudentsColor = () => {
+/** The logged-in teacher's colour for the top places (yellow until they pick one; always for staff). */
+export const useTopStudentsColor = (enabled = true) => {
   useEffect(() => {
-    if (topColor === null) void loadTopColor();
-  }, []);
+    if (enabled && topColor === null) void loadTopColor();
+  }, [enabled]);
   return useSyncExternalStore(subscribe, () => topColor ?? DEFAULT_TOP_COLOR);
 };
 

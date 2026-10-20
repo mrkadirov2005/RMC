@@ -21,6 +21,7 @@ export const teacherLabels: Record<string, string> = {
   'Save colour': 'Rangni saqlash',
   'Colour saved': 'Rang saqlandi',
   'Could not save the colour': "Rangni saqlab bo'lmadi",
+  'Download scores': 'Ballarni yuklash',
   // Telegram bot (platform side)
   'This student and their parents have not joined the Telegram bot yet.': "Bu o'quvchi va ota-onasi hali Telegram botga qo'shilmagan.",
   'Sent to the student and parents on Telegram': "Telegram orqali o'quvchi va ota-onasiga yuborildi",

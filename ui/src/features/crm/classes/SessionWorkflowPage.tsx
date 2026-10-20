@@ -32,7 +32,8 @@ import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
 import ConsolidationTab from './components/ConsolidationTab';
 import { LessonSummaryDialog } from './components/LessonSummaryDialog';
 import { findAbsenceStreakStudents, getMissingAbsenceReasons, toAbsenceReason } from './absenceStreak';
-import { buildMonthlyAttendanceGrid, downloadCanvasPng, drawMonthlyAttendanceImage } from './monthlyAttendanceImage';
+import { downloadClassScoresImage } from './classScoresImage';
+import { useTopStudentsColor } from '../../teacher/standings';
 import { getApiPayload } from '@/shared/api/response';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -115,6 +116,8 @@ export default function SessionWorkflowPage() {
   const selectedActions = isViewMode && recordedActions?.length ? recordedActions : requestedActions;
   const from = searchParams.get('from');
   const backPath = from === 'teacher' ? '/teacher-portal' : `/classes/${numericClassId}`;
+  // The teacher's own colour for the top five in the scores image (staff get the default yellow).
+  const topColor = useTopStudentsColor(authUser?.userType === 'teacher');
   const selectedTabs = useMemo(
     () => WORKFLOW_TABS.filter((tab) => selectedActions.includes(tab)),
     [selectedActions],
@@ -447,23 +450,19 @@ export default function SessionWorkflowPage() {
     }), { replace: true });
   };
 
-  // "Suratni yuklash": the class's attendance and lesson points for the lesson's month, including the lesson just saved.
+  // "Suratni yuklash": the class's attendance and lesson points for the lesson's month, including
+  // the lesson just saved, in order of points over all lessons with the top five in the teacher's colour.
   const downloadMonthlyAttendanceImage = async () => {
     const monthKey = (selectedDate || toDateKey(new Date())).slice(0, 7);
     try {
-      const [records, scores] = await Promise.all([
-        sessionWorkflowApi.loadClassAttendance(numericClassId),
-        sessionWorkflowApi.loadClassMonthScores(numericClassId, monthKey),
-      ]);
-      const grid = buildMonthlyAttendanceGrid({ students, records, scores, monthKey });
-      const className = classData?.class_name || `#${numericClassId}`;
-      const canvas = drawMonthlyAttendanceImage(grid, {
-        title: className,
-        subtitle: classData?.teacher_name ? `O'qituvchi: ${classData.teacher_name}` : undefined,
+      await downloadClassScoresImage({
+        classId: numericClassId,
+        className: classData?.class_name,
+        teacherName: classData?.teacher_name,
+        monthKey,
+        students,
+        topColor,
       });
-      if (!canvas) throw new Error('canvas unavailable');
-      const safeName = className.replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '') || 'guruh';
-      await downloadCanvasPng(canvas, `davomat_${safeName}_${monthKey}.png`);
     } catch {
       showToast.error(t('Could not create the attendance image.'));
     }

@@ -1,7 +1,7 @@
 // Tab component for the teacher feature.
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,9 @@ import { useAppSelector } from '../../crm/hooks';
 import { useMonthlyClassPoints } from '../../crm/classes/hooks/useMonthlyClassPoints';
 import { getMonthKey, shiftMonth } from '../../crm/classes/utils/date';
 import TeacherStudentDirectory from './TeacherStudentDirectory';
+import { downloadClassScoresImage } from '../../crm/classes/classScoresImage';
+import { useTopStudentsColor } from '../standings';
+import { showToast } from '@/utils/toast';
 import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {
@@ -52,6 +55,28 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
   }, [teacherId]);
 
   const { user } = useAppSelector((state: any) => state.auth);
+  const topColor = useTopStudentsColor(user?.userType === 'teacher');
+  const [downloadingScores, setDownloadingScores] = useState(false);
+
+  // "Ballarni yuklash": the same image as after a lesson, for the group and month on screen.
+  const downloadScores = async () => {
+    if (!selectedGroup) return;
+    setDownloadingScores(true);
+    try {
+      await downloadClassScoresImage({
+        classId: selectedGroup.id,
+        className: selectedGroup.label,
+        teacherName: user?.userType === 'teacher' ? [user?.first_name, user?.last_name].filter(Boolean).join(' ') || null : null,
+        monthKey: pointsMonth || getMonthKey(),
+        students: selectedClassStudents.length > 0 ? selectedClassStudents : groupStudents,
+        topColor,
+      });
+    } catch {
+      showToast.error(t('Could not create the attendance image.'));
+    } finally {
+      setDownloadingScores(false);
+    }
+  };
 
   const todayKey = new Date().toISOString().split('T')[0];
   const {
@@ -399,6 +424,12 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                 <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => { setPointsMonth((m) => shiftMonth(m || getMonthKey(), 1)); if (selectedGroup) void loadStudentsForGroup(selectedGroup.id, undefined, shiftMonth(pointsMonth, 1)); }}>
                   ▶
                 </Button>
+                {selectedGroup && (
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={() => void downloadScores()} disabled={downloadingScores}>
+                    {downloadingScores ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                    {t('Download scores')}
+                  </Button>
+                )}
               </div>
             </div>
 

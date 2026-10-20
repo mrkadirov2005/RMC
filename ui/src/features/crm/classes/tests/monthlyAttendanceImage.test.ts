@@ -55,4 +55,31 @@ describe('monthly attendance image', () => {
     expect(grid.dates).toEqual(['2026-10-02', '2026-10-09']);
     expect(grid.rows[0]).toMatchObject({ marks: ['present', null], scores: [90, 60], lessons: 2, total: 150 });
   });
+
+  it('with standings, rows go by place over all lessons (no lessons last) and carry the place and trend', () => {
+    const students = [
+      { student_id: 1, first_name: 'Ali', last_name: 'Valiyev' },
+      { student_id: 2, first_name: 'Ziyoda', last_name: 'Isomova' },
+      { student_id: 3, first_name: 'Bek', last_name: 'Aliyev' },
+    ];
+    const standings = new Map([
+      [2, { place: 1, total_points: 310, lessons: 4, trend: { direction: 'up' as const } }],
+      [1, { place: 2, total_points: 280, lessons: 4, trend: null }],
+    ]);
+    const grid = buildMonthlyAttendanceGrid({ monthKey: '2026-10', students, records: [], standings });
+    expect(grid.ranked).toBe(true);
+    expect(grid.rows.map((row) => row.id)).toEqual([2, 1, 3]);
+    expect(grid.rows[0].standing).toMatchObject({ place: 1, total_points: 310, trend: { direction: 'up' } });
+    expect(grid.rows[2].standing).toBeUndefined();
+  });
+
+  it('without standings, rows stay A–Z as before', () => {
+    const grid = buildMonthlyAttendanceGrid({
+      monthKey: '2026-10',
+      students: [{ student_id: 1, first_name: 'Ali', last_name: 'Valiyev' }, { student_id: 3, first_name: 'Bek', last_name: 'Aliyev' }],
+      records: [],
+    });
+    expect(grid.ranked).toBe(false);
+    expect(grid.rows.map((row) => row.id)).toEqual([3, 1]);
+  });
 });
