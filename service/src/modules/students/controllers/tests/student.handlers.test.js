@@ -15,6 +15,7 @@ jest.mock('../../services/student.service', () => ({
   transferStudent: jest.fn(),
   listLinkedGroups: jest.fn(),
   assignToGroup: jest.fn(),
+  removeAddedGroup: jest.fn(),
   authenticate: jest.fn(),
   setPasswordByAdmin: jest.fn(),
   changePassword: jest.fn(),
@@ -829,11 +830,36 @@ describe('students controller handlers', () => {
       const res = createResponse();
       studentService.assignToGroup.mockResolvedValue({ student: { student_id: 12, class_id: 3 }, main_student_id: 9 });
 
-      await controller.assignStudentToGroup({ params: { id: '9' }, body: { class_id: '3', start_date: '2026-10-20' }, user: admin }, res);
+      await controller.assignStudentToGroup({ params: { id: '9' }, body: { class_id: '3', start_date: '2026-10-20', note: 'Ota-onasi so‘radi', copy_discount_ids: [5] }, user: admin }, res);
 
-      expect(studentService.assignToGroup).toHaveBeenCalledWith(9, 3, 2, '2026-10-20');
+      expect(studentService.assignToGroup).toHaveBeenCalledWith(9, 3, 2, { startDate: '2026-10-20', note: 'Ota-onasi so‘radi', copyDiscountIds: [5] });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ student: { student_id: 12, class_id: 3 }, main_student_id: 9 }));
+    });
+  });
+
+  describe('removeAddedGroup', () => {
+    it('removes an added group that has no lessons or payments yet', async () => {
+      const res = createResponse();
+      studentService.removeAddedGroup.mockResolvedValue({ removed: 12, main_student_id: 9 });
+      await controller.removeAddedGroup({ params: { id: '12' }, user: admin }, res);
+      expect(studentService.removeAddedGroup).toHaveBeenCalledWith(12, 2);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ removed: 12, main_student_id: 9 }));
+    });
+
+    it('refuses once the group has lessons, payments or coins', async () => {
+      const res = createResponse();
+      studentService.removeAddedGroup.mockResolvedValue({ error: 'has_activity' });
+      await controller.removeAddedGroup({ params: { id: '12' }, user: admin }, res);
+      expect(res.status).toHaveBeenCalledWith(409);
+    });
+
+    it('is not for teachers or students', async () => {
+      const res = createResponse();
+      studentService.removeAddedGroup.mockClear();
+      await controller.removeAddedGroup({ params: { id: '12' }, user: { userType: 'teacher', id: 4 } }, res);
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(studentService.removeAddedGroup).not.toHaveBeenCalled();
     });
   });
 });

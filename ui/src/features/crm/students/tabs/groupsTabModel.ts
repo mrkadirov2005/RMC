@@ -9,7 +9,27 @@ export interface StudentGroupRecord {
   is_main?: boolean;
   teacher_first_name?: string | null;
   teacher_last_name?: string | null;
+  main_student_id?: number | null;
+  transferred_from_student_id?: number | null;
+  start_date?: string | null;
+  group_note?: string | null;
 }
+
+/** A group the child was added to (not their main record, not a transfer) that can still be undone. */
+export const isUndoableAddedGroup = (group: StudentGroupRecord) =>
+  Boolean(group.main_student_id) && !group.transferred_from_student_id && group.status !== 'Transferred';
+
+export interface CopyableDiscount {
+  discount_id: number;
+  discount_type?: string | null;
+  value?: number | string | null;
+  reason?: string | null;
+  group_name: string;
+}
+
+/** "100 000 so'm" or "50%" off, for the discount checkboxes. */
+export const describeDiscount = (discount: CopyableDiscount, formatMoney: (value: number) => string) =>
+  discount.discount_type === 'percent' ? `${Number(discount.value || 0)}%` : formatMoney(Number(discount.value || 0));
 
 export interface ClassOption {
   class_id?: number;

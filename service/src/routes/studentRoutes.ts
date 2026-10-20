@@ -137,6 +137,8 @@ router_student.post('/:id/transfer', requireAuth, requireRole('superuser'), vali
 // The child's group records (main record first) and adding them to another group under the same login.
 router_student.get('/:id/groups', requireAuth, validateParams(IdParamDto), studentController.getStudentGroups);
 router_student.post('/:id/groups', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(AssignStudentGroupDto), studentController.assignStudentToGroup);
+// Undo an added group (only before any lesson, payment or coin there). :id is the added record.
+router_student.delete('/:id/added-group', requireAuth, requireRole('superuser'), validateParams(IdParamDto), studentController.removeAddedGroup);
 
 /**
  * @swagger

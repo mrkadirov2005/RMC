@@ -334,14 +334,40 @@ const assignStudentToGroup = async (req: any, res: any) => {
     if (req.user?.userType === 'student' || req.user?.userType === 'teacher') {
       return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
-    const result = await studentService.assignToGroup(Number(req.params.id), Number(req.body.class_id), centerId ?? undefined, String(req.body.start_date).slice(0, 10));
+    const result = await studentService.assignToGroup(Number(req.params.id), Number(req.body.class_id), centerId ?? undefined, {
+      startDate: String(req.body.start_date).slice(0, 10),
+      note: req.body.note ?? null,
+      copyDiscountIds: req.body.copy_discount_ids || [],
+    });
     if (result?.error === 'not_found') return res.status(404).json({ error: "O'quvchi topilmadi" });
     if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Guruh topilmadi' });
     if (result?.error === 'already_in_group') return res.status(400).json({ error: "O'quvchi allaqachon shu guruhda" });
-    res.status(201).json({ message: "O'quvchi yangi guruhga qo'shildi", student: result.student, main_student_id: result.main_student_id });
+    res.status(201).json({ message: "O'quvchi yangi guruhga qo'shildi", student: result.student, main_student_id: result.main_student_id, copied_discounts: result.copied_discounts || 0 });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'quvchini guruhga qo'shib bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+// Undo adding the child to another group: :id is the added group record.
+const removeAddedGroup = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    }
+    if (req.user?.userType === 'student' || req.user?.userType === 'teacher') {
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
+    }
+    const result = await studentService.removeAddedGroup(Number(req.params.id), centerId ?? undefined);
+    if (result?.error === 'not_found') return res.status(404).json({ error: "Qo'shilgan guruh yozuvi topilmadi" });
+    if (result?.error === 'has_activity') {
+      return res.status(409).json({ error: "Bu guruhda dars, to'lov yoki tanga bor. Yozuvni o'chirib bo'lmaydi, arxivlang." });
+    }
+    res.json({ message: "O'quvchi guruhdan olib tashlandi", ...result });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Guruhdan olib tashlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -441,6 +467,7 @@ module.exports = {
   transferStudent,
   getStudentGroups,
   assignStudentToGroup,
+  removeAddedGroup,
   studentLogin,
   setStudentPassword,
   changeStudentPassword,

@@ -72,6 +72,7 @@ const studentSelection = {
   previous_class_id: students.previousClassId,
   transferred_from_student_id: students.transferredFromStudentId,
   main_student_id: students.mainStudentId,
+  group_note: students.groupNote,
   start_date: students.startDate,
   end_date: students.endDate,
   school_name: students.schoolName,
@@ -807,7 +808,35 @@ const findLinkedGroups = async (id: number, centerId?: number) => {
 // Adds the child to another group as a new record that points at their main record. The new
 // record copies the profile and parent links but not the login, so the child keeps signing in
 // with the same username and password and sees every group from there.
-const assignToGroup = async (id: number, targetClassId: number, centerId?: number, startDate?: string) =>
+type AssignOptions = { startDate?: string; note?: string | null; copyDiscountIds?: number[] };
+
+// A discount repeated in the new group: same kind and value, priced on the new group's fee and
+// running from the day the child starts there.
+const discountCopy = (discount: any, studentId: number, fee: number, startDate: string | null) => {
+  const value = Number(discount.value || 0);
+  const off = discount.discount_type === 'percent' ? Math.min(fee, (fee * Math.min(100, Math.max(0, value))) / 100) : Math.min(fee, Math.max(0, value));
+  const laterStart = discount.start_date && startDate && String(discount.start_date) > startDate ? discount.start_date : startDate;
+  return {
+    studentId,
+    centerId: discount.center_id,
+    discountType: discount.discount_type,
+    discountKind: discount.discount_kind,
+    value: discount.value,
+    originalPrice: fee > 0 ? String(fee) : discount.original_price,
+    finalPrice: fee > 0 ? String(Math.max(0, fee - off)) : discount.final_price,
+    reason: discount.reason,
+    reasonCategory: discount.reason_category,
+    referrerName: discount.referrer_name,
+    paymentPeriod: discount.payment_period,
+    startDate: laterStart || null,
+    endDate: discount.end_date,
+    active: true,
+    createdAt: sql`CURRENT_TIMESTAMP`,
+    updatedAt: sql`CURRENT_TIMESTAMP`,
+  };
+};
+
+const assignToGroup = async (id: number, targetClassId: number, centerId?: number, options: AssignOptions = {}) =>
   db.transaction(async (tx: any) => {
     const mainId = await findMainId(tx, id);
     if (!mainId) return { error: 'not_found' as const };
@@ -819,7 +848,7 @@ const assignToGroup = async (id: number, targetClassId: number, centerId?: numbe
     if (!main) return { error: 'not_found' as const };
 
     const targetRows = await tx
-      .select({ class_id: classes.classId, center_id: classes.centerId, teacher_id: classes.teacherId })
+      .select({ class_id: classes.classId, center_id: classes.centerId, teacher_id: classes.teacherId, payment_amount: classes.paymentAmount })
       .from(classes)
       .where(and(eq(classes.classId, targetClassId), isNull(classes.deletedAt), eq(classes.centerId, main.center_id)))
       .limit(1);
@@ -852,7 +881,8 @@ const assignToGroup = async (id: number, targetClassId: number, centerId?: numbe
         teacherId: targetClass.teacher_id || null,
         classId: targetClass.class_id,
         mainStudentId: mainId,
-        startDate: startDate || null,
+        startDate: options.startDate || null,
+        groupNote: options.note?.trim() || null,
         schoolName: main.school_name,
         schoolClass: main.school_class,
         fatherName: main.father_name,
@@ -869,8 +899,57 @@ const assignToGroup = async (id: number, targetClassId: number, centerId?: numbe
     const student = insertedRows[0];
 
     await copyParentLinks(tx, mainId, student.student_id);
-    return { student, main_student_id: mainId };
+
+    // Only active discounts of this child's own records can be copied.
+    const ids = [...new Set((options.copyDiscountIds || []).map(Number).filter((value) => value > 0))];
+    let copiedDiscounts: any[] = [];
+    if (ids.length > 0) {
+      const linkedIds = (await tx.select({ student_id: students.studentId }).from(students).where(isLinkedTo(mainId))).map((row: any) => Number(row.student_id));
+      const source = await tx
+        .select({
+          discount_id: discounts.discountId, center_id: discounts.centerId, discount_type: discounts.discountType, discount_kind: discounts.discountKind,
+          value: discounts.value, original_price: discounts.originalPrice, final_price: discounts.finalPrice, reason: discounts.reason,
+          reason_category: discounts.reasonCategory, referrer_name: discounts.referrerName, payment_period: discounts.paymentPeriod,
+          start_date: discounts.startDate, end_date: discounts.endDate,
+        })
+        .from(discounts)
+        .where(and(sql`${discounts.discountId} = ANY(${ids})`, sql`${discounts.studentId} = ANY(${linkedIds})`, eq(discounts.active, true)));
+      if (source.length > 0) {
+        copiedDiscounts = await tx
+          .insert(discounts)
+          .values(source.map((discount: any) => discountCopy(discount, student.student_id, Number(targetClass.payment_amount || 0), options.startDate || null)))
+          .returning({ discount_id: discounts.discountId });
+      }
+    }
+    return { student, main_student_id: mainId, copied_discounts: copiedDiscounts.length };
   });
+
+/**
+ * Undo "add to another group": deletes the added record, its discounts and parent links, as if it
+ * never happened. Only for a group the child was added to (not their main record, not a transfer)
+ * and only before anything happened there; with lessons, payments or coins the database refuses
+ * and the record has to be archived instead.
+ */
+const removeAddedGroup = async (recordId: number, centerId?: number) => {
+  try {
+    return await db.transaction(async (tx: any) => {
+      const conditions: any[] = [eq(students.studentId, recordId), isNull(students.deletedAt), isNotNull(students.mainStudentId), isNull(students.transferredFromStudentId)];
+      if (centerId) conditions.push(eq(students.centerId, centerId));
+      const rows = await tx.select({ student_id: students.studentId, main_student_id: students.mainStudentId }).from(students).where(and(...conditions)).limit(1);
+      if (!rows[0]) return { error: 'not_found' as const };
+      // Tests and consolidation work would be deleted with the record (cascade), so they block it too.
+      const work = await tx.execute(sql`SELECT EXISTS (SELECT 1 FROM test_submissions WHERE student_id = ${recordId})
+        OR EXISTS (SELECT 1 FROM consolidation_trials WHERE student_id = ${recordId}) AS has_work`);
+      if ((work?.rows ?? work)?.[0]?.has_work) return { error: 'has_activity' as const };
+      await tx.delete(discounts).where(eq(discounts.studentId, recordId));
+      await tx.delete(students).where(eq(students.studentId, recordId));
+      return { removed: recordId, main_student_id: Number(rows[0].main_student_id) };
+    });
+  } catch (error: any) {
+    if (error?.code === '23503' || error?.cause?.code === '23503') return { error: 'has_activity' as const };
+    throw error;
+  }
+};
 
 const findByUsername = async (username: string) => {
   const rows = await db
@@ -945,6 +1024,8 @@ const saveVideos = async (id: number, videos: { before_video_url: string | null;
 };
 
 module.exports = {
+  removeAddedGroup,
+  discountCopy,
   findActionReason,
   findVideos,
   saveVideos,

@@ -232,7 +232,10 @@ export const studentAPI = {
   update: (id: number, data: any) => apiClient.put(`/students/${id}`, data),
   // The child's group records (main record first) and adding them to another group under the same login.
   getGroups: (id: number) => apiClient.get(`/students/${id}/groups`),
-  assignToGroup: (id: number, classId: number, startDate: string) => apiClient.post(`/students/${id}/groups`, { class_id: classId, start_date: startDate }),
+  assignToGroup: (id: number, classId: number, body: { start_date: string; note?: string; copy_discount_ids?: number[] }) =>
+    apiClient.post(`/students/${id}/groups`, { class_id: classId, ...body }),
+  /** Undo adding the child to a group (only before any lesson, payment or coin there). */
+  removeAddedGroup: (recordId: number) => apiClient.delete(`/students/${recordId}/added-group`),
   transfer: (id: number, targetClassId: number, reasonId: number) =>
     apiClient.post(`/students/${id}/transfer`, { target_class_id: targetClassId, reason_id: reasonId }),
   delete: (id: number, reasonId: number, reasonNote?: string) => apiClient.delete(`/students/${id}`, { data: { reason_id: reasonId, reason_note: reasonNote } }),

@@ -1,6 +1,7 @@
 // React hooks for the crm feature.
 
 import { useState } from 'react';
+import { getCenterToday } from '@/shared/billingPeriod';
 import type { FormEvent } from 'react';
 import type { Class, Student } from '../types';
 import { useAppSelector } from '../../hooks';
@@ -19,7 +20,7 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
   const [formData, setFormData] = useState<Partial<Student>>({ center_id: defaultCenterId, gender: 'Male', status: 'Active', acquisition_source_id: 1 });
   const [saving, setSaving] = useState(false);
 // Handles open modal.
-  const handleOpenModal = (student?: Student) => { student ? setFormData({ ...student, password: '' }) : setFormData({ center_id: defaultCenterId, gender: 'Male', status: 'Active', acquisition_source_id: 1, username: '', password: '', class_id: selectedClass ? (selectedClass.class_id || selectedClass.id) : undefined }); setEditingId(student?.student_id || student?.id || null); setIsModalOpen(true); };
+  const handleOpenModal = (student?: Student) => { student ? setFormData({ ...student, password: '' }) : setFormData({ center_id: defaultCenterId, gender: 'Male', status: 'Active', acquisition_source_id: 1, username: '', password: '', start_date: getCenterToday(), class_id: selectedClass ? (selectedClass.class_id || selectedClass.id) : undefined }); setEditingId(student?.student_id || student?.id || null); setIsModalOpen(true); };
 // Handles close modal.
   const handleCloseModal = () => { setIsModalOpen(false); setEditingId(null); setFormData({ center_id: defaultCenterId, gender: 'Male', status: 'Active', acquisition_source_id: 1, username: '', password: '' }); };
 // Handles submit.

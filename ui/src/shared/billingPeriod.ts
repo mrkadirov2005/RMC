@@ -13,6 +13,10 @@ const toDay = (value: unknown) => {
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
+/** Today as YYYY-MM-DD in Tashkent, where the centers are. */
+export const getCenterToday = (now = new Date()) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+
 /** The current month as YYYY-MM in Tashkent, where the centers are. */
 export const getCenterMonthKey = (now = new Date()) =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit' }).format(now);

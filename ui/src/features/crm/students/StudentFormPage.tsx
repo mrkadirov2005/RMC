@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getCenterToday } from '@/shared/billingPeriod';
 import type { FormEvent } from 'react';
 import { ArrowLeft, BadgePercent, CheckCircle2, GraduationCap, Loader2, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -42,6 +43,7 @@ const StudentFormPage = () => {
     password: '',
     discount_kind: 'serial_discount',
     discount_value_type: 'fixed',
+    start_date: getCenterToday(),
   });
   const [loadingStudent, setLoadingStudent] = useState(isEditing);
   const [saving, setSaving] = useState(false);

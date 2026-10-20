@@ -107,6 +107,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
   { label: 'Advertisement', value: 1 }, { label: 'Teacher referral', value: 2 }, { label: 'Student or parent referral', value: 3 }, { label: 'Social media', value: 4 }, { label: 'Walk-in', value: 5 }, { label: 'Other', value: 6 },
 ], genderOptions, statusOptions, showCenterField = true }: Props) => {
   const { t } = useLanguage();
+  const isNewStudent = !formData.student_id && !formData.id;
   const selectedTeacherId = Number(formData.teacher_id) || 0;
   const classesByTeacher = useMemo(() => {
     const map = new Map<number, number>();
@@ -200,8 +201,9 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           />
         </div>
         <div className={fieldClass}>
-          <TextField label={t('Start date')} type="date" value={String(formData.start_date || '').slice(0, 10)} onChange={(value) => setFormData({ ...formData, start_date: value })} />
-          <p className="text-xs text-slate-500">{t('The first month is charged from this day. Leave empty to charge whole months.')}</p>
+          {/* A new student must have one (today by default); an existing one may be left empty. */}
+          <TextField label={t('Start date')} type="date" value={String(formData.start_date || '').slice(0, 10)} onChange={(value) => setFormData({ ...formData, start_date: value })} required={isNewStudent} />
+          <p className="text-xs text-slate-500">{t(isNewStudent ? 'The first month is charged from this day.' : 'The first month is charged from this day. Leave empty to charge whole months.')}</p>
         </div>
       </FormSection>
 

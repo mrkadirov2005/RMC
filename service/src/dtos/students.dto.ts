@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength, Matches, ValidateIf } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, MinLength, MaxLength, Matches, ValidateIf } from 'class-validator';
 
 class StudentListQueryDto {
   @IsOptional()
@@ -389,6 +389,18 @@ class AssignStudentGroupDto {
   // The first day in the new group; billing for the first month is prorated from it.
   @IsDateString()
   start_date!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  note?: string;
+
+  // The child's discounts to repeat in the new group (ids from any of their group records).
+  @IsOptional()
+  @IsArray()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  copy_discount_ids?: number[];
 }
 
 class DeleteStudentDto {

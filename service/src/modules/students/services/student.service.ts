@@ -128,8 +128,10 @@ const listLinkedStudentIds = async (id: number, centerId?: number): Promise<numb
   return ids.length > 0 ? ids : [Number(id)];
 };
 
-const assignToGroup = (id: number, targetClassId: number, centerId?: number, startDate?: string) =>
-  studentRepository.assignToGroup(id, targetClassId, centerId, startDate);
+const assignToGroup = (id: number, targetClassId: number, centerId?: number, options: { startDate?: string; note?: string | null; copyDiscountIds?: number[] } = {}) =>
+  studentRepository.assignToGroup(id, targetClassId, centerId, options);
+
+const removeAddedGroup = (recordId: number, centerId?: number) => studentRepository.removeAddedGroup(recordId, centerId);
 
 const authenticate = async (username: string, password: string) => {
   const student = await studentRepository.findByUsername(username);
@@ -202,6 +204,7 @@ module.exports = {
   listLinkedGroups,
   listLinkedStudentIds,
   assignToGroup,
+  removeAddedGroup,
   authenticate,
   setPasswordByAdmin,
   changePassword,

@@ -1,27 +1,33 @@
 // Tab component for the crm feature.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Coins, Loader2, Plus, Users } from 'lucide-react';
+import { Coins, Loader2, Plus, Undo2, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { formatMoney } from '@/utils/helpers';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { classAPI, studentAPI, teacherAPI } from '../api';
+import { classAPI, discountAPI, studentAPI, teacherAPI } from '../api';
 import {
   getAssignableClasses,
   getAssignableTeachers,
   getClassId,
   getTeacherClasses,
+  describeDiscount,
+  isUndoableAddedGroup,
   type ClassOption,
+  type CopyableDiscount,
   type StudentGroupRecord,
   type TeacherOption,
 } from './groupsTabModel';
@@ -52,6 +58,11 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
   const [assigning, setAssigning] = useState(false);
   // First day in the new group (Tashkent date); the first month is billed from it.
   const [startDate, setStartDate] = useState('');
+  const [note, setNote] = useState('');
+  // The child's active discounts in their groups; the checked ones are repeated in the new group.
+  const [discounts, setDiscounts] = useState<CopyableDiscount[]>([]);
+  const [copyDiscountIds, setCopyDiscountIds] = useState<number[]>([]);
+  const [removingId, setRemovingId] = useState<number | null>(null);
 
   const loadGroups = useCallback(async () => {
     setLoading(true);
@@ -82,7 +93,19 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
     setSelectedTeacherId('');
     setSelectedClassId('');
     setStartDate(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent' }).format(new Date()));
+    setNote('');
+    setDiscounts([]);
+    setCopyDiscountIds([]);
     setDialogOpen(true);
+    const activeGroups = groups.filter((group) => group.status !== 'Transferred');
+    void Promise.all(activeGroups.map((group) => discountAPI.getActiveByStudent(group.student_id).then((response) => ({ group, row: getApiPayload<any>(response) })).catch(() => null)))
+      .then((results) => {
+        const found: CopyableDiscount[] = [];
+        results.forEach((result) => {
+          if (result?.row?.discount_id) found.push({ ...result.row, group_name: result.group.class_name || '' });
+        });
+        setDiscounts(found);
+      });
     try {
       const [classResponse, teacherResponse] = await Promise.all([classAPI.getAll(), teacherAPI.getAll()]);
       setClasses(unwrapApiRows<ClassOption>(classResponse));
@@ -96,14 +119,35 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
     if (!selectedClassId || !startDate) return;
     setAssigning(true);
     try {
-      await studentAPI.assignToGroup(studentId, Number(selectedClassId), startDate);
-      showToast.success(t('Student added to the new group'));
+      const response = await studentAPI.assignToGroup(studentId, Number(selectedClassId), {
+        start_date: startDate,
+        note: note.trim() || undefined,
+        copy_discount_ids: copyDiscountIds,
+      });
+      const copied = Number(getApiPayload<any>(response)?.copied_discounts || 0);
+      showToast.success(copied > 0 ? t('Student added to the new group with {count} discount(s)', { count: copied }) : t('Student added to the new group'));
       setDialogOpen(false);
       await loadGroups();
     } catch (err) {
       showToast.error(getErrorMessage(err) || t("Couldn't add the student to the group"));
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const removeAddedGroup = async (recordId: number, groupName: string) => {
+    if (!window.confirm(t('Remove the student from {group}? Use this only if they were added by mistake.', { group: groupName }))) return;
+    setRemovingId(recordId);
+    try {
+      await studentAPI.removeAddedGroup(recordId);
+      showToast.success(t('Removed from the group'));
+      // The record on screen may be the one just removed.
+      if (recordId === Number(studentId) && data?.main_student_id) onOpenStudent(Number(data.main_student_id));
+      else await loadGroups();
+    } catch (err) {
+      showToast.error(getErrorMessage(err) || t("Couldn't remove the student from the group"));
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -166,11 +210,29 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
                         {group.class_name || t('No group')}
                         {group.is_main && <Badge className="bg-sky-600 text-white hover:bg-sky-600">{t('Main account')}</Badge>}
                       </div>
+                      {(group.start_date || group.group_note) && (
+                        <div className="mt-0.5 text-xs font-normal text-muted-foreground">
+                          {[group.start_date && t('From {date}', { date: String(group.start_date).slice(0, 10) }), group.group_note].filter(Boolean).join(' · ')}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>{teacherName || '-'}</TableCell>
                     <TableCell>{group.status ? t(group.status) : '-'}</TableCell>
                     <TableCell className="text-right">{Number(group.coins || 0)}</TableCell>
                     <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                      {isUndoableAddedGroup(group) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs text-rose-600 hover:text-rose-700"
+                          disabled={removingId !== null}
+                          onClick={() => void removeAddedGroup(group.student_id, group.class_name || '')}
+                        >
+                          {removingId === group.student_id ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Undo2 className="mr-1 h-3.5 w-3.5" />}
+                          {t('Remove from group')}
+                        </Button>
+                      )}
                       {isCurrent ? (
                         <span className="text-xs text-muted-foreground">{t('Open now')}</span>
                       ) : (
@@ -178,6 +240,7 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
                           {t('Open')}
                         </Button>
                       )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -235,6 +298,31 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
             <Label htmlFor="assign-start-date">{t('Start date')}</Label>
             <Input id="assign-start-date" type="date" required value={startDate} onChange={(event) => setStartDate(event.target.value)} />
             <p className="text-xs text-muted-foreground">{t('The first month is charged from this day.')}</p>
+          </div>
+          {discounts.length > 0 && (
+            <div className="space-y-2">
+              <Label>{t('Copy discounts to the new group')}</Label>
+              {discounts.map((discount) => (
+                <label key={discount.discount_id} className="flex items-start gap-2 rounded-md border p-2 text-sm">
+                  <Checkbox
+                    checked={copyDiscountIds.includes(discount.discount_id)}
+                    onCheckedChange={(checked) =>
+                      setCopyDiscountIds((current) => (checked ? [...current, discount.discount_id] : current.filter((id) => id !== discount.discount_id)))
+                    }
+                    aria-label={t('Copy the discount from {group}', { group: discount.group_name })}
+                  />
+                  <span>
+                    <span className="font-semibold">{describeDiscount(discount, formatMoney)}</span> · {discount.group_name}
+                    {discount.reason && <span className="block text-xs text-muted-foreground">{discount.reason}</span>}
+                  </span>
+                </label>
+              ))}
+              <p className="text-xs text-muted-foreground">{t('A copied discount is priced on the new group fee and starts on the start date.')}</p>
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="assign-note">{t('Note')}</Label>
+            <Textarea id="assign-note" value={note} maxLength={500} rows={2} onChange={(event) => setNote(event.target.value)} placeholder={t('e.g. parents asked for a second subject')} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={assigning}>

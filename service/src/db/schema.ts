@@ -307,6 +307,7 @@ const students = pgTable('students', {
   previousClassId: integer('previous_class_id'),
   transferredFromStudentId: integer('transferred_from_student_id'),
   mainStudentId: integer('main_student_id'),
+  groupNote: text('group_note'),
   startDate: date('start_date'),
   endDate: date('end_date'),
   schoolName: varchar('school_name', { length: 255 }),
