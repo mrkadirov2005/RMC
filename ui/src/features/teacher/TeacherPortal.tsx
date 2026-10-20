@@ -1,7 +1,7 @@
 // Portal component for the teacher feature.
 
 import { useEffect, useCallback, useState } from 'react';
-import { useUrlTab } from '@/shared/hooks/useUrlTab';
+import { useTeacherPortalTab } from './useTeacherPortalTab';
 import {
   ClipboardList,
   FileQuestion,
@@ -86,16 +86,13 @@ const storeTabOrder = (order: string[]) => {
 };
 
 // Renders the teacher portal portal.
-
-const TEACHER_PORTAL_TABS = ['overall', 'statistics', 'consolidations', 'classes', 'tests', 'calendar', 'attendance', 'assignments', 'tasks', 'profile'] as const;
 const TeacherPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { toggleTheme, isDark } = useThemeMode();
-  // The open tab is in the address (?tab=attendance), so a reload stays on it.
-  const [tabValue, setTabValue] = useUrlTab('overall', TEACHER_PORTAL_TABS);
+  const [tabValue, setTabValue] = useTeacherPortalTab();
   const [tabOrder, setTabOrder] = useState<string[]>(getStoredTabOrder);
   const [draggedTabValue, setDraggedTabValue] = useState<string | null>(null);
 

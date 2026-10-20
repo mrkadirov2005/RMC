@@ -36,4 +36,15 @@ describe('tab in the address', () => {
     act(() => screen.getByText('overview').click());
     expect(screen.getByTestId('url').textContent).toBe('?page=3');
   });
+
+  it('can keep the default in the address too', () => {
+    const Keep = () => {
+      const [, setTab] = useUrlTab('overview', ['overview', 'payments'] as const, 'tab', { keepDefault: true });
+      const location = useLocation();
+      return (<><span data-testid="url">{location.search}</span><button onClick={() => setTab('overview')}>overview</button></>);
+    };
+    render(<MemoryRouter initialEntries={['/x?tab=payments']}><Keep /></MemoryRouter>);
+    act(() => screen.getByText('overview').click());
+    expect(screen.getByTestId('url').textContent).toBe('?tab=overview');
+  });
 });
