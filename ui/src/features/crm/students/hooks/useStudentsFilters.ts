@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useUrlState } from '@/shared/hooks/useUrlState';
 import type { Class, Student } from '../types';
 import { getStudentCount, getStatusVariant } from '../queries';
 
@@ -7,26 +8,44 @@ const normalizeLimit = (value: number) => {
   return Math.min(100, Math.max(1, Math.floor(value)));
 };
 
+const URL_DEFAULTS = {
+  q: '', gender: '', status: '', school: '', class_id: '', teacher_id: '', subject_id: '', level: '', address: '', age: '', page: '1', limit: '20',
+};
+
 // Provides students filters.
 export const useStudentsFilters = (students: Student[]) => {
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterGender, setFilterGender] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [filterSchool, setFilterSchool] = useState('');
-  const [filterClassId, setFilterClassId] = useState('');
-  const [filterTeacherId, setFilterTeacherId] = useState('');
-  const [filterSubjectId, setFilterSubjectId] = useState('');
-  const [filterLevel, setFilterLevel] = useState('');
-  const [filterAddress, setFilterAddress] = useState('');
-  const [filterAge, setFilterAge] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
-  const [showFilters, setShowFilters] = useState(false);
+  // Search, filters, page and page size live in the address, so a reload or Back from a student's
+  // profile brings the same list back.
+  const [url, update] = useUrlState(URL_DEFAULTS);
+  const searchTerm = url.q;
+  const filterGender = url.gender;
+  const filterStatus = url.status;
+  const filterSchool = url.school;
+  const filterClassId = url.class_id;
+  const filterTeacherId = url.teacher_id;
+  const filterSubjectId = url.subject_id;
+  const filterLevel = url.level;
+  const filterAddress = url.address;
+  const filterAge = url.age;
+  const page = Math.max(1, Number(url.page) || 1);
+  const limit = normalizeLimit(Number(url.limit));
+  const [showFilters, setShowFilters] = useState(() => Boolean(url.gender || url.status || url.school || url.class_id || url.teacher_id || url.subject_id || url.level || url.address || url.age));
 
-  useEffect(() => {
-    setPage(1);
-  }, [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, filterTeacherId, limit, searchTerm]);
+  // A changed search or filter starts again from page 1 (one update, so the page is not lost).
+  const setFilter = (key: keyof typeof URL_DEFAULTS) => (value: string) => update({ [key]: value, page: '1' });
+  const setSearchTerm = setFilter('q');
+  const setFilterGender = setFilter('gender');
+  const setFilterStatus = setFilter('status');
+  const setFilterSchool = setFilter('school');
+  const setFilterClassId = setFilter('class_id');
+  const setFilterTeacherId = setFilter('teacher_id');
+  const setFilterSubjectId = setFilter('subject_id');
+  const setFilterLevel = setFilter('level');
+  const setFilterAddress = setFilter('address');
+  const setFilterAge = setFilter('age');
+  const setPage = (value: number) => update({ page: String(Math.max(1, value)) });
+  const setLimit = (value: number) => update({ limit: String(normalizeLimit(value)), page: '1' });
 
   const studentParams = useMemo(() => ({
     q: searchTerm.trim() || undefined,
@@ -44,19 +63,7 @@ export const useStudentsFilters = (students: Student[]) => {
   }), [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, filterTeacherId, limit, page, searchTerm]);
 
 // Handles clear filters.
-  const clearFilters = () => {
-    setSearchTerm('');
-    setFilterGender('');
-    setFilterStatus('');
-    setFilterSchool('');
-    setFilterClassId('');
-    setFilterTeacherId('');
-    setFilterSubjectId('');
-    setFilterLevel('');
-    setFilterAddress('');
-    setFilterAge('');
-    setPage(1);
-  };
+  const clearFilters = () => update({ q: '', gender: '', status: '', school: '', class_id: '', teacher_id: '', subject_id: '', level: '', address: '', age: '', page: '1' });
   const hasActiveFilters = Boolean(searchTerm || filterGender || filterStatus || filterSchool || filterClassId || filterTeacherId || filterSubjectId || filterLevel || filterAddress || filterAge);
   return {
     selectedClass,
@@ -86,7 +93,7 @@ export const useStudentsFilters = (students: Student[]) => {
     page,
     setPage,
     limit,
-    setLimit: (value: number) => setLimit(normalizeLimit(value)),
+    setLimit,
     studentParams,
     showFilters,
     setShowFilters,

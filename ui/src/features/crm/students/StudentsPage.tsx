@@ -1,6 +1,7 @@
 // Page component for the students screen in the crm feature.
 
 import { useMemo, useRef, useState } from 'react';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { ChevronLeft, ChevronRight, Download, FileSpreadsheet, MoreHorizontal, Plus, Upload, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +34,7 @@ const headerActionIconClass = 'h-3.5 w-3.5';
 const StudentsPage = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [activeTab, setActiveTab] = useState('students');
+  const [activeTab, setActiveTab] = useUrlTab('students', ['students', 'statistics', 'multi-group-students', 'watchlist', 'teachers'] as const);
   const [openedTeacherSummary, setOpenedTeacherSummary] = useState<{ name: string; students: number; group?: string } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isSheetsPushing, setIsSheetsPushing] = useState(false);

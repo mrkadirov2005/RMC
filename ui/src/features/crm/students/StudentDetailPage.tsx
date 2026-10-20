@@ -1,7 +1,8 @@
 // Page component for the students screen in the crm feature.
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import {
   ArrowLeft,
   CalendarCheck,
@@ -149,6 +150,8 @@ interface CoinTransaction {
 // };
 
 // Renders the student detail page screen.
+
+const STUDENT_TABS = ['overview', 'groups', 'videos', 'attendance', 'payments', 'assignments', 'individual-tasks', 'grades', 'coins'] as const;
 const StudentDetailPage = () => {
   const { t } = useLanguage();
   const dispatch = useAppDispatch();
@@ -171,7 +174,9 @@ const StudentDetailPage = () => {
   const [settingPassword, setSettingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const location = useLocation();
+  // The open tab is in the address (?tab=groups), so a reload stays on it.
+  const [activeTab, setActiveTab] = useUrlTab('overview', STUDENT_TABS);
   const [isEditingOverview, setIsEditingOverview] = useState(false);
   const [overviewDraft, setOverviewDraft] = useState<StudentOverviewDraft | null>(null);
   const [savingOverview, setSavingOverview] = useState(false);
@@ -450,7 +455,9 @@ const StudentDetailPage = () => {
         <Button
           size="sm"
           className="h-8 w-fit rounded-lg bg-sky-600 text-xs text-white shadow-sm hover:bg-sky-700"
-          onClick={() => navigate('/students')}
+          // Back to where the profile was opened from (the list keeps its page and filters); a
+          // profile opened directly (reload, link) goes to the list.
+          onClick={() => (location.key !== 'default' ? navigate(-1) : navigate('/students'))}
         >
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t('Back to Students')}
         </Button>
@@ -641,7 +648,7 @@ const StudentDetailPage = () => {
 
             {activeTab === 'videos' && studentId && <VideosTab studentId={Number(studentId)} />}
             {activeTab === 'groups' && studentId && (
-              <GroupsTab studentId={Number(studentId)} onOpenStudent={(id) => navigate(`/students/${id}/profile`)} />
+              <GroupsTab studentId={Number(studentId)} onOpenStudent={(id) => navigate(`/students/${id}/profile?tab=groups`)} />
             )}
 
             {activeTab === 'payments' && (

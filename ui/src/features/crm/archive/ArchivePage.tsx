@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { Archive,  CalendarDays, Loader2, RefreshCcw, RotateCcw, Trash2} from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -79,6 +80,7 @@ const ArchivePage = () => {
     sessions: 25,
   });
   const canHardDelete = Boolean(user?.can_hard_delete);
+  const [archiveTab, setArchiveTab] = useUrlTab('students', ['students', 'graduates', 'teachers', 'classes', 'payments', 'sessions'] as const);
   const [filters, setFilters] = useState<Record<ArchiveEntity, ArchiveFilterState>>({
     students: emptyFilters(),
     teachers: emptyFilters(),
@@ -267,7 +269,7 @@ const ArchivePage = () => {
 
       <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
         <CardContent className="p-0">
-          <Tabs defaultValue="students">
+          <Tabs value={archiveTab} onValueChange={setArchiveTab}>
             <TabsList className="h-auto w-full justify-start rounded-none border-b bg-slate-50 p-2 gap-2 dark:bg-muted/40">
               <TabsTrigger value="students" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Students')}</TabsTrigger>
               <TabsTrigger value="graduates" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Graduates')}</TabsTrigger>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, FileQuestion, Loader2, Pencil, PlayCircle, Trash2, UserCog } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -44,6 +45,7 @@ const EDITABLE_OVERVIEW_FIELDS = new Set([
 
 const ClassDetailPage = () => {
   const { classId } = useParams<{ classId: string }>();
+  const [activeTab, setActiveTab] = useUrlTab<string>(DEFAULT_CLASS_DETAIL_TAB, ['overview', 'students', 'subjects', 'points', 'tests', 'sessions']);
   const navigate = useNavigate();
   const authUser = useAppSelector((state) => state.auth.user);
   const { classData, students, setStudents, subjects, sessions, setSessions, assignedTests, loading, error, refetch } = useClassDetailData(classId, authUser);
@@ -251,7 +253,7 @@ const ClassDetailPage = () => {
         handleForceDelete={() => {}}
       />
 
-      <Tabs defaultValue={DEFAULT_CLASS_DETAIL_TAB} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
           <TabsTrigger value="overview" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Overview')}</TabsTrigger>
           <TabsTrigger value="students" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Students')}</TabsTrigger>

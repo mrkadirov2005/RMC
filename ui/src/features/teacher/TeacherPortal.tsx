@@ -1,6 +1,7 @@
 // Portal component for the teacher feature.
 
 import { useEffect, useCallback, useState } from 'react';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import {
   ClipboardList,
   FileQuestion,
@@ -43,7 +44,6 @@ import TeacherAssignmentsTab from './components/TeacherAssignmentsTab';
 import TeacherTasksTab from './components/TeacherTasksTab';
 import { useAppDispatch } from '../crm/hooks';
 import type { RootState } from '../../store';
-import { setTeacherPortalTabValue } from '../../slices/pagesUiSlice';
 import { fetchTests } from '../../slices/testsSlice';
 import { fetchStudentsForce } from '../../slices/studentsSlice';
 import { fetchClasses } from '../../slices/classesSlice';
@@ -52,7 +52,6 @@ import { fetchAssignments } from '../../slices/assignmentsSlice';
 import { fetchGrades } from '../../slices/gradesSlice';
 import { fetchPayments } from '../../slices/paymentsSlice';
 import { logout } from '../../slices/authSlice';
-import { selectTeacherPortalUi } from '../../store/selectors';
 import { useLanguage } from '../../i18n/LanguageContext';
 import TeacherTestsView from './tests/TeacherTestsView';
 import CalendarPage from '../crm/calendar/CalendarPage';
@@ -87,14 +86,16 @@ const storeTabOrder = (order: string[]) => {
 };
 
 // Renders the teacher portal portal.
+
+const TEACHER_PORTAL_TABS = ['overall', 'statistics', 'consolidations', 'classes', 'tests', 'calendar', 'attendance', 'assignments', 'tasks', 'profile'] as const;
 const TeacherPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { toggleTheme, isDark } = useThemeMode();
-  const teacherPortalUi = useAppSelector(selectTeacherPortalUi);
-  const { tabValue } = teacherPortalUi;
+  // The open tab is in the address (?tab=attendance), so a reload stays on it.
+  const [tabValue, setTabValue] = useUrlTab('overall', TEACHER_PORTAL_TABS);
   const [tabOrder, setTabOrder] = useState<string[]>(getStoredTabOrder);
   const [draggedTabValue, setDraggedTabValue] = useState<string | null>(null);
 
@@ -132,11 +133,6 @@ const TeacherPortal = () => {
     loadStats();
   }, [loadStats]);
 
-  useEffect(() => {
-    if (tabValue === 'students') {
-      dispatch(setTeacherPortalTabValue('classes'));
-    }
-  }, [dispatch, tabValue]);
 
 // Handles quick action.
   const handleQuickAction = (action: string) => {
@@ -145,7 +141,7 @@ const TeacherPortal = () => {
         navigate('/tests/create');
         break;
       case 'attendance':
-        dispatch(setTeacherPortalTabValue('attendance'));
+        setTabValue('attendance');
         break;
       case 'assignment':
         navigate('/assignments');
@@ -271,7 +267,7 @@ const TeacherPortal = () => {
         className="animate-slide-up animation-delay-500"
         contentClassName="p-0"
       >
-        <Tabs value={tabValue} onValueChange={(value) => dispatch(setTeacherPortalTabValue(value))}>
+        <Tabs value={tabValue} onValueChange={setTabValue}>
           <div className="flex items-center justify-between gap-2 border-b px-4">
             <div className="overflow-x-auto">
               <TabsList className="h-auto gap-0 bg-transparent p-0">

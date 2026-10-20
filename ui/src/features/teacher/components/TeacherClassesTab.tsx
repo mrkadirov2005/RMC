@@ -1,6 +1,7 @@
 // Tab component for the teacher feature.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useUrlState } from '@/shared/hooks/useUrlState';
 import { Eye, EyeClosed, GraduationCap, Loader2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -53,7 +54,12 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  // The open group is in the address (?group=12), so a reload stays in it.
+  const [groupUrl, updateGroupUrl] = useUrlState({ group: '' });
+  const selectedClassId = Number(groupUrl.group) || null;
+  const setSelectedClassId = (id: number | null) => updateGroupUrl({ group: id ? String(id) : '' });
+  const selectedClassIdRef = useRef(selectedClassId);
+  selectedClassIdRef.current = selectedClassId;
   const [classData, setClassData] = useState<ClassInfo | null>(null);
   const [students, setStudents] = useState<TeacherStudentItem[]>([]);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
@@ -162,8 +168,11 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
       const payload = response.data || [];
       const scopedClasses = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : [];
       setClasses(scopedClasses);
-      // Do not auto-open the first class — show list of groups instead.
-      setSelectedClassId(null);
+      // Do not auto-open the first class — show list of groups instead. A group from the address
+      // stays open if it is one of the teacher's.
+      if (selectedClassIdRef.current && !scopedClasses.some((cls: ClassInfo) => Number(cls.class_id) === selectedClassIdRef.current)) {
+        updateGroupUrl({ group: '' });
+      }
     } catch (error) {
       console.error('Error loading classes:', error);
     } finally {

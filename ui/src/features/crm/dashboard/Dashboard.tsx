@@ -1,6 +1,7 @@
 // Source file for the dashboard area in the crm feature.
 
 import { memo, useMemo, useState } from 'react';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, Plus, UserRoundX, Users, Wallet } from 'lucide-react';
 import { useAppSelector } from '../hooks';
@@ -24,7 +25,7 @@ const Dashboard = memo(() => {
   const { user } = useAppSelector((state) => state.auth);
   const role = user?.userType || 'superuser';
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'payments' | 'attendance'>('payments');
+  const [activeTab, setActiveTab] = useUrlTab<'payments' | 'attendance'>('payments', ['payments', 'attendance']);
   const selectedMonth = useMemo(() => new Date(), []);
   const scope: DashboardScope = { type: 'all', value: 'all' };
   const { loading, scopedCollections, stats } = useDashboardData(role, selectedMonth, scope);
