@@ -1,7 +1,11 @@
 const pool = require('../../../db/pool');
 
+// Archive reasons that make a student a graduate: today's "finished successfully" and the older
+// "Graduated" that earlier archives used.
+const GRADUATE_REASON_CODES = ['finished_successfully', 'graduated'];
+
 /**
- * Students archived as "finished successfully", one row per child: the archived record's details
+ * Students archived as graduates (GRADUATE_REASON_CODES), one row per child: the archived record's details
  * plus the history across all of the child's records (other groups, transfers).
  */
 const findGraduates = async (centerId?: number) => {
@@ -9,7 +13,7 @@ const findGraduates = async (centerId?: number) => {
     `WITH graduates AS (
        SELECT s.*, COALESCE(s.main_student_id, s.student_id) AS main_id
        FROM students s
-       JOIN student_action_reasons r ON r.reason_id = s.delete_reason_id AND r.reason_code = 'finished_successfully'
+       JOIN student_action_reasons r ON r.reason_id = s.delete_reason_id AND r.reason_code = ANY($2::text[])
        WHERE s.deleted_at IS NOT NULL AND ($1::int IS NULL OR s.center_id = $1)
      ),
      history AS (
@@ -35,7 +39,7 @@ const findGraduates = async (centerId?: number) => {
      FROM graduates g
      JOIN history h ON h.student_id = g.student_id
      ORDER BY g.deleted_at DESC, g.student_id DESC`,
-    [centerId ?? null]
+    [centerId ?? null, GRADUATE_REASON_CODES]
   );
   return result.rows;
 };
@@ -44,9 +48,9 @@ const findGraduates = async (centerId?: number) => {
 const findGraduateCenter = async (studentId: number, centerId?: number) => {
   const result = await pool.query(
     `SELECT s.center_id FROM students s
-     JOIN student_action_reasons r ON r.reason_id = s.delete_reason_id AND r.reason_code = 'finished_successfully'
+     JOIN student_action_reasons r ON r.reason_id = s.delete_reason_id AND r.reason_code = ANY($3::text[])
      WHERE s.student_id = $1 AND s.deleted_at IS NOT NULL AND ($2::int IS NULL OR s.center_id = $2)`,
-    [studentId, centerId ?? null]
+    [studentId, centerId ?? null, GRADUATE_REASON_CODES]
   );
   return result.rows[0]?.center_id ?? null;
 };
@@ -79,5 +83,5 @@ const softDeleteCertificate = async (certificateId: number, centerId?: number) =
   return result.rowCount > 0;
 };
 
-module.exports = { findGraduates, findGraduateCenter, insertCertificate, findCertificateFile, softDeleteCertificate };
+module.exports = { GRADUATE_REASON_CODES, findGraduates, findGraduateCenter, insertCertificate, findCertificateFile, softDeleteCertificate };
 export {};
