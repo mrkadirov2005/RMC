@@ -57,6 +57,7 @@ export const studentsLabels: Record<string, string> = {
   // Student groups tab: one login across several group records.
   'A new record is created in the chosen group. The student keeps the same username and password.': "Tanlangan guruhda yangi yozuv yaratiladi. O'quvchi o'sha login va parol bilan kiraveradi.",
   'Assign to new group': "Yangi guruhga qo'shish",
+  'The first month is charged from this day.': "Birinchi oy to'lovi shu kundan hisoblanadi.",
   'Print receipt': "Chekni chop etish",
   "Couldn't add the student to the group": "O'quvchini guruhga qo'shib bo'lmadi",
   "Couldn't load groups": "Guruhlarni yuklab bo'lmadi",

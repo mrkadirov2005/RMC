@@ -334,7 +334,7 @@ const assignStudentToGroup = async (req: any, res: any) => {
     if (req.user?.userType === 'student' || req.user?.userType === 'teacher') {
       return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
-    const result = await studentService.assignToGroup(Number(req.params.id), Number(req.body.class_id), centerId ?? undefined);
+    const result = await studentService.assignToGroup(Number(req.params.id), Number(req.body.class_id), centerId ?? undefined, String(req.body.start_date).slice(0, 10));
     if (result?.error === 'not_found') return res.status(404).json({ error: "O'quvchi topilmadi" });
     if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Guruh topilmadi' });
     if (result?.error === 'already_in_group') return res.status(400).json({ error: "O'quvchi allaqachon shu guruhda" });

@@ -829,9 +829,9 @@ describe('students controller handlers', () => {
       const res = createResponse();
       studentService.assignToGroup.mockResolvedValue({ student: { student_id: 12, class_id: 3 }, main_student_id: 9 });
 
-      await controller.assignStudentToGroup({ params: { id: '9' }, body: { class_id: '3' }, user: admin }, res);
+      await controller.assignStudentToGroup({ params: { id: '9' }, body: { class_id: '3', start_date: '2026-10-20' }, user: admin }, res);
 
-      expect(studentService.assignToGroup).toHaveBeenCalledWith(9, 3, 2);
+      expect(studentService.assignToGroup).toHaveBeenCalledWith(9, 3, 2, '2026-10-20');
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ student: { student_id: 12, class_id: 3 }, main_student_id: 9 }));
     });

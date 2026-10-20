@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -49,6 +50,8 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [assigning, setAssigning] = useState(false);
+  // First day in the new group (Tashkent date); the first month is billed from it.
+  const [startDate, setStartDate] = useState('');
 
   const loadGroups = useCallback(async () => {
     setLoading(true);
@@ -78,6 +81,7 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
   const openAssignDialog = async () => {
     setSelectedTeacherId('');
     setSelectedClassId('');
+    setStartDate(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent' }).format(new Date()));
     setDialogOpen(true);
     try {
       const [classResponse, teacherResponse] = await Promise.all([classAPI.getAll(), teacherAPI.getAll()]);
@@ -89,10 +93,10 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
   };
 
   const assignToGroup = async () => {
-    if (!selectedClassId) return;
+    if (!selectedClassId || !startDate) return;
     setAssigning(true);
     try {
-      await studentAPI.assignToGroup(studentId, Number(selectedClassId));
+      await studentAPI.assignToGroup(studentId, Number(selectedClassId), startDate);
       showToast.success(t('Student added to the new group'));
       setDialogOpen(false);
       await loadGroups();
@@ -227,11 +231,16 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="assign-start-date">{t('Start date')}</Label>
+            <Input id="assign-start-date" type="date" required value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            <p className="text-xs text-muted-foreground">{t('The first month is charged from this day.')}</p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={assigning}>
               {t('Cancel')}
             </Button>
-            <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => void assignToGroup()} disabled={!selectedClassId || assigning}>
+            <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => void assignToGroup()} disabled={!selectedClassId || !startDate || assigning}>
               {assigning && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
               {t('Assign')}
             </Button>

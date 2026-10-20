@@ -807,7 +807,7 @@ const findLinkedGroups = async (id: number, centerId?: number) => {
 // Adds the child to another group as a new record that points at their main record. The new
 // record copies the profile and parent links but not the login, so the child keeps signing in
 // with the same username and password and sees every group from there.
-const assignToGroup = async (id: number, targetClassId: number, centerId?: number) =>
+const assignToGroup = async (id: number, targetClassId: number, centerId?: number, startDate?: string) =>
   db.transaction(async (tx: any) => {
     const mainId = await findMainId(tx, id);
     if (!mainId) return { error: 'not_found' as const };
@@ -852,6 +852,7 @@ const assignToGroup = async (id: number, targetClassId: number, centerId?: numbe
         teacherId: targetClass.teacher_id || null,
         classId: targetClass.class_id,
         mainStudentId: mainId,
+        startDate: startDate || null,
         schoolName: main.school_name,
         schoolClass: main.school_class,
         fatherName: main.father_name,

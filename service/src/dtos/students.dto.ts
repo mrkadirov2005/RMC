@@ -385,6 +385,10 @@ class AssignStudentGroupDto {
   @IsInt()
   @Min(1)
   class_id!: number;
+
+  // The first day in the new group; billing for the first month is prorated from it.
+  @IsDateString()
+  start_date!: string;
 }
 
 class DeleteStudentDto {

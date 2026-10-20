@@ -128,8 +128,8 @@ const listLinkedStudentIds = async (id: number, centerId?: number): Promise<numb
   return ids.length > 0 ? ids : [Number(id)];
 };
 
-const assignToGroup = (id: number, targetClassId: number, centerId?: number) =>
-  studentRepository.assignToGroup(id, targetClassId, centerId);
+const assignToGroup = (id: number, targetClassId: number, centerId?: number, startDate?: string) =>
+  studentRepository.assignToGroup(id, targetClassId, centerId, startDate);
 
 const authenticate = async (username: string, password: string) => {
   const student = await studentRepository.findByUsername(username);
