@@ -1,5 +1,20 @@
 // Labels that were still shown in English: confirm dialogs, toasts and shared components.
 export const miscLabels: Record<string, string> = {
+  // Archive search and filters
+  '{shown} of {total}': '{shown} / {total}',
+  'Archived between': 'Arxivlangan sana',
+  'Finished between': 'Tugatgan sana',
+  'No records match the filters.': "Filtrlarga mos yozuv topilmadi.",
+  'Search by name, phone, enrollment, group or note...': "Ism, telefon, ro'yxat raqami, guruh yoki izoh bo'yicha qidirish...",
+  'Search by name, employee ID, email or phone...': "Ism, xodim ID, email yoki telefon bo'yicha qidirish...",
+  'Search by group, code, room or teacher...': "Guruh, kod, xona yoki o'qituvchi bo'yicha qidirish...",
+  'Search by receipt, student, enrollment, amount or note...': "Chek, o'quvchi, ro'yxat raqami, summa yoki izoh bo'yicha qidirish...",
+  'Search by group or teacher...': "Guruh yoki o'qituvchi bo'yicha qidirish...",
+  'Search by name, phone, passport, school, group or result...': "Ism, telefon, pasport, maktab, guruh yoki natija bo'yicha qidirish...",
+  'Payment method': "To'lov usuli",
+  'Payment type': "To'lov turi",
+  'Has a certificate': 'Sertifikati bor',
+  'No certificate yet': "Sertifikat hali yo'q",
   'Class Reports': 'Guruh hisobotlari',
   'Visual styling was saved for the center': "Ko'rinish sozlamalari markaz uchun saqlandi",
   'Could not save visual styling': "Ko'rinish sozlamalarini saqlab bo'lmadi",

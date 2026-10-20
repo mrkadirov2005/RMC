@@ -1,6 +1,6 @@
 const { and, desc, eq, isNotNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { classes, payments, sessions, students, teachers } = require('../../../db/schema');
+const { classes, payments, sessions, studentActionReasons, students, teachers } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -16,18 +16,28 @@ const findArchivedStudents = (centerId?: number) =>
       last_name: students.lastName,
       email: students.email,
       phone: students.phone,
+      parent_phone: students.parentPhone,
       status: students.status,
-      teacher_id: students.teacherId,
+      teacher_id: sql`COALESCE(${classes.teacherId}, ${students.teacherId})`,
       class_id: students.classId,
+      start_date: students.startDate,
+      created_at: students.createdAt,
       deleted_at: students.deletedAt,
       class_name: classes.className,
       class_code: classes.classCode,
       teacher_first_name: teachers.firstName,
       teacher_last_name: teachers.lastName,
+      // Why the student was archived, for the archive filters.
+      reason_id: students.deleteReasonId,
+      reason_code: studentActionReasons.reasonCode,
+      reason_name: studentActionReasons.reasonName,
+      reason_note: students.deleteReasonNote,
     })
     .from(students)
     .leftJoin(classes, eq(classes.classId, students.classId))
-    .leftJoin(teachers, eq(teachers.teacherId, students.teacherId))
+    // The group's teacher (the student's own teacher_id is often empty or out of date).
+    .leftJoin(teachers, eq(teachers.teacherId, sql`COALESCE(${classes.teacherId}, ${students.teacherId})`))
+    .leftJoin(studentActionReasons, eq(studentActionReasons.reasonId, students.deleteReasonId))
     .where(and(isNotNull(students.deletedAt), ...center(students, centerId)))
     .orderBy(desc(students.deletedAt), desc(students.studentId));
 
@@ -81,6 +91,7 @@ const findArchivedPayments = (centerId?: number) =>
       currency: payments.currency,
       payment_method: payments.paymentMethod,
       receipt_number: payments.receiptNumber,
+      notes: payments.notes,
       payment_status: payments.paymentStatus,
       payment_type: payments.paymentType,
       deleted_at: payments.deletedAt,

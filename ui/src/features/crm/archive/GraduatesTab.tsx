@@ -1,7 +1,7 @@
 // Archive → Graduates: students who left having reached their result, with what the city
 // administration asks for later (passport, birth date, school, how long and what they studied)
 // and their certificate PDFs.
-import { Fragment, useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Download, FilePlus2, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,8 @@ import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { archiveAPI } from './api';
+import { ArchiveFilterBar } from './ArchiveFilterBar';
+import { applyFilters, buildOptions, emptyFilters, type ArchiveTabConfig } from './archiveFilters';
 
 type Certificate = { certificate_id: number; title: string; file_name: string; file_size: number };
 type Graduate = {
@@ -18,6 +20,20 @@ type Graduate = {
   date_of_birth?: string | null; phone?: string | null; parent_phone?: string | null; school_name?: string | null; school_class?: string | null;
   result?: string | null; studied_from?: string | null; finished_on?: string | null; months_studied?: number | null;
   groups?: string | null; teachers?: string | null; subjects?: string | null; certificates: Certificate[];
+};
+
+// Groups, teachers and subjects come as one comma-separated text per graduate; the first is
+// enough to filter by (most graduates studied in one group).
+const first = (value?: string | null) => String(value || '').split(',')[0].trim() || null;
+
+const graduateFilters: ArchiveTabConfig<Graduate> = {
+  searchText: (row) => [row.first_name, row.last_name, row.father_name, row.phone, row.parent_phone, row.passport_number, row.school_name, row.result, row.groups, row.teachers, row.subjects, ...row.certificates.map((certificate) => certificate.title)],
+  selects: [
+    { key: 'subject', label: 'Subject', value: (row) => first(row.subjects) },
+    { key: 'teacher', label: 'Teacher', value: (row) => first(row.teachers) },
+    { key: 'certificate', label: 'Certificates', value: (row) => (row.certificates.length > 0 ? 'yes' : 'no'), optionLabel: (row) => (row.certificates.length > 0 ? 'Has a certificate' : 'No certificate yet') },
+  ],
+  date: (row) => row.finished_on,
 };
 
 const MAX_PDF_BYTES = 5 * 1024 * 1024;
@@ -37,6 +53,8 @@ export function GraduatesTab() {
   const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [filters, setFilters] = useState(emptyFilters);
+  const shownRows = useMemo(() => applyFilters(rows, graduateFilters, filters), [rows, filters]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -107,6 +125,20 @@ export function GraduatesTab() {
   }
 
   return (
+    <>
+    <ArchiveFilterBar
+      filters={filters}
+      onChange={setFilters}
+      searchPlaceholder={t('Search by name, phone, passport, school, group or result...')}
+      selects={graduateFilters.selects.map((select) => ({
+        key: select.key,
+        label: t(select.label),
+        options: buildOptions(rows, select).map((option) => ({ ...option, label: t(option.label) })),
+      }))}
+      dateLabel={t('Finished between')}
+      shown={shownRows.length}
+      total={rows.length}
+    />
     <Table>
       <TableHeader>
         <TableRow>
@@ -120,7 +152,12 @@ export function GraduatesTab() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((row) => (
+        {shownRows.length === 0 && (
+          <TableRow>
+            <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">{t('No records match the filters.')}</TableCell>
+          </TableRow>
+        )}
+        {shownRows.map((row) => (
           <Fragment key={row.student_id}>
             <TableRow>
               <TableCell>
@@ -176,5 +213,6 @@ export function GraduatesTab() {
         ))}
       </TableBody>
     </Table>
+    </>
   );
 }

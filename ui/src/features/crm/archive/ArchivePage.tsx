@@ -14,6 +14,9 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
 import { formatGroupLabel } from '@/shared/groupLabel';
+import { ArchiveFilterBar } from './ArchiveFilterBar';
+import { applyFilters, buildOptions, emptyFilters, isFiltered, type ArchiveFilterState } from './archiveFilters';
+import { buildArchiveTabs, teacherName, type ArchiveEntity } from './archiveTabs';
 
 type ArchivePayload = {
   students: any[];
@@ -36,8 +39,6 @@ const emptyArchive: ArchivePayload = {
 const fullName = (row: any, firstKey = 'first_name', lastKey = 'last_name') =>
   [row?.[firstKey], row?.[lastKey]].filter(Boolean).join(' ').trim() || '-';
 
-const teacherName = (row: any) =>
-  [row?.teacher_first_name, row?.teacher_last_name].filter(Boolean).join(' ').trim() || '-';
 
 const formatDate = (value: any) => {
   if (!value) return '-';
@@ -54,7 +55,7 @@ const EmptyRow = ({ colSpan, label }: { colSpan: number; label: string }) => (
   </TableRow>
 );
 
-type ArchiveEntity = 'students' | 'teachers' | 'classes' | 'payments' | 'sessions';
+const ENTITIES: ArchiveEntity[] = ['students', 'teachers', 'classes', 'payments', 'sessions'];
 
 const ArchivePage = () => {
   const { t } = useLanguage();
@@ -78,6 +79,18 @@ const ArchivePage = () => {
     sessions: 25,
   });
   const canHardDelete = Boolean(user?.can_hard_delete);
+  const [filters, setFilters] = useState<Record<ArchiveEntity, ArchiveFilterState>>({
+    students: emptyFilters(),
+    teachers: emptyFilters(),
+    classes: emptyFilters(),
+    payments: emptyFilters(),
+    sessions: emptyFilters(),
+  });
+  const tabs = useMemo(() => buildArchiveTabs(t), [t]);
+  const filteredArchive = useMemo(
+    () => Object.fromEntries(ENTITIES.map((entity) => [entity, applyFilters(archive[entity], tabs[entity], filters[entity])])) as Record<ArchiveEntity, any[]>,
+    [archive, filters, tabs]
+  );
 
   const loadArchive = () => {
     let cancelled = false;
@@ -174,13 +187,13 @@ const ArchivePage = () => {
   );
   const paginatedArchive = useMemo(
     () => ({
-      students: paginateItems(archive.students, pages.students, pageSizes.students),
-      teachers: paginateItems(archive.teachers, pages.teachers, pageSizes.teachers),
-      classes: paginateItems(archive.classes, pages.classes, pageSizes.classes),
-      payments: paginateItems(archive.payments, pages.payments, pageSizes.payments),
-      sessions: paginateItems(archive.sessions, pages.sessions, pageSizes.sessions),
+      students: paginateItems(filteredArchive.students, pages.students, pageSizes.students),
+      teachers: paginateItems(filteredArchive.teachers, pages.teachers, pageSizes.teachers),
+      classes: paginateItems(filteredArchive.classes, pages.classes, pageSizes.classes),
+      payments: paginateItems(filteredArchive.payments, pages.payments, pageSizes.payments),
+      sessions: paginateItems(filteredArchive.sessions, pages.sessions, pageSizes.sessions),
     }),
-    [archive, pages, pageSizes]
+    [filteredArchive, pages, pageSizes]
   );
   const setEntityPage = (entity: ArchiveEntity, page: number) => {
     setPages((current) => ({ ...current, [entity]: page }));
@@ -189,6 +202,23 @@ const ArchivePage = () => {
     setPageSizes((current) => ({ ...current, [entity]: pageSize }));
     setEntityPage(entity, 1);
   };
+  const filterBar = (entity: ArchiveEntity) => (
+    <ArchiveFilterBar
+      filters={filters[entity]}
+      onChange={(next) => {
+        setFilters((current) => ({ ...current, [entity]: next }));
+        setEntityPage(entity, 1);
+      }}
+      searchPlaceholder={tabs[entity].searchPlaceholder}
+      selects={tabs[entity].selects.map((select) => ({ key: select.key, label: select.label, options: buildOptions(archive[entity], select) }))}
+      dateLabel={t('Archived between')}
+      shown={filteredArchive[entity].length}
+      total={archive[entity].length}
+    />
+  );
+  // "Nothing archived" or, when filters hide everything, "nothing matches".
+  const emptyLabel = (entity: ArchiveEntity, label: string) =>
+    archive[entity].length > 0 && isFiltered(filters[entity]) ? t('No records match the filters.') : label;
   const archivePagination = (entity: ArchiveEntity, total: number) => (
     <div className="border-t p-4">
       <PaginationBar
@@ -252,23 +282,34 @@ const ArchivePage = () => {
             </TabsContent>
 
             <TabsContent value="students" className="m-0">
+              {filterBar('students')}
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('Student')}</TableHead>
                     <TableHead>{t('Enrollment')}</TableHead>
                     <TableHead>{t('Group')}</TableHead>
+                    <TableHead>{t('Teacher')}</TableHead>
+                    <TableHead>{t('Reason')}</TableHead>
                     <TableHead>{t('Status')}</TableHead>
                     <TableHead>{t('Archived At')}</TableHead>
                     <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.students.length === 0 ? <EmptyRow colSpan={6} label={t('No archived students.')} /> : paginatedArchive.students.items.map((student) => (
+                  {filteredArchive.students.length === 0 ? <EmptyRow colSpan={8} label={emptyLabel('students', t('No archived students.'))} /> : paginatedArchive.students.items.map((student) => (
                     <TableRow key={student.student_id}>
-                      <TableCell className="font-medium">{fullName(student)}</TableCell>
+                      <TableCell className="font-medium">
+                        {fullName(student)}
+                        {(student.phone || student.parent_phone) && <div className="font-normal text-muted-foreground">{student.phone || student.parent_phone}</div>}
+                      </TableCell>
                       <TableCell>{student.enrollment_number || '-'}</TableCell>
                       <TableCell>{student.class_name || '-'}</TableCell>
+                      <TableCell>{teacherName(student) || '-'}</TableCell>
+                      <TableCell className="max-w-[240px]">
+                        {student.reason_name || <span className="text-muted-foreground">{t('No reason recorded')}</span>}
+                        {student.reason_note && <div className="truncate text-muted-foreground" title={student.reason_note}>{student.reason_note}</div>}
+                      </TableCell>
                       <TableCell><Badge variant="outline">{student.status || t('Archived')}</Badge></TableCell>
                       <TableCell>{formatDate(student.deleted_at)}</TableCell>
                       <TableCell>{rowActions('students', Number(student.student_id))}</TableCell>
@@ -276,10 +317,11 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
-              {archivePagination('students', archive.students.length)}
+              {archivePagination('students', filteredArchive.students.length)}
             </TabsContent>
 
             <TabsContent value="teachers" className="m-0">
+              {filterBar('teachers')}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -292,7 +334,7 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.teachers.length === 0 ? <EmptyRow colSpan={6} label={t('No archived teachers.')} /> : paginatedArchive.teachers.items.map((teacher) => (
+                  {filteredArchive.teachers.length === 0 ? <EmptyRow colSpan={6} label={emptyLabel('teachers', t('No archived teachers.'))} /> : paginatedArchive.teachers.items.map((teacher) => (
                     <TableRow key={teacher.teacher_id}>
                       <TableCell className="font-medium">{fullName(teacher)}</TableCell>
                       <TableCell>{teacher.employee_id || '-'}</TableCell>
@@ -304,10 +346,11 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
-              {archivePagination('teachers', archive.teachers.length)}
+              {archivePagination('teachers', filteredArchive.teachers.length)}
             </TabsContent>
 
             <TabsContent value="classes" className="m-0">
+              {filterBar('classes')}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -320,10 +363,10 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.classes.length === 0 ? <EmptyRow colSpan={6} label={t('No archived classes.')} /> : paginatedArchive.classes.items.map((cls) => (
+                  {filteredArchive.classes.length === 0 ? <EmptyRow colSpan={6} label={emptyLabel('classes', t('No archived classes.'))} /> : paginatedArchive.classes.items.map((cls) => (
                     <TableRow key={cls.class_id}>
                       <TableCell className="font-medium">{formatGroupLabel(cls)}</TableCell>
-                      <TableCell>{teacherName(cls)}</TableCell>
+                      <TableCell>{teacherName(cls) || '-'}</TableCell>
                       <TableCell>{cls.room_number || '-'}</TableCell>
                       <TableCell>{formatMoney(Number(cls.payment_amount || 0))}</TableCell>
                       <TableCell>{formatDate(cls.deleted_at)}</TableCell>
@@ -332,10 +375,11 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
-              {archivePagination('classes', archive.classes.length)}
+              {archivePagination('classes', filteredArchive.classes.length)}
             </TabsContent>
 
             <TabsContent value="payments" className="m-0">
+              {filterBar('payments')}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -348,7 +392,7 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.payments.length === 0 ? <EmptyRow colSpan={6} label={t('No archived payments.')} /> : paginatedArchive.payments.items.map((payment) => (
+                  {filteredArchive.payments.length === 0 ? <EmptyRow colSpan={6} label={emptyLabel('payments', t('No archived payments.'))} /> : paginatedArchive.payments.items.map((payment) => (
                     <TableRow key={payment.payment_id}>
                       <TableCell className="font-medium">{payment.receipt_number || `#${payment.payment_id}`}</TableCell>
                       <TableCell>{[payment.student_first_name, payment.student_last_name].filter(Boolean).join(' ').trim() || payment.enrollment_number || '-'}</TableCell>
@@ -360,10 +404,11 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
-              {archivePagination('payments', archive.payments.length)}
+              {archivePagination('payments', filteredArchive.payments.length)}
             </TabsContent>
 
             <TabsContent value="sessions" className="m-0">
+              {filterBar('sessions')}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -376,11 +421,11 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.sessions.length === 0 ? <EmptyRow colSpan={6} label={t('No archived calendar sessions.')} /> : paginatedArchive.sessions.items.map((session) => (
+                  {filteredArchive.sessions.length === 0 ? <EmptyRow colSpan={6} label={emptyLabel('sessions', t('No archived calendar sessions.'))} /> : paginatedArchive.sessions.items.map((session) => (
                     <TableRow key={session.session_id}>
                       <TableCell className="font-medium">{formatDate(session.session_date)}</TableCell>
                       <TableCell>{session.class_name || '-'}</TableCell>
-                      <TableCell>{teacherName(session)}</TableCell>
+                      <TableCell>{teacherName(session) || '-'}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <CalendarDays className="h-4 w-4 text-muted-foreground" />
@@ -393,7 +438,7 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
-              {archivePagination('sessions', archive.sessions.length)}
+              {archivePagination('sessions', filteredArchive.sessions.length)}
             </TabsContent>
           </Tabs>
         </CardContent>

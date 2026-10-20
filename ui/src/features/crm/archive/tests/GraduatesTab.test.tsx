@@ -48,4 +48,21 @@ describe('graduates tab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
     await waitFor(() => expect(api.uploadCertificate).toHaveBeenCalledWith(1, expect.objectContaining({ title: 'CEFR B2', file_name: 'b2.pdf', data: expect.stringMatching(/^data:application\/pdf;base64,/) })));
   });
+
+  it('searches graduates and filters by when they finished', async () => {
+    api.getGraduates.mockResolvedValue({ data: [graduate, { ...graduate, student_id: 2, first_name: 'Malika', last_name: 'Karimova', result: 'B2', finished_on: '2026-09-01', certificates: [] }] });
+    render(<GraduatesTab />);
+    await screen.findByText('Karimova Malika');
+    expect(screen.getByText('2 of 2')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'ielts 6.5' } });
+    await waitFor(() => expect(screen.getByText('1 of 2')).toBeTruthy());
+    expect(screen.queryByText('Karimova Malika')).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: '' } });
+    // Hojiakbar finished on 20 Jun, Malika on 1 Sep.
+    fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-07-01' } });
+    await waitFor(() => expect(screen.getByText('1 of 2')).toBeTruthy());
+    expect(screen.getByText('Karimova Malika')).toBeTruthy();
+  });
 });

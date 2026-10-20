@@ -75,3 +75,25 @@ describe('archive repository restore/purge round trip per entity', () => {
     expect(mockDb.delete).not.toHaveBeenCalled();
   });
 });
+
+describe('archived students list', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("sends why each student was archived, their phones and the group's teacher, for the archive filters", async () => {
+    const { PgDialect } = require('drizzle-orm/pg-core');
+    const chain = {};
+    chain.from = jest.fn(() => chain);
+    chain.leftJoin = jest.fn(() => chain);
+    chain.where = jest.fn(() => chain);
+    chain.orderBy = jest.fn(() => Promise.resolve([]));
+    mockDb.select.mockReturnValueOnce(chain);
+
+    await archiveRepository.findArchivedStudents(2);
+
+    const fields = mockDb.select.mock.calls[0][0];
+    expect(Object.keys(fields)).toEqual(expect.arrayContaining(['reason_id', 'reason_code', 'reason_name', 'reason_note', 'parent_phone', 'teacher_id', 'start_date']));
+    expect(chain.leftJoin).toHaveBeenCalledTimes(3);
+    const teacherJoin = new PgDialect().sqlToQuery(chain.leftJoin.mock.calls[1][1]).sql;
+    expect(teacherJoin).toContain('COALESCE("classes"."teacher_id", "students"."teacher_id")');
+  });
+});
