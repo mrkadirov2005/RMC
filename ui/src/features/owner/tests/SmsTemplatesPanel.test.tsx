@@ -33,17 +33,51 @@ describe('SMS templates panel', () => {
     sms.deleteTemplate.mockResolvedValue({ data: {} });
   });
 
-  it('shows each type with the template in use, or the standard text', async () => {
+  it('shows the two sections, each type with the template in use or the standard text', async () => {
     render(<SmsTemplatesPanel />);
-    expect(await screen.findByText('In use: Yumshoq')).toBeTruthy();
-    expect(screen.getAllByText('In use: the standard text')).toHaveLength(2);
-    expect(screen.getByText('Qattiq')).toBeTruthy();
+    expect(await screen.findByText('Payment waiting — In use: Yumshoq')).toBeTruthy();
+    expect(screen.getByText('Payment received — In use: the standard text')).toBeTruthy();
+    const attendance = screen.getByRole('heading', { name: 'Attendance warning' }).closest('section') as HTMLElement;
+    expect(within(attendance).getByText('In use: the standard text')).toBeTruthy();
+    expect(within(attendance).getByText('No templates yet.')).toBeTruthy();
+    const payment = screen.getByRole('heading', { name: 'Payment' }).closest('section') as HTMLElement;
+    expect(within(payment).getByText('Qattiq')).toBeTruthy();
+    expect(within(payment).getAllByText('Payment waiting')).toHaveLength(2);
+  });
+
+  it('lets a new payment template be a reminder or a receipt, swapping in the example', async () => {
+    render(<SmsTemplatesPanel />);
+    await screen.findByText('Qattiq');
+    const payment = screen.getByRole('heading', { name: 'Payment' }).closest('section') as HTMLElement;
+    fireEvent.click(within(payment).getByRole('button', { name: /New template/ }));
+    const body = (await screen.findByLabelText('Text')) as HTMLTextAreaElement;
+    expect(body.value).toBe('Kutilmoqda: {qoldiq}');
+    fireEvent.click(screen.getByRole('radio', { name: 'Payment received' }));
+    expect(body.value).toBe('Rahmat {ism}');
+    fireEvent.change(body, { target: { value: 'Rahmat! {tolangan}' } });
+    fireEvent.click(screen.getByRole('radio', { name: 'Payment waiting' }));
+    expect(body.value).toBe('Rahmat! {tolangan}');
+    fireEvent.change(screen.getByLabelText('Template name'), { target: { value: 'Eslatma' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(sms.createTemplate).toHaveBeenCalledWith({ kind: 'payment_waiting', name: 'Eslatma', body: 'Rahmat! {tolangan}' }));
+  });
+
+  it('edits a template and keeps its type', async () => {
+    sms.updateTemplate.mockResolvedValue({ data: {} });
+    render(<SmsTemplatesPanel />);
+    await screen.findByText('Qattiq');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    expect(await screen.findByLabelText('Template name')).toHaveProperty('value', 'Yumshoq');
+    expect(screen.queryByRole('radio')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Text'), { target: { value: 'Yangi {ism}' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(sms.updateTemplate).toHaveBeenCalledWith(1, { name: 'Yumshoq', body: 'Yangi {ism}' }));
   });
 
   it('creates a template from the example, with placeholders and a live preview', async () => {
     render(<SmsTemplatesPanel />);
-    await screen.findByText('In use: Yumshoq');
-    const attendance = screen.getByRole('heading', { name: 'Missed lessons' }).closest('section') as HTMLElement;
+    await screen.findByText('Qattiq');
+    const attendance = screen.getByRole('heading', { name: 'Attendance warning' }).closest('section') as HTMLElement;
     fireEvent.click(within(attendance).getByRole('button', { name: /New template/ }));
 
     await screen.findByLabelText('Template name');
@@ -81,7 +115,7 @@ describe('SMS templates panel', () => {
   it('shows the reason when saving is refused', async () => {
     sms.createTemplate.mockImplementation(() => Promise.reject(Object.assign(new Error('400'), { response: { data: { error: "Bu turda ishlatib bo'lmaydigan o'rinlar: {summa}." } } })));
     render(<SmsTemplatesPanel />);
-    await screen.findByText('In use: Yumshoq');
+    await screen.findByText('Qattiq');
     fireEvent.click(screen.getAllByRole('button', { name: /New template/ })[0]);
     await screen.findByLabelText('Template name');
     const dialog = document.body;

@@ -55,3 +55,11 @@ export const TEMPLATE_KIND_LABELS: Record<string, string> = {
   payment_waiting: 'Payment waiting',
   attendance: 'Missed lessons',
 };
+
+/** The two main sections: attendance warnings, and payments (a reminder or a receipt). */
+export const TEMPLATE_GROUPS = [
+  { id: 'attendance', title: 'Attendance warning', kinds: ['attendance'] },
+  { id: 'payment', title: 'Payment', kinds: ['payment_waiting', 'payment_success'] },
+] as const;
+
+export const groupOfKind = (kind: string) => TEMPLATE_GROUPS.find((group) => (group.kinds as readonly string[]).includes(kind));

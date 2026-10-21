@@ -1,6 +1,6 @@
-// Owner → SMS → Templates: their own wording for each SMS type. The active template of a type is
-// used for every send of that type (admins' payment notices, teachers' missed lessons); with none
-// active the built-in text is used.
+// Owner → SMS → Templates, in two sections: attendance warnings, and payments (a reminder or a
+// receipt). The active template of a type is used for every send of that type (admins' payment
+// notices, teachers' missed lessons); with none active the built-in text is used.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { smsAPI } from './api';
-import { PLACEHOLDER_LABELS, TEMPLATE_KIND_LABELS, insertAt, previewTemplate, smsLength } from './smsTemplateText';
+import { PLACEHOLDER_LABELS, TEMPLATE_GROUPS, TEMPLATE_KIND_LABELS, groupOfKind, insertAt, previewTemplate, smsLength } from './smsTemplateText';
 
 interface SmsTemplate {
   template_id: number;
@@ -81,7 +81,20 @@ const SmsTemplatesPanel = () => {
     };
   }, [t]);
 
+  // A section's types in the section's own order (the payment reminder first), as the server knows them.
+  const kindsOf = (groupKinds: readonly string[]) =>
+    groupKinds.map((id) => kinds.find((kind) => kind.kind === id)).filter((kind): kind is TemplateKind => Boolean(kind));
   const draftKind = kinds.find((kind) => kind.kind === draft?.kind);
+  const draftGroup = draft ? groupOfKind(draft.kind) : undefined;
+  const kindChoices = draftGroup ? kindsOf(draftGroup.kinds) : [];
+
+  // Switching a new payment template between reminder and receipt swaps in that type's example,
+  // unless the text was already changed.
+  const chooseKind = (kind: TemplateKind) => {
+    if (!draft) return;
+    const untouched = !draft.body.trim() || draft.body === draftKind?.example;
+    setDraft({ ...draft, kind: kind.kind, body: untouched ? kind.example : draft.body });
+  };
 
   const insertPlaceholder = (key: string) => {
     if (!draft) return;
@@ -154,19 +167,27 @@ const SmsTemplatesPanel = () => {
         {t('Write your own text for each SMS type. The active template is used every time that SMS is sent; with none active, the standard text is used.')}
       </p>
 
-      {kinds.map((kind) => {
-        const own = templates.filter((template) => template.kind === kind.kind);
-        const active = own.find((template) => template.is_active);
+      {TEMPLATE_GROUPS.map((group) => {
+        const groupKinds = kindsOf(group.kinds);
+        if (groupKinds.length === 0) return null;
+        const own = templates.filter((template) => (group.kinds as readonly string[]).includes(template.kind));
+        const several = groupKinds.length > 1;
         return (
-          <section key={kind.kind} className="space-y-3 rounded-xl border bg-card p-3 shadow-sm">
+          <section key={group.id} className="space-y-3 rounded-xl border bg-card p-3 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-base font-bold">{t(TEMPLATE_KIND_LABELS[kind.kind] || kind.kind)}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {active ? t('In use: {name}', { name: active.name }) : t('In use: the standard text')}
-                </p>
+                <h2 className="text-base font-bold">{t(group.title)}</h2>
+                {groupKinds.map((kind) => {
+                  const active = own.find((template) => template.kind === kind.kind && template.is_active);
+                  const inUse = active ? t('In use: {name}', { name: active.name }) : t('In use: the standard text');
+                  return (
+                    <p key={kind.kind} className="text-xs text-muted-foreground">
+                      {several ? `${t(TEMPLATE_KIND_LABELS[kind.kind] || kind.kind)} — ${inUse}` : inUse}
+                    </p>
+                  );
+                })}
               </div>
-              <Button type="button" size="sm" variant="outline" onClick={() => setDraft({ id: null, kind: kind.kind, name: '', body: kind.example })}>
+              <Button type="button" size="sm" variant="outline" onClick={() => setDraft({ id: null, kind: groupKinds[0].kind, name: '', body: groupKinds[0].example })}>
                 <Plus className="mr-1.5 h-4 w-4" /> {t('New template')}
               </Button>
             </div>
@@ -181,7 +202,14 @@ const SmsTemplatesPanel = () => {
                     className={cn('rounded-lg border p-3', template.is_active && 'border-emerald-400 bg-emerald-50/60 dark:border-emerald-700 dark:bg-emerald-950/30')}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-semibold">{template.name}</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold">{template.name}</span>
+                        {several && (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                            {t(TEMPLATE_KIND_LABELS[template.kind] || template.kind)}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <label className="flex items-center gap-2 text-xs font-medium">
                           <Switch
@@ -215,11 +243,34 @@ const SmsTemplatesPanel = () => {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{draft?.id ? t('Edit template') : t('New template')}</DialogTitle>
-            <DialogDescription>{draft ? t(TEMPLATE_KIND_LABELS[draft.kind] || draft.kind) : ''}</DialogDescription>
+            <DialogDescription>{draft ? t(groupOfKind(draft.kind)?.title || draft.kind) : ''}</DialogDescription>
           </DialogHeader>
 
           {draft && (
             <div className="space-y-4">
+              {!draft.id && kindChoices.length > 1 && (
+                <div className="space-y-1">
+                  <Label>{t('Type')}</Label>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('Type')}>
+                    {kindChoices.map((kind) => (
+                      <button
+                        key={kind.kind}
+                        type="button"
+                        role="radio"
+                        aria-checked={draft.kind === kind.kind}
+                        onClick={() => chooseKind(kind)}
+                        className={cn(
+                          'rounded-md border px-3 py-1.5 text-sm font-medium transition',
+                          draft.kind === kind.kind ? 'border-emerald-600 bg-emerald-600 text-white' : 'hover:bg-muted'
+                        )}
+                      >
+                        {t(TEMPLATE_KIND_LABELS[kind.kind] || kind.kind)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-1">
                 <Label htmlFor="sms-template-name">{t('Template name')}</Label>
                 <Input id="sms-template-name" value={draft.name} maxLength={120} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />

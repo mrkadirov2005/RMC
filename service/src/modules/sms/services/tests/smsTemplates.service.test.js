@@ -51,3 +51,17 @@ describe('sms templates', () => {
     await expect(templates.setTemplateActive(9, true)).rejects.toMatchObject({ statusCode: 404 });
   });
 });
+
+describe('main templates added by the migration', () => {
+  it('are one per type, switched on, and pass the template rules', async () => {
+    const queries = [];
+    await require('../../../../../db/migrations/20261022000001-sms-templates.js').up({ sequelize: { query: async (sql) => queries.push(sql) } });
+    const seed = queries[1];
+    const rows = Array.from(seed.matchAll(/\('(\w+)', '((?:[^']|'')+)',\s*'((?:[^']|'')+)' \|\| E'\\n' \|\| '\{markaz\}'\)/g))
+      .map(([, kind, name, body]) => ({ kind, name: name.replace(/''/g, "'"), body: `${body.replace(/''/g, "'")}\n{markaz}` }));
+    expect(rows.map((row) => row.kind)).toEqual(['attendance', 'payment_waiting', 'payment_success']);
+    expect(rows.map((row) => row.name)).toEqual(['Davomat ogohlantirishi', "To'lov eslatmasi", "To'lov qabul qilindi"]);
+    for (const row of rows) expect(() => templates.validateTemplate(row.kind, row.name, row.body)).not.toThrow();
+    expect(seed).toContain('WHERE NOT EXISTS (SELECT 1 FROM sms_templates)');
+  });
+});
