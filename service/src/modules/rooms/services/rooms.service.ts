@@ -38,24 +38,43 @@ const getRoomById = async (id: number, centerId: number) => {
   return roomsRepository.findById(id, centerId);
 };
 
+/** The days a lesson repeats on: `days` when given (Mon-Wed-Fri), else the one `day`. */
+const lessonDays = (day: string, days?: unknown) => {
+  const list = Array.isArray(days) && days.length ? [day, ...days] : [day];
+  const seen = new Set<string>();
+  return list.map((value) => String(value || '').trim()).filter((value) => {
+    const key = value.toLowerCase();
+    if (!value || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const createRoom = async (data: any) => {
-  const { center_id, room_number, class_id, day, time, end_time, capacity } = data;
+  const { center_id, room_number, class_id, day, days, time, end_time, capacity, nickname } = data;
   const timeWindow = normalizeTimeWindow(time, end_time);
   if (timeWindow.error) return { error: timeWindow.error };
-  const conflict = await roomsRepository.findConflict(center_id, room_number, day, timeWindow.start, timeWindow.end);
-  if (conflict) return { error: 'room_unavailable' as const, conflict };
-  const row = await roomsRepository.insert([center_id, room_number, class_id || null, day, timeWindow.start, timeWindow.end, capacity]);
+  const dayNames = lessonDays(day, days);
+  // Every day is checked before any is saved, so a clash on one day saves none.
+  for (const dayName of dayNames) {
+    const conflict = await roomsRepository.findConflict(center_id, room_number, dayName, timeWindow.start, timeWindow.end);
+    if (conflict) return { error: 'room_unavailable' as const, conflict, day: dayName };
+  }
+  const rows: any[] = [];
+  for (const dayName of dayNames) {
+    rows.push(await roomsRepository.insert([center_id, room_number, class_id || null, dayName, timeWindow.start, timeWindow.end, capacity, nickname]));
+  }
   if (class_id) await roomsRepository.setClassRoomNumber(Number(class_id), Number(center_id), room_number);
-  return row;
+  return Array.isArray(days) && days.length ? { ...rows[0], rooms: rows } : rows[0];
 };
 
 const updateRoom = async (id: number, data: any, centerId: number) => {
-  const { room_number, class_id, day, time, end_time, capacity } = data;
+  const { room_number, class_id, day, time, end_time, capacity, nickname } = data;
   const timeWindow = normalizeTimeWindow(time, end_time);
   if (timeWindow.error) return { error: timeWindow.error };
   const conflict = await roomsRepository.findConflict(centerId, room_number, day, timeWindow.start, timeWindow.end, Number(id));
-  if (conflict) return { error: 'room_unavailable' as const, conflict };
-  const row = await roomsRepository.update(id, [room_number, class_id || null, day, timeWindow.start, timeWindow.end, capacity], centerId);
+  if (conflict) return { error: 'room_unavailable' as const, conflict, day };
+  const row = await roomsRepository.update(id, [room_number, class_id || null, day, timeWindow.start, timeWindow.end, capacity, nickname], centerId);
   if (row && class_id) await roomsRepository.setClassRoomNumber(Number(class_id), Number(centerId), room_number);
   return row;
 };

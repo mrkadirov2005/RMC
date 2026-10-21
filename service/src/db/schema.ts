@@ -202,6 +202,7 @@ const physicalRooms = pgTable('physical_rooms', {
   name: varchar('name', { length: 50 }).notNull(),
   capacity: integer('capacity'),
   location: varchar('location', { length: 255 }),
+  nickname: varchar('nickname', { length: 100 }),
   status: varchar('status', { length: 30 }).notNull(),
   features: jsonb('features'),
   operatingStartTime: time('operating_start_time').notNull(),

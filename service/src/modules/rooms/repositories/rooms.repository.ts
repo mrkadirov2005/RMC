@@ -41,19 +41,20 @@ const findById = (id: number, centerId: number) => {
     .then((rows: any[]) => rows[0] || null);
 };
 
-const ensurePhysicalRoom = async (centerId: number, roomNumber: string, capacity?: number) => {
+const ensurePhysicalRoom = async (centerId: number, roomNumber: string, capacity?: number, nickname?: string) => {
   const result = await pool.query(`
-    INSERT INTO physical_rooms (center_id, name, capacity) VALUES ($1, trim($2), $3)
+    INSERT INTO physical_rooms (center_id, name, capacity, nickname) VALUES ($1, trim($2), $3, NULLIF(trim($4::text), ''))
     ON CONFLICT (center_id, lower(trim(name))) DO UPDATE
       SET capacity = COALESCE(EXCLUDED.capacity, physical_rooms.capacity),
+          nickname = COALESCE(EXCLUDED.nickname, physical_rooms.nickname),
           updated_at = CURRENT_TIMESTAMP
     RETURNING physical_room_id
-  `, [centerId, roomNumber, capacity ?? null]);
+  `, [centerId, roomNumber, capacity ?? null, nickname ?? null]);
   return result.rows[0].physical_room_id;
 };
 
 const insert = async (params: any[]) => {
-  const physicalRoomId = await ensurePhysicalRoom(params[0], params[1], params[6]);
+  const physicalRoomId = await ensurePhysicalRoom(params[0], params[1], params[6], params[7]);
   return db
     .insert(rooms)
     .values({
@@ -70,7 +71,7 @@ const insert = async (params: any[]) => {
 };
 
 const update = async (id: number, params: any[], centerId: number) => {
-  const physicalRoomId = await ensurePhysicalRoom(centerId, params[0], params[5]);
+  const physicalRoomId = await ensurePhysicalRoom(centerId, params[0], params[5], params[6]);
   return db
     .update(rooms)
     .set({

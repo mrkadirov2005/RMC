@@ -38,8 +38,32 @@ describe('rooms service', () => {
     const conflict = { roomId: 9 };
     repository.findConflict.mockResolvedValue(conflict);
     await expect(service.createRoom({ center_id: 2, room_number: 'A', day: 'Monday', time: '09:00', end_time: '10:00' }))
-      .resolves.toEqual({ error: 'room_unavailable', conflict });
+      .resolves.toEqual({ error: 'room_unavailable', conflict, day: 'Monday' });
     expect(repository.insert).not.toHaveBeenCalled();
+  });
+
+  test('puts a group in the room on several days at once, one lesson per day', async () => {
+    repository.findConflict.mockResolvedValue(null);
+    repository.insert.mockImplementation(async (params) => ({ room_id: params[3].length, day: params[3] }));
+    const out = await service.createRoom({
+      center_id: 2, room_number: '5', nickname: 'Katta zal', class_id: 7, day: 'Monday', days: ['Wednesday', 'Friday', 'monday'], time: '15:00', end_time: '16:30', capacity: 20,
+    });
+    expect(repository.findConflict.mock.calls.map((call) => call[2])).toEqual(['Monday', 'Wednesday', 'Friday']);
+    expect(repository.insert.mock.calls.map((call) => call[0])).toEqual([
+      [2, '5', 7, 'Monday', '15:00', '16:30', 20, 'Katta zal'],
+      [2, '5', 7, 'Wednesday', '15:00', '16:30', 20, 'Katta zal'],
+      [2, '5', 7, 'Friday', '15:00', '16:30', 20, 'Katta zal'],
+    ]);
+    expect(out.rooms).toHaveLength(3);
+    expect(repository.setClassRoomNumber).toHaveBeenCalledTimes(1);
+  });
+
+  test('saves none of the days when one of them is taken, and says which', async () => {
+    repository.findConflict.mockResolvedValueOnce(null).mockResolvedValueOnce({ roomId: 4 });
+    const out = await service.createRoom({ center_id: 2, room_number: '5', class_id: 7, day: 'Monday', days: ['Wednesday', 'Friday'], time: '15:00', end_time: '16:30' });
+    expect(out).toEqual({ error: 'room_unavailable', conflict: { roomId: 4 }, day: 'Wednesday' });
+    expect(repository.insert).not.toHaveBeenCalled();
+    expect(repository.setClassRoomNumber).not.toHaveBeenCalled();
   });
 
   test('excludes the current room when checking update conflicts', async () => {
