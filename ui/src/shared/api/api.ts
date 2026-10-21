@@ -679,6 +679,8 @@ export const ownerAPI = {
 export const roomAPI = {
   getAll: (params?: { center_id?: number }) => apiClient.get('/rooms', { params }),
   getPhysical: (params?: Record<string, unknown>) => apiClient.get('/rooms/physical', { params }),
+  /** Extra name, capacity, equipment, opening hours and status of a room itself (not a lesson in it). */
+  updatePhysical: (id: number, data: Record<string, unknown>) => apiClient.patch(`/rooms/physical/${id}`, data),
   deletePhysical: (id: number) => apiClient.delete(`/rooms/physical/${id}`),
   getById: (id: number) => apiClient.get(`/rooms/${id}`),
   create: (data: any) => apiClient.post('/rooms', data),
@@ -687,6 +689,8 @@ export const roomAPI = {
   getOverview: (params?: Record<string, unknown>) => apiClient.get('/rooms/overview', { params }),
   /** Each room's week: lessons, free windows, free seats and groups larger than the room. */
   getWeekly: () => apiClient.get('/rooms/weekly'),
+  /** Rooms free for a weekly lesson: days as "monday,wednesday", start and end as HH:mm, optional group size. */
+  getFree: (params: { days: string; start: string; end: string; seats?: number }) => apiClient.get('/rooms/free', { params }),
   getAvailability: (params?: Record<string, unknown>) => apiClient.get('/rooms/availability', { params }),
   getSchedule: (params?: Record<string, unknown>) => apiClient.get('/rooms/schedule', { params }),
   getUtilization: (params?: Record<string, unknown>) => apiClient.get('/rooms/reports/utilization', { params }),
