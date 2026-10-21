@@ -62,6 +62,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const leadRoutes = require('./routes/leadRoutes');
   const lessonControlRoutes = require('./routes/lessonControlRoutes');
   const telegramBotRoutes = require('./routes/telegramBotRoutes');
+  const smsRoutes = require('./routes/smsRoutes');
   const portalRoutes = require('./routes/portalRoutes');
   const roomsRoutes = require('./routes/roomsRoutes');
   const roomSlotsRoutes = require('./routes/roomSlotsRoutes');
@@ -175,6 +176,9 @@ async function createApp(options: CreateAppOptions = {}) {
   // Scoring deadlines, lesson moves and days off; each handler limits what teachers may do.
   app.use('/api/lesson-control', requireAuth, requireRole('superuser', 'teacher'), lessonControlRoutes);
   app.use('/api/telegram-bot', requireAuth, requireRole('superuser', 'teacher'), telegramBotRoutes);
+  // SMS to parents through the center's phone, sent by hand: payment notices by admins, missed
+  // lessons by teachers and admins, the full list for the owner. Each handler checks the role.
+  app.use('/api/sms', requireAuth, requireRole('superuser', 'teacher'), smsRoutes);
   app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
   app.use('/api/teacher-tasks', requireAuth, requireRole('superuser', 'teacher'), teacherTaskRoutes);
   app.use('/api/salaries', requireAuth, requireRole('superuser', 'teacher'), salaryRoutes);
@@ -233,6 +237,7 @@ async function main() {
   const server = app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
+  require('./modules/sms/services/sms.service').startSmsWorker();
 
   // Graceful shutdown - use a flag to prevent multiple calls
   let isShuttingDown = false;

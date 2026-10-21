@@ -2,8 +2,9 @@
 // page, filtered by status, dates, teacher, subject and group.
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, RotateCcw, Search } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, MessageSquareText, RotateCcw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,8 +12,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { formatMoney } from '@/utils/helpers';
+import { getErrorMessage } from '@/utils/errorMessage';
+import { showToast } from '@/utils/toast';
+import { describeSmsResult } from '../sms/smsResult';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { classAPI, paymentAPI, subjectAPI, teacherAPI } from './api';
+import { classAPI, paymentAPI, smsAPI, subjectAPI, teacherAPI, type SmsSendResult } from './api';
 import { usePaymentsPage } from '../payments/hooks/usePaymentsPage';
 import { PaymentFormDialog } from '../payments/components/PaymentFormDialog';
 
@@ -84,6 +88,7 @@ const DashboardPaymentsPage = () => {
   const [subjects, setSubjects] = useState<string[]>([]);
   // Bumped after a payment is saved here, so the list shows the new status.
   const [refresh, setRefresh] = useState(0);
+  const [sendingSms, setSendingSms] = useState(false);
   const paymentHook = usePaymentsPage();
   // The student a payment is being recorded for: their card, group fee and payment history.
   const selectedStudent = paymentHook.students.find(
@@ -174,6 +179,30 @@ const DashboardPaymentsPage = () => {
   const firstRow = data && data.total ? (data.page - 1) * data.limit + 1 : 0;
   const lastRow = data ? Math.min(data.total, data.page * data.limit) : 0;
   const lastMonth = shiftMonth(thisMonth, -1);
+
+  // SMS to parents, by hand: "payment received" when something was paid in the period, "payment
+  // waiting" when something is still owed. The server works out the amounts again before sending.
+  const rows = data?.rows || [];
+  const paidRows = rows.filter((row) => row.paid_amount > 0);
+  const owingRows = rows.filter((row) => row.remaining > 0);
+  const sendPaymentSms = async (type: 'success' | 'waiting', targets: SummaryRow[]) => {
+    if (targets.length === 0 || sendingSms) return;
+    if (targets.length > 1) {
+      const question = type === 'success'
+        ? t('Send a "payment received" SMS to the parents of {count} students?', { count: targets.length })
+        : t('Send a "payment waiting" SMS to the parents of {count} students?', { count: targets.length });
+      if (!window.confirm(question)) return;
+    }
+    setSendingSms(true);
+    try {
+      const result = getApiPayload<SmsSendResult>(await smsAPI.sendPayment({ type, student_ids: targets.map((row) => row.student_id), from, to }));
+      if (result) (result.queued > 0 ? showToast.success : showToast.info)(describeSmsResult(result, t));
+    } catch (error) {
+      showToast.error(getErrorMessage(error) || t("Couldn't send the SMS"));
+    } finally {
+      setSendingSms(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 px-4 py-6">
@@ -273,6 +302,28 @@ const DashboardPaymentsPage = () => {
         </div>
       </div>
 
+      {rows.length > 0 && (
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={sendingSms || loading}>
+                {sendingSms ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <MessageSquareText className="mr-1.5 h-4 w-4" />}
+                {t('SMS to parents')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t('Students on this page')}</DropdownMenuLabel>
+              <DropdownMenuItem disabled={owingRows.length === 0} onSelect={() => void sendPaymentSms('waiting', owingRows)}>
+                {t('Payment waiting ({count})', { count: owingRows.length })}
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={paidRows.length === 0} onSelect={() => void sendPaymentSms('success', paidRows)}>
+                {t('Payment received ({count})', { count: paidRows.length })}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
         <Table>
           <TableHeader>
@@ -286,7 +337,7 @@ const DashboardPaymentsPage = () => {
               <TableHead className="text-right">{t('Remaining')}</TableHead>
               <TableHead>{t('Last payment')}</TableHead>
               <TableHead>{t('Status')}</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-36" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -310,7 +361,23 @@ const DashboardPaymentsPage = () => {
                   <TableCell className="text-right font-semibold tabular-nums text-rose-600">{row.remaining > 0 ? formatMoney(row.remaining) : '—'}</TableCell>
                   <TableCell className="text-sm tabular-nums">{formatDay(row.last_payment_date)}</TableCell>
                   <TableCell><span data-keep-bg className={cn('rounded-md px-2 py-0.5 text-xs font-bold', style.className)}>{t(style.label)}</span></TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1.5">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button type="button" variant="outline" size="sm" className="h-7 px-2" disabled={sendingSms} aria-label={t('SMS to parents')}>
+                          <MessageSquareText className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem disabled={row.remaining <= 0} onSelect={() => void sendPaymentSms('waiting', [row])}>
+                          {t('Payment waiting')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled={row.paid_amount <= 0} onSelect={() => void sendPaymentSms('success', [row])}>
+                          {t('Payment received')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     {/* Not paid in full: record a payment with the student and what they owe filled in. */}
                     {row.state !== 'paid' && (
                       <button
@@ -330,6 +397,7 @@ const DashboardPaymentsPage = () => {
                         <span className="relative z-10">{t("To'lov")}</span>
                       </button>
                     )}
+                    </div>
                   </TableCell>
                 </TableRow>
               );

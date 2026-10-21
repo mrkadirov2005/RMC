@@ -1,18 +1,19 @@
 // Red alert list of students who missed their group's latest lessons in a row (unexcused). The
-// teacher sees their own groups and tells the admin; the admin (or owner) closes each alert with
-// what happened, and "Sick" also freezes the student.
+// teacher sees their own groups, tells the admin, and can text the parents; the admin (or owner)
+// closes each alert with what happened, and "Sick" also freezes the student.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ChevronDown, Loader2, Phone } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Loader2, MessageSquareText, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { unwrapApiRows } from '@/shared/api/response';
+import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { absenceAlertAPI } from './api';
+import { absenceAlertAPI, smsAPI, type SmsSendResult } from './api';
+import { describeSmsResult } from '../sms/smsResult';
 import { DeleteStudentDialog } from '../students/components/DeleteStudentDialog';
 
 type AbsenceOutcome = 'sick' | 'not_interested' | 'excused' | 'left';
@@ -34,6 +35,9 @@ export interface AbsenceAlert {
   center_id?: number | null;
 }
 
+// The SMS module's key for one run of absences: texted once per run.
+const smsKey = (alert: AbsenceAlert) => `${alert.class_id}:${alert.student_id}:${alert.last_absent_date}`;
+
 const OUTCOMES: Array<{ value: AbsenceOutcome; label: string; detail: string }> = [
   { value: 'sick', label: 'Sick (freeze)', detail: 'The student is ill; their account is frozen.' },
   { value: 'not_interested', label: "Didn't like the lessons", detail: "Won't come anymore." },
@@ -47,12 +51,15 @@ const formatDay = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}`;
 
 export function AbsenceAlertsPanel({
   canResolve = false,
+  canSendSms = false,
   className,
   teacherOptions = [],
   classOptions = [],
   onArchive,
 }: {
   canResolve?: boolean;
+  /** Text the parents of students who missed lessons in a row (each once per run of absences). */
+  canSendSms?: boolean;
   className?: string;
   teacherOptions?: Array<{ id: number; label: string }>;
   classOptions?: Array<{ id: number; label: string; teacher_id?: number | null }>;
@@ -68,6 +75,22 @@ export function AbsenceAlertsPanel({
   const [teacherFilter, setTeacherFilter] = useState('');
   const [classFilter, setClassFilter] = useState('');
   const [archiving, setArchiving] = useState<AbsenceAlert | null>(null);
+  const [sendingSms, setSendingSms] = useState(false);
+  // Runs of absences whose parents were already texted (from the SMS module).
+  const [smsSent, setSmsSent] = useState<Set<string>>(new Set());
+
+  const loadSmsSent = useCallback(async () => {
+    if (!canSendSms) return;
+    try {
+      setSmsSent(new Set(unwrapApiRows<{ key: string }>(await smsAPI.getAttendanceSent()).map((row) => row.key)));
+    } catch {
+      setSmsSent(new Set());
+    }
+  }, [canSendSms]);
+
+  useEffect(() => {
+    void loadSmsSent();
+  }, [loadSmsSent]);
 
   const load = useCallback(async () => {
     try {
@@ -113,6 +136,21 @@ export function AbsenceAlertsPanel({
     }
   };
 
+  const sendSms = async (targets: AbsenceAlert[]) => {
+    if (targets.length === 0 || sendingSms) return;
+    if (targets.length > 1 && !window.confirm(t('Send an SMS to the parents of {count} students who missed lessons?', { count: targets.length }))) return;
+    setSendingSms(true);
+    try {
+      const result = getApiPayload<SmsSendResult>(await smsAPI.sendAttendance(targets.map((alert) => ({ student_id: alert.student_id, class_id: alert.class_id }))));
+      if (result) (result.queued > 0 ? showToast.success : showToast.info)(describeSmsResult(result, t));
+      await loadSmsSent();
+    } catch (error) {
+      showToast.error(getErrorMessage(error) || t("Couldn't send the SMS"));
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
   const teacherClassOptions = useMemo(
     () => classOptions.filter((item) => !teacherFilter || Number(item.teacher_id || 0) === Number(teacherFilter)),
     [classOptions, teacherFilter]
@@ -133,6 +171,7 @@ export function AbsenceAlertsPanel({
   // Nothing to show while loading or when every student is attending.
   if (!alerts || alerts.length === 0) return null;
   const visible = expanded ? filteredAlerts : filteredAlerts.slice(0, COLLAPSED_COUNT);
+  const notTexted = filteredAlerts.filter((alert) => !smsSent.has(smsKey(alert)));
 
   return (
     <section className={cn('rounded-xl border border-rose-300 bg-rose-50/70 p-4 shadow-sm dark:border-rose-900 dark:bg-rose-950/30', className)}>
@@ -150,6 +189,12 @@ export function AbsenceAlertsPanel({
             </p>
           </div>
         </div>
+        {canSendSms && notTexted.length > 0 && (
+          <Button size="sm" variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-100" disabled={sendingSms} onClick={() => void sendSms(notTexted)}>
+            {sendingSms ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <MessageSquareText className="mr-1.5 h-4 w-4" />}
+            {t('SMS to all parents ({count})', { count: notTexted.length })}
+          </Button>
+        )}
       </div>
 
       {(teacherOptions.length > 0 || classOptions.length > 0) && (
@@ -208,6 +253,20 @@ export function AbsenceAlertsPanel({
                 </div>
               )}
             </div>
+            {canSendSms && (
+              <div className="flex shrink-0 flex-wrap gap-2">
+                {smsSent.has(smsKey(alert)) ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {t('SMS sent')}
+                  </span>
+                ) : (
+                  <Button size="sm" variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-100" disabled={sendingSms} onClick={() => void sendSms([alert])}>
+                    <MessageSquareText className="mr-1.5 h-4 w-4" />
+                    {t('SMS to parents')}
+                  </Button>
+                )}
+              </div>
+            )}
             {canResolve && (
               <div className="flex shrink-0 flex-wrap gap-2">
                 <Button size="sm" variant="outline" className="border-rose-300 text-rose-700 hover:bg-rose-100" onClick={() => openResolve(alert)}>

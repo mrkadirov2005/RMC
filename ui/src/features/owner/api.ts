@@ -1,6 +1,8 @@
 // Source file for the api.ts area in the owner feature.
 
-import { attendanceAPI, classAPI, centerAPI, discountAPI, kpiAPI, ownerAPI, paymentAPI, salaryAPI, superuserAPI, studentAPI, teacherAPI } from '../../shared/api/api';
+import { attendanceAPI, classAPI, centerAPI, discountAPI, kpiAPI, ownerAPI, paymentAPI, salaryAPI, smsAPI, superuserAPI, studentAPI, teacherAPI } from '../../shared/api/api';
+
+export { smsAPI };
 
 export const ownerManagerApi = {
   centers: centerAPI,

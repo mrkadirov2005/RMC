@@ -7,11 +7,17 @@ vi.mock('@/i18n/LanguageContext', () => ({
     t: (value: string, vars?: Record<string, string | number>) => value.replace(/\{(\w+)\}/g, (_, key) => String(vars?.[key] ?? `{${key}}`)),
   }),
 }));
-vi.mock('@/utils/toast', () => ({ showToast: { success: vi.fn(), error: vi.fn() } }));
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
+vi.mock('@/utils/toast', () => ({ showToast: toast }));
 
 const getAll = vi.fn();
 const resolve = vi.fn();
-vi.mock('../api', () => ({ absenceAlertAPI: { getAll: () => getAll(), resolve: (body: unknown) => resolve(body) } }));
+const sendAttendance = vi.fn();
+const getAttendanceSent = vi.fn();
+vi.mock('../api', () => ({
+  absenceAlertAPI: { getAll: () => getAll(), resolve: (body: unknown) => resolve(body) },
+  smsAPI: { sendAttendance: (items: unknown) => sendAttendance(items), getAttendanceSent: () => getAttendanceSent() },
+}));
 
 const alert = {
   student_id: 10,
@@ -32,6 +38,9 @@ describe('AbsenceAlertsPanel', () => {
   beforeEach(() => {
     getAll.mockReset();
     resolve.mockReset();
+    sendAttendance.mockReset();
+    getAttendanceSent.mockReset();
+    toast.success.mockReset();
   });
 
   it('shows nothing when no student is missing lessons', async () => {
@@ -61,5 +70,33 @@ describe('AbsenceAlertsPanel', () => {
 
     await waitFor(() => expect(resolve).toHaveBeenCalledWith({ student_id: 10, class_id: 1, outcome: 'sick', note: 'Kasal' }));
     await waitFor(() => expect(screen.queryByText('Isomova Ziyoda')).toBeNull());
+  });
+
+  it('lets a teacher text the parents, once per run of absences', async () => {
+    const texted = { ...alert, student_id: 11, student_name: 'Karimov Bek' };
+    getAll.mockResolvedValue({ data: [alert, texted] });
+    getAttendanceSent
+      .mockResolvedValueOnce({ data: [{ key: '1:11:2026-10-06', sent_at: '2026-10-07T05:00:00Z' }] })
+      .mockResolvedValue({ data: [{ key: '1:11:2026-10-06' }, { key: '1:10:2026-10-06' }] });
+    sendAttendance.mockResolvedValue({ data: { queued: 1, already_sent: 0, no_phone: 0, not_applicable: 0, daily_limit: 30, sent_today: 0, waiting: 1, sending_now: true } });
+    render(<AbsenceAlertsPanel canSendSms />);
+
+    expect(await screen.findByText('Isomova Ziyoda')).toBeTruthy();
+    // Bek's parents were already texted about these absences.
+    expect(screen.getAllByText('SMS sent')).toHaveLength(1);
+    expect(screen.getByText('SMS to all parents (1)')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'SMS to parents' }));
+    await waitFor(() => expect(sendAttendance).toHaveBeenCalledWith([{ student_id: 10, class_id: 1 }]));
+    expect(toast.success).toHaveBeenCalledWith('1 SMS queued');
+    await waitFor(() => expect(screen.getAllByText('SMS sent')).toHaveLength(2));
+  });
+
+  it('offers no SMS where it is not allowed', async () => {
+    getAll.mockResolvedValue({ data: [alert] });
+    render(<AbsenceAlertsPanel canResolve />);
+    await screen.findByText('Isomova Ziyoda');
+    expect(screen.queryByText('SMS to parents')).toBeNull();
+    expect(getAttendanceSent).not.toHaveBeenCalled();
   });
 });

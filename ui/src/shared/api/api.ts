@@ -496,6 +496,28 @@ export const telegramBotAPI = {
   getStats: () => apiClient.get('/telegram-bot/stats'),
 };
 
+// SMS to parents, sent by hand through the center's phone: payment notices (admins), missed
+// lessons (teachers and admins), and the owner's list of everything sent.
+export interface SmsSendResult {
+  queued: number;
+  already_sent: number;
+  no_phone: number;
+  not_applicable: number;
+  daily_limit: number;
+  sent_today: number;
+  waiting: number;
+  sending_now: boolean;
+}
+export const smsAPI = {
+  getStatus: () => apiClient.get('/sms/status'),
+  sendPayment: (data: { type: 'success' | 'waiting'; student_ids: number[]; from: string; to: string }) => apiClient.post('/sms/payment', data),
+  sendAttendance: (items: Array<{ student_id: number; class_id: number }>) => apiClient.post('/sms/attendance', { items }),
+  /** Missed-lesson SMS already sent, as "class:student:last absent day" keys. */
+  getAttendanceSent: () => apiClient.get('/sms/attendance/sent'),
+  getMessages: (params: Record<string, unknown>) => apiClient.get('/sms/messages', { params, headers: { 'X-Skip-Center-Scope': '1' } }),
+  sendTest: (phone: string) => apiClient.post('/sms/test', { phone }, { headers: { 'X-Skip-Center-Scope': '1' } }),
+};
+
 // Students who missed their group's latest lessons in a row; admins close each with an outcome.
 export const absenceAlertAPI = {
   getAll: () => apiClient.get('/absence-alerts'),
