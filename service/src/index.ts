@@ -82,6 +82,9 @@ async function createApp(options: CreateAppOptions = {}) {
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
 
+  // nginx sits in front and sets X-Forwarded-For; trust that one hop so rate limits count each client's own IP.
+  app.set('trust proxy', 1);
+
   app.use(helmet());
 
   const resolveCorsOrigins = (environment = process.env.NODE_ENV, configuredOrigins = process.env.CORS_ALLOWED_ORIGINS) => {
