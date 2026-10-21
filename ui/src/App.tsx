@@ -374,7 +374,7 @@ function AppContent() {
         <Route
           path="/owner/sms"
           element={
-            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.VIEW_SMS}>
               <Layout>
                 <OwnerSmsPage />
               </Layout>

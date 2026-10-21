@@ -47,6 +47,7 @@ export const smsLabels: Record<string, string> = {
   Expired: "Muddati o'tdi",
   // Owner → SMS → Templates
   Messages: 'Xabarlar',
+  'Send SMS to parents': 'Ota-onalarga SMS yuborish',
   Templates: 'Shablonlar',
   'Write your own text for each SMS type. The active template is used every time that SMS is sent; with none active, the standard text is used.':
     "Har bir SMS turi uchun o'z matningizni yozing. Faol shablon shu SMS har safar yuborilganda ishlatiladi; faol shablon bo'lmasa, standart matn yuboriladi.",

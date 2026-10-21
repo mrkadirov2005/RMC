@@ -282,8 +282,14 @@ const Sidebar = memo(() => {
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
-    // Every SMS sent to parents, with filters.
-    { label: 'SMS', path: '/owner/sms', iconName: 'Sms', roles: ['superuser'], ownerOnly: true },
+    // Every SMS sent to parents, with filters, and the templates. Admins see their own branch's.
+    {
+      label: 'SMS', path: '/owner/sms', iconName: 'Sms', roles: ['superuser'], permission: 'VIEW_SMS',
+      children: [
+        { label: 'Messages', path: '/owner/sms?tab=messages', iconName: 'Sms', permission: 'SMS_TAB_MESSAGES' },
+        { label: 'Templates', path: '/owner/sms?tab=templates', iconName: 'Sms', permission: 'SMS_TAB_TEMPLATES' },
+      ],
+    },
     // Admins can be given their own branch here; creating or deleting branches stays owner-only.
     { label: 'Centers', path: '/centers', iconName: 'Centers', roles: ['superuser'], permission: 'CRUD_CENTER' },
   ];

@@ -96,6 +96,7 @@ export const ROUTE_PERMISSIONS = {
   '/calendar': PERMISSION_CODES.VIEW_CALENDAR,
   '/reports': PERMISSION_CODES.VIEW_REPORTS,
   '/owner/reports': PERMISSION_CODES.VIEW_REPORTS,
+  '/owner/sms': PERMISSION_CODES.VIEW_SMS,
   '/users': PERMISSION_CODES.MANAGE_USERS,
   '/teacher-portal': null, // Teacher specific route
   '/student-portal': null, // Student specific route

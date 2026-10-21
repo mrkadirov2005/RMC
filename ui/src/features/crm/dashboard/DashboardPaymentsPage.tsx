@@ -19,6 +19,8 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { classAPI, paymentAPI, smsAPI, subjectAPI, teacherAPI, type SmsSendResult } from './api';
 import { usePaymentsPage } from '../payments/hooks/usePaymentsPage';
 import { PaymentFormDialog } from '../payments/components/PaymentFormDialog';
+import { useRBAC } from '../hooks/useRBAC';
+import { PERMISSION_CODES } from '@/types';
 
 type PaymentState = 'paid' | 'partial' | 'unpaid';
 const ALL = 'all';
@@ -69,6 +71,8 @@ const formatDay = (value: string | null) => (value ? `${value.slice(8, 10)}.${va
 
 const DashboardPaymentsPage = () => {
   const { t } = useLanguage();
+  // The owner ticks "Send SMS to parents" for an admin in the Owner panel; the server checks it too.
+  const canSendSms = useRBAC().canAccess(PERMISSION_CODES.SEND_SMS);
   const navigate = useNavigate();
   const thisMonth = centerToday().slice(0, 7);
   const [from, setFrom] = useState(`${thisMonth}-01`);
@@ -302,7 +306,7 @@ const DashboardPaymentsPage = () => {
         </div>
       </div>
 
-      {rows.length > 0 && (
+      {canSendSms && rows.length > 0 && (
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -363,6 +367,7 @@ const DashboardPaymentsPage = () => {
                   <TableCell><span data-keep-bg className={cn('rounded-md px-2 py-0.5 text-xs font-bold', style.className)}>{t(style.label)}</span></TableCell>
                   <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1.5">
+                    {canSendSms && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button type="button" variant="outline" size="sm" className="h-7 px-2" disabled={sendingSms} aria-label={t('SMS to parents')}>
@@ -378,6 +383,7 @@ const DashboardPaymentsPage = () => {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    )}
                     {/* Not paid in full: record a payment with the student and what they owe filled in. */}
                     {row.state !== 'paid' && (
                       <button

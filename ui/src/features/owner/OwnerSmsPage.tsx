@@ -14,6 +14,9 @@ import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useUrlTab } from '@/shared/hooks/useUrlTab';
+import { useAppSelector } from '@/features/crm/hooks';
+import { useRBAC } from '@/features/crm/hooks/useRBAC';
+import { PERMISSION_CODES } from '@/types';
 import { ownerManagerApi, smsAPI } from './api';
 import SmsTemplatesPanel from './SmsTemplatesPanel';
 
@@ -90,7 +93,13 @@ const formatTime = (value: string | null) =>
 
 const OwnerSmsPage = () => {
   const { t } = useLanguage();
-  const [tab, setTab] = useUrlTab<(typeof SMS_TABS)[number]>('messages', SMS_TABS);
+  // An admin given the page sees the tabs the owner ticked, and only their own branch's messages.
+  const isOwner = String(useAppSelector((state) => state.auth.user?.role) || '').toLowerCase() === 'owner';
+  const { canAccessSubPage } = useRBAC();
+  const allowedTabs = SMS_TABS.filter((id) =>
+    canAccessSubPage(PERMISSION_CODES.VIEW_SMS, id === 'messages' ? PERMISSION_CODES.SMS_TAB_MESSAGES : PERMISSION_CODES.SMS_TAB_TEMPLATES));
+  const [requestedTab, setTab] = useUrlTab<(typeof SMS_TABS)[number]>(allowedTabs[0] ?? 'messages', allowedTabs, 'tab', { keepDefault: true });
+  const tab = allowedTabs.includes(requestedTab) ? requestedTab : allowedTabs[0];
   const [status, setStatus] = useState<SmsStatus | null>(null);
   const [centers, setCenters] = useState<Array<{ id: number; name: string }>>([]);
   const [from, setFrom] = useState('');
@@ -109,10 +118,11 @@ const OwnerSmsPage = () => {
 
   useEffect(() => {
     smsAPI.getStatus().then((response) => setStatus(getApiPayload<SmsStatus>(response))).catch(() => setStatus(null));
+    if (!isOwner) return;
     ownerManagerApi.centers.getAll().then((response) => setCenters(unwrapApiRows<any>(response)
       .map((row) => ({ id: Number(row.center_id || row.id), name: String(row.center_name || row.name || '') }))
       .filter((row) => row.id > 0))).catch(() => null);
-  }, [refresh]);
+  }, [refresh, isOwner]);
 
   // Typing waits a moment before searching.
   useEffect(() => {
@@ -136,13 +146,14 @@ const OwnerSmsPage = () => {
   const requestKey = JSON.stringify({ ...params, refresh });
 
   useEffect(() => {
+    if (tab !== 'messages') return undefined;
     let cancelled = false;
     smsAPI
       .getMessages((({ refresh: _refresh, ...filters }) => filters)(JSON.parse(requestKey)))
       .then((response) => { if (!cancelled) setResult({ key: requestKey, data: getApiPayload<SmsList>(response) }); })
       .catch(() => { if (!cancelled) setResult({ key: requestKey, data: null }); });
     return () => { cancelled = true; };
-  }, [requestKey]);
+  }, [requestKey, tab]);
 
   const loading = result?.key !== requestKey;
   const data = result?.data ?? null;
@@ -219,7 +230,7 @@ const OwnerSmsPage = () => {
       )}
 
       <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-1.5" role="tablist">
-        {SMS_TABS.map((id) => (
+        {allowedTabs.map((id) => (
           <button
             key={id}
             type="button"
@@ -240,7 +251,7 @@ const OwnerSmsPage = () => {
       {tab === 'templates' && <SmsTemplatesPanel />}
 
       {tab === 'messages' && (<>
-      {status?.configured && (
+      {isOwner && status?.configured && (
         <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-3 shadow-sm">
           <div className="min-w-[220px] flex-1 space-y-1">
             <Label htmlFor="sms-test-phone" className="text-xs">{t('Send a test SMS')}</Label>

@@ -14,6 +14,14 @@ vi.mock('@/utils/toast', () => ({ showToast: toast }));
 const sms = vi.hoisted(() => ({ getStatus: vi.fn(), getMessages: vi.fn(), sendTest: vi.fn() }));
 const centers = vi.hoisted(() => ({ getAll: vi.fn() }));
 vi.mock('../api', () => ({ smsAPI: sms, ownerManagerApi: { centers } }));
+const auth = vi.hoisted(() => ({ user: { role: 'owner', permissions: [] as string[] } }));
+vi.mock('@/features/crm/hooks', () => ({ useAppSelector: (select: (state: unknown) => unknown) => select({ auth }) }));
+vi.mock('@/features/crm/hooks/useRBAC', () => ({
+  useRBAC: () => ({
+    canAccessSubPage: (_page: string, tab: string) =>
+      auth.user.role === 'owner' || !auth.user.permissions.some((code) => code.startsWith('SMS_TAB_')) || auth.user.permissions.includes(tab),
+  }),
+}));
 vi.mock('../SmsTemplatesPanel', () => ({ default: () => <div>templates panel</div> }));
 
 const message = (overrides = {}) => ({
@@ -81,5 +89,16 @@ describe('owner SMS page', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Messages' }));
     expect(await screen.findByText('Valiyev Ali')).toBeTruthy();
     expect(screen.queryByText('templates panel')).toBeNull();
+  });
+
+  it("gives an admin only the ticked tabs, their own branch's messages and no test SMS", async () => {
+    auth.user = { role: 'admin', permissions: ['VIEW_SMS', 'SMS_TAB_MESSAGES'] };
+    renderPage('/owner/sms?tab=templates');
+    expect(await screen.findByText('Valiyev Ali')).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: 'Templates' })).toBeNull();
+    expect(screen.queryByText('templates panel')).toBeNull();
+    expect(screen.queryByText('Send a test SMS')).toBeNull();
+    expect(centers.getAll).not.toHaveBeenCalled();
+    auth.user = { role: 'owner', permissions: [] };
   });
 });

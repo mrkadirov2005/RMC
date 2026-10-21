@@ -36,14 +36,14 @@ describe('sms controller', () => {
     expect(res.status).toHaveBeenCalledWith(403);
 
     const ok = response();
-    await controller.sendPaymentSms({ user: { id: 2, userType: 'superuser' }, body: { type: 'waiting', student_ids: [1, '2', 0], from: '2026-10-01', to: '2026-10-31' } }, ok);
+    await controller.sendPaymentSms({ user: { id: 2, userType: 'superuser', permissions: ['SEND_SMS'] }, body: { type: 'waiting', student_ids: [1, '2', 0], from: '2026-10-01', to: '2026-10-31' } }, ok);
     expect(service.sendPaymentSms).toHaveBeenCalledWith(expect.objectContaining({ type: 'waiting', studentIds: [1, 2], centerId: 4, senderName: 'Admin Aka' }));
     expect(ok.json).toHaveBeenCalledWith({ queued: 1 });
   });
 
   it('rejects an unknown payment message type', async () => {
     const res = response();
-    await controller.sendPaymentSms({ user: { id: 2, userType: 'superuser' }, body: { type: 'other', student_ids: [1] } }, res);
+    await controller.sendPaymentSms({ user: { id: 2, userType: 'superuser', permissions: ['SEND_SMS'] }, body: { type: 'other', student_ids: [1] } }, res);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
@@ -88,5 +88,44 @@ describe('sms controller', () => {
     const activated = response();
     await controller.setTemplateActive({ user: owner, params: { id: '3' }, body: { active: true } }, activated);
     expect(templates.setTemplateActive).toHaveBeenCalledWith(3, true);
+  });
+
+  it('lets an admin send SMS only when the owner ticked "SMS yuborish"', async () => {
+    const refused = response();
+    await controller.sendPaymentSms({ user: { id: 2, userType: 'superuser', role: 'admin', permissions: ['CRUD_PAYMENT'] }, body: { type: 'waiting', student_ids: [1] } }, refused);
+    expect(refused.status).toHaveBeenCalledWith(403);
+    const refusedAttendance = response();
+    await controller.sendAttendanceSms({ user: { id: 2, userType: 'superuser', role: 'admin', permissions: [] }, body: { items: [{ student_id: 1, class_id: 3 }] } }, refusedAttendance);
+    expect(refusedAttendance.status).toHaveBeenCalledWith(403);
+    expect(service.sendPaymentSms).not.toHaveBeenCalled();
+    expect(service.sendAttendanceSms).not.toHaveBeenCalled();
+
+    const owner = response();
+    await controller.sendPaymentSms({ user: { id: 1, userType: 'superuser', role: 'owner' }, body: { type: 'waiting', student_ids: [1] } }, owner);
+    expect(owner.json).toHaveBeenCalledWith({ queued: 1 });
+    const teacher = response();
+    await controller.sendAttendanceSms({ user: { id: 7, userType: 'teacher' }, body: { items: [{ student_id: 1, class_id: 3 }] } }, teacher);
+    expect(teacher.json).toHaveBeenCalledWith({ queued: 1 });
+  });
+
+  it("shows an admin given the SMS page only their own branch's messages, and only the ticked tabs", async () => {
+    const admin = (permissions) => ({ id: 2, userType: 'superuser', role: 'admin', permissions });
+
+    const messages = response();
+    await controller.listMessages({ user: admin(['VIEW_SMS', 'SMS_TAB_MESSAGES']), query: { center_id: '9', kind: 'test' } }, messages);
+    expect(service.listMessages).toHaveBeenCalledWith({ center_id: 4, kind: 'test' });
+
+    const noTemplates = response();
+    await controller.listTemplates({ user: admin(['VIEW_SMS', 'SMS_TAB_MESSAGES']) }, noTemplates);
+    expect(noTemplates.status).toHaveBeenCalledWith(403);
+
+    // The page with no tab ticked opens both.
+    const both = response();
+    await controller.listTemplates({ user: admin(['VIEW_SMS']) }, both);
+    expect(both.json).toHaveBeenCalledWith({ templates: [], kinds: [] });
+
+    const noPage = response();
+    await controller.listMessages({ user: admin(['SMS_TAB_MESSAGES']), query: {} }, noPage);
+    expect(noPage.status).toHaveBeenCalledWith(403);
   });
 });

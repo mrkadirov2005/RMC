@@ -9,12 +9,13 @@ export interface AdminSubPageAccess {
 
 export interface AdminPageAccess {
   label: string;
-  path: string;
+  /** The page it opens; none for an action that is not a page (sending SMS). */
+  path?: string;
   permission: string;
   children?: readonly AdminSubPageAccess[];
 }
 
-// Every sidebar page an owner can grant a branch admin, in sidebar order. The admin dialog lists
+// Every sidebar page an owner can grant a branch admin, in sidebar order, and sending SMS. The admin dialog lists
 // these, and the sidebar and route guards check the same permission codes. Owner Panel is not
 // here: it manages admin accounts, so it stays owner-only. Reports is safe to grant because the
 // server limits an admin's data to their own branch.
@@ -39,6 +40,8 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
   { label: 'Calendar', path: '/calendar', permission: PERMISSION_CODES.VIEW_CALENDAR },
   { label: 'Tests', path: '/tests', permission: PERMISSION_CODES.MANAGE_TESTS },
   { label: 'Payments', path: '/payments', permission: PERMISSION_CODES.CRUD_PAYMENT },
+  // Not a page: the SMS buttons on To'lovlar. Without it an admin can't send any SMS.
+  { label: 'Send SMS to parents', permission: PERMISSION_CODES.SEND_SMS },
   {
     label: 'Salary',
     path: '/salary',
@@ -65,6 +68,16 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
       { label: 'Retention', view: 'retention', permission: PERMISSION_CODES.REPORTS_TAB_RETENTION },
       { label: 'Davomat', view: 'attendance', permission: PERMISSION_CODES.REPORTS_TAB_ATTENDANCE },
       { label: 'Class Reports', view: 'classes', permission: PERMISSION_CODES.REPORTS_TAB_CLASSES },
+    ],
+  },
+  // An admin sees their own branch's messages; templates are shared by all branches.
+  {
+    label: 'SMS',
+    path: '/owner/sms',
+    permission: PERMISSION_CODES.VIEW_SMS,
+    children: [
+      { label: 'Messages', view: 'messages', permission: PERMISSION_CODES.SMS_TAB_MESSAGES },
+      { label: 'Templates', view: 'templates', permission: PERMISSION_CODES.SMS_TAB_TEMPLATES },
     ],
   },
   // An admin only ever sees and edits their own branch here; creating or deleting branches

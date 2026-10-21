@@ -23,10 +23,33 @@ const senderNameOf = (user: any) => smsService.senderNameOf(user);
 
 const isOwner = (user: any) => user?.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner';
 
+// What the owner ticked for a branch admin in the access list. Teachers send missed-lesson SMS for
+// their own groups without these.
+const SEND_SMS = 'SEND_SMS';
+const VIEW_SMS = 'VIEW_SMS';
+const SMS_TABS = { messages: 'SMS_TAB_MESSAGES', templates: 'SMS_TAB_TEMPLATES' } as const;
+const permissionsOf = (user: any): string[] => (Array.isArray(user?.permissions) ? user.permissions : []);
+
+const canSendSms = (user: any) =>
+  user?.userType === 'teacher' || isOwner(user) || (user?.userType === 'superuser' && permissionsOf(user).includes(SEND_SMS));
+
+/** The SMS page tab for an admin: the page itself, and the tab (an admin with no tab ticked sees both). */
+const canOpenSmsTab = (user: any, tab: keyof typeof SMS_TABS) => {
+  if (isOwner(user)) return true;
+  if (user?.userType !== 'superuser') return false;
+  const permissions = permissionsOf(user);
+  if (!permissions.includes(VIEW_SMS)) return false;
+  const tabCodes = Object.values(SMS_TABS);
+  return !tabCodes.some((code) => permissions.includes(code)) || permissions.includes(SMS_TABS[tab]);
+};
+
+const NO_SMS_PERMISSION = "SMS yuborishga ruxsat yo'q. Ega bu huquqni Ega panelida beradi.";
+
 // Admin, To'lovlar page: "payment received" or "payment waiting" to the chosen students' parents.
 const sendPaymentSms = async (req: any, res: any) => {
   try {
     if (req.user?.userType !== 'superuser') return res.status(403).json({ error: 'Kirish rad etildi.' });
+    if (!canSendSms(req.user)) return res.status(403).json({ error: NO_SMS_PERMISSION });
     const scope = scopeOf(req, res);
     if (!scope) return;
     const type = String(req.body?.type || '');
@@ -53,6 +76,7 @@ const sendPaymentSms = async (req: any, res: any) => {
 // Teacher (own groups) or admin, warnings page: students who missed lessons in a row.
 const sendAttendanceSms = async (req: any, res: any) => {
   try {
+    if (!canSendSms(req.user)) return res.status(403).json({ error: NO_SMS_PERMISSION });
     const scope = scopeOf(req, res);
     if (!scope) return;
     const items = (Array.isArray(req.body?.items) ? req.body.items : [])
@@ -94,11 +118,15 @@ const getStatus = async (_req: any, res: any) => {
   }
 };
 
-// Owner: every message sent, with filters.
+// Owner: every message sent, with filters. An admin given the page: their own branch's only.
 const listMessages = async (req: any, res: any) => {
   try {
-    if (!isOwner(req.user)) return res.status(403).json({ error: 'Kirish rad etildi. Ega huquqlari talab qilinadi.' });
-    res.json(await smsService.listMessages(req.query || {}));
+    if (!canOpenSmsTab(req.user, 'messages')) return res.status(403).json({ error: 'Kirish rad etildi.' });
+    if (isOwner(req.user)) return res.json(await smsService.listMessages(req.query || {}));
+    const scope = scopeOf(req, res);
+    if (!scope) return;
+    if (!scope.centerId) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    res.json(await smsService.listMessages({ ...(req.query || {}), center_id: scope.centerId }));
   } catch (error) {
     fail(res, error, "SMS xabarlarini yuklab bo'lmadi");
   }
@@ -118,10 +146,11 @@ const sendTest = async (req: any, res: any) => {
 
 const OWNER_ONLY = 'Kirish rad etildi. Ega huquqlari talab qilinadi.';
 
-// Owner: their own wording for each SMS type. Validation errors come back as 400 with the reason.
+// Owner (or an admin given the Templates tab): the wording for each SMS type, shared by all branches.
+// Validation errors come back as 400 with the reason.
 const ownerTemplateAction = (message: string, action: (req: any) => Promise<any>, status = 200) => async (req: any, res: any) => {
   try {
-    if (!isOwner(req.user)) return res.status(403).json({ error: OWNER_ONLY });
+    if (!canOpenSmsTab(req.user, 'templates')) return res.status(403).json({ error: OWNER_ONLY });
     const out = await action(req);
     res.status(status).json(out ?? { ok: true });
   } catch (error: any) {

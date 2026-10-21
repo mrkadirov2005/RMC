@@ -35,6 +35,8 @@ const paymentHook = vi.hoisted(() => ({
 }));
 vi.mock('../../payments/hooks/usePaymentsPage', () => ({ usePaymentsPage: () => paymentHook }));
 vi.mock('../../payments/components/PaymentFormDialog', () => ({ PaymentFormDialog: () => null }));
+const rbac = vi.hoisted(() => ({ permissions: ['CRUD_PAYMENT', 'SEND_SMS'] as string[] }));
+vi.mock('../../hooks/useRBAC', () => ({ useRBAC: () => ({ canAccess: (code: string) => rbac.permissions.includes(code) }) }));
 
 vi.mock('../api', () => ({
   paymentAPI: { getStudentsSummary: (params: unknown) => api.getStudentsSummary(params) },
@@ -113,6 +115,14 @@ describe('dashboard payments page', () => {
     await waitFor(() => expect(api.sendPayment).toHaveBeenCalledWith(expect.objectContaining({ type: 'waiting', student_ids: [2] })));
     expect(api.sendPayment.mock.calls[0][0].from).toMatch(/-01$/);
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('1 SMS queued'));
+  });
+
+  it('shows no SMS buttons to an admin the owner has not allowed to send SMS', async () => {
+    rbac.permissions = ['CRUD_PAYMENT'];
+    render(<MemoryRouter><DashboardPaymentsPage /></MemoryRouter>);
+    await screen.findByText('Karimov Bek');
+    expect(screen.queryAllByRole('button', { name: /SMS to parents/ })).toHaveLength(0);
+    rbac.permissions = ['CRUD_PAYMENT', 'SEND_SMS'];
   });
 
   it('asks before texting everyone on the page who still owes', async () => {

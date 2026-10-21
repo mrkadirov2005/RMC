@@ -324,6 +324,9 @@ export const PERMISSION_CODES = {
   VIEW_REPORTS: 'VIEW_REPORTS',
   MANAGE_USERS: 'MANAGE_USERS',
   VIEW_CONSOLIDATIONS: 'VIEW_CONSOLIDATIONS',
+  // Sending SMS to parents (To'lovlar page). Teachers send missed-lesson SMS without it.
+  SEND_SMS: 'SEND_SMS',
+  VIEW_SMS: 'VIEW_SMS',
   // Sidebar submenus. An admin with the parent page but none of its submenu codes sees every
   // submenu (accounts saved before submenus could be chosen); see adminPageAccess.ts.
   RETENTION_TAB_RETENTION: 'RETENTION_TAB_RETENTION',
@@ -338,4 +341,6 @@ export const PERMISSION_CODES = {
   REPORTS_TAB_RETENTION: 'REPORTS_TAB_RETENTION',
   REPORTS_TAB_ATTENDANCE: 'REPORTS_TAB_ATTENDANCE',
   REPORTS_TAB_CLASSES: 'REPORTS_TAB_CLASSES',
+  SMS_TAB_MESSAGES: 'SMS_TAB_MESSAGES',
+  SMS_TAB_TEMPLATES: 'SMS_TAB_TEMPLATES',
 };

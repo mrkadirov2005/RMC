@@ -12,8 +12,10 @@ describe('branch admin page access catalog', () => {
   it('lists every sidebar page an admin can be given, in sidebar order', () => {
     expect(ADMIN_PAGE_ACCESS.map((page) => page.label)).toEqual([
       'Dashboard', 'Students', 'Leads', 'Archive', 'Retention', 'Teachers', 'Classes', 'Consolidations',
-      'Rooms', 'Calendar', 'Tests', 'Payments', 'Salary', 'Assignments', 'Teacher Tasks', 'Subjects', 'Debts', 'Reports', 'Centers', 'Settings',
+      'Rooms', 'Calendar', 'Tests', 'Payments', 'Send SMS to parents', 'Salary', 'Assignments', 'Teacher Tasks', 'Subjects', 'Debts', 'Reports',
+      'SMS', 'Centers', 'Settings',
     ]);
+    expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'SMS')?.children?.map((child) => child.view)).toEqual(['messages', 'templates']);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total', 'Monthly', 'List']);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Retention')?.children?.map((child) => child.label)).toEqual(['Retention', 'Intake']);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Reports')?.children?.map((child) => child.view)).toEqual([
@@ -22,7 +24,9 @@ describe('branch admin page access catalog', () => {
   });
 
   it('uses the same permission for the admin dialog and route guard', () => {
-    for (const page of ADMIN_PAGE_ACCESS) expect(ROUTE_PERMISSIONS[page.path as keyof typeof ROUTE_PERMISSIONS]).toBe(page.permission);
+    for (const page of ADMIN_PAGE_ACCESS.filter((item) => item.path)) {
+      expect(ROUTE_PERMISSIONS[page.path as keyof typeof ROUTE_PERMISSIONS]).toBe(page.permission);
+    }
   });
 });
 
