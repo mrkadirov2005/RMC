@@ -14,6 +14,9 @@ jest.mock('../../repositories/sms.repository', () => ({
   findMessages: jest.fn(),
   countQueued: jest.fn(async () => 0),
 }));
+jest.mock('../../repositories/smsTemplates.repository', () => ({
+  findActiveBodies: jest.fn(async () => ({})),
+}));
 jest.mock('../smsGateway', () => ({
   isConfigured: jest.fn(() => true),
   sendSms: jest.fn(),
@@ -21,6 +24,7 @@ jest.mock('../smsGateway', () => ({
 }));
 
 const repository = require('../../repositories/sms.repository');
+const templatesRepository = require('../../repositories/smsTemplates.repository');
 const gateway = require('../smsGateway');
 const service = require('../sms.service');
 
@@ -120,6 +124,30 @@ describe('sms service', () => {
     const [[[row]]] = repository.enqueue.mock.calls;
     expect(row).toMatchObject({ kind: 'attendance', dedupeKey: 'attendance:3:10:2026-10-09', createdByType: 'teacher', senderName: 'Ibrohim M' });
     expect(row.text).toBe('Hurmatli ota-ona! Farzandingiz Ali Valiyev IELTS B-12 guruhidagi oxirgi 2 ta darsga kelmadi (07.10, 09.10). Iltimos, sababini markazga xabar bering.\nTemurbek');
+  });
+
+  it("uses the owner's active template, filling in the placeholders", async () => {
+    templatesRepository.findActiveBodies.mockResolvedValueOnce({ payment_waiting: "Salom! {ism}, {guruh}: {oy} uchun {qoldiq} (jami {kutilgan}). {markaz}" });
+    repository.findPaymentFigures.mockResolvedValue([paymentRow({ paid_amount: 100000 })]);
+    await service.sendPaymentSms({ type: 'waiting', studentIds: [10], from: '2026-10-01', to: '2026-10-31', centerId: 1, actingUser: admin, senderName: null });
+    expect(repository.enqueue.mock.calls[0][0][0].text).toBe("Salom! Ali Valiyev, IELTS B-12: oktyabr oyi uchun 200 000 so'm (jami 300 000 so'm). Temurbek");
+
+    templatesRepository.findActiveBodies.mockResolvedValueOnce({ attendance: 'Ota-ona! {ism} {soni} ta dars qoldirdi: {sanalar}.' });
+    repository.findAttendanceFacts.mockResolvedValue({
+      records: [mark(10, '2026-10-09', 'Absent'), mark(10, '2026-10-07', 'Absent')],
+      resolutions: [],
+      students: [student()],
+    });
+    await service.sendAttendanceSms({ items: [{ student_id: 10, class_id: 3 }], actingUser: admin, senderName: null });
+    expect(repository.enqueue.mock.calls[1][0][0].text).toBe('Ota-ona! Ali Valiyev 2 ta dars qoldirdi: 07.10, 09.10.');
+  });
+
+  it('falls back to the built-in text when the templates cannot be read', async () => {
+    jest.spyOn(console, 'error').mockImplementationOnce(() => {});
+    templatesRepository.findActiveBodies.mockRejectedValueOnce(new Error('db down'));
+    repository.findPaymentFigures.mockResolvedValue([paymentRow()]);
+    await service.sendPaymentSms({ type: 'waiting', studentIds: [10], from: '2026-10-01', to: '2026-10-31', centerId: 1, actingUser: admin, senderName: null });
+    expect(repository.enqueue.mock.calls[0][0][0].text).toMatch(/^Hurmatli ota-ona! Ali Valiyev \(IELTS B-12\) uchun/);
   });
 
   it('skips a student who moved group or is frozen', async () => {

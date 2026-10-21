@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OwnerSmsPage from '../OwnerSmsPage';
 
@@ -13,6 +14,7 @@ vi.mock('@/utils/toast', () => ({ showToast: toast }));
 const sms = vi.hoisted(() => ({ getStatus: vi.fn(), getMessages: vi.fn(), sendTest: vi.fn() }));
 const centers = vi.hoisted(() => ({ getAll: vi.fn() }));
 vi.mock('../api', () => ({ smsAPI: sms, ownerManagerApi: { centers } }));
+vi.mock('../SmsTemplatesPanel', () => ({ default: () => <div>templates panel</div> }));
 
 const message = (overrides = {}) => ({
   sms_id: 1, kind: 'payment_waiting', phone: '+998901234567', status: 'delivered', error: null,
@@ -20,6 +22,8 @@ const message = (overrides = {}) => ({
   created_at: '2026-10-13T05:00:00Z', sent_at: '2026-10-13T05:00:30Z', center_name: 'Temurbek', class_name: 'IELTS',
   student_name: 'Valiyev Ali', created_by_type: 'superuser', sender_name: 'Admin Aka', ...overrides,
 });
+
+const renderPage = (path = '/owner/sms') => render(<MemoryRouter initialEntries={[path]}><OwnerSmsPage /></MemoryRouter>);
 
 describe('owner SMS page', () => {
   beforeEach(() => {
@@ -33,7 +37,7 @@ describe('owner SMS page', () => {
   });
 
   it('shows the phone, today against the limit, and every message', async () => {
-    render(<OwnerSmsPage />);
+    renderPage();
     expect(await screen.findByText('Valiyev Ali')).toBeTruthy();
     expect(screen.getByText('Connected')).toBeTruthy();
     expect(screen.getByText('12 / 30')).toBeTruthy();
@@ -46,7 +50,7 @@ describe('owner SMS page', () => {
   });
 
   it('filters by date and search', async () => {
-    render(<OwnerSmsPage />);
+    renderPage();
     await screen.findByText('Valiyev Ali');
     fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-10-01' } });
     await waitFor(() => expect(sms.getMessages).toHaveBeenLastCalledWith(expect.objectContaining({ from: '2026-10-01', page: 1 })));
@@ -56,7 +60,7 @@ describe('owner SMS page', () => {
 
   it('sends a test SMS', async () => {
     sms.sendTest.mockResolvedValue({ data: { queued: 1, sending_now: true } });
-    render(<OwnerSmsPage />);
+    renderPage();
     fireEvent.change(await screen.findByLabelText('Send a test SMS'), { target: { value: '90 123 45 67' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(sms.sendTest).toHaveBeenCalledWith('90 123 45 67'));
@@ -65,8 +69,17 @@ describe('owner SMS page', () => {
 
   it('says when the phone is not connected', async () => {
     sms.getStatus.mockResolvedValue({ data: { configured: false, daily_limit: 30, sent_today: 0, queued: 0, send_from_hour: 8, send_to_hour: 21 } });
-    render(<OwnerSmsPage />);
+    renderPage();
     expect(await screen.findByText('The SMS phone is not connected yet, so no SMS are sent.')).toBeTruthy();
     expect(screen.queryByLabelText('Send a test SMS')).toBeNull();
+  });
+
+  it('opens the Templates tab from the address and switches back to messages', async () => {
+    renderPage('/owner/sms?tab=templates');
+    expect(await screen.findByText('templates panel')).toBeTruthy();
+    expect(screen.queryByText('Reset filters')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Messages' }));
+    expect(await screen.findByText('Valiyev Ali')).toBeTruthy();
+    expect(screen.queryByText('templates panel')).toBeNull();
   });
 });

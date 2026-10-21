@@ -1,7 +1,8 @@
 // Owner → SMS: every message sent to parents (payment notices from admins, missed lessons from
 // teachers), whether the phone is connected, and a test message. 50 per page, with filters.
+// The Templates tab holds the owner's own wording for each SMS type.
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Loader2, MessageSquareText, RotateCcw, Search, Send } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Loader2, MessageSquareText, RotateCcw, Search, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,9 +13,12 @@ import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { ownerManagerApi, smsAPI } from './api';
+import SmsTemplatesPanel from './SmsTemplatesPanel';
 
 const ALL = 'all';
+const SMS_TABS = ['messages', 'templates'] as const;
 
 interface SmsStatus {
   configured: boolean;
@@ -86,6 +90,7 @@ const formatTime = (value: string | null) =>
 
 const OwnerSmsPage = () => {
   const { t } = useLanguage();
+  const [tab, setTab] = useUrlTab<(typeof SMS_TABS)[number]>('messages', SMS_TABS);
   const [status, setStatus] = useState<SmsStatus | null>(null);
   const [centers, setCenters] = useState<Array<{ id: number; name: string }>>([]);
   const [from, setFrom] = useState('');
@@ -182,9 +187,11 @@ const OwnerSmsPage = () => {
             <p className="text-sm text-muted-foreground">{t('Every SMS sent to parents: payment notices from admins and missed lessons from teachers.')}</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={reset}>
-          <RotateCcw className="mr-1.5 h-4 w-4" /> {t('Reset filters')}
-        </Button>
+        {tab === 'messages' && (
+          <Button variant="ghost" size="sm" onClick={reset}>
+            <RotateCcw className="mr-1.5 h-4 w-4" /> {t('Reset filters')}
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -211,6 +218,28 @@ const OwnerSmsPage = () => {
         </p>
       )}
 
+      <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-1.5" role="tablist">
+        {SMS_TABS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={cn(
+              'flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-semibold transition',
+              tab === id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            )}
+          >
+            {id === 'messages' ? <MessageSquareText className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+            {id === 'messages' ? t('Messages') : t('Templates')}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'templates' && <SmsTemplatesPanel />}
+
+      {tab === 'messages' && (<>
       {status?.configured && (
         <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-3 shadow-sm">
           <div className="min-w-[220px] flex-1 space-y-1">
@@ -349,6 +378,7 @@ const OwnerSmsPage = () => {
           </Button>
         </div>
       </div>
+      </>)}
     </div>
   );
 };

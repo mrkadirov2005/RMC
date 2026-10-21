@@ -5,6 +5,7 @@
 // Self-contained: it reads what it needs with its own queries and never calls other modules.
 const smsRepository = require('../repositories/sms.repository');
 const smsGateway = require('./smsGateway');
+const smsTemplates = require('./smsTemplates.service');
 
 const KINDS = ['payment_success', 'payment_waiting', 'attendance', 'test'] as const;
 const UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr'];
@@ -170,6 +171,7 @@ const sendPaymentSms = async ({
   const kind = type === 'success' ? 'payment_success' : 'payment_waiting';
   const skipped = { no_phone: 0, not_applicable: ids.length - rows.length };
   const queue: any[] = [];
+  const template = (await smsTemplates.activeBodies())[kind];
 
   for (const row of rows) {
     const applies = type === 'success' ? row.paid_amount > 0 : row.remaining > 0;
@@ -177,16 +179,27 @@ const sendPaymentSms = async ({
     const phone = recipientPhone(row);
     if (!phone) { skipped.no_phone += 1; continue; }
     const who = `${studentName(row)}${row.class_name ? ` (${plainText(row.class_name)})` : ''}`;
-    const text = type === 'success'
+    const builtIn = type === 'success'
       ? `Hurmatli ota-ona! ${who} uchun ${label} to'lovi qabul qilindi: ${money(row.paid_amount)}.${row.remaining > 0 ? ` Qoldiq: ${money(row.remaining)}.` : ''} Rahmat!`
       : `Hurmatli ota-ona! ${who} uchun ${label} to'lovi kutilmoqda: ${money(row.remaining)}. Iltimos, to'lovni o'z vaqtida qiling.`;
+    const text = template
+      ? smsTemplates.renderTemplate(template, {
+        ism: studentName(row),
+        guruh: plainText(row.class_name),
+        markaz: plainText(row.center_name),
+        oy: label,
+        tolangan: money(row.paid_amount),
+        qoldiq: money(row.remaining),
+        kutilgan: money(row.expected),
+      })
+      : `${builtIn}${signature(row.center_name)}`;
     queue.push({
       centerId: Number(row.center_id) || centerId || null,
       studentId: Number(row.student_id),
       classId: Number(row.class_id) || null,
       kind,
       phone,
-      text: plainText(`${text}${signature(row.center_name)}`),
+      text: plainText(text),
       // Once a day per student, notice and period, however many times it is pressed.
       dedupeKey: `${kind}:${row.student_id}:${period.from}:${period.to}:${today}`,
       expiresAt: tashkentNoon(today, 2),
@@ -227,6 +240,7 @@ const sendAttendanceSms = async ({
   const today = tashkentDay();
   const skipped = { no_phone: 0, not_applicable: 0 };
   const queue: any[] = [];
+  const template = (await smsTemplates.activeBodies()).attendance;
 
   for (const pair of pairs) {
     const run = absenceRun(facts, pair.studentId, pair.classId);
@@ -241,8 +255,15 @@ const sendAttendanceSms = async ({
       classId: pair.classId,
       kind: 'attendance',
       phone,
-      text: plainText(
-        `Hurmatli ota-ona! Farzandingiz ${studentName(run.student)}${group} oxirgi ${run.absentDays.length} ta darsga kelmadi (${dates}). Iltimos, sababini markazga xabar bering.${signature(run.student.center_name)}`
+      text: plainText(template
+        ? smsTemplates.renderTemplate(template, {
+          ism: studentName(run.student),
+          guruh: plainText(run.student.class_name),
+          markaz: plainText(run.student.center_name),
+          soni: run.absentDays.length,
+          sanalar: dates,
+        })
+        : `Hurmatli ota-ona! Farzandingiz ${studentName(run.student)}${group} oxirgi ${run.absentDays.length} ta darsga kelmadi (${dates}). Iltimos, sababini markazga xabar bering.${signature(run.student.center_name)}`
       ),
       dedupeKey: attendanceKey(pair.classId, pair.studentId, run.lastAbsentDay),
       expiresAt: tashkentNoon(today, 2),

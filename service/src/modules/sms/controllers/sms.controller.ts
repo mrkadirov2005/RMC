@@ -1,4 +1,5 @@
 const smsService = require('../services/sms.service');
+const smsTemplates = require('../services/smsTemplates.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 
 const scopeOf = (req: any, res: any) => {
@@ -115,6 +116,44 @@ const sendTest = async (req: any, res: any) => {
   }
 };
 
-module.exports = { sendPaymentSms, sendAttendanceSms, listAttendanceSent, getStatus, listMessages, sendTest };
+const OWNER_ONLY = 'Kirish rad etildi. Ega huquqlari talab qilinadi.';
+
+// Owner: their own wording for each SMS type. Validation errors come back as 400 with the reason.
+const ownerTemplateAction = (message: string, action: (req: any) => Promise<any>, status = 200) => async (req: any, res: any) => {
+  try {
+    if (!isOwner(req.user)) return res.status(403).json({ error: OWNER_ONLY });
+    const out = await action(req);
+    res.status(status).json(out ?? { ok: true });
+  } catch (error: any) {
+    if (error?.statusCode) return res.status(error.statusCode).json({ error: error.message });
+    fail(res, error, message);
+  }
+};
+
+const templateId = (req: any) => {
+  const id = Number(req.params?.id);
+  if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error("Shablon raqami noto'g'ri."), { statusCode: 400 });
+  return id;
+};
+
+const listTemplates = ownerTemplateAction("Shablonlarni yuklab bo'lmadi", () => smsTemplates.listTemplates());
+const createTemplate = ownerTemplateAction("Shablonni saqlab bo'lmadi", (req) => smsTemplates.createTemplate(req.body), 201);
+const updateTemplate = ownerTemplateAction("Shablonni saqlab bo'lmadi", (req) => smsTemplates.updateTemplate(templateId(req), req.body));
+const deleteTemplate = ownerTemplateAction("Shablonni o'chirib bo'lmadi", (req) => smsTemplates.deleteTemplate(templateId(req)));
+const setTemplateActive = ownerTemplateAction("Shablonni o'zgartirib bo'lmadi", (req) => smsTemplates.setTemplateActive(templateId(req), req.body?.active === true));
+
+module.exports = {
+  sendPaymentSms,
+  sendAttendanceSms,
+  listAttendanceSent,
+  getStatus,
+  listMessages,
+  sendTest,
+  listTemplates,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
+  setTemplateActive,
+};
 
 export {};

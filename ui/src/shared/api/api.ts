@@ -516,6 +516,12 @@ export const smsAPI = {
   getAttendanceSent: () => apiClient.get('/sms/attendance/sent'),
   getMessages: (params: Record<string, unknown>) => apiClient.get('/sms/messages', { params, headers: { 'X-Skip-Center-Scope': '1' } }),
   sendTest: (phone: string) => apiClient.post('/sms/test', { phone }, { headers: { 'X-Skip-Center-Scope': '1' } }),
+  /** Owner: their own wording per SMS type; the active one of a type is used for every send. */
+  getTemplates: () => apiClient.get('/sms/templates'),
+  createTemplate: (data: { kind: string; name: string; body: string }) => apiClient.post('/sms/templates', data),
+  updateTemplate: (id: number, data: { name: string; body: string }) => apiClient.put(`/sms/templates/${id}`, data),
+  deleteTemplate: (id: number) => apiClient.delete(`/sms/templates/${id}`),
+  setTemplateActive: (id: number, active: boolean) => apiClient.put(`/sms/templates/${id}/active`, { active }),
 };
 
 // Students who missed their group's latest lessons in a row; admins close each with an outcome.
