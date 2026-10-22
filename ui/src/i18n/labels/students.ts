@@ -1,4 +1,6 @@
 export const studentsLabels: Record<string, string> = {
+  'Set start date': 'Boshlanish sanasini belgilash',
+  'The first month is billed from this day.': 'Birinchi oy shu kundan hisoblanadi.',
   'Note (required)': "Izoh (majburiy)",
   'e.g. Got B2 / Went to another center (which one)': "Masalan: B2 oldi / Qaysi markazga ketgani",
   'Videos': 'Videolar',

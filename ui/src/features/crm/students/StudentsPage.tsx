@@ -144,6 +144,20 @@ const StudentsPage = () => {
       throw error;
     }
   };
+  const handleStartDateUpdate = async (student: Student, startDate: string) => {
+    const id = student.student_id || student.id;
+    if (!id) {
+      showToast.error('Student ID is missing.');
+      throw new Error('Student ID is missing.');
+    }
+    try {
+      await studentsApi.setStartDate(id, startDate);
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update the start date.');
+      throw error;
+    }
+    await refreshStudents();
+  };
   const handleBulkDeleteStudents = async (ids: number[], reasonId: number, reasonNote?: string) => {
     if (ids.length === 0) return;
 
@@ -317,6 +331,7 @@ const StudentsPage = () => {
             onTransfer={handleTransferStudent}
             onBulkDelete={handleBulkDeleteStudents}
             onPasswordUpdate={handlePasswordUpdate}
+            onStartDateUpdate={handleStartDateUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             classOptions={s.classes}
             teacherOptions={s.teacherOptions}
@@ -403,6 +418,7 @@ const StudentsPage = () => {
             onTransfer={handleTransferStudent}
             onBulkDelete={handleBulkDeleteStudents}
             onPasswordUpdate={handlePasswordUpdate}
+            onStartDateUpdate={handleStartDateUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             onTransferGroup={handleTransferGroupOwner}
             onDeleteGroups={handleBulkDeleteGroups}
