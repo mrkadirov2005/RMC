@@ -26,6 +26,7 @@ const CashReportPage = lazy(() => import('./features/crm/cash/CashReportPage'));
 const LessonControlPage = lazy(() => import('./features/crm/lessonControl/LessonControlPage'));
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
 const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
+const OwnerGraphPage = lazy(() => import('./features/owner/graph/OwnerGraphPage'));
 const OwnerSmsPage = lazy(() => import('./features/owner/OwnerSmsPage'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
 const StudentFormPage = lazy(() => import('./features/crm/students/StudentFormPage'));
@@ -377,6 +378,16 @@ function AppContent() {
             <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
               <Layout>
                 <OwnerSmsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/owner/graph"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+              <Layout>
+                <OwnerGraphPage />
               </Layout>
             </ProtectedRoute>
           }

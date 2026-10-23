@@ -8,7 +8,7 @@ import {
   ClipboardList, CheckCircle, Building2, AlertTriangle, FileQuestion,
   LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
-  DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown, MessageSquareText,
+  DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown, MessageSquareText, Network,
   School, BadgeAlert, Server, ClipboardCheck,
   TrendingDown, BadgePercent, ChevronDown, GripVertical, Wallet, PanelLeft,
   PanelLeftClose, PanelLeftOpen,
@@ -60,6 +60,7 @@ const iconMap: Record<string, ElementType> = {
   Salary: Wallet,
   Owner: Crown,
   Sms: MessageSquareText,
+  Graph: Network,
   Centers: School,
   Reports: BarChart3,
   Retention: TrendingDown,
@@ -91,6 +92,7 @@ const iconToneMap: Record<string, string> = {
   Salary: 'from-teal-600 to-cyan-700 shadow-teal-500/25',
   Owner: 'from-fuchsia-600 to-indigo-700 shadow-fuchsia-500/25',
   Sms: 'from-emerald-500 to-teal-700 shadow-emerald-500/25',
+  Graph: 'from-sky-500 to-indigo-700 shadow-sky-500/25',
   Centers: 'from-cyan-600 to-teal-700 shadow-cyan-500/25',
   Reports: 'from-slate-800 to-slate-950 shadow-slate-500/25',
   Retention: 'from-rose-600 to-red-700 shadow-rose-500/25',
@@ -284,6 +286,8 @@ const Sidebar = memo(() => {
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
     // Every SMS sent to parents, with filters.
     { label: 'SMS', path: '/owner/sms', iconName: 'Sms', roles: ['superuser'], ownerOnly: true },
+    // The owner's node graph: centers, teachers, students, and what is in each student tab.
+    { label: 'Graph', path: '/owner/graph', iconName: 'Graph', roles: ['superuser'], ownerOnly: true },
     // Admins can be given their own branch here; creating or deleting branches stays owner-only.
     { label: 'Centers', path: '/centers', iconName: 'Centers', roles: ['superuser'], permission: 'CRUD_CENTER' },
   ];
