@@ -1,5 +1,23 @@
 const systemService = require('../services/system.service');
 
+const metricsService = require('../services/metrics.service');
+
+const getMetricsHistory = async (req: any, res: any) => {
+  try {
+    res.json(await metricsService.getHistory(req.query?.days));
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to load server history.' });
+  }
+};
+
+const getTrafficStats = async (req: any, res: any) => {
+  try {
+    res.json(await metricsService.getTraffic(req.query?.days));
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to load request traffic.' });
+  }
+};
+
 const redeployServer = async (req: any, res: any) => {
   try {
     systemService.validateRedeployPassword(req.body?.password);
@@ -74,6 +92,8 @@ module.exports = {
   createDatabaseTableRow,
   updateDatabaseTableRow,
   deleteDatabaseTableRow,
+  getMetricsHistory,
+  getTrafficStats,
   redeployServer,
   triggerBackup,
   getBackupStats,

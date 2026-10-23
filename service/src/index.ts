@@ -125,9 +125,11 @@ async function createApp(options: CreateAppOptions = {}) {
   // Init Mongo connection + indexes in the background.
   // If Mongo is unavailable, the API will still work; it will just skip request log inserts.
   if (initializeMongo) {
-    void initMongo().catch((err: any) => {
-      console.warn('[mongo] init failed:', err?.message || err);
-    });
+    void initMongo()
+      .then(() => require('./modules/system/services/metrics.service').startSampler())
+      .catch((err: any) => {
+        console.warn('[mongo] init failed:', err?.message || err);
+      });
   }
 
   // Health check

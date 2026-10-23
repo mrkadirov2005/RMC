@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { AlertTriangle, Boxes, Database, DatabaseBackup, DatabaseZap, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
+import { Activity, AlertTriangle, Boxes, Database, DatabaseBackup, DatabaseZap, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import ServerMonitorPage from './ServerMonitorPage';
 import EngineeringDatabaseTab from './tabs/EngineeringDatabaseTab';
 import EngineeringDrizzleStudioTab from './tabs/EngineeringDrizzleStudioTab';
 import EngineeringBackupTab from './tabs/EngineeringBackupTab';
 import EngineeringLoggingTab from './tabs/EngineeringLoggingTab';
+import EngineeringMonitoringTab from './tabs/EngineeringMonitoringTab';
 import EngineeringOperationsTab from './tabs/EngineeringOperationsTab';
 import EngineeringRequestHealthTab from './tabs/EngineeringRequestHealthTab';
 import EngineeringStudioTab from './tabs/EngineeringStudioTab';
 
-type EngineeringTab = 'server' | 'database' | 'studio' | 'drizzle' | 'warnings' | 'failed' | 'logging' | 'operations' | 'backup';
+type EngineeringTab = 'server' | 'database' | 'studio' | 'drizzle' | 'warnings' | 'failed' | 'logging' | 'monitoring' | 'operations' | 'backup';
 
 const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server }> = [
   { id: 'server', label: 'Server', icon: Server },
@@ -20,6 +21,7 @@ const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server }> = 
   { id: 'warnings', label: 'Warnings', icon: AlertTriangle },
   { id: 'failed', label: 'Failed Requests', icon: ShieldAlert },
   { id: 'logging', label: 'Logging', icon: ScrollText },
+  { id: 'monitoring', label: 'Monitoring', icon: Activity },
   { id: 'operations', label: 'Operations', icon: Boxes },
   { id: 'backup', label: 'Backup', icon: DatabaseBackup },
 ];
@@ -62,6 +64,7 @@ const EngineeringPage = () => {
       {activeTab === 'warnings' && <EngineeringRequestHealthTab mode="warnings" />}
       {activeTab === 'failed' && <EngineeringRequestHealthTab mode="failed" />}
       {activeTab === 'logging' && <EngineeringLoggingTab />}
+      {activeTab === 'monitoring' && <EngineeringMonitoringTab />}
       {activeTab === 'operations' && <EngineeringOperationsTab />}
       {activeTab === 'backup' && <EngineeringBackupTab />}
     </div>

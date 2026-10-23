@@ -732,6 +732,8 @@ export const translationAPI = {
 
 export const systemAPI = {
   getStats: () => apiClient.get('/system/stats'),
+  getMetricsHistory: (days: number) => apiClient.get('/system/metrics/history', { params: { days } }),
+  getTrafficStats: (days: number) => apiClient.get('/system/metrics/traffic', { params: { days } }),
   getDatabaseTables: () => apiClient.get('/system/database/tables'),
   getDatabaseTableRows: (table: string, params?: { limit?: number; offset?: number; q?: string }) =>
     apiClient.get(`/system/database/tables/${encodeURIComponent(table)}/rows`, { params }),
