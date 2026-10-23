@@ -100,4 +100,19 @@ describe('room insights service', () => {
     expect(() => service.deletePhysicalRoom(0, 4)).toThrow("Xona id si musbat butun son bo'lishi kerak");
     expect(repository.deletePhysicalRoom).not.toHaveBeenCalled();
   });
+
+  test('tidies the equipment list and checks the extra name before saving a room', () => {
+    repository.updatePhysicalRoom.mockResolvedValue({ room_id: 1 });
+    service.updatePhysicalRoom(1, 4, { nickname: 'Katta zal', features: [' TV ', 'tv', '', 'Kondisioner', 'Dinamik'] });
+    expect(repository.updatePhysicalRoom).toHaveBeenCalledWith(1, 4, { nickname: 'Katta zal', features: ['TV', 'Kondisioner', 'Dinamik'] });
+
+    service.updatePhysicalRoom(1, 4, { features: [] });
+    expect(repository.updatePhysicalRoom).toHaveBeenLastCalledWith(1, 4, { features: [] });
+
+    repository.updatePhysicalRoom.mockClear();
+    expect(() => service.updatePhysicalRoom(1, 4, { nickname: 'x'.repeat(101) })).toThrow('nickname');
+    expect(() => service.updatePhysicalRoom(1, 4, { features: ['x'.repeat(61)] })).toThrow("Jihozlar ro'yxati juda uzun");
+    expect(() => service.updatePhysicalRoom(1, 4, { features: Array.from({ length: 41 }, (_, i) => `item ${i}`) })).toThrow("Jihozlar ro'yxati juda uzun");
+    expect(repository.updatePhysicalRoom).not.toHaveBeenCalled();
+  });
 });

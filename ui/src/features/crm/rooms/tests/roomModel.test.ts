@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAssignedClassGroups, buildRoomGroups, filterClassesByTeacher, normalizeRoomAssignments } from '../roomModel';
+import { buildAssignedClassGroups, buildRoomGroups, buildRoomPayload, filterClassesByTeacher, normalizeRoomAssignments } from '../roomModel';
 
 describe('room management model', () => {
   it('keeps an unassigned room visible without counting it as a class assignment', () => {
@@ -42,5 +42,28 @@ describe('room management model', () => {
       class_name: 'IELTS Evening',
       end_time: '11:00',
     })]);
+  });
+});
+
+describe('room form request', () => {
+  const form = { room_number: '5', nickname: 'Katta zal', capacity: '20', class_id: '7', day: 'Monday', days: ['Monday', 'Wednesday', 'Friday'], time: '15:00', end_time: '16:30' };
+
+  it('sends a new lesson on several days as one request with the days', () => {
+    expect(buildRoomPayload(form, { editing: false, mode: 'assignment' })).toEqual({
+      room_number: '5', nickname: 'Katta zal', capacity: 20, class_id: 7, day: 'Monday', days: ['Monday', 'Wednesday', 'Friday'], time: '15:00', end_time: '16:30',
+    });
+  });
+
+  it('sends one day as the plain day, and a room without a group with no group', () => {
+    expect(buildRoomPayload({ ...form, days: ['Tuesday'], day: 'Monday' }, { editing: false, mode: 'assignment' })).toMatchObject({ day: 'Tuesday' });
+    expect(buildRoomPayload({ ...form, days: ['Tuesday'], day: 'Monday' }, { editing: false, mode: 'assignment' })).not.toHaveProperty('days');
+    expect(buildRoomPayload({ ...form, class_id: '', capacity: '' }, { editing: false, mode: 'room' })).toMatchObject({ class_id: null, capacity: undefined, day: 'Monday' });
+    expect(buildRoomPayload({ ...form, days: [] }, { editing: false, mode: 'assignment' })).toMatchObject({ day: 'Monday' });
+  });
+
+  it('edits one lesson on its own day', () => {
+    const edited = buildRoomPayload({ ...form, day: 'Friday', days: ['Friday'] }, { editing: true, mode: 'assignment' });
+    expect(edited).toMatchObject({ day: 'Friday', class_id: 7 });
+    expect(edited).not.toHaveProperty('days');
   });
 });

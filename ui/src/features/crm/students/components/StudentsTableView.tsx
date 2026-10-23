@@ -1,7 +1,7 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, BookOpen, Coins, CreditCard, GraduationCap, Info, KeyRound, MoreVertical, Pencil, Phone, School, Trash2, UserCheck } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, Coins, CreditCard, GraduationCap, Info, CalendarDays, KeyRound, MoreVertical, Pencil, Phone, School, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -38,6 +38,7 @@ interface Props {
   onTransfer?: (student: Student, targetClassId: number, reasonId: number) => Promise<void> | void;
   onBulkDelete?: (ids: number[], reasonId: number, reasonNote?: string) => Promise<void> | void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
+  onStartDateUpdate?: (student: Student, startDate: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   classOptions?: Class[];
   teacherOptions?: TeacherOption[];
@@ -118,6 +119,59 @@ const PasswordResetDialog = ({
   );
 };
 
+const StartDateDialog = ({
+  student,
+  onOpenChange,
+  onStartDateUpdate,
+}: {
+  student: Student | null;
+  onOpenChange: (open: boolean) => void;
+  onStartDateUpdate?: (student: Student, startDate: string) => Promise<void> | void;
+}) => {
+  const { t } = useLanguage();
+  const [value, setValue] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setValue(String(student?.start_date || '').slice(0, 10));
+  }, [student?.student_id, student?.id, student?.start_date]);
+
+  const save = async () => {
+    if (!student || !onStartDateUpdate || !value || saving) return;
+    setSaving(true);
+    try {
+      await onStartDateUpdate(student, value);
+      onOpenChange(false);
+    } catch {
+      // The page already showed the error; keep the dialog open.
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={student != null} onOpenChange={(open) => (!open && !saving ? onOpenChange(false) : undefined)}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t('Set start date')}</DialogTitle>
+          <DialogDescription>
+            {student ? `${student.first_name} ${student.last_name}` : ''}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="student-start-date">{t('Start date')}</Label>
+          <Input id="student-start-date" type="date" value={value} onChange={(event) => setValue(event.target.value)} disabled={saving} />
+          <p className="text-xs text-muted-foreground">{t('The first month is billed from this day.')}</p>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('Cancel')}</Button>
+          <Button type="button" onClick={save} disabled={saving || !value}>{saving ? t('Saving...') : t('Save')}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Renders the students table view view.
 export const StudentsTableView = ({
   students,
@@ -129,6 +183,7 @@ export const StudentsTableView = ({
   onTransfer,
   onBulkDelete,
   onPasswordUpdate,
+  onStartDateUpdate,
   onCoinsUpdated,
   classOptions = [],
   teacherOptions = [],
@@ -149,6 +204,7 @@ export const StudentsTableView = ({
   const [transferring, setTransferring] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ ids: number[]; bulk: boolean } | null>(null);
   const [passwordTarget, setPasswordTarget] = useState<Student | null>(null);
+  const [startDateTarget, setStartDateTarget] = useState<Student | null>(null);
 
   const getStudentId = (student: Student) => Number(student.student_id || student.id || 0);
   const getClassTeacherId = (student: Student) => {
@@ -342,6 +398,12 @@ export const StudentsTableView = ({
             {t('Transfer')}
           </DropdownMenuItem>
         )}
+        {onStartDateUpdate && (
+          <DropdownMenuItem onClick={() => setStartDateTarget(student)}>
+            <CalendarDays className={actionIconClass} />
+            {t('Set start date')}
+          </DropdownMenuItem>
+        )}
         {onPasswordUpdate && (
           <DropdownMenuItem onClick={() => setPasswordTarget(student)}>
             <KeyRound className={actionIconClass} />
@@ -456,6 +518,11 @@ export const StudentsTableView = ({
         description={deleteTarget?.bulk ? t('Pick why these students are being removed. This applies to every selected student.') : t('Pick why this student is being removed.')}
         onOpenChange={(open) => (!open ? setDeleteTarget(null) : undefined)}
         onConfirm={confirmDelete}
+      />
+      <StartDateDialog
+        student={startDateTarget}
+        onOpenChange={(open) => (!open ? setStartDateTarget(null) : undefined)}
+        onStartDateUpdate={onStartDateUpdate}
       />
       <PasswordResetDialog
         student={passwordTarget}

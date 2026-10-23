@@ -6,6 +6,7 @@ export const studentsApi = {
   pushToSheets: () => dataAPI.pushEntityToSheets('students'),
   pullFromSheets: () => dataAPI.pullEntityFromSheets('students'),
   setPassword: (id: number, username: string, password: string) => studentAPI.setPassword(id, { username, password }),
+  setStartDate: (id: number, startDate: string) => studentAPI.update(id, { start_date: startDate }),
   deleteStudent: (id: number, reasonId: number, reasonNote?: string) => studentAPI.delete(id, reasonId, reasonNote),
   transferStudent: (id: number, classId: number, reasonId: number) => studentAPI.transfer(id, classId, reasonId),
   getActionReasons: (type: 'transfer' | 'delete') => studentAPI.getActionReasons(type),

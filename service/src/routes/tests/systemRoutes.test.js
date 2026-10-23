@@ -2,6 +2,8 @@ require('reflect-metadata');
 
 jest.mock('../../modules/system', () => ({
   getStats: jest.fn(),
+  getMetricsHistory: jest.fn(),
+  getTrafficStats: jest.fn(),
   getDatabaseTables: jest.fn(),
   getDatabaseTableRows: jest.fn(),
   createDatabaseTableRow: jest.fn(),

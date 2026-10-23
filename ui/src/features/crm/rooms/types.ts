@@ -1,6 +1,7 @@
 import type { RoomAssignment } from './roomModel';
 
-export type RoomsTab = 'statistics' | 'weekly' | 'management' | 'reports';
+export type RoomsTab = 'statistics' | 'list' | 'timetable' | 'finder' | 'weekly' | 'management' | 'reports';
+export const ROOMS_TABS: readonly RoomsTab[] = ['statistics', 'list', 'timetable', 'finder', 'weekly', 'management', 'reports'];
 
 export type RoomWorkspaceFilters = {
   date: string;

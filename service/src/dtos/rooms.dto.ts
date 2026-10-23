@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayNotEmpty,
   IsArray,
   IsBoolean,
@@ -8,6 +9,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -44,6 +46,12 @@ class CreateRoomDto {
   @IsNotEmpty()
   room_number!: string;
 
+  // The extra name shown in brackets after the number.
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  nickname?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -59,6 +67,13 @@ class CreateRoomDto {
   @IsString()
   @IsNotEmpty()
   day!: string;
+
+  // Several days at once (Mon-Wed-Fri): one lesson per day, all or none.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(7)
+  @IsString({ each: true })
+  days?: string[];
 
   @IsString()
   @IsNotEmpty()
@@ -79,6 +94,12 @@ class UpdateRoomDto {
   @IsString()
   @IsNotEmpty()
   room_number!: string;
+
+  // The extra name shown in brackets after the number.
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  nickname?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -279,6 +300,12 @@ class UpdatePhysicalRoomDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  // The extra name in brackets; an empty text removes it.
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  nickname?: string;
 
   @IsOptional()
   @Type(() => Number)

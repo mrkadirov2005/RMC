@@ -13,8 +13,11 @@ import { fetchTeachers } from '../../../slices/teachersSlice';
 import { selectRoomsPageUi, selectTeacherOptions } from '../../../store/selectors';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { roomAPI } from './api';
-import { buildRoomGroups, filterClassesByTeacher, normalizeRoomAssignments, type RoomAssignment } from './roomModel';
-import type { RoomsTab } from './types';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
+import { useRoomsOverview, type PhysicalRoom } from './hooks/useRoomsOverview';
+import { capitalDay, type WeekDay } from './weeklyModel';
+import { buildRoomGroups, buildRoomPayload, filterClassesByTeacher, normalizeRoomAssignments, type RoomAssignment } from './roomModel';
+import { ROOMS_TABS, type RoomsTab } from './types';
 import { RoomsWorkspaceHeader } from './components/RoomsWorkspaceHeader';
 import { RoomsWorkspaceTabs } from './components/RoomsWorkspaceTabs';
 import { RoomStatisticsTab } from './components/RoomStatisticsTab';
@@ -23,8 +26,13 @@ import { RoomHistoryTab } from './components/RoomHistoryTab';
 import { RoomAssignmentDialog, type RoomFormData } from './components/RoomAssignmentDialog';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { WeeklyRoomsTab } from './components/WeeklyRoomsTab';
+import { RoomsDashboard } from './components/RoomsDashboard';
+import { RoomsListTab } from './components/RoomsListTab';
+import { RoomsTimetableTab } from './components/RoomsTimetableTab';
+import { RoomFinderTab } from './components/RoomFinderTab';
+import { RoomDetailsDialog } from './components/RoomDetailsDialog';
 
-const emptyForm = (): RoomFormData => ({ room_number: '', capacity: '', class_id: '', day: 'Monday', time: '09:00', end_time: '10:00' });
+const emptyForm = (): RoomFormData => ({ room_number: '', nickname: '', capacity: '', class_id: '', day: 'Monday', days: ['Monday'], time: '09:00', end_time: '10:00' });
 
 const RoomsPage = () => {
   const { t } = useLanguage();
@@ -36,7 +44,10 @@ const RoomsPage = () => {
   const { isModalOpen, editingId, submitting } = useAppSelector(selectRoomsPageUi);
   const storeLoading = useAppSelector((state) => state.rooms.loading || state.classes.loading);
   const error = useAppSelector((state) => state.rooms.error || state.classes.error);
-  const [tab, setTab] = useState<RoomsTab>('statistics');
+  // The open tab is kept in the address so a reload stays on it.
+  const [tab, setTab] = useUrlTab<RoomsTab>('statistics', ROOMS_TABS);
+  const { weekly, physical, reload: reloadOverview } = useRoomsOverview();
+  const [editingRoom, setEditingRoom] = useState<PhysicalRoom | null>(null);
   const [form, setForm] = useState<RoomFormData>(emptyForm);
   const [mode, setMode] = useState<'room' | 'assignment'>('room');
   const [teacherId, setTeacherId] = useState('');
@@ -56,8 +67,17 @@ const RoomsPage = () => {
     setMode(dialogMode);
     const group = row?.class_id ? classes.find((item: any) => Number(item.class_id || item.id) === Number(row.class_id)) : null;
     setTeacherId(group?.teacher_id ? String(group.teacher_id) : '');
-    setForm(row ? { room_number: row.room_number || '', capacity: row.capacity ? String(row.capacity) : '', class_id: row.class_id ? String(row.class_id) : '', day: row.day || 'Monday', time: String(row.time || '09:00').slice(0, 5), end_time: String(row.end_time || '10:00').slice(0, 5) } : { ...emptyForm(), room_number: dialogMode === 'assignment' ? selectedRoom : '' });
+    setForm(row ? { room_number: row.room_number || '', nickname: '', capacity: row.capacity ? String(row.capacity) : '', class_id: row.class_id ? String(row.class_id) : '', day: row.day || 'Monday', days: [row.day || 'Monday'], time: String(row.time || '09:00').slice(0, 5), end_time: String(row.end_time || '10:00').slice(0, 5) } : { ...emptyForm(), room_number: dialogMode === 'assignment' ? selectedRoom : '' });
     dispatch(setRoomsPageEditingId(row?.room_id || null));
+    dispatch(setRoomsPageModalOpen(true));
+  };
+  // From the free-room search: put a group in that room on those days and that time.
+  const assignFoundRoom = (room: string, days: WeekDay[], start: string, end: string) => {
+    const dayNames = days.map(capitalDay);
+    setMode('assignment');
+    setTeacherId('');
+    setForm({ ...emptyForm(), room_number: room, day: dayNames[0] || 'Monday', days: dayNames, time: start, end_time: end });
+    dispatch(setRoomsPageEditingId(null));
     dispatch(setRoomsPageModalOpen(true));
   };
   const closeDialog = () => { dispatch(setRoomsPageModalOpen(false)); dispatch(setRoomsPageEditingId(null)); setTeacherId(''); };
@@ -68,11 +88,16 @@ const RoomsPage = () => {
     if (mode === 'assignment' && (!teacherId || !form.class_id)) return showToast.error('Choose a teacher and group');
     dispatch(setRoomsPageSubmitting(true));
     try {
-      const payload = { ...form, capacity: form.capacity ? Number(form.capacity) : undefined, class_id: form.class_id ? Number(form.class_id) : null };
+      const payload = buildRoomPayload(form, { editing: Boolean(editingId), mode });
       if (editingId) await roomAPI.update(editingId, payload); else await roomAPI.create(payload);
       showToast.success(editingId ? 'Room assignment updated' : mode === 'room' ? 'Room created' : 'Class assigned to room');
-      closeDialog(); await dispatch(fetchRoomsForce());
-    } catch (requestError: any) { showToast.error(requestError.response?.status === 409 ? 'Room is not available for this time.' : requestError.response?.data?.error || 'Operation failed'); }
+      closeDialog(); await dispatch(fetchRoomsForce()); reloadOverview();
+    } catch (requestError: any) {
+      const clashDay = requestError.response?.data?.day;
+      showToast.error(requestError.response?.status === 409
+        ? (clashDay ? t('Room is busy on {day} at this time.', { day: t(clashDay) }) : 'Room is not available for this time.')
+        : requestError.response?.data?.error || 'Operation failed');
+    }
     finally { dispatch(setRoomsPageSubmitting(false)); }
   };
 
@@ -83,7 +108,7 @@ const RoomsPage = () => {
       const row = normalizedRooms.find((item) => item.room_id === id); await roomAPI.delete(id);
       const sameRoom = normalizedRooms.filter((item) => item.room_number === row?.room_number);
       if (row?.class_id && sameRoom.length === 1) await roomAPI.create({ room_number: row.room_number, capacity: row.capacity, class_id: null, day: 'Monday', time: '09:00', end_time: '10:00' });
-      showToast.success('Room assignment deleted'); await dispatch(fetchRoomsForce());
+      showToast.success('Room assignment deleted'); await dispatch(fetchRoomsForce()); reloadOverview();
     } catch { showToast.error('Failed to delete room assignment'); } finally { dispatch(setRoomsPageSubmitting(false)); }
   };
   const deleteRoom = async () => {
@@ -97,11 +122,11 @@ const RoomsPage = () => {
       );
       await Promise.all(room.allRows.map((row) => roomAPI.delete(row.room_id)));
       if (physicalRoom?.room_id) await roomAPI.deletePhysical(Number(physicalRoom.room_id));
-      setSelectedRoom(''); showToast.success('Room deleted'); await dispatch(fetchRoomsForce());
+      setSelectedRoom(''); showToast.success('Room deleted'); await dispatch(fetchRoomsForce()); reloadOverview();
     }
     catch { showToast.error('Failed to delete room'); } finally { dispatch(setRoomsPageSubmitting(false)); }
   };
-  const importRooms = async (file?: File) => { setImporting(true); const imported = await importCsvEntity('rooms', 'Rooms', file); if (imported) await dispatch(fetchRoomsForce()); setImporting(false); if (fileRef.current) fileRef.current.value = ''; };
+  const importRooms = async (file?: File) => { setImporting(true); const imported = await importCsvEntity('rooms', 'Rooms', file); if (imported) { await dispatch(fetchRoomsForce()); reloadOverview(); } setImporting(false); if (fileRef.current) fileRef.current.value = ''; };
   return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4" data-testid="rooms-workspace">
     <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => importRooms(event.target.files?.[0])} />
     <RoomsWorkspaceHeader importing={importing} onImport={() => fileRef.current?.click()} onExport={() => exportCsvEntity('rooms', 'Rooms')} onCreate={() => openDialog()} />
@@ -109,12 +134,16 @@ const RoomsPage = () => {
     <Card className="overflow-hidden">
       <RoomsWorkspaceTabs active={tab} onChange={setTab} />
       {(storeLoading && !rooms.length) ? <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div> : <div role="tabpanel" id={`rooms-panel-${tab}`}>
-        {tab === 'statistics' && <RoomStatisticsTab rooms={roomGroups} classes={classes} students={students} />}
+        {tab === 'statistics' && <><RoomsDashboard weekly={weekly} /><RoomStatisticsTab rooms={roomGroups} classes={classes} students={students} /></>}
+        {tab === 'list' && <RoomsListTab rooms={physical} weekly={weekly} onAdd={() => openDialog()} onEdit={setEditingRoom} />}
+        {tab === 'timetable' && <RoomsTimetableTab weekly={weekly} />}
+        {tab === 'finder' && <RoomFinderTab onAssign={assignFoundRoom} />}
         {tab === 'weekly' && <WeeklyRoomsTab />}
         {tab === 'management' && <RoomManagementTab rooms={roomGroups} selected={selectedRoom} onSelect={setSelectedRoom} onAssign={() => openDialog({ room_number: selectedRoom, room_id: 0 }, 'assignment')} onEdit={(row) => openDialog(row)} onDeleteAssignment={deleteAssignment} onDeleteRoom={deleteRoom} />}
         {tab === 'reports' && <RoomHistoryTab rooms={roomGroups} selected={selectedRoom} />}
       </div>}
     </Card>
+    <RoomDetailsDialog room={editingRoom} onClose={() => setEditingRoom(null)} onSaved={reloadOverview} />
     <RoomAssignmentDialog open={isModalOpen} editing={Boolean(editingId)} mode={mode} submitting={submitting} form={form} teacherId={teacherId} teachers={teacherFilters} classes={teacherClasses} onForm={setForm} onTeacher={setTeacherId} onClose={closeDialog} onSubmit={submit} />
   </div>;
 };

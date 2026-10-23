@@ -69,6 +69,23 @@ const updatePhysicalRoom = (id: number, centerId: number, data: any) => {
     throw Object.assign(new Error("capacity musbat butun son bo'lishi kerak"), { status: 400 });
   if (data.features != null && !Array.isArray(data.features))
     throw Object.assign(new Error("features massiv bo'lishi kerak"), { status: 400 });
+  if (data.nickname != null && String(data.nickname).length > 100)
+    throw Object.assign(new Error("nickname 100 belgidan oshmasligi kerak"), { status: 400 });
+  // The equipment list: trimmed, no blanks or repeats.
+  if (Array.isArray(data.features)) {
+    const seen = new Set<string>();
+    data = {
+      ...data,
+      features: data.features.map((item: any) => String(item).trim()).filter((item: string) => {
+        const key = item.toLowerCase();
+        if (!item || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }),
+    };
+    if (data.features.length > 40 || data.features.some((item: string) => item.length > 60))
+      throw Object.assign(new Error("Jihozlar ro'yxati juda uzun"), { status: 400 });
+  }
   if (data.status != null && !['active', 'inactive', 'maintenance'].includes(String(data.status).toLowerCase()))
     throw Object.assign(new Error("status active, inactive yoki maintenance bo'lishi kerak"), { status: 400 });
   if (data.operating_start_time) requireTime(data.operating_start_time, 'operating_start_time');

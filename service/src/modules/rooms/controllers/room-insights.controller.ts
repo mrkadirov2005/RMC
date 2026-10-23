@@ -31,6 +31,8 @@ const handle = (operation: (req: any, centerId: number) => Promise<any>) => asyn
 module.exports = {
   // The week of each room: lessons, free windows, free seats and groups larger than the room.
   weekly: handle((_req, centerId) => roomWeeklyService.getWeekly(centerId)),
+  // Rooms free on given weekdays at a given time, for placing a group.
+  free: handle((req, centerId) => roomWeeklyService.getFree(centerId, req.query)),
   physicalRooms: handle((_req, centerId) => service.getPhysicalRooms(centerId)),
   updatePhysicalRoom: handle(async (req, centerId) => {
     const result = await service.updatePhysicalRoom(Number(req.params.id), centerId, req.body);

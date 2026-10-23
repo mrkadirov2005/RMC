@@ -10,6 +10,8 @@ const { TableParamDto, CreateTableRowDto, UpdateTableRowDto, DeleteTableRowDto }
 router.use(requireAuth);
 
 router.get('/stats', requireRole('superuser'), systemController.getStats);
+router.get('/metrics/history', requireRole('superuser'), systemController.getMetricsHistory);
+router.get('/metrics/traffic', requireRole('superuser'), systemController.getTrafficStats);
 router.get('/database/tables', requireOwner, systemController.getDatabaseTables);
 router.get('/database/tables/:table/rows', requireOwner, validateParams(TableParamDto), systemController.getDatabaseTableRows);
 router.post('/database/tables/:table/rows', requireOwner, validateParams(TableParamDto), validateBody(CreateTableRowDto), systemController.createDatabaseTableRow);

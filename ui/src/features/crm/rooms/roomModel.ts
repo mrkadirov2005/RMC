@@ -71,3 +71,19 @@ export const buildAssignedClassGroups = (assignments: RoomAssignment[]) => {
   });
   return Array.from(grouped.values()).sort((a, b) => a.name.localeCompare(b.name));
 };
+
+/**
+ * The request for saving the room form. A new lesson on several days goes as one request with
+ * `days` (every day is checked first on the server, so a clash saves none); one day, or editing
+ * an existing lesson, sends the single `day`.
+ */
+export const buildRoomPayload = <T extends { days: string[]; day: string; capacity: string; class_id: string }>(
+  form: T,
+  { editing, mode }: { editing: boolean; mode: 'room' | 'assignment' }
+) => {
+  const { days, ...fields } = form;
+  const payload = { ...fields, capacity: form.capacity ? Number(form.capacity) : undefined, class_id: form.class_id ? Number(form.class_id) : null };
+  if (editing) return payload;
+  const chosen = days.length ? days : [fields.day];
+  return mode === 'assignment' && chosen.length > 1 ? { ...payload, day: chosen[0], days: chosen } : { ...payload, day: chosen[0] };
+};

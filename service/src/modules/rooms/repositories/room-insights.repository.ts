@@ -61,7 +61,7 @@ const schedule = async (centerId: number, filters: Filters) => {
 };
 
 const physicalRooms = async (centerId: number) => (await pool.query(`
-  SELECT pr.physical_room_id AS room_id, pr.name, pr.capacity, pr.location, pr.status,
+  SELECT pr.physical_room_id AS room_id, pr.name, pr.nickname, pr.capacity, pr.location, pr.status,
     pr.features, pr.operating_start_time::text, pr.operating_end_time::text,
     array_remove(array_agg(r.room_id ORDER BY r.room_id), NULL) AS assignment_ids
   FROM physical_rooms pr LEFT JOIN rooms r ON r.physical_room_id = pr.physical_room_id
@@ -76,11 +76,13 @@ const updatePhysicalRoom = async (roomId: number, centerId: number, data: any) =
       location = COALESCE($5, location), status = COALESCE($6, status),
       features = COALESCE($7::jsonb, features),
       operating_start_time = COALESCE($8::time, operating_start_time),
-      operating_end_time = COALESCE($9::time, operating_end_time), updated_at = CURRENT_TIMESTAMP
+      operating_end_time = COALESCE($9::time, operating_end_time),
+      nickname = CASE WHEN $10::text IS NULL THEN nickname ELSE NULLIF(trim($10::text), '') END,
+      updated_at = CURRENT_TIMESTAMP
     WHERE physical_room_id = $1 AND center_id = $2 RETURNING *
   `, [roomId, centerId, data.name || null, data.capacity ?? null, data.location ?? null,
     data.status || null, data.features == null ? null : JSON.stringify(data.features),
-    data.operating_start_time || null, data.operating_end_time || null]);
+    data.operating_start_time || null, data.operating_end_time || null, data.nickname ?? null]);
   return result.rows[0] || null;
 };
 
