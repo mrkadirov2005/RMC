@@ -41,6 +41,7 @@ interface Props {
   onTransfer?: (student: Student, targetClassId: number, reasonId: number) => Promise<void> | void;
   onBulkDelete?: (ids: number[], reasonId: number, reasonNote?: string) => Promise<void> | void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
+  onStartDateUpdate?: (student: Student, startDate: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   onTransferGroup: (classId: number, teacherId: number) => Promise<void> | void;
   onDeleteGroups?: (classIds: number[]) => Promise<void> | void;
@@ -166,6 +167,7 @@ export const StudentsTeacherGroupsTab = ({
   onTransfer,
   onBulkDelete,
   onPasswordUpdate,
+  onStartDateUpdate,
   onCoinsUpdated,
   onTransferGroup,
   onDeleteGroups,
@@ -515,6 +517,7 @@ export const StudentsTeacherGroupsTab = ({
           onTransfer={onTransfer}
           onBulkDelete={onBulkDelete}
           onPasswordUpdate={onPasswordUpdate}
+          onStartDateUpdate={onStartDateUpdate}
           onCoinsUpdated={onCoinsUpdated}
           classOptions={classes}
           teacherOptions={teacherOptions}
