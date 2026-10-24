@@ -29,7 +29,9 @@ export default defineConfig(({ command }) => {
         output: {
           manualChunks(id) {
             if (!id.includes('node_modules')) return undefined
-            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/react-router-dom/')) {
+            // Only the real packages: a looser match also caught @xyflow/react and made a circular chunk
+            // that left React undefined when the Radix chunk ran.
+            if (/node_modules\/(react|react-dom|react-router-dom|react-router|scheduler)\//.test(id)) {
               return 'vendor-react'
             }
             if (id.includes('/@reduxjs/') || id.includes('/react-redux/') || id.includes('/redux-persist/') || id.includes('/axios/')) {
