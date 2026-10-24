@@ -237,7 +237,7 @@ export const drawMonthlyAttendanceImage = (
   });
   ctx.font = `bold 12px ${FONT}`;
   ctx.fillText('Darslar', xLessons + lessonsW / 2, tableTop + tableHeadH / 2);
-  ctx.fillText(grid.ranked ? 'Oy bali' : 'Jami ball', xTotal + totalW / 2, tableTop + tableHeadH / 2);
+  ctx.fillText(grid.ranked ? "O'rin" : 'Jami ball', xTotal + totalW / 2, tableTop + tableHeadH / 2);
 
   // Student rows.
   const fitText = (text: string, maxWidth: number) => {
@@ -266,21 +266,7 @@ export const drawMonthlyAttendanceImage = (
     ctx.fillStyle = '#0f172a';
     ctx.font = `600 13px ${FONT}`;
     ctx.textAlign = 'left';
-    const badgeW = top ? 50 : 0;
-    ctx.fillText(fitText(row.name, nameW - 12 - badgeW), tableLeft + numW + 6, y + rowH / 2);
-    if (top && row.standing) {
-      // "1-o'rin" badge at the end of the name cell.
-      const bx = tableLeft + numW + nameW - badgeW - 4;
-      ctx.fillStyle = topColor;
-      ctx.beginPath();
-      ctx.roundRect?.(bx, y + 7, badgeW, rowH - 14, 8);
-      if (!ctx.roundRect) ctx.rect(bx, y + 7, badgeW, rowH - 14);
-      ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.font = `bold 10px ${FONT}`;
-      ctx.textAlign = 'center';
-      ctx.fillText(`${row.standing.place}-o'rin`, bx + badgeW / 2, y + rowH / 2 + 1);
-    }
+    ctx.fillText(fitText(row.name, nameW - 12), tableLeft + numW + 6, y + rowH / 2);
     if (grid.ranked) {
       if (row.standing?.trend) drawTrend(ctx, row.standing.trend.direction, xTrend + trendW / 2, y + rowH / 2);
       else {
@@ -314,9 +300,11 @@ export const drawMonthlyAttendanceImage = (
     ctx.fillStyle = row.lessons ? '#334155' : '#94a3b8';
     ctx.font = `600 12px ${FONT}`;
     ctx.fillText(row.lessons ? String(row.lessons) : '—', xLessons + lessonsW / 2, y + rowH / 2);
-    ctx.fillStyle = row.lessons ? '#0f172a' : '#94a3b8';
+    // Ranked: the last column is the student's place over all lessons, not the month's total.
+    const lastValue = grid.ranked ? (row.standing && row.standing.lessons > 0 ? String(row.standing.place) : '—') : (row.lessons ? String(row.total) : '—');
+    ctx.fillStyle = lastValue === '—' ? '#94a3b8' : '#0f172a';
     ctx.font = `bold 13px ${FONT}`;
-    ctx.fillText(row.lessons ? String(row.total) : '—', xTotal + totalW / 2, y + rowH / 2);
+    ctx.fillText(lastValue, xTotal + totalW / 2, y + rowH / 2);
   });
   if (grid.rows.length === 0) {
     ctx.fillStyle = '#64748b';
