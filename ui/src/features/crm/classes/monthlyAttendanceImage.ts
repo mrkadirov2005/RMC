@@ -30,6 +30,8 @@ export interface MonthlyAttendanceGrid {
     recorded: number;
     lessons: number;
     total: number;
+    /** The student's coin balance. */
+    coins: number | null;
     standing?: ImageStanding;
   }>;
   /** True when the standings were loaded: rows go by place and the image shows them. */
@@ -106,6 +108,7 @@ export const buildMonthlyAttendanceGrid = ({
         recorded: marks.filter(Boolean).length,
         lessons: scored.length,
         total: scored.reduce((sum, score) => sum + score, 0),
+        coins: student.coins === null || student.coins === undefined ? null : Number(student.coins),
         standing: standings?.get(id),
       };
     })
@@ -236,7 +239,7 @@ export const drawMonthlyAttendanceImage = (
     ctx.fillText(date.slice(5, 7), x, tableTop + 31);
   });
   ctx.font = `bold 12px ${FONT}`;
-  ctx.fillText('Darslar', xLessons + lessonsW / 2, tableTop + tableHeadH / 2);
+  ctx.fillText('Coin', xLessons + lessonsW / 2, tableTop + tableHeadH / 2);
   ctx.fillText(grid.ranked ? "O'rin" : 'Jami ball', xTotal + totalW / 2, tableTop + tableHeadH / 2);
 
   // Student rows.
@@ -297,9 +300,9 @@ export const drawMonthlyAttendanceImage = (
     });
 
     ctx.textAlign = 'center';
-    ctx.fillStyle = row.lessons ? '#334155' : '#94a3b8';
+    ctx.fillStyle = row.coins === null ? '#94a3b8' : '#334155';
     ctx.font = `600 12px ${FONT}`;
-    ctx.fillText(row.lessons ? String(row.lessons) : '—', xLessons + lessonsW / 2, y + rowH / 2);
+    ctx.fillText(row.coins === null ? '—' : String(row.coins), xLessons + lessonsW / 2, y + rowH / 2);
     // Ranked: the last column is the student's place over all lessons, not the month's total.
     const lastValue = grid.ranked ? (row.standing && row.standing.lessons > 0 ? String(row.standing.place) : '—') : (row.lessons ? String(row.total) : '—');
     ctx.fillStyle = lastValue === '—' ? '#94a3b8' : '#0f172a';
@@ -319,12 +322,15 @@ export const drawMonthlyAttendanceImage = (
   ctx.lineWidth = 1;
   ctx.strokeRect(tableLeft + 0.5, tableTop + 0.5, tableRight - tableLeft - 1, tableBottom - tableTop - 1);
   ctx.beginPath();
-  [tableLeft + numW, ...(grid.ranked ? [xTrend, xAll] : []), xDate, ...grid.dates.map((_, index) => xDate + (index + 1) * dateW), xTotal].forEach((x) => {
+  [tableLeft + numW, xTrend, ...(grid.ranked ? [xAll] : []), xDate, ...grid.dates.map((_, index) => xDate + (index + 1) * dateW), xTotal].forEach((x) => {
     ctx.moveTo(Math.round(x) + 0.5, tableTop);
     ctx.lineTo(Math.round(x) + 0.5, tableBottom);
   });
-  ctx.moveTo(tableLeft, tableTop + tableHeadH + 0.5);
-  ctx.lineTo(tableRight, tableTop + tableHeadH + 0.5);
+  for (let line = 0; line <= Math.max(grid.rows.length, 1); line += 1) {
+    const ly = Math.round(tableTop + tableHeadH + line * rowH) + 0.5;
+    ctx.moveTo(tableLeft, ly);
+    ctx.lineTo(tableRight, ly);
+  }
   ctx.stroke();
 
   // Legend.

@@ -11,6 +11,7 @@ export type WorkflowStudent = {
   student_id?: number | string;
   first_name?: string;
   last_name?: string;
+  coins?: number | null;
   deleted_at?: string | null;
 };
 

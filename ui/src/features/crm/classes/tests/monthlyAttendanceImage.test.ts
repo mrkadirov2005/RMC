@@ -32,8 +32,8 @@ describe('monthly attendance image', () => {
 
     expect(grid.dates).toEqual(['2026-10-02', '2026-10-06']);
     expect(grid.rows).toEqual([
-      { id: 2, name: 'Isomova Ziyoda', marks: ['absent', 'excused'], scores: [null, null], attended: 0, recorded: 2, lessons: 0, total: 0 },
-      { id: 1, name: 'Valiyev Ali', marks: ['late', 'present'], scores: [null, null], attended: 2, recorded: 2, lessons: 0, total: 0 },
+      { id: 2, name: 'Isomova Ziyoda', marks: ['absent', 'excused'], scores: [null, null], attended: 0, recorded: 2, lessons: 0, total: 0, coins: null },
+      { id: 1, name: 'Valiyev Ali', marks: ['late', 'present'], scores: [null, null], attended: 2, recorded: 2, lessons: 0, total: 0, coins: null },
     ]);
   });
 
