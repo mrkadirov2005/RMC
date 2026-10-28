@@ -1,6 +1,11 @@
 const pool = require('../../../db/pool');
 
-/** A day's payments in the center's scope (every branch for the owner), with who paid and who took it. */
+/**
+ * A day's payments in the center's scope (every branch for the owner), with who paid and who took it.
+ * The till is the day the money was taken (created_at, Tashkent time). payment_date is the month the
+ * payment is for, so a November payment entered today belongs to today's till, not to a day in
+ * November. Rows without created_at fall back to payment_date.
+ */
 const findPaymentsOn = async (date: string, centerId?: number) => {
   const result = await pool.query(
     `SELECT p.payment_id, p.amount, p.payment_method, p.received_by_name, p.created_at AS paid_at,
@@ -8,7 +13,8 @@ const findPaymentsOn = async (date: string, centerId?: number) => {
      FROM payments p
      LEFT JOIN students s ON s.student_id = p.student_id
      LEFT JOIN classes c ON c.class_id = s.class_id
-     WHERE p.deleted_at IS NULL AND p.payment_date = $1::date
+     WHERE p.deleted_at IS NULL
+       AND COALESCE((p.created_at AT TIME ZONE current_setting('TimeZone') AT TIME ZONE 'Asia/Tashkent')::date, p.payment_date) = $1::date
        AND ($2::int IS NULL OR p.center_id = $2)
      ORDER BY p.created_at, p.payment_id`,
     [date, centerId ?? null]
