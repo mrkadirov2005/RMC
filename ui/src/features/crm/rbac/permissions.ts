@@ -55,6 +55,7 @@ export const PERMISSION_DESCRIPTIONS = {
   [PERMISSION_CODES.VIEW_CONSOLIDATIONS]: 'Open consolidation exercises and their results',
   [PERMISSION_CODES.RETENTION_TAB_RETENTION]: 'Students who left',
   [PERMISSION_CODES.RETENTION_TAB_INTAKE]: 'New students who joined',
+  [PERMISSION_CODES.DASHBOARD_PAYMENTS_CHART]: 'Daily payments chart on the dashboard',
   [PERMISSION_CODES.SALARY_TAB_TOTAL]: 'Salary totals',
   [PERMISSION_CODES.SALARY_TAB_MONTHLY]: 'Salaries by month',
   [PERMISSION_CODES.SALARY_TAB_LIST]: 'Teacher salary list',

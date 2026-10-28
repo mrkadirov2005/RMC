@@ -5,6 +5,12 @@ export interface AdminSubPageAccess {
   /** The query value the page reads to pick this submenu, e.g. /salary?view=monthly or /owner/reports?section=finance. */
   view: string;
   permission: string;
+  /**
+   * A switch on the page rather than a view of it (the dashboard's payments chart): it has no `view`
+   * query value, ticking it never changes the page's own permission, and a page saved without it
+   * does not get it.
+   */
+  feature?: boolean;
 }
 
 export interface AdminPageAccess {
@@ -20,7 +26,14 @@ export interface AdminPageAccess {
 // here: it manages admin accounts, so it stays owner-only. Reports is safe to grant because the
 // server limits an admin's data to their own branch.
 export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
-  { label: 'Dashboard', path: '/dashboard', permission: PERMISSION_CODES.VIEW_DASHBOARD },
+  {
+    label: 'Dashboard',
+    path: '/dashboard',
+    permission: PERMISSION_CODES.VIEW_DASHBOARD,
+    children: [
+      { label: 'Payments chart', view: '', permission: PERMISSION_CODES.DASHBOARD_PAYMENTS_CHART, feature: true },
+    ],
+  },
   { label: 'Students', path: '/students', permission: PERMISSION_CODES.CRUD_STUDENT },
   { label: 'Leads', path: '/telegram-registrations', permission: PERMISSION_CODES.VIEW_TELEGRAM_LEADS },
   { label: 'Archive', path: '/archive', permission: PERMISSION_CODES.VIEW_ARCHIVE },
@@ -88,6 +101,8 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
   { label: 'Settings', path: '/settings', permission: PERMISSION_CODES.MANAGE_USERS },
 ];
 
+const viewChildren = (page: AdminPageAccess) => (page.children || []).filter((child) => !child.feature);
+
 const pageWithChildren = (parentPermission: string) =>
   ADMIN_PAGE_ACCESS.find((page) => page.permission === parentPermission && page.children?.length);
 
@@ -100,7 +115,8 @@ export const canAccessSubPage = (permissions: readonly string[], parentPermissio
   if (!permissions.includes(parentPermission)) return false;
   const page = pageWithChildren(parentPermission);
   if (!page) return true;
-  const childCodes = page.children!.map((child) => child.permission);
+  if (page.children!.find((child) => child.permission === childPermission)?.feature) return permissions.includes(childPermission);
+  const childCodes = viewChildren(page).map((child) => child.permission);
   if (!childCodes.some((code) => permissions.includes(code))) return true;
   return permissions.includes(childPermission);
 };
@@ -112,8 +128,8 @@ export const canAccessSubPage = (permissions: readonly string[], parentPermissio
 export const expandLegacySubPagePermissions = (permissions: readonly string[]) => {
   const expanded = new Set(permissions);
   ADMIN_PAGE_ACCESS.forEach((page) => {
-    if (!page.children?.length || !expanded.has(page.permission)) return;
-    const childCodes = page.children.map((child) => child.permission);
+    if (!viewChildren(page).length || !expanded.has(page.permission)) return;
+    const childCodes = viewChildren(page).map((child) => child.permission);
     if (!childCodes.some((code) => expanded.has(code))) childCodes.forEach((code) => expanded.add(code));
   });
   return Array.from(expanded);
@@ -130,6 +146,7 @@ export const togglePagePermission = (permissions: readonly string[], code: strin
   const parent = ADMIN_PAGE_ACCESS.find((item) => item.children?.some((child) => child.permission === code));
 
   if (page) {
+    // Ticking a page ticks its views and its switches; unticking it clears both.
     const codes = [page.permission, ...(page.children || []).map((child) => child.permission)];
     codes.forEach((value) => (enabled ? next.add(value) : next.delete(value)));
   } else if (parent) {
@@ -138,7 +155,10 @@ export const togglePagePermission = (permissions: readonly string[], code: strin
       next.add(parent.permission);
     } else {
       next.delete(code);
-      if (!parent.children!.some((child) => next.has(child.permission))) next.delete(parent.permission);
+      // Only a view can be a page's last one; switching a feature off leaves the page as it is.
+      const views = viewChildren(parent);
+      const wasView = views.some((child) => child.permission === code);
+      if (wasView && !views.some((child) => next.has(child.permission))) next.delete(parent.permission);
     }
   } else if (enabled) {
     next.add(code);

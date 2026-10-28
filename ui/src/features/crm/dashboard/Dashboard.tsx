@@ -1,9 +1,9 @@
 // Source file for the dashboard area in the crm feature.
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, Plus, UserRoundX, Users, Wallet } from 'lucide-react';
+import { CalendarCheck2, CheckCircle2, CircleDollarSign, Plus, UserRoundX, Users, Wallet } from 'lucide-react';
 import { useAppSelector } from '../hooks';
 import { useDashboardData } from './hooks/useDashboardData';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,16 @@ import { showToast } from '@/utils/toast';
 import { LeadsReminder } from '../telegram/LeadsReminder';
 import { formatMoney } from '@/utils/helpers';
 import { buildPaymentDays, centerDayKey, previousCenterDayKey } from './dailyPayments';
+import { DailyPaymentsChart } from './components/DailyPaymentsChart';
+import { useRBAC } from '../hooks/useRBAC';
+import { PERMISSION_CODES } from '@/types';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
   const { t } = useLanguage();
   const { user } = useAppSelector((state) => state.auth);
+  const { canAccessSubPage } = useRBAC();
+  const canSeePaymentsChart = canAccessSubPage(PERMISSION_CODES.VIEW_DASHBOARD, PERMISSION_CODES.DASHBOARD_PAYMENTS_CHART);
   const role = user?.userType || 'superuser';
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useUrlTab<'payments' | 'attendance'>('payments', ['payments', 'attendance']);
@@ -50,15 +55,12 @@ const Dashboard = memo(() => {
   const payments = scopedCollections.payments;
   const attendance = scopedCollections.attendance;
   const paymentDays = useMemo(() => buildPaymentDays(payments, today), [payments, today]);
-  const [hoveredDayKey, setHoveredDayKey] = useState<string | null>(null);
   const paidToday = paymentDays.find((day) => day.key === todayKey) || { amount: 0, count: 0 };
   // Yesterday can be last month (on the 1st), so it is counted from the month it falls in.
   const paidYesterday = buildPaymentDays(payments, new Date(`${yesterdayKey}T12:00:00+05:00`)).find((day) => day.key === yesterdayKey) || { amount: 0, count: 0 };
-  const shownDay = paymentDays.find((day) => day.key === hoveredDayKey) || paymentDays.find((day) => day.key === todayKey);
   const attendanceToday = attendance.filter((record) => String(record.attendance_date || '').slice(0, 10) === todayKey);
   const presentToday = attendanceToday.filter((record) => ['Present', 'Late'].includes(String(record.status))).length;
   const absentToday = attendanceToday.filter((record) => String(record.status).toLowerCase().startsWith('absent')).length;
-  const maxPaymentAmount = Math.max(1, ...paymentDays.map((day) => day.amount));
   const { handleOpenModal, handleCloseModal, handleSubmit, isModalOpen, formData, setFormData, studentOptions, centerOptions, isLoadingOptions, state } = paymentHook;
 
   return (
@@ -115,35 +117,7 @@ const Dashboard = memo(() => {
             <Metric icon={CheckCircle2} label={t('Paid today')} value={formatMoney(paidToday.amount)} hint={t('{count} payments', { count: paidToday.count })} tone="text-emerald-600 bg-emerald-50" />
             <Metric icon={Users} label={t('Students this month')} value={stats.totalStudents} tone="text-cyan-600 bg-cyan-50" />
           </div>
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-              <div><h2 className="font-black">{t('Monthly payment activity')}</h2><p className="text-sm text-slate-500">{t('Money collected each day. Hover over a day to see how much came in.')}</p></div>
-              {shownDay ? (
-                <div className="rounded-lg bg-slate-50 px-3 py-2 text-right dark:bg-white/[0.06]" aria-live="polite">
-                  <p className="text-xs font-bold text-slate-500">{new Date(`${shownDay.key}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}</p>
-                  <p className="text-lg font-black text-slate-950 dark:text-white">{formatMoney(shownDay.amount)}</p>
-                  <p className="text-xs text-slate-500">{t('{count} payments', { count: shownDay.count })}</p>
-                </div>
-              ) : <BarChart3 className="h-5 w-5 text-cyan-600" />}
-            </div>
-            <div className="flex h-48 items-end gap-1 overflow-x-auto pb-6" onMouseLeave={() => setHoveredDayKey(null)}>
-              {paymentDays.map((day) => (
-                <button
-                  key={day.key}
-                  type="button"
-                  aria-label={`${day.key}: ${formatMoney(day.amount)}`}
-                  title={`${formatMoney(day.amount)} · ${t('{count} payments', { count: day.count })}`}
-                  onMouseEnter={() => setHoveredDayKey(day.key)}
-                  onFocus={() => setHoveredDayKey(day.key)}
-                  onClick={() => setHoveredDayKey(day.key)}
-                  className="group flex h-full min-w-[14px] flex-1 flex-col items-center justify-end gap-1"
-                >
-                  <div className={`w-full rounded-t-sm transition-opacity group-hover:opacity-80 ${day.key === hoveredDayKey ? 'ring-2 ring-slate-900/30 dark:ring-white/40' : ''} ${day.key === todayKey ? 'bg-emerald-500' : day.key === yesterdayKey ? 'bg-amber-500' : 'bg-cyan-500/70'}`} style={{ height: `${Math.max(4, (day.amount / maxPaymentAmount) * 140)}px` }} />
-                  <span className="text-[0.5625rem] text-slate-400">{day.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
+          {canSeePaymentsChart && <DailyPaymentsChart payments={payments} month={today} />}
           <Button variant="outline" onClick={() => navigate('/payments')}>{t('Open payments management')}</Button>
         </div>
       ) : (

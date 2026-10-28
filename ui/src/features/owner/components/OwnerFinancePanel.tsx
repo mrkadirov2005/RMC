@@ -20,6 +20,7 @@ import {
   getOwnerPaymentMonthKey,
 } from '../utils';
 import type { OwnerManagerStatisticsCollections } from '../types';
+import { DailyPaymentsChart } from '../../crm/dashboard/components/DailyPaymentsChart';
 import { FinanceDailyView } from './finance/FinanceDailyView';
 import type { DailyIncomeRow } from './finance/FinanceDailyView';
 import { FinanceStatsView } from './finance/FinanceStatsView';
@@ -234,6 +235,8 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
         .join(' ')
     : '';
 
+  const chartMonth = useMemo(() => new Date(`${selectedMonth}-15T12:00:00+05:00`), [selectedMonth]);
+
   if (loading) {
     return (
       <div className="rounded-md border bg-white p-6 text-center text-sm font-black text-slate-500">
@@ -342,6 +345,8 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
           </div>
         </div>
       </div>
+
+      {financeView !== 'teachers' && <DailyPaymentsChart payments={collections.payments} month={chartMonth} />}
 
       {financeView === 'statistics' && (
         <FinanceStatsView
