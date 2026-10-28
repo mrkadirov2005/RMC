@@ -142,9 +142,14 @@ const Sidebar = memo(() => {
   const normalizedRole = String(user?.role || '').toLowerCase();
   const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
-  const [reportsExpanded, setReportsExpanded] = useState(() => location.pathname === '/owner/reports');
-  const [retentionExpanded, setRetentionExpanded] = useState(() => location.pathname === '/retention');
-  const [salaryExpanded, setSalaryExpanded] = useState(() => location.pathname === '/salary');
+  // Menu items whose submenu is open, by path; the page you are on starts open.
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set([location.pathname]));
+  const toggleGroup = (path: string) =>
+    setExpandedGroups((current) => {
+      const next = new Set(current);
+      if (!next.delete(path)) next.add(path);
+      return next;
+    });
   const [sidebarOrder, setSidebarOrder] = useState<string[]>([]);
   const [draggedPath, setDraggedPath] = useState<string | null>(null);
   const rawCenterOptions = useAppSelector(selectCenterOptions);
@@ -460,10 +465,7 @@ const Sidebar = memo(() => {
             {orderedMenuItems.map((item, itemIndex) => {
               const Icon = iconMap[item.iconName] || Users;
               const isActive = location.pathname === item.path;
-              const isReportsItem = item.path === '/owner/reports';
-              const isRetentionItem = item.path === '/retention';
-              const isSalaryItem = item.path === '/salary';
-              const isGroupExpanded = (isReportsItem && reportsExpanded) || (isRetentionItem && retentionExpanded) || (isSalaryItem && salaryExpanded);
+              const isGroupExpanded = expandedGroups.has(item.path);
               const iconTone = iconToneMap[item.iconName] || 'from-slate-500 to-slate-700 shadow-slate-500/20';
               return (
                 <div
@@ -480,9 +482,7 @@ const Sidebar = memo(() => {
                     <button
                       onClick={() => {
                         if (item.children?.length && isExpanded) {
-                          if (isReportsItem) setReportsExpanded((current) => !current);
-                          if (isRetentionItem) setRetentionExpanded((current) => !current);
-                          if (isSalaryItem) setSalaryExpanded((current) => !current);
+                          toggleGroup(item.path);
                         } else {
                           handleNavigation(item.children?.[0]?.path || item.path);
                         }

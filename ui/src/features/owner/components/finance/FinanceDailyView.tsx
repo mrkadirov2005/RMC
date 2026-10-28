@@ -17,9 +17,10 @@ interface Props {
   monthTotal: number;
   totalPaymentCount: number;
   daysWithIncome: number;
+  onDayClick?: (dateKey: string) => void;
 }
 
-export const FinanceDailyView = ({ selectedMonth, rows, monthTotal, totalPaymentCount, daysWithIncome }: Props) => (
+export const FinanceDailyView = ({ selectedMonth, rows, monthTotal, totalPaymentCount, daysWithIncome, onDayClick }: Props) => (
   <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
     <div className="mb-3">
       <p className="text-base font-black text-slate-950 dark:text-white">Kunlik tushum</p>
@@ -51,7 +52,7 @@ export const FinanceDailyView = ({ selectedMonth, rows, monthTotal, totalPayment
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={row.dateKey}>
+              <TableRow key={row.dateKey} className={onDayClick ? 'cursor-pointer hover:bg-slate-50' : undefined} onClick={() => onDayClick?.(row.dateKey)}>
                 <TableCell className="font-medium">{row.dateLabel}</TableCell>
                 <TableCell className="text-right">{row.paymentCount}</TableCell>
                 <TableCell className="text-right">{row.studentCount}</TableCell>

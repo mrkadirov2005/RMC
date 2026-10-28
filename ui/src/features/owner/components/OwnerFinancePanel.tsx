@@ -25,6 +25,7 @@ import { FinanceDailyView } from './finance/FinanceDailyView';
 import type { DailyIncomeRow } from './finance/FinanceDailyView';
 import { FinanceStatsView } from './finance/FinanceStatsView';
 import { FinanceTeachersView } from './finance/FinanceTeachersView';
+import { DayPaymentsModal } from './finance/DayPaymentsModal';
 import { PaymentDateDetailsModal } from './finance/PaymentDateDetailsModal';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -235,6 +236,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
         .join(' ')
     : '';
 
+  const [openDayKey, setOpenDayKey] = useState<string | null>(null);
   const chartMonth = useMemo(() => new Date(`${selectedMonth}-15T12:00:00+05:00`), [selectedMonth]);
 
   if (loading) {
@@ -346,7 +348,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
         </div>
       </div>
 
-      {financeView !== 'teachers' && <DailyPaymentsChart payments={collections.payments} month={chartMonth} />}
+      {financeView !== 'teachers' && <DailyPaymentsChart payments={collections.payments} month={chartMonth} onDayClick={setOpenDayKey} />}
 
       {financeView === 'statistics' && (
         <FinanceStatsView
@@ -379,6 +381,8 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
           onPaidCardClick={() => setPaidDateModalOpen(true)}
         />
       )}
+
+      <DayPaymentsModal dateKey={openDayKey} onClose={() => setOpenDayKey(null)} collections={collections} />
 
       <PaymentDateDetailsModal
         open={paidDateModalOpen}
@@ -414,6 +418,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
           monthTotal={dailyTotalIncome}
           totalPaymentCount={dailyPaymentCount}
           daysWithIncome={dailyRows.length}
+          onDayClick={setOpenDayKey}
         />
       )}
     </div>

@@ -10,9 +10,11 @@ interface Props {
   payments: Record<string, unknown>[];
   /** Any moment in the month to draw; defaults to now. */
   month?: Date;
+  /** Called with the day (YYYY-MM-DD) when a bar is clicked, e.g. to list that day's payments. */
+  onDayClick?: (dateKey: string) => void;
 }
 
-export const DailyPaymentsChart = ({ payments, month }: Props) => {
+export const DailyPaymentsChart = ({ payments, month, onDayClick }: Props) => {
   const { t } = useLanguage();
   const [hoveredDayKey, setHoveredDayKey] = useState<string | null>(null);
   const shownMonth = useMemo(() => month ?? new Date(), [month]);
@@ -44,7 +46,7 @@ export const DailyPaymentsChart = ({ payments, month }: Props) => {
             title={`${formatMoney(day.amount)} · ${t('{count} payments', { count: day.count })}`}
             onMouseEnter={() => setHoveredDayKey(day.key)}
             onFocus={() => setHoveredDayKey(day.key)}
-            onClick={() => setHoveredDayKey(day.key)}
+            onClick={() => { setHoveredDayKey(day.key); onDayClick?.(day.key); }}
             className="group flex h-full min-w-[14px] flex-1 flex-col items-center justify-end gap-1"
           >
             <div className={`w-full rounded-t-sm transition-opacity group-hover:opacity-80 ${day.key === hoveredDayKey ? 'ring-2 ring-slate-900/30 dark:ring-white/40' : ''} ${day.key === todayKey ? 'bg-emerald-500' : day.key === yesterdayKey ? 'bg-amber-500' : 'bg-cyan-500/70'}`} style={{ height: `${Math.max(4, (day.amount / maxPaymentAmount) * 140)}px` }} />
