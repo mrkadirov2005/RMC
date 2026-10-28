@@ -13,6 +13,18 @@ export interface PaymentDay {
 export const centerDayKey = (date = new Date()) =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 
+/**
+ * The day the money came in: when the payment was entered (Tashkent time). payment_date is the month
+ * the payment is for, so a November payment entered today still counts for today. Rows without an
+ * entry time fall back to payment_date.
+ */
+export const paymentDayKey = (payment: PaymentLike) => {
+  const enteredAt = new Date(String(payment.created_at || ''));
+  return payment.created_at && !Number.isNaN(enteredAt.getTime())
+    ? centerDayKey(enteredAt)
+    : String(payment.payment_date || payment.paid_at || payment.date || '').slice(0, 10);
+};
+
 export const isCollectedPayment = (payment: PaymentLike) =>
   // A transfer only moves money between a student's two group records; nothing new came in.
   String(payment.payment_type || '') !== 'Transfer Adjustment' &&
@@ -26,7 +38,7 @@ export const buildPaymentDays = (payments: PaymentLike[], now = new Date()): Pay
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const byDay = new Map<string, { amount: number; count: number }>();
   for (const payment of payments) {
-    const key = String(payment.payment_date || '').slice(0, 10);
+    const key = paymentDayKey(payment);
     if (!key.startsWith(monthKey) || !isCollectedPayment(payment)) continue;
     const day = byDay.get(key) || { amount: 0, count: 0 };
     day.amount += Number(payment.amount || 0) || 0;

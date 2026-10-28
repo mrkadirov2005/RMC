@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatMoney } from '@/utils/helpers';
-import { isCollectedPayment } from '../../../crm/dashboard/dailyPayments';
+import { isCollectedPayment, paymentDayKey } from '../../../crm/dashboard/dailyPayments';
 import { getOwnerPaymentAmount } from '../../utils';
 import type { OwnerManagerStatisticsCollections } from '../../types';
 
@@ -27,7 +27,7 @@ export const DayPaymentsModal = ({ dateKey, onClose, collections }: Props) => {
   const rows = useMemo(() => {
     if (!dateKey) return [];
     return collections.payments
-      .filter((payment) => String(payment?.payment_date || '').slice(0, 10) === dateKey && isCollectedPayment(payment))
+      .filter((payment) => paymentDayKey(payment) === dateKey && isCollectedPayment(payment))
       .sort((a, b) => String(a?.created_at || '').localeCompare(String(b?.created_at || '')));
   }, [collections.payments, dateKey]);
   const total = rows.reduce((sum, payment) => sum + getOwnerPaymentAmount(payment), 0);
