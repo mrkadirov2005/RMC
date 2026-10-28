@@ -70,4 +70,24 @@ describe('admin submenu access', () => {
     expect(resolveSubPageView('MANAGE_SALARY', 'list', allow)).toBe('list');
     expect(resolveSubPageView('MANAGE_SALARY', 'monthly', () => true)).toBe('monthly');
   });
+
+  describe('dashboard payments chart switch', () => {
+    const chart = 'DASHBOARD_PAYMENTS_CHART';
+
+    it('shows the chart only to admins who were given it', () => {
+      expect(canAccessSubPage(['VIEW_DASHBOARD'], 'VIEW_DASHBOARD', chart)).toBe(false);
+      expect(canAccessSubPage(['VIEW_DASHBOARD', chart], 'VIEW_DASHBOARD', chart)).toBe(true);
+      expect(canAccessSubPage([chart], 'VIEW_DASHBOARD', chart)).toBe(false);
+    });
+
+    it('unticking the chart keeps the dashboard; unticking the dashboard clears the chart', () => {
+      expect(togglePagePermission(['VIEW_DASHBOARD', chart], chart, false)).toEqual(['VIEW_DASHBOARD']);
+      expect(togglePagePermission(['VIEW_DASHBOARD', chart], 'VIEW_DASHBOARD', false)).toEqual([]);
+      expect(togglePagePermission(['VIEW_DASHBOARD'], chart, true).sort()).toEqual([chart, 'VIEW_DASHBOARD']);
+    });
+
+    it('does not tick the chart for an admin saved without it', () => {
+      expect(expandLegacySubPagePermissions(['VIEW_DASHBOARD'])).toEqual(['VIEW_DASHBOARD']);
+    });
+  });
 });
