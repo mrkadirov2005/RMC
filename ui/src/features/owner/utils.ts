@@ -1,5 +1,7 @@
 // Shared utility helpers.
 
+import { paymentDayKey } from '../crm/dashboard/dailyPayments';
+
 import type {
   OwnerOverviewKpiRow,
   OwnerManagerDailyIncomeRow,
@@ -199,7 +201,7 @@ export const buildOwnerPaymentMonthStats = (
   };
 };
 
-// Builds one income row per calendar day that received at least one paid payment in the selected month.
+// Builds one income row per calendar day on which at least one paid payment was entered in the selected month.
 export const buildOwnerDailyIncomeRows = (
   payments: any[],
   selectedMonth: string
@@ -208,17 +210,12 @@ export const buildOwnerDailyIncomeRows = (
 
   payments.forEach((payment) => {
     if (!isCompletedPayment(payment)) return;
-    if (getOwnerPaymentMonthKey(payment) !== selectedMonth) return;
-
-    const raw = getOwnerPaymentDateValue(payment);
-    if (!raw) return;
-    const date = new Date(String(raw));
-    if (Number.isNaN(date.getTime())) return;
-
-    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    // By the day the money was entered, not payment_date (the month it is for).
+    const dateKey = paymentDayKey(payment);
+    if (!dateKey.startsWith(selectedMonth)) return;
     let bucket = buckets.get(dateKey);
     if (!bucket) {
-      bucket = { dateLabel: date.toLocaleDateString(), paymentCount: 0, students: new Set<number>(), total: 0 };
+      bucket = { dateLabel: new Date(`${dateKey}T12:00:00`).toLocaleDateString(), paymentCount: 0, students: new Set<number>(), total: 0 };
       buckets.set(dateKey, bucket);
     }
 

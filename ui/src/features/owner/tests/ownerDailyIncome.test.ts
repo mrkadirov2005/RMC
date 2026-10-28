@@ -224,3 +224,15 @@ describe('buildOwnerDailyIncomeRows', () => {
     expect(rows[0]).toMatchObject({ paymentCount: 2, studentCount: 2, total: 300 });
   });
 });
+
+describe('buildOwnerDailyIncomeRows by entry day', () => {
+  it('counts a payment on the day it was entered, not the month it is for', () => {
+    const rows = buildOwnerDailyIncomeRows(
+      [{ status: 'paid', student_id: 1, amount: 100, payment_date: '2026-11-01', created_at: '2026-10-28T09:00:00Z' }],
+      '2026-10'
+    );
+
+    expect(rows.map((row) => row.dateKey)).toEqual(['2026-10-28']);
+    expect(buildOwnerDailyIncomeRows([{ status: 'paid', amount: 100, payment_date: '2026-11-01', created_at: '2026-10-28T09:00:00Z' }], '2026-11')).toEqual([]);
+  });
+});
