@@ -220,3 +220,12 @@ export type Onboarding = {
   instagram: { url: string | null; opened: boolean };
   consents: Consent[];
 };
+
+// @MOB-145 Vocabulary flashcards.
+export type FlashcardGrade = 'again' | 'hard' | 'good' | 'easy';
+export type Flashcard = { word_id: number; front: string; back: string; set_title: string | null; class_name: string | null; is_new: boolean; interval_days: number | null };
+export type FlashcardSession = {
+  cards: Flashcard[];
+  stats: { total: number; due: number; new: number; learned: number; new_today_left: number };
+};
+export type FlashcardReview = { word_id: number; grade: FlashcardGrade; due_at: string; interval_days: number; ease: number };

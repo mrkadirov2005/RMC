@@ -10,6 +10,7 @@ const homework = require('../modules/homework/homework.controller');
 const account = require('../modules/mobile/controllers/mobileAccount.controller');
 const onboarding = require('../modules/mobile/controllers/mobileOnboarding.controller');
 const media = require('../modules/media/media.controller');
+const flashcards = require('../modules/mobile/controllers/flashcards.controller');
 
 // @MOB-020 Mobile app API, mounted at /api/mobile/v1. Sign-in, refresh and sign-out are public
 // and registered in index.ts. index.ts mounts this router behind requireAuth; every route here
@@ -73,6 +74,9 @@ router.get('/student/leaderboard', ...student, learner.leaderboard);
 router.get('/student/progress', ...student, learner.progress);
 // @MOB-125 The rotating token behind the student ID QR.
 router.get('/student/id-token', ...student, account.idToken);
+// @MOB-145 Vocabulary flashcards with spaced repetition.
+router.get('/student/flashcards', ...student, flashcards.session);
+router.post('/student/flashcards/:wordId/review', ...student, flashcards.review);
 // @MOB-054 Homework: list, open, autosave, submit.
 router.get('/student/homework', ...student, homework.myHomework);
 router.get('/student/homework/:assignmentId', ...student, homework.homeworkDetail);

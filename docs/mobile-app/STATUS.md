@@ -15,12 +15,13 @@ ticket is tagged `@MOB-###` on the line before it (`grep -rn "@MOB-" service ui 
 | Content | Official links, announcements (with push), rules with versions and acceptance, help requests with answers | MOB-060..063, 150..153, 160..162, 164 |
 | Account | Forgot password by SMS code (10 min, 5 tries, 3 codes an hour, all devices signed out); student ID QR that changes every minute; parent asks to add a child from the app, admin approves in the existing Telegram → Parent requests panel | MOB-024, 032, 111, 124, 125 |
 | Media answers | Homework questions answered by voice recording or by photos/PDFs; private storage behind short-lived signed URLs, size and type limits, retries after network loss; teachers listen and open files when grading | MOB-055, 143 |
+| Flashcards | Practice → So'z kartochkalari: consolidation words of the student's groups with spaced repetition (Again/Hard/Good/Easy), 10 new words a day, pronunciation read by the phone | MOB-145 |
 | Onboarding | Optional first-run steps: Telegram channel (checked by the bot), Instagram (opened only), video consent (a parent answers for a minor; history kept), notification permission; reopen from Settings | MOB-112, 113 |
 | Charts | Home charts of attendance, scores and coins, by month or by day | MOB-127, 128 |
 | Web panel | `/owner/mobile-app` (owner, with a Usage tab of adoption numbers), `/homework` (admins with Tests permission, teachers), `/student-id` (admins and teachers check a scanned ID) | MOB-160..166 |
 
 Tests: backend unit tests for every new module, plus `service/test/integration/flows/mobile-app.integration.test.js`
-(12 end-to-end flows on PostgreSQL); app tests for the API client and helpers. Screens were checked in Chrome
+(13 end-to-end flows on PostgreSQL); app tests for the API client and helpers. Screens were checked in Chrome
 against a seeded database.
 
 ## Needs you
@@ -28,7 +29,7 @@ against a seeded database.
 1. **Approve or decline** MOB-010, MOB-011, MOB-012 (they change existing code: secrets in compose, CORS, audit fixes).
 2. **Push on phones** needs an Expo/EAS project: `npx eas-cli init` in `mobile/`, which adds `extra.eas.projectId`;
    then a development build (`npx eas-cli build --profile development`). Expo Go cannot receive remote push.
-3. **Deploy**: seven new migrations (`service/db/migrations/20261031*`) run on backend start. Rebuild only the
+3. **Deploy**: eight new migrations (`service/db/migrations/20261031*`) run on backend start. Rebuild only the
    backend service.
 4. **Optional env**: `HOMEWORK_MAX_COINS` (default 5), `MOBILE_PUSH_WORKER=off`, `MOBILE_MIN_APP_VERSION`,
    `MOBILE_ID_SECRET` (signs the ID QR; falls back to `JWT_SECRET`).

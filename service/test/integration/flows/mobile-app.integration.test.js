@@ -18,7 +18,7 @@ describe('mobile app API with PostgreSQL', () => {
 
   beforeAll(async () => {
     pool = require('../../../src/db/pool');
-    await pool.query('TRUNCATE TABLE edu_centers, owners, parents, mobile_sessions, mobile_password_resets, parent_link_requests, mobile_onboarding, mobile_consents, media_files RESTART IDENTITY CASCADE');
+    await pool.query('TRUNCATE TABLE edu_centers, owners, parents, mobile_sessions, mobile_password_resets, parent_link_requests, mobile_onboarding, mobile_consents, media_files, flashcard_reviews RESTART IDENTITY CASCADE');
     centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Mobile Center', 'MOB-C') RETURNING center_id`)).rows[0].center_id;
     const teacherId = (await pool.query(
       `INSERT INTO teachers (center_id, employee_id, first_name, last_name) VALUES ($1, 'MOB-T', 'Temur', 'Aliyev') RETURNING teacher_id`, [centerId],
@@ -535,5 +535,58 @@ describe('mobile app API with PostgreSQL', () => {
       fs.rmSync(process.env.MEDIA_LOCAL_DIR, { recursive: true, force: true });
       process.env.MEDIA_LOCAL_DIR = savedDir;
     }
+  });
+  // @MOB-145
+  test('flashcards: words of the student\'s groups, hard and easy answers set different review dates', async () => {
+    const b1 = (await pool.query("SELECT class_id, teacher_id FROM classes WHERE class_name = 'B1'")).rows[0];
+    const sessionId = (await pool.query(
+      `INSERT INTO sessions (center_id, class_id, teacher_id, session_date, start_time, duration_minutes, end_time, status)
+       VALUES ($1, $2, $3, CURRENT_DATE, '09:00', 90, '10:30', 'completed') RETURNING session_id`,
+      [centerId, b1.class_id, b1.teacher_id],
+    )).rows[0].session_id;
+    const setId = (await pool.query(
+      `INSERT INTO consolidation_sets (center_id, class_id, session_id, teacher_id, title, share_token)
+       VALUES ($1, $2, $3, $4, 'Unit 7', 'flash-test') RETURNING consolidation_set_id`,
+      [centerId, b1.class_id, sessionId, b1.teacher_id],
+    )).rows[0].consolidation_set_id;
+    await pool.query(
+      `INSERT INTO consolidation_words (consolidation_set_id, word_order, main_word, translations) VALUES
+       ($1, 1, 'reliable', '["ishonchli"]'), ($1, 2, 'brave', '["jasur", "botir"]')`,
+      [setId],
+    );
+
+    const mobileAuth = require('../../../src/modules/mobile/services/mobileAuth.service');
+    const student = (await mobileAuth.login({ username: 'aziza', password: 'secret-pass', ...device('stu-cards') })).access_token;
+    const first = (await api().get('/api/mobile/v1/student/flashcards').set(auth(student))).body;
+    expect(first.stats).toMatchObject({ total: 2, new: 2, due: 0 });
+    expect(first.cards.map((c) => [c.front, c.back, c.is_new])).toEqual([['reliable', 'ishonchli', true], ['brave', 'jasur, botir', true]]);
+
+    const review = (wordId, grade) => api().post(`/api/mobile/v1/student/flashcards/${wordId}/review`).set(auth(student)).send({ grade });
+    const easy = (await review(first.cards[0].word_id, 'easy')).body;
+    const hard = (await review(first.cards[1].word_id, 'hard')).body;
+    expect(easy.interval_days).toBe(4);
+    expect(hard.interval_days).toBe(1);
+    expect(new Date(easy.due_at).getTime()).toBeGreaterThan(new Date(hard.due_at).getTime());
+    expect((await review(first.cards[0].word_id, 'perfect')).status).toBe(400);
+
+    // A word of a group the student is not in (Bobur is only in B1) cannot be reviewed.
+    const ielts = (await pool.query("SELECT class_id FROM classes WHERE class_name = 'IELTS'")).rows[0].class_id;
+    const ieltsSet = (await pool.query(
+      `INSERT INTO consolidation_sets (center_id, class_id, session_id, teacher_id, title, share_token)
+       VALUES ($1, $2, $3, $4, 'IELTS words', 'flash-test-2') RETURNING consolidation_set_id`,
+      [centerId, ielts, sessionId, b1.teacher_id],
+    )).rows[0].consolidation_set_id;
+    const ieltsWord = (await pool.query(
+      `INSERT INTO consolidation_words (consolidation_set_id, word_order, main_word, translations) VALUES ($1, 1, 'thrive', '["gullab-yashnamoq"]')
+       RETURNING consolidation_word_id`,
+      [ieltsSet],
+    )).rows[0].consolidation_word_id;
+    const bobur = (await mobileAuth.login({ username: 'bobur', password: 'secret-pass', ...device('bob-cards') })).access_token;
+    expect((await api().post(`/api/mobile/v1/student/flashcards/${ieltsWord}/review`).set(auth(bobur)).send({ grade: 'good' })).status).toBe(404);
+    await pool.query('DELETE FROM consolidation_sets WHERE consolidation_set_id = $1', [ieltsSet]);
+
+    const after = (await api().get('/api/mobile/v1/student/flashcards').set(auth(student))).body;
+    expect(after.cards).toEqual([]);
+    expect(after.stats).toMatchObject({ total: 2, new: 0, due: 0 });
   });
 });

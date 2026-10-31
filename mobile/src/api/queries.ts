@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  FlashcardGrade,
+  FlashcardReview,
+  FlashcardSession,
   Onboarding,
   TelegramCheck,
   IdToken,
@@ -154,3 +157,8 @@ export const markInstagramOpened = () => api.request('/onboarding/instagram-open
 export const finishOnboarding = (skipped: boolean) => api.request('/onboarding/finish', { method: 'POST', body: JSON.stringify({ skipped }) });
 export const answerConsent = (studentId: number, granted: boolean) =>
   api.request('/consents', { method: 'PUT', body: JSON.stringify({ student_id: studentId, kind: 'video', granted }) });
+
+// @MOB-145 Today's flashcards and one answer at a time.
+export const useFlashcards = () => useQuery({ queryKey: ['flashcards'], queryFn: () => get<FlashcardSession>('/student/flashcards'), staleTime: 0 });
+export const reviewFlashcard = (wordId: number, grade: FlashcardGrade) =>
+  api.request<FlashcardReview>(`/student/flashcards/${wordId}/review`, { method: 'POST', body: JSON.stringify({ grade }) });

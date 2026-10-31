@@ -196,6 +196,21 @@ export const uz = {
   camera: 'Kamera',
   gallery: 'Galereya',
   filesLeft: (left: number, max: number) => `Yana ${left} ta fayl qo'shish mumkin (ko'pi bilan ${max})`,
+  flashcardsIntro: "Guruhingizdagi mustahkamlash so'zlari. Har bir so'z kerakli kunda qaytadi.",
+  dueNow: 'Hozir takrorlash',
+  newWords: "Yangi so'zlar",
+  learned: "O'rganilgan",
+  startReview: 'Boshlash',
+  showAnswer: "Javobni ko'rish",
+  newWord: "Yangi so'z",
+  howWell: 'Qanchalik esladingiz?',
+  grades: { again: 'Yana', hard: 'Qiyin', good: 'Yaxshi', easy: 'Oson' } as Record<string, string>,
+  nextIn: (days: number) => (days <= 0 ? '10 daqiqa' : days === 1 ? '1 kun' : `${days} kun`),
+  sessionDone: "Bugungi so'zlar tugadi! 🎉",
+  sessionDoneText: "Ertaga yangi so'zlar va takrorlash qaytadi.",
+  noWords: "Guruhingizda hali mustahkamlash so'zlari yo'q. O'qituvchi qo'shgach shu yerda paydo bo'ladi.",
+  listenWord: 'Talaffuz',
+  cardOf: (i: number, n: number) => `${i} / ${n}`,
 };
 
 export type Strings = typeof uz;
@@ -396,6 +411,21 @@ export const en: Strings = {
   camera: 'Camera',
   gallery: 'Gallery',
   filesLeft: (left: number, max: number) => `${left} more file(s) allowed (at most ${max})`,
+  flashcardsIntro: 'Consolidation words from your groups. Each word comes back on the day you need it.',
+  dueNow: 'Due now',
+  newWords: 'New words',
+  learned: 'Learned',
+  startReview: 'Start',
+  showAnswer: 'Show answer',
+  newWord: 'New word',
+  howWell: 'How well did you remember?',
+  grades: { again: 'Again', hard: 'Hard', good: 'Good', easy: 'Easy' },
+  nextIn: (days: number) => (days <= 0 ? '10 min' : days === 1 ? '1 day' : `${days} days`),
+  sessionDone: "You're done for today! 🎉",
+  sessionDoneText: 'New words and reviews come back tomorrow.',
+  noWords: 'Your groups have no consolidation words yet. They appear here once a teacher adds them.',
+  listenWord: 'Pronunciation',
+  cardOf: (i: number, n: number) => `${i} / ${n}`,
 };
 
 export const dictionaries = { uz, en };

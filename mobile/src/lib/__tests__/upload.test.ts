@@ -7,7 +7,7 @@ const blob = { size: 4000, type: 'audio/mp4' };
 const started = { media: { media_id: 1 }, upload: { url: 'https://store/put', method: 'PUT', headers: { 'Content-Type': 'audio/mp4' }, expires_in: 900 } };
 
 const setup = (putResults: (Error | number)[], completeResults: (Error | object)[] = [{ media_id: 1, status: 'uploaded' }]) => {
-  const request = jest.fn(async (path: string) => {
+  const request = jest.fn(async (path: string, _init?: RequestInit) => {
     if (path === '/media/uploads') return started;
     const next = completeResults.shift();
     if (next instanceof Error) throw next;
@@ -19,7 +19,7 @@ const setup = (putResults: (Error | number)[], completeResults: (Error | object)
     if (next instanceof Error) throw next;
     return { ok: next === 200, status: next };
   });
-  const wait = jest.fn(async () => {});
+  const wait = jest.fn(async (_ms: number) => {});
   return { deps: { request, fetchFn, wait } as never, request, fetchFn, wait };
 };
 
@@ -29,7 +29,7 @@ describe('uploadFile', () => {
     const { deps, request, fetchFn } = setup([200]);
     const stages: string[] = [];
     await expect(uploadFile({ uri: 'file:///rec.m4a', contentType: 'audio/mp4', name: 'a.m4a' }, (s) => stages.push(s), deps)).resolves.toEqual({ media_id: 1, status: 'uploaded' });
-    expect(JSON.parse(request.mock.calls[0][1].body)).toEqual({ purpose: 'homework', content_type: 'audio/mp4', size_bytes: 4000, file_name: 'a.m4a' });
+    expect(JSON.parse(String(request.mock.calls[0][1]?.body))).toEqual({ purpose: 'homework', content_type: 'audio/mp4', size_bytes: 4000, file_name: 'a.m4a' });
     expect(fetchFn).toHaveBeenLastCalledWith('https://store/put', { method: 'PUT', headers: { 'Content-Type': 'audio/mp4' }, body: blob });
     expect(stages).toEqual(['preparing', 'uploading', 'checking']);
   });
