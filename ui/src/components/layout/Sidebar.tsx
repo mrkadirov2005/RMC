@@ -289,6 +289,8 @@ const Sidebar = memo(() => {
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
+    // @MOB-160 Announcements, rules, links and requests of the student and parent mobile app.
+    { label: 'Mobile app', path: '/owner/mobile-app', iconName: 'Sms', roles: ['superuser'], ownerOnly: true },
     // Every SMS sent to parents, with filters, and the templates. Admins see their own branch's.
     {
       label: 'SMS', path: '/owner/sms', iconName: 'Sms', roles: ['superuser'], permission: 'VIEW_SMS',
