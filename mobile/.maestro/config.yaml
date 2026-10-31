@@ -1,0 +1,7 @@
+# @MOB-170 Smoke flows for the TEMURBEK SCHOOL app (https://maestro.mobile.dev).
+# Run against a development or preview build pointed at staging:
+#   maestro test .maestro -e STUDENT_USER=... -e STUDENT_PASS=... -e PARENT_USER=... -e PARENT_PASS=...
+flows:
+  - "*.yaml"
+excludeTags:
+  - util

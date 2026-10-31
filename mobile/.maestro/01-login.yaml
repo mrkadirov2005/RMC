@@ -1,0 +1,20 @@
+# @MOB-170 A wrong password is refused; the right one opens the student home.
+appId: uz.temurbekschool.app
+---
+- launchApp:
+    clearState: true
+- tapOn: "Login"
+- inputText: ${STUDENT_USER}
+- tapOn: "Parol"
+- inputText: "wrong-password"
+- hideKeyboard
+- tapOn:
+    text: "Kirish"
+    index: 1
+- assertVisible: "Login yoki parol noto'g'ri"
+- runFlow:
+    file: _login.yaml
+    env:
+      USER: ${STUDENT_USER}
+      PASS: ${STUDENT_PASS}
+- assertVisible: "Bosh sahifa"

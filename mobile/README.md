@@ -28,3 +28,18 @@ npm test
 - `src/api/` client with token refresh, typed queries.
 - `src/screens/` sections shared by student and parent screens.
 - Code for each ticket is tagged `// @MOB-###` on the line before it: `grep -rn "@MOB-" src`.
+
+## Smoke tests (Maestro)
+
+`.maestro/` has flows for sign-in, student home, parent home and homework submit. They need a development
+or preview build on a simulator or phone and test accounts on the backend it points to:
+
+```bash
+maestro test .maestro -e STUDENT_USER=... -e STUDENT_PASS=... -e PARENT_USER=... -e PARENT_PASS=...
+```
+
+## Builds and release
+
+Profiles are in `eas.json` (development, preview, production). Store forms, privacy answers and the build
+steps are in `docs/mobile-app/store-listing.md`. Crash reporting (Sentry) is on only when
+`EXPO_PUBLIC_SENTRY_DSN` is set; see `src/lib/crash.ts`.

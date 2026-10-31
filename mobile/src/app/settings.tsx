@@ -1,17 +1,32 @@
 import { router } from 'expo-router';
+import { APP_VERSION } from '../config';
+import { APP_ENV, crashReportingEnabled, sendTestCrash } from '../lib/crash';
 import { Switch, Text, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { revokeDevice, setNotificationPreference, useDevices, useNotificationPreferences } from '../api/queries';
+import { revokeDevice, sendHelpRequest, setNotificationPreference, useDevices, useNotificationPreferences } from '../api/queries';
 import { useAuth } from '../auth/AuthContext';
 import { Button, Card, Chips, ListRow, QueryView, SectionHeader, Tag, text } from '../components/ui';
 import { useT } from '../i18n/LanguageContext';
 import { shortDate } from '../lib/format';
 import { DetailScreen } from '../screens/DetailScreen';
+import { colors } from '../theme/tokens';
+import { useState } from 'react';
 
 // @MOB-114 Language, signed-in devices and sign-out.
 export default function SettingsScreen() {
   const { t, lang, setLang } = useT();
   const { signOut } = useAuth();
+  // @MOB-171 Accounts are made by the center, so deleting one is a request the admins carry out.
+  const [deletion, setDeletion] = useState<'idle' | 'confirm' | 'busy' | 'sent' | 'failed'>('idle');
+  const requestDeletion = async () => {
+    setDeletion('busy');
+    try {
+      await sendHelpRequest('help', t.deleteAccountMessage);
+      setDeletion('sent');
+    } catch {
+      setDeletion('failed');
+    }
+  };
   const devices = useDevices();
   const prefs = useNotificationPreferences();
   const queryClient = useQueryClient();
@@ -86,6 +101,24 @@ export default function SettingsScreen() {
       <Card style={{ marginTop: 16 }}>
         <Button title={t.signOut} variant="danger" onPress={() => void signOut()} />
       </Card>
+      <Card>
+        <Text style={[text.bold, { marginBottom: 4 }]}>{t.deleteAccount}</Text>
+        <Text style={[text.muted, { marginBottom: 8 }]}>{deletion === 'sent' ? t.deleteAccountSent : t.deleteAccountText}</Text>
+        {deletion === 'failed' ? <Text style={{ color: colors.danger, marginBottom: 8 }}>{t.genericError}</Text> : null}
+        {deletion === 'confirm' || deletion === 'busy' ? (
+          <Button title={t.deleteAccountConfirm} variant="danger" loading={deletion === 'busy'} onPress={() => void requestDeletion()} />
+        ) : deletion !== 'sent' ? (
+          <Button title={t.deleteAccount} variant="secondary" onPress={() => setDeletion('confirm')} />
+        ) : null}
+      </Card>
+      <Text style={[text.muted, { textAlign: 'center', fontSize: 12 }]}>
+        {t.appName} {APP_VERSION}
+        {APP_ENV !== 'production' ? ` · ${APP_ENV}` : ''}
+      </Text>
+      {/* @MOB-107 Test builds only: sends a test error to check crash reporting and source maps. */}
+      {crashReportingEnabled && APP_ENV !== 'production' ? (
+        <Button title="Sentry test" variant="secondary" onPress={sendTestCrash} />
+      ) : null}
     </DetailScreen>
   );
 }

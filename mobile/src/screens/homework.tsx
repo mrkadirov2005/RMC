@@ -86,6 +86,7 @@ export function QuestionView({ q, index, value, onChange, readOnly, mark, media 
                 onPress={() => onChange(i)}
                 style={[styles.option, selected && styles.optionOn]}
                 accessibilityRole="radio"
+                testID={`choice-${index}-${i}`}
                 accessibilityState={{ selected }}
               >
                 <Text style={{ color: colors.text }}>{option}</Text>

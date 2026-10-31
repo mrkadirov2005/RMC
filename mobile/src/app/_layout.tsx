@@ -1,16 +1,22 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../auth/AuthContext';
 import { LanguageProvider } from '../i18n/LanguageContext';
+import { initCrashReporting, setCrashRole, withCrashReporting } from '../lib/crash';
 import { PushNotifications } from '../lib/push';
 import { colors } from '../theme/tokens';
 
+// @MOB-107 Before anything renders, so start-up crashes are caught too.
+initCrashReporting();
+
 // @MOB-126 Push registration and tap handling need the signed-in state.
 function PushBridge() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
+  // @MOB-107 Crash reports carry the role only.
+  useEffect(() => setCrashRole(status === 'signedIn' ? (user?.role ?? null) : null), [status, user?.role]);
   return <PushNotifications signedIn={status === 'signedIn'} />;
 }
 
@@ -21,7 +27,7 @@ const makeQueryClient = () =>
     defaultOptions: { queries: { staleTime: 60_000, gcTime: 24 * 60 * 60_000, retry: 1 } },
   });
 
-export default function RootLayout() {
+function RootLayout() {
   const [queryClient] = useState(makeQueryClient);
   return (
     <SafeAreaProvider>
@@ -45,3 +51,5 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+export default withCrashReporting(RootLayout);

@@ -16,6 +16,7 @@ ticket is tagged `@MOB-###` on the line before it (`grep -rn "@MOB-" service ui 
 | Account | Forgot password by SMS code (10 min, 5 tries, 3 codes an hour, all devices signed out); student ID QR that changes every minute; parent asks to add a child from the app, admin approves in the existing Telegram → Parent requests panel | MOB-024, 032, 111, 124, 125 |
 | Media answers | Homework questions answered by voice recording or by photos/PDFs; private storage behind short-lived signed URLs, size and type limits, retries after network loss; teachers listen and open files when grading | MOB-055, 143 |
 | Flashcards | Practice → So'z kartochkalari: consolidation words of the student's groups with spaced repetition (Again/Hard/Good/Easy), 10 new words a day, pronunciation read by the phone | MOB-145 |
+| Release groundwork | Sentry crash reporting with personal data removed (off without a DSN), in-app account deletion request, EAS build profiles, Maestro smoke flows, store-listing draft | MOB-107, 170..172 |
 | Onboarding | Optional first-run steps: Telegram channel (checked by the bot), Instagram (opened only), video consent (a parent answers for a minor; history kept), notification permission; reopen from Settings | MOB-112, 113 |
 | Charts | Home charts of attendance, scores and coins, by month or by day | MOB-127, 128 |
 | Web panel | `/owner/mobile-app` (owner, with a Usage tab of adoption numbers), `/homework` (admins with Tests permission, teachers), `/student-id` (admins and teachers check a scanned ID) | MOB-160..166 |
@@ -45,7 +46,8 @@ against a seeded database.
 
 ## Not built yet (next)
 
-- flashcards (MOB-145), crash reporting (MOB-107), store release (MOB-170..175).
+- Store release (MOB-170..175): Maestro flows, `eas.json` and the store-listing draft are ready; running them needs
+  the owner's Apple/Google accounts, an EAS project and a test device (`docs/mobile-app/store-listing.md`).
 - Release 2 and 3 modules (video, exams, speaking, surveys, chat, AI, premium).
 
 ## Try it locally

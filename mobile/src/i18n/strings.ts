@@ -211,6 +211,11 @@ export const uz = {
   noWords: "Guruhingizda hali mustahkamlash so'zlari yo'q. O'qituvchi qo'shgach shu yerda paydo bo'ladi.",
   listenWord: 'Talaffuz',
   cardOf: (i: number, n: number) => `${i} / ${n}`,
+  deleteAccount: "Hisobni o'chirish",
+  deleteAccountText: "So'rov markaz administratoriga boradi. Hisob va unga bog'liq ma'lumotlar (to'lov hujjatlaridan tashqari) o'chiriladi.",
+  deleteAccountConfirm: "Ha, o'chirishni so'rayman",
+  deleteAccountSent: "So'rov yuborildi. Administrator siz bilan bog'lanadi.",
+  deleteAccountMessage: "Hisobimni va unga bog'liq ma'lumotlarni o'chirishni so'rayman.",
 };
 
 export type Strings = typeof uz;
@@ -426,6 +431,11 @@ export const en: Strings = {
   noWords: 'Your groups have no consolidation words yet. They appear here once a teacher adds them.',
   listenWord: 'Pronunciation',
   cardOf: (i: number, n: number) => `${i} / ${n}`,
+  deleteAccount: 'Delete account',
+  deleteAccountText: 'The request goes to the center administrator. The account and its data are deleted, except payment records the center must keep.',
+  deleteAccountConfirm: 'Yes, request deletion',
+  deleteAccountSent: 'Request sent. An administrator will contact you.',
+  deleteAccountMessage: 'I ask to delete my account and the data linked to it.',
 };
 
 export const dictionaries = { uz, en };

@@ -1,0 +1,14 @@
+# @MOB-170 Parent home: child switcher, payment status, children list with "add a child".
+appId: uz.temurbekschool.app
+---
+- runFlow:
+    file: _login.yaml
+    env:
+      USER: ${PARENT_USER}
+      PASS: ${PARENT_PASS}
+- assertVisible:
+    text: "Salom.*"
+- assertVisible:
+    text: "Qarzdorlik.*"
+- tapOn: "Farzandlarim"
+- assertVisible: "Farzand qo'shish"

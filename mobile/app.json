@@ -45,7 +45,8 @@
           "photosPermission": "TEMURBEK SCHOOL attaches photos to your homework.",
           "cameraPermission": "TEMURBEK SCHOOL takes photos of your homework."
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "scheme": "temurbekschool",
     "extra": {
