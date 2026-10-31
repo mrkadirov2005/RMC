@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# @MOB-172 Signing key and built APKs (back up credentials/ outside the repo)
+/credentials
+/dist
