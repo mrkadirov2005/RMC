@@ -169,7 +169,10 @@ async function createApp(options: CreateAppOptions = {}) {
   const { MobileLoginDto, MobileRefreshDto, MobileResetRequestDto, MobileResetConfirmDto } = require('./dtos/mobile.dto');
   const mobileAccountController = require('./modules/mobile/controllers/mobileAccount.controller');
   const mobileRefreshRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false });
-  app.get('/api/mobile/v1/app-config', mobileAuthController.appConfig);
+  // @MOB-172 @MOB-175 The app is installed from the website: version check and the APK download link.
+  const mobileReleaseController = require('./modules/mobile/controllers/mobileRelease.controller');
+  app.get('/api/mobile/v1/app-config', mobileReleaseController.appConfig);
+  app.get('/api/mobile/v1/download', mobileReleaseController.download);
   app.post('/api/mobile/v1/auth/login', authRateLimiter, validateBody(MobileLoginDto), mobileAuthController.login);
   app.post('/api/mobile/v1/auth/refresh', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.refresh);
   app.post('/api/mobile/v1/auth/logout', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.logout);
@@ -239,7 +242,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/consolidations', requireAuth, requireRole('superuser', 'teacher', 'student'), consolidationRoutes);
   app.use('/api/consolidate', consolidatePublicRateLimiter, consolidatePublicRoutes);
   app.use('/api/share/tests', consolidatePublicRateLimiter, testSharePublicRoutes);
-  // @MOB-055 Local media storage (when no S3 bucket is set): the signed URL is the permission.
+  // @MOB-055 Uploads land on the backend first (then move to Google Drive): the signed URL is the permission.
   const mediaController = require('./modules/media/media.controller');
   app.put('/api/media-local/*', express.raw({ type: () => true, limit: '25mb' }), mediaController.localPut);
   app.get('/api/media-local/*', mediaController.localGet);
@@ -276,6 +279,7 @@ async function main() {
   require('./modules/sms/services/sms.service').startSmsWorker();
   // @MOB-041 Mobile push notifications (attendance, grades, coins, payments).
   require('./modules/mobile/services/mobileNotification.service').startPushWorker();
+  require('./modules/media/media.service').startDriveSync();
 
   // Graceful shutdown - use a flag to prevent multiple calls
   let isShuttingDown = false;

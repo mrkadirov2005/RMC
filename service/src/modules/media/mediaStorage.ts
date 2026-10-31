@@ -2,17 +2,12 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-// @MOB-055 Private file storage behind presigned URLs. With MEDIA_S3_BUCKET set, files go to S3 and
-// the app uploads straight to it. Without it (development, demos), the backend plays the same role:
-// it signs URLs to its own /api/media-local route and keeps files in MEDIA_LOCAL_DIR.
+// @MOB-055 The app uploads to the backend through a signed URL to its own /api/media-local route;
+// files land in MEDIA_LOCAL_DIR. After the upload is checked, media.service moves them to Google
+// Drive when it is configured (googleDrive.ts). The signed URL is the permission.
 
 type PutRequest = { key: string; contentType: string; size: number; expiresSeconds: number; baseUrl: string };
 type GetRequest = { key: string; contentType: string; expiresSeconds: number; baseUrl: string; fileName?: string | null };
-
-const s3Config = () => ({
-  bucket: String(process.env.MEDIA_S3_BUCKET || '').trim(),
-  region: String(process.env.MEDIA_S3_REGION || process.env.AWS_REGION || 'us-east-1').trim(),
-});
 
 const localDir = () => path.resolve(process.env.MEDIA_LOCAL_DIR || path.join(process.cwd(), 'uploads', 'media'));
 
@@ -26,43 +21,14 @@ const secret = () => {
 const sign = (parts: (string | number)[]) => crypto.createHmac('sha256', secret()).update(parts.join('|')).digest('base64url');
 const sameText = (a: string, b: string) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
-let s3Client: any = null;
-const s3 = () => {
-  if (!s3Client) {
-    const { S3Client } = require('@aws-sdk/client-s3');
-    s3Client = new S3Client({ region: s3Config().region });
-  }
-  return s3Client;
-};
-
-const usesS3 = () => Boolean(s3Config().bucket);
-
-// The URL the app PUTs the file to. On S3 the signature covers the type and exact length, so a
-// bigger or different file is refused by S3 itself.
+// The URL the app PUTs the file to. The signature covers the type and exact length.
 const presignPut = async ({ key, contentType, size, expiresSeconds, baseUrl }: PutRequest) => {
-  if (usesS3()) {
-    const { PutObjectCommand } = require('@aws-sdk/client-s3');
-    const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-    const command = new PutObjectCommand({ Bucket: s3Config().bucket, Key: key, ContentType: contentType, ContentLength: size });
-    return getSignedUrl(s3(), command, { expiresIn: expiresSeconds });
-  }
   const exp = Math.floor(Date.now() / 1000) + expiresSeconds;
   const sig = sign(['put', key, contentType, size, exp]);
   return `${baseUrl}/api/media-local/${encodeURI(key)}?op=put&type=${encodeURIComponent(contentType)}&size=${size}&exp=${exp}&sig=${sig}`;
 };
 
-const presignGet = async ({ key, contentType, expiresSeconds, baseUrl, fileName }: GetRequest) => {
-  if (usesS3()) {
-    const { GetObjectCommand } = require('@aws-sdk/client-s3');
-    const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-    const command = new GetObjectCommand({
-      Bucket: s3Config().bucket,
-      Key: key,
-      ResponseContentType: contentType,
-      ...(fileName ? { ResponseContentDisposition: `inline; filename="${fileName.replace(/[^\w.\- ]/g, '_')}"` } : {}),
-    });
-    return getSignedUrl(s3(), command, { expiresIn: expiresSeconds });
-  }
+const presignGet = async ({ key, contentType, expiresSeconds, baseUrl }: GetRequest) => {
   const exp = Math.floor(Date.now() / 1000) + expiresSeconds;
   const sig = sign(['get', key, contentType, exp]);
   return `${baseUrl}/api/media-local/${encodeURI(key)}?op=get&type=${encodeURIComponent(contentType)}&exp=${exp}&sig=${sig}`;
@@ -70,16 +36,6 @@ const presignGet = async ({ key, contentType, expiresSeconds, baseUrl, fileName 
 
 // Size of the stored object, or null when nothing was uploaded.
 const sizeOf = async (key: string): Promise<number | null> => {
-  if (usesS3()) {
-    const { HeadObjectCommand } = require('@aws-sdk/client-s3');
-    try {
-      const head = await s3().send(new HeadObjectCommand({ Bucket: s3Config().bucket, Key: key }));
-      return Number(head.ContentLength ?? 0);
-    } catch (error: any) {
-      if (error?.$metadata?.httpStatusCode === 404 || error?.name === 'NotFound') return null;
-      throw error;
-    }
-  }
   try {
     return (await fs.promises.stat(localPath(key))).size;
   } catch {
@@ -88,11 +44,6 @@ const sizeOf = async (key: string): Promise<number | null> => {
 };
 
 const remove = async (key: string) => {
-  if (usesS3()) {
-    const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
-    await s3().send(new DeleteObjectCommand({ Bucket: s3Config().bucket, Key: key }));
-    return;
-  }
   await fs.promises.rm(localPath(key), { force: true });
 };
 
@@ -117,12 +68,14 @@ const verifyLocal = (key: string, query: any, now = Date.now()) => {
   return { op, type, size: op === 'put' ? size : null };
 };
 
+const readLocal = (key: string): Promise<Buffer> => fs.promises.readFile(localPath(key));
+
 const writeLocal = async (key: string, data: Buffer) => {
   const file = localPath(key);
   await fs.promises.mkdir(path.dirname(file), { recursive: true });
   await fs.promises.writeFile(file, data);
 };
 
-module.exports = { usesS3, presignPut, presignGet, sizeOf, remove, verifyLocal, writeLocal, localPath, KEY_PATTERN };
+module.exports = { presignPut, presignGet, sizeOf, remove, verifyLocal, readLocal, writeLocal, localPath, KEY_PATTERN };
 
 export {};

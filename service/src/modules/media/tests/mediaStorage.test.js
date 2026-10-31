@@ -10,7 +10,6 @@ describe('media storage (local driver)', () => {
     jest.resetModules();
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'media-'));
     process.env.MEDIA_LOCAL_DIR = dir;
-    delete process.env.MEDIA_S3_BUCKET;
     storage = require('../mediaStorage');
   });
   afterEach(() => {
@@ -47,8 +46,8 @@ describe('media storage (local driver)', () => {
     expect(await storage.sizeOf(key)).toBeNull();
     await storage.writeLocal(key, Buffer.from('hello'));
     expect(await storage.sizeOf(key)).toBe(5);
+    expect((await storage.readLocal(key)).toString()).toBe('hello');
     await storage.remove(key);
     expect(await storage.sizeOf(key)).toBeNull();
-    expect(storage.usesS3()).toBe(false);
   });
 });

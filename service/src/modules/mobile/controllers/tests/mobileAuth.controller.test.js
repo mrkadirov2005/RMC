@@ -22,12 +22,6 @@ describe('mobile auth controller', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('app-config reports the API version and minimum app version', () => {
-    const res = createResponse();
-    controller.appConfig({}, res);
-    expect(res.json).toHaveBeenCalledWith({ api_version: 'v1', min_app_version: expect.any(String) });
-  });
-
   // @MOB-022
   it.each([
     ['role_required', 409, 'ROLE_REQUIRED'],

@@ -1,8 +1,10 @@
 jest.mock('../../../db/pool', () => ({ query: jest.fn() }));
-jest.mock('../mediaStorage', () => ({ presignPut: jest.fn(), presignGet: jest.fn(), sizeOf: jest.fn(), remove: jest.fn() }));
+jest.mock('../mediaStorage', () => ({ presignPut: jest.fn(), presignGet: jest.fn(), sizeOf: jest.fn(), remove: jest.fn(), readLocal: jest.fn() }));
+jest.mock('../googleDrive', () => ({ isConfigured: jest.fn(() => false), upload: jest.fn() }));
 
 const pool = require('../../../db/pool');
 const storage = require('../mediaStorage');
+const drive = require('../googleDrive');
 const service = require('../media.service');
 
 const rows = (list) => ({ rows: list });
@@ -70,5 +72,52 @@ describe('media service', () => {
     pool.query.mockResolvedValueOnce(rows([{ media_id: 2 }]));
     await expect(service.invalidOwnMedia(7, [2, 3])).resolves.toEqual([3]);
     expect(pool.query.mock.calls[0][1]).toEqual([[2, 3], 7]);
+  });
+
+  // @MOB-055 Owner's decision: files end up in Google Drive with a direct download link.
+  describe('Google Drive', () => {
+    const row = { media_id: 5, kind: 'audio', content_type: 'audio/mp4', size_bytes: 500, status: 'uploaded', storage_key: 'homework/student-7/0b2f8a3e-5c1d-4e6f-8a9b-1c2d3e4f5a6b.m4a', drive_file_id: null };
+
+    it('moves a checked file to Drive, keeps the link and deletes the backend copy', async () => {
+      drive.isConfigured.mockReturnValue(true);
+      storage.readLocal.mockResolvedValue(Buffer.from('abc'));
+      drive.upload.mockResolvedValue({ id: 'F1', downloadUrl: 'https://drive.google.com/uc?export=download&id=F1' });
+      pool.query.mockResolvedValue(rows([]));
+      await expect(service.moveToDrive(row)).resolves.toBe(true);
+      expect(drive.upload).toHaveBeenCalledWith({ name: 'homework_student-7_0b2f8a3e-5c1d-4e6f-8a9b-1c2d3e4f5a6b.m4a', contentType: 'audio/mp4', data: Buffer.from('abc') });
+      expect(pool.query.mock.calls[0][1]).toEqual([5, 'F1', 'https://drive.google.com/uc?export=download&id=F1']);
+      expect(storage.remove).toHaveBeenCalledWith(row.storage_key);
+    });
+
+    it('keeps the file on the backend when Drive fails or is not configured', async () => {
+      drive.isConfigured.mockReturnValue(false);
+      await expect(service.moveToDrive(row)).resolves.toBe(false);
+      drive.isConfigured.mockReturnValue(true);
+      storage.readLocal.mockResolvedValue(Buffer.from('abc'));
+      drive.upload.mockRejectedValue(new Error('quota'));
+      const log = jest.spyOn(console, 'error').mockImplementation(() => {});
+      await expect(service.moveToDrive(row)).resolves.toBe(false);
+      log.mockRestore();
+      expect(storage.remove).not.toHaveBeenCalled();
+      expect(pool.query).not.toHaveBeenCalled();
+    });
+
+    it('serves the Drive link once the file is there, a signed backend link before', async () => {
+      await expect(service.downloadUrl({ ...row, download_url: 'https://drive.google.com/uc?export=download&id=F1' }, 'http://api')).resolves.toMatchObject({
+        url: 'https://drive.google.com/uc?export=download&id=F1', expires_in: null,
+      });
+      expect(storage.presignGet).not.toHaveBeenCalled();
+      storage.presignGet.mockResolvedValue('http://api/signed');
+      await expect(service.downloadUrl(row, 'http://api')).resolves.toMatchObject({ url: 'http://api/signed', expires_in: 300 });
+    });
+
+    it('retries files still on the backend', async () => {
+      drive.isConfigured.mockReturnValue(true);
+      storage.readLocal.mockResolvedValue(Buffer.from('abc'));
+      drive.upload.mockResolvedValue({ id: 'F2', downloadUrl: 'u' });
+      pool.query.mockResolvedValueOnce(rows([row, { ...row, media_id: 6 }])).mockResolvedValue(rows([]));
+      await expect(service.syncToDrive()).resolves.toBe(2);
+      expect(pool.query.mock.calls[0][0]).toMatch(/drive_file_id IS NULL/);
+    });
   });
 });

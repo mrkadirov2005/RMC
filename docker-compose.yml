@@ -63,6 +63,12 @@ services:
       SMS_GATEWAY_USERNAME: "${SMS_GATEWAY_USERNAME:-}"
       SMS_GATEWAY_PASSWORD: "${SMS_GATEWAY_PASSWORD:-}"
       SMS_DAILY_LIMIT: "${SMS_DAILY_LIMIT:-30}"
+      # @MOB-055 Homework files from the app land here, then move to Google Drive (empty: they stay here).
+      MEDIA_LOCAL_DIR: /media-uploads
+      GDRIVE_CLIENT_ID: "${GDRIVE_CLIENT_ID:-}"
+      GDRIVE_CLIENT_SECRET: "${GDRIVE_CLIENT_SECRET:-}"
+      GDRIVE_REFRESH_TOKEN: "${GDRIVE_REFRESH_TOKEN:-}"
+      GDRIVE_FOLDER_ID: "${GDRIVE_FOLDER_ID:-}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,6 +79,7 @@ services:
       - "${BACKEND_PORT:-4000}:4000"
     volumes:
       - backup_control:/backup-control
+      - media_uploads:/media-uploads
     restart: unless-stopped
     networks:
       - crm_network
@@ -167,6 +174,7 @@ volumes:
   mongo_data:
   backup_data:
   backup_control:
+  media_uploads:
 
 networks:
   crm_network:

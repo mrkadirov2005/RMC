@@ -1,15 +1,8 @@
 const mobileAuthService = require('../services/mobileAuth.service');
 
-const MIN_APP_VERSION = process.env.MOBILE_MIN_APP_VERSION || '1.0.0';
-
 const fail = (res: any, error: any, message: string) => {
   console.error('Mobile auth error:', error);
   res.status(500).json({ error: message });
-};
-
-// @MOB-020 Public: lets the app check it is still supported before signing in.
-const appConfig = (req: any, res: any) => {
-  res.json({ api_version: 'v1', min_app_version: MIN_APP_VERSION });
 };
 
 // @MOB-022 POST /api/mobile/v1/auth/login
@@ -97,6 +90,6 @@ const revokeDevice = async (req: any, res: any) => {
   }
 };
 
-module.exports = { appConfig, login, refresh, logout, me, listDevices, revokeDevice };
+module.exports = { login, refresh, logout, me, listDevices, revokeDevice };
 
 export {};

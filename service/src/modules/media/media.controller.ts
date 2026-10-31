@@ -62,11 +62,10 @@ const download = async (req: any, res: any) => {
   }
 };
 
-// @MOB-055 Local storage only: PUT/GET /api/media-local/<key>?op&type&size&exp&sig. The signature is
-// the permission; no token is needed, as with S3.
+// @MOB-055 PUT/GET /api/media-local/<key>?op&type&size&exp&sig. The signature is the permission, so
+// no token is needed.
 const localPut = async (req: any, res: any) => {
   try {
-    if (storage.usesS3()) return res.status(404).end();
     const key = String(req.params[0] || '');
     const signed = storage.verifyLocal(key, req.query);
     if (!signed || signed.op !== 'put') return res.status(403).json({ error: 'Havola yaroqsiz yoki muddati tugagan' });
@@ -82,7 +81,6 @@ const localPut = async (req: any, res: any) => {
 };
 
 const localGet = (req: any, res: any) => {
-  if (storage.usesS3()) return res.status(404).end();
   const key = String(req.params[0] || '');
   const signed = storage.verifyLocal(key, req.query);
   if (!signed || signed.op !== 'get') return res.status(403).json({ error: 'Havola yaroqsiz yoki muddati tugagan' });

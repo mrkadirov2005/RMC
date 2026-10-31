@@ -3,6 +3,7 @@ export {};
 const express = require('express');
 const admin = require('../modules/mobile/controllers/mobileAdmin.controller');
 const account = require('../modules/mobile/controllers/mobileAccount.controller');
+const releases = require('../modules/mobile/controllers/mobileRelease.controller');
 
 // @MOB-160 @MOB-161 @MOB-162 @MOB-164 Web panel management of the mobile app's content.
 // Mounted at /api/mobile-admin behind requireAuth and the superuser role (admins and the owner).
@@ -27,5 +28,9 @@ router.patch('/help-requests/:id', admin.updateHelpRequest);
 
 // @MOB-166 App adoption numbers.
 router.get('/adoption', account.adoption);
+
+// @MOB-172 App versions published for download from the website.
+router.get('/releases', releases.list);
+router.post('/releases', releases.publish);
 
 module.exports = router;

@@ -589,4 +589,33 @@ describe('mobile app API with PostgreSQL', () => {
     expect(after.cards).toEqual([]);
     expect(after.stats).toMatchObject({ total: 2, new: 0, due: 0 });
   });
+
+  // @MOB-172 @MOB-175 The app is installed from the website: admins publish versions, the app checks them.
+  test('app releases: admin publishes a Drive link, app-config and the download link follow it', async () => {
+    await pool.query('TRUNCATE mobile_app_releases RESTART IDENTITY');
+    const { generateToken } = require('../../../src/middleware/auth');
+    const adminToken = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId, username: 'admin1' });
+    const admin = () => api().post('/api/mobile-admin/releases').set(auth(adminToken));
+
+    expect((await api().get('/api/mobile/v1/download')).status).toBe(404);
+    expect((await api().get('/api/mobile/v1/app-config')).body).toMatchObject({ latest_version: null, download_url: null });
+
+    const first = await admin().send({ version: '1.0.0', download_url: 'https://drive.google.com/file/d/APK1/view?usp=sharing' });
+    expect(first.status).toBe(201);
+    expect(first.body).toMatchObject({ version: '1.0.0', min_version: '1.0.0', download_url: 'https://drive.google.com/uc?export=download&id=APK1', created_by_name: 'admin1' });
+    expect((await admin().send({ version: '1.0.0', download_url: 'https://x' })).body.code).toBe('NOT_NEWER');
+    expect((await admin().send({ version: '1.1.0', min_version: '1.1.0', download_url: 'https://drive.google.com/file/d/APK2/view', notes: 'Yangi' })).status).toBe(201);
+
+    const config = (await api().get('/api/mobile/v1/app-config')).body;
+    expect(config).toMatchObject({ min_app_version: '1.1.0', latest_version: '1.1.0', download_url: 'https://drive.google.com/uc?export=download&id=APK2', release_notes: 'Yangi' });
+    const download = await api().get('/api/mobile/v1/download');
+    expect(download.status).toBe(302);
+    expect(download.headers.location).toBe('https://drive.google.com/uc?export=download&id=APK2');
+    expect((await api().get('/api/mobile-admin/releases').set(auth(adminToken))).body.items.map((r) => r.version)).toEqual(['1.1.0', '1.0.0']);
+
+    // Only admins publish.
+    const teacher = generateToken({ id: 1, userType: 'teacher', role: 'teacher', center_id: centerId });
+    expect((await api().post('/api/mobile-admin/releases').set(auth(teacher)).send({ version: '9.9.9', download_url: 'https://x' })).status).toBe(403);
+    expect((await api().post('/api/mobile-admin/releases').send({ version: '9.9.9', download_url: 'https://x' })).status).toBe(401);
+  });
 });

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const pool = require('../../db/pool');
 const storage = require('./mediaStorage');
+const drive = require('./googleDrive');
 
 // @MOB-055 What may be uploaded, by kind: allowed types and the largest size.
 const MB = 1024 * 1024;
@@ -85,14 +86,53 @@ const completeUpload = async (owner: { type: string; id: number }, mediaId: numb
     `UPDATE media_files SET status = 'uploaded', size_bytes = $2, uploaded_at = CURRENT_TIMESTAMP WHERE media_id = $1 RETURNING *`,
     [mediaId, size],
   );
+  await moveToDrive(updated);
   return { kind: 'ok' as const, media: publicRow(updated) };
 };
 
-const downloadUrl = async (row: any, baseUrl: string) => ({
-  ...publicRow(row),
-  url: await storage.presignGet({ key: row.storage_key, contentType: row.content_type, expiresSeconds: DOWNLOAD_URL_SECONDS, baseUrl, fileName: row.file_name }),
-  expires_in: DOWNLOAD_URL_SECONDS,
-});
+// @MOB-055 Moves a checked file from the backend to Google Drive and keeps its direct link. When
+// Drive is not configured or fails, the file stays on the backend (served by signed links) and
+// syncToDrive tries again later.
+const moveToDrive = async (row: any) => {
+  if (!drive.isConfigured() || row.drive_file_id) return false;
+  try {
+    const data = await storage.readLocal(row.storage_key);
+    const name = `${row.storage_key.replace(/\//g, '_')}`;
+    const file = await drive.upload({ name, contentType: row.content_type, data });
+    await query(`UPDATE media_files SET drive_file_id = $2, download_url = $3 WHERE media_id = $1`, [row.media_id, file.id, file.downloadUrl]);
+    await storage.remove(row.storage_key);
+    return true;
+  } catch (error: any) {
+    console.error(`[media] Google Drive upload failed for media ${row.media_id}: ${error?.message || error}`);
+    return false;
+  }
+};
+
+// @MOB-055 Retries files left on the backend (Drive was down or not configured yet).
+const syncToDrive = async (limit = 20) => {
+  if (!drive.isConfigured()) return 0;
+  const rows = await query(
+    `SELECT * FROM media_files WHERE status = 'uploaded' AND drive_file_id IS NULL ORDER BY media_id LIMIT $1`,
+    [limit],
+  );
+  let moved = 0;
+  for (const row of rows) {
+    // One at a time keeps memory low on the small server.
+    if (await moveToDrive(row)) moved += 1;
+  }
+  return moved;
+};
+
+// @MOB-055 The Drive link once the file is there (it does not expire), otherwise a signed link to
+// the backend copy.
+const downloadUrl = async (row: any, baseUrl: string) =>
+  row.download_url
+    ? { ...publicRow(row), url: row.download_url, expires_in: null }
+    : {
+        ...publicRow(row),
+        url: await storage.presignGet({ key: row.storage_key, contentType: row.content_type, expiresSeconds: DOWNLOAD_URL_SECONDS, baseUrl, fileName: row.file_name }),
+        expires_in: DOWNLOAD_URL_SECONDS,
+      };
 
 // @MOB-055 A signed link to the owner's own uploaded file.
 const ownDownload = async (owner: { type: string; id: number }, mediaId: number, baseUrl: string) => {
@@ -127,6 +167,28 @@ const describe = async (ids: number[]) => {
   return rows.map(publicRow);
 };
 
-module.exports = { KINDS, limits, kindOf, createUpload, completeUpload, ownDownload, downloadUrl, invalidOwnMedia, attachToAssignment, byId, describe };
+// @MOB-055 Started with the server: every 10 minutes, files still on the backend go to Drive.
+const startDriveSync = () => {
+  if (!drive.isConfigured()) {
+    console.log('[media] Google Drive is not configured; uploaded files stay on the backend.');
+    return null;
+  }
+  let running = false;
+  const timer = setInterval(async () => {
+    if (running) return;
+    running = true;
+    try {
+      await syncToDrive();
+    } catch (error: any) {
+      console.error('[media] Drive sync failed:', error?.message || error);
+    } finally {
+      running = false;
+    }
+  }, 10 * 60 * 1000);
+  timer.unref?.();
+  return timer;
+};
+
+module.exports = { startDriveSync, KINDS, limits, kindOf, createUpload, completeUpload, moveToDrive, syncToDrive, ownDownload, downloadUrl, invalidOwnMedia, attachToAssignment, byId, describe };
 
 export {};
