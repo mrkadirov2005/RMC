@@ -22,6 +22,13 @@ jest.mock('../homework.repository', () => ({
   setCoinsAwarded: jest.fn(),
 }));
 jest.mock('../../students/services/student.service', () => ({ listLinkedGroups: jest.fn(), upsertSourceCoins: jest.fn() }));
+jest.mock('../../media/media.service', () => ({
+  describe: jest.fn().mockResolvedValue([]),
+  invalidOwnMedia: jest.fn().mockResolvedValue([]),
+  attachToAssignment: jest.fn(),
+  byId: jest.fn(),
+  downloadUrl: jest.fn(),
+}));
 jest.mock('../../mobile/repositories/mobileNotification.repository', () => ({ parentsOf: jest.fn(), isCategoryEnabled: jest.fn(), enqueue: jest.fn() }));
 
 const repo = require('../homework.repository');
@@ -142,7 +149,7 @@ describe('homework service', () => {
     repo.deleteAssignment.mockResolvedValue({ assignment_id: 9 });
     await expect(service.deleteAssignment(admin, 9)).resolves.toBe(true);
     repo.submissionsFor.mockResolvedValue([{ submission_id: 1 }]);
-    await expect(service.submissions(admin, 9)).resolves.toEqual([{ submission_id: 1 }]);
+    await expect(service.submissions(admin, 9)).resolves.toEqual([{ submission_id: 1, media: [] }]);
 
     // @MOB-165
     await expect(service.assignmentDetail(teacher, 9)).resolves.toBeNull();
@@ -239,5 +246,37 @@ describe('homework service', () => {
     expect(result.submission.coins_awarded).toBe(5);
     expect(notificationRepo.enqueue).toHaveBeenCalledTimes(1);
     expect(notificationRepo.enqueue).toHaveBeenCalledWith(expect.objectContaining({ userType: 'student', category: 'homework', body: 'T: 3/3 — Zo‘r' }));
+  });
+
+  // @MOB-143
+  it('refuses answers pointing at files that are not the student\'s finished uploads, and links good ones', async () => {
+    const mediaService = require('../../media/media.service');
+    const content = { questions: [{ id: 'a', type: 'audio', prompt: 'Read' }, { id: 'f', type: 'file', prompt: 'Photo', max_files: 1 }] };
+    studentService.listLinkedGroups.mockResolvedValue([{ student_id: 7, is_main: true }]);
+    repo.studentAssignment.mockResolvedValue({ assignment_id: 1, content, max_score: '2', title: 'T', submission_status: 'in_progress' });
+
+    await expect(service.submit(7, 1, { a: 'x' })).resolves.toEqual({ error: 'bad_media', details: ['a'] });
+    await expect(service.submit(7, 1, { f: [1, 2] })).resolves.toEqual({ error: 'bad_media', details: ['f'] });
+    mediaService.invalidOwnMedia.mockResolvedValueOnce([9]);
+    await expect(service.submit(7, 1, { a: 9 })).resolves.toEqual({ error: 'bad_media', details: [9] });
+
+    repo.submit.mockResolvedValueOnce({ submission_id: 3, status: 'submitted' });
+    await service.submit(7, 1, { a: 9, f: [10] });
+    expect(mediaService.invalidOwnMedia).toHaveBeenLastCalledWith(7, [9, 10]);
+    expect(mediaService.attachToAssignment).toHaveBeenCalledWith(7, [9, 10], 1);
+  });
+
+  it('opens a submission file only for staff who can see its assignment', async () => {
+    const mediaService = require('../../media/media.service');
+    mediaService.byId.mockResolvedValueOnce(null);
+    await expect(service.mediaForStaff(admin, 5, 'b')).resolves.toBeNull();
+    mediaService.byId.mockResolvedValueOnce({ media_id: 5, status: 'uploaded', assignment_id: null });
+    await expect(service.mediaForStaff(admin, 5, 'b')).resolves.toBeNull();
+
+    mediaService.byId.mockResolvedValue({ media_id: 5, status: 'uploaded', assignment_id: 9 });
+    repo.getAssignment.mockResolvedValue({ assignment_id: 9, teacher_id: 99, center_id: 2 });
+    await expect(service.mediaForStaff(teacher, 5, 'b')).resolves.toBeNull();
+    mediaService.downloadUrl.mockResolvedValue({ url: 'https://get' });
+    await expect(service.mediaForStaff(admin, 5, 'b')).resolves.toEqual({ url: 'https://get' });
   });
 });

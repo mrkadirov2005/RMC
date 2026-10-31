@@ -11,7 +11,19 @@ const SKILLS = ['vocabulary', 'grammar', 'reading', 'listening', 'writing', 'spe
 const selectClass = 'h-9 rounded-md border border-input bg-background px-2 text-sm';
 
 // Editable form of a question: list fields as text, turned back into the stored shape on save.
-type Draft = { id: string; type: QuestionType; prompt: string; points: string; options: string; answer: string; answers: string; pairs: string; min_words: string };
+type Draft = {
+  id: string;
+  type: QuestionType;
+  prompt: string;
+  points: string;
+  options: string;
+  answer: string;
+  answers: string;
+  pairs: string;
+  min_words: string;
+  max_seconds: string;
+  max_files: string;
+};
 
 const toDraft = (q: Question): Draft => ({
   id: q.id,
@@ -23,6 +35,8 @@ const toDraft = (q: Question): Draft => ({
   answers: (q.answers || []).join(', '),
   pairs: (q.pairs || []).map(([l, r]) => `${l} = ${r}`).join('\n'),
   min_words: q.min_words ? String(q.min_words) : '',
+  max_seconds: String(q.max_seconds ?? 120),
+  max_files: String(q.max_files ?? 3),
 });
 
 const lines = (value: string) => value.split('\n').map((s) => s.trim()).filter(Boolean);
@@ -39,6 +53,9 @@ const fromDraft = (d: Draft): Question => {
         return [left.trim(), rest.join('=').trim()] as [string, string];
       }),
     };
+  // @MOB-143
+  if (d.type === 'audio') return { ...base, max_seconds: Math.min(600, Math.max(10, Math.round(Number(d.max_seconds) || 120))) };
+  if (d.type === 'file') return { ...base, max_files: Math.min(5, Math.max(1, Math.round(Number(d.max_files) || 3))) };
   return { ...base, ...(Number(d.min_words) > 0 ? { min_words: Number(d.min_words) } : {}) };
 };
 
@@ -64,6 +81,8 @@ export function TaskEditor({ lessonId, task, onSave, onCancel }: Props) {
     gap: t('Fill the gap'),
     match: t('Matching'),
     text: t('Written answer'),
+    audio: t('Spoken answer'),
+    file: t('Photo or PDF'),
   };
   const update = (i: number, patch: Partial<Draft>) => setDrafts(drafts.map((d, j) => (j === i ? { ...d, ...patch } : d)));
 
@@ -129,6 +148,18 @@ export function TaskEditor({ lessonId, task, onSave, onCancel }: Props) {
               <label className="flex items-center gap-2 text-sm">
                 {t('Minimum words')}
                 <Input className="h-9 w-24" type="number" min={0} value={d.min_words} onChange={(e) => update(i, { min_words: e.target.value })} />
+              </label>
+            )}
+            {d.type === 'audio' && (
+              <label className="flex items-center gap-2 text-sm">
+                {t('Longest recording, seconds')}
+                <Input className="h-9 w-24" type="number" min={10} max={600} value={d.max_seconds} onChange={(e) => update(i, { max_seconds: e.target.value })} />
+              </label>
+            )}
+            {d.type === 'file' && (
+              <label className="flex items-center gap-2 text-sm">
+                {t('Files at most')}
+                <Input className="h-9 w-24" type="number" min={1} max={5} value={d.max_files} onChange={(e) => update(i, { max_files: e.target.value })} />
               </label>
             )}
           </div>

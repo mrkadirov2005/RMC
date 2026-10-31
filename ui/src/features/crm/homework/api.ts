@@ -4,7 +4,8 @@ export { classAPI } from '@/shared/api/api';
 
 // @MOB-163 @MOB-165 Homework Bank, assigning and grading (service: /api/homework).
 
-export type QuestionType = 'choice' | 'gap' | 'match' | 'text';
+// @MOB-143 audio: a recorded answer; file: photos or PDFs. Both are graded by the teacher.
+export type QuestionType = 'choice' | 'gap' | 'match' | 'text' | 'audio' | 'file';
 export type Question = {
   id: string;
   type: QuestionType;
@@ -15,7 +16,10 @@ export type Question = {
   answers?: string[];
   pairs?: [string, string][];
   min_words?: number;
+  max_seconds?: number;
+  max_files?: number;
 };
+export type MediaFile = { media_id: number; kind: 'audio' | 'image' | 'pdf'; content_type: string; size_bytes: number; file_name: string | null };
 export type Task = {
   task_id: number;
   lesson_id: number;
@@ -58,6 +62,7 @@ export type Submission = {
   max_score: string | null;
   feedback: string | null;
   submitted_at: string | null;
+  media?: MediaFile[];
 };
 
 export const homeworkAPI = {
@@ -73,5 +78,7 @@ export const homeworkAPI = {
   assignment: (id: number) => apiClient.get(`/homework/assignments/${id}`),
   removeAssignment: (id: number) => apiClient.delete(`/homework/assignments/${id}`),
   submissions: (assignmentId: number) => apiClient.get(`/homework/assignments/${assignmentId}/submissions`),
+  // @MOB-143 A 5-minute signed link to a recorded or attached answer.
+  media: (mediaId: number) => apiClient.get(`/homework/media/${mediaId}`),
   review: (submissionId: number, score: number, feedback: string) => apiClient.post(`/homework/submissions/${submissionId}/review`, { score, feedback }),
 };

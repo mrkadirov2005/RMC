@@ -18,7 +18,7 @@ describe('mobile app API with PostgreSQL', () => {
 
   beforeAll(async () => {
     pool = require('../../../src/db/pool');
-    await pool.query('TRUNCATE TABLE edu_centers, owners, parents, mobile_sessions, mobile_password_resets, parent_link_requests, mobile_onboarding, mobile_consents RESTART IDENTITY CASCADE');
+    await pool.query('TRUNCATE TABLE edu_centers, owners, parents, mobile_sessions, mobile_password_resets, parent_link_requests, mobile_onboarding, mobile_consents, media_files RESTART IDENTITY CASCADE');
     centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Mobile Center', 'MOB-C') RETURNING center_id`)).rows[0].center_id;
     const teacherId = (await pool.query(
       `INSERT INTO teachers (center_id, employee_id, first_name, last_name) VALUES ($1, 'MOB-T', 'Temur', 'Aliyev') RETURNING teacher_id`, [centerId],
@@ -444,6 +444,96 @@ describe('mobile app API with PostgreSQL', () => {
       expect(done.rows[0]).toMatchObject({ skipped: false, completed_at: expect.any(Date), instagram_opened_at: expect.any(Date) });
     } finally {
       process.env.TELEGRAM_BOT_TOKEN = savedToken;
+    }
+  });
+  // @MOB-055 @MOB-143
+  test('spoken and photo answers: signed upload, size check, submit, teacher opens the file', async () => {
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+    const savedDir = process.env.MEDIA_LOCAL_DIR;
+    process.env.MEDIA_LOCAL_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'rmc-media-'));
+    try {
+      const { generateToken } = require('../../../src/middleware/auth');
+      const adminToken = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId, username: 'admin1' });
+      const hw = (method, p) => api()[method](`/api/homework${p}`).set(auth(adminToken));
+      const b1 = (await pool.query("SELECT class_id FROM classes WHERE class_name = 'B1'")).rows[0].class_id;
+      const level = (await hw('post', '/bank/level').send({ title: 'Speaking' })).body;
+      const book = (await hw('post', '/bank/book').send({ title: 'Book', parent_id: level.id })).body;
+      const unit = (await hw('post', '/bank/unit').send({ title: 'Unit', parent_id: book.id })).body;
+      const lesson = (await hw('post', '/bank/lesson').send({ title: 'Lesson', parent_id: unit.id })).body;
+      const content = {
+        questions: [
+          { id: 'say', type: 'audio', prompt: 'Read the text aloud', max_seconds: 60, points: 5 },
+          { id: 'photo', type: 'file', prompt: 'Photo of your notebook', max_files: 1, points: 2 },
+        ],
+      };
+      const task = (await hw('post', '/tasks').send({ lesson_id: lesson.id, title: 'Speaking 1', skill: 'speaking', content })).body;
+      await hw('post', `/tasks/${task.task_id}/approve`);
+      const assignment = (await hw('post', '/assignments').send({ task_id: task.task_id, class_id: b1 })).body;
+
+      const mobileAuth = require('../../../src/modules/mobile/services/mobileAuth.service');
+      const student = (await mobileAuth.login({ username: 'aziza', password: 'secret-pass', ...device('stu-media') })).access_token;
+      const detail = (await api().get(`/api/mobile/v1/student/homework/${assignment.assignment_id}`).set(auth(student))).body;
+      expect(detail.task.questions).toEqual([
+        { id: 'say', type: 'audio', prompt: 'Read the text aloud', points: 5, max_seconds: 60 },
+        { id: 'photo', type: 'file', prompt: 'Photo of your notebook', points: 2, max_files: 1 },
+      ]);
+
+      // Over the limit or of a type not allowed: refused before any upload.
+      const start = (body) => api().post('/api/mobile/v1/media/uploads').set(auth(student)).send({ purpose: 'homework', ...body });
+      expect((await start({ content_type: 'audio/mp4', size_bytes: 30 * 1024 * 1024 })).status).toBe(413);
+      expect((await start({ content_type: 'application/x-msdownload', size_bytes: 100 })).status).toBe(415);
+
+      const upload = async (contentType, bytes, announced = bytes.length) => {
+        const started = (await start({ content_type: contentType, size_bytes: announced, file_name: 'answer' })).body;
+        const url = new URL(started.upload.url);
+        const put = await api().put(url.pathname + url.search).set('Content-Type', contentType).send(bytes);
+        return { id: started.media.media_id, put: put.status };
+      };
+      const audio = await upload('audio/mp4', Buffer.alloc(3000, 1));
+      expect(audio.put).toBe(200);
+      // More bytes than were signed for: refused by the storage URL.
+      const cheat = await upload('image/jpeg', Buffer.alloc(500, 2), 100);
+      expect(cheat.put).toBe(413);
+      const photo = await upload('image/jpeg', Buffer.alloc(800, 3));
+
+      // Not confirmed yet: submitting with it is refused.
+      expect((await api().post(`/api/mobile/v1/student/homework/${assignment.assignment_id}/submit`).set(auth(student)).send({ answers: { say: audio.id } })).body.code).toBe('BAD_MEDIA');
+      for (const id of [audio.id, photo.id]) {
+        expect((await api().post(`/api/mobile/v1/media/${id}/complete`).set(auth(student))).body).toMatchObject({ status: 'uploaded' });
+      }
+      expect((await api().post(`/api/mobile/v1/media/${cheat.id}/complete`).set(auth(student))).body.code).toBe('NOT_UPLOADED');
+
+      // Another student's file cannot be used or opened.
+      const bobur = (await mobileAuth.login({ username: 'bobur', password: 'secret-pass', ...device('bob-media') })).access_token;
+      expect((await api().get(`/api/mobile/v1/media/${audio.id}`).set(auth(bobur))).status).toBe(404);
+
+      const submitted = await api().post(`/api/mobile/v1/student/homework/${assignment.assignment_id}/submit`).set(auth(student)).send({ answers: { say: audio.id, photo: [photo.id] } });
+      expect(submitted.status).toBe(200);
+      expect(submitted.body).toMatchObject({ status: 'submitted', per_question: { say: null, photo: null } });
+
+      // The teacher's view lists the files and opens them by a signed link.
+      const subs = (await hw('get', `/assignments/${assignment.assignment_id}/submissions`)).body.items;
+      expect(subs[0].media.map((m) => m.media_id).sort()).toEqual([audio.id, photo.id].sort());
+      const link = (await hw('get', `/media/${audio.id}`)).body;
+      expect(link).toMatchObject({ kind: 'audio', content_type: 'audio/mp4', size_bytes: 3000 });
+      const url = new URL(link.url);
+      const file = await api().get(url.pathname + url.search).buffer(true).parse((res, cb) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => cb(null, Buffer.concat(chunks)));
+      });
+      expect(file.status).toBe(200);
+      expect(file.headers['content-type']).toBe('audio/mp4');
+      expect(file.body.length).toBe(3000);
+      // A tampered link is refused.
+      expect((await api().get(url.pathname + url.search.replace('op=get', 'op=put'))).status).toBe(403);
+
+      expect((await hw('post', `/submissions/${submitted.body.submission_id}/review`).send({ score: 6, feedback: 'Good pronunciation' })).status).toBe(200);
+    } finally {
+      fs.rmSync(process.env.MEDIA_LOCAL_DIR, { recursive: true, force: true });
+      process.env.MEDIA_LOCAL_DIR = savedDir;
     }
   });
 });

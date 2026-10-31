@@ -14,12 +14,13 @@ ticket is tagged `@MOB-###` on the line before it (`grep -rn "@MOB-" service ui 
 | Notifications | Outbox and worker over Expo push, watchers for attendance, grades, coins, payments; inbox with unread count; per-category switches | MOB-040..043, 126 |
 | Content | Official links, announcements (with push), rules with versions and acceptance, help requests with answers | MOB-060..063, 150..153, 160..162, 164 |
 | Account | Forgot password by SMS code (10 min, 5 tries, 3 codes an hour, all devices signed out); student ID QR that changes every minute; parent asks to add a child from the app, admin approves in the existing Telegram → Parent requests panel | MOB-024, 032, 111, 124, 125 |
+| Media answers | Homework questions answered by voice recording or by photos/PDFs; private storage behind short-lived signed URLs, size and type limits, retries after network loss; teachers listen and open files when grading | MOB-055, 143 |
 | Onboarding | Optional first-run steps: Telegram channel (checked by the bot), Instagram (opened only), video consent (a parent answers for a minor; history kept), notification permission; reopen from Settings | MOB-112, 113 |
 | Charts | Home charts of attendance, scores and coins, by month or by day | MOB-127, 128 |
 | Web panel | `/owner/mobile-app` (owner, with a Usage tab of adoption numbers), `/homework` (admins with Tests permission, teachers), `/student-id` (admins and teachers check a scanned ID) | MOB-160..166 |
 
 Tests: backend unit tests for every new module, plus `service/test/integration/flows/mobile-app.integration.test.js`
-(11 end-to-end flows on PostgreSQL); app tests for the API client and helpers. Screens were checked in Chrome
+(12 end-to-end flows on PostgreSQL); app tests for the API client and helpers. Screens were checked in Chrome
 against a seeded database.
 
 ## Needs you
@@ -27,7 +28,7 @@ against a seeded database.
 1. **Approve or decline** MOB-010, MOB-011, MOB-012 (they change existing code: secrets in compose, CORS, audit fixes).
 2. **Push on phones** needs an Expo/EAS project: `npx eas-cli init` in `mobile/`, which adds `extra.eas.projectId`;
    then a development build (`npx eas-cli build --profile development`). Expo Go cannot receive remote push.
-3. **Deploy**: six new migrations (`service/db/migrations/20261031*`) run on backend start. Rebuild only the
+3. **Deploy**: seven new migrations (`service/db/migrations/20261031*`) run on backend start. Rebuild only the
    backend service.
 4. **Optional env**: `HOMEWORK_MAX_COINS` (default 5), `MOBILE_PUSH_WORKER=off`, `MOBILE_MIN_APP_VERSION`,
    `MOBILE_ID_SECRET` (signs the ID QR; falls back to `JWT_SECRET`).
@@ -36,10 +37,14 @@ against a seeded database.
    own phone, else the saved parent phone; a parent's own phone.
 6. **Telegram check** uses the bot's settings: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_REQUIRED_CHANNEL`, `TELEGRAM_BOT_USERNAME` on the
    backend too. The bot must be an admin of the channel. `MOBILE_INSTAGRAM_URL` (or an Instagram official link) sets the Instagram step.
+7. **File storage**: set `MEDIA_S3_BUCKET` and `MEDIA_S3_REGION` (and AWS credentials, e.g. an instance role with
+   s3:PutObject/GetObject/DeleteObject on that bucket; the bucket stays private, with CORS allowing PUT from the app).
+   Without a bucket, files are kept in `service/uploads/media` (`MEDIA_LOCAL_DIR`) and served by the backend; behind
+   nginx set `MEDIA_PUBLIC_BASE_URL` to the public API origin and allow 25 MB bodies on `/api/media-local/`.
 
 ## Not built yet (next)
 
-- Audio/photo answers and attachments (MOB-055, 143), flashcards (MOB-145), crash reporting (MOB-107), store release (MOB-170..175).
+- flashcards (MOB-145), crash reporting (MOB-107), store release (MOB-170..175).
 - Release 2 and 3 modules (video, exams, speaking, surveys, chat, AI, premium).
 
 ## Try it locally

@@ -9,6 +9,7 @@ const content = require('../modules/mobile/controllers/mobileContent.controller'
 const homework = require('../modules/homework/homework.controller');
 const account = require('../modules/mobile/controllers/mobileAccount.controller');
 const onboarding = require('../modules/mobile/controllers/mobileOnboarding.controller');
+const media = require('../modules/media/media.controller');
 
 // @MOB-020 Mobile app API, mounted at /api/mobile/v1. Sign-in, refresh and sign-out are public
 // and registered in index.ts. index.ts mounts this router behind requireAuth; every route here
@@ -54,6 +55,11 @@ router.post('/onboarding/telegram/check', ...anyMobileUser, onboarding.checkTele
 router.post('/onboarding/instagram-opened', ...anyMobileUser, onboarding.instagramOpened);
 router.post('/onboarding/finish', ...anyMobileUser, onboarding.finish);
 router.put('/consents', ...anyMobileUser, onboarding.answerConsent);
+
+// @MOB-055 Uploads: ask for a signed URL, upload, confirm; open own files by a signed link.
+router.post('/media/uploads', ...student, media.createUpload);
+router.post('/media/:id/complete', ...student, media.completeUpload);
+router.get('/media/:id', ...student, media.download);
 
 // @MOB-031 The student's own data.
 router.get('/student/dashboard', ...student, learner.dashboard);

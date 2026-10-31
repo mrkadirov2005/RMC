@@ -46,4 +46,12 @@ export const homeworkLabels: Record<string, string> = {
   'Only approved tasks can be assigned.': 'Faqat tasdiqlangan vazifani berish mumkin.',
   'Add question': "Savol qo'shish",
   'Not answered': 'Javob berilmagan',
+  // @MOB-143
+  'Spoken answer': 'Ovozli javob',
+  'Photo or PDF': 'Rasm yoki PDF',
+  'Longest recording, seconds': 'Yozuv ko‘pi bilan, soniya',
+  'Files at most': 'Fayllar ko‘pi bilan',
+  Listen: 'Tinglash',
+  'Open file': 'Faylni ochish',
+  'Could not open the file.': "Faylni ochib bo'lmadi.",
 };

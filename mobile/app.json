@@ -32,6 +32,19 @@
           "color": "#1F5BB5",
           "defaultChannel": "default"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "TEMURBEK SCHOOL records your spoken homework answers."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "TEMURBEK SCHOOL attaches photos to your homework.",
+          "cameraPermission": "TEMURBEK SCHOOL takes photos of your homework."
+        }
       ]
     ],
     "scheme": "temurbekschool",

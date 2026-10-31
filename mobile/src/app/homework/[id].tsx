@@ -111,6 +111,8 @@ export default function HomeworkDetailScreen() {
                 onChange={(value) => change(q.id, value)}
                 readOnly={readOnly}
                 mark={hw.per_question ? hw.per_question[q.id] : undefined}
+                media={hw.media ?? []}
+                canOpenMedia={!childId}
               />
             ))}
 

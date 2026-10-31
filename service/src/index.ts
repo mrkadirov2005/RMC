@@ -239,6 +239,10 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/consolidations', requireAuth, requireRole('superuser', 'teacher', 'student'), consolidationRoutes);
   app.use('/api/consolidate', consolidatePublicRateLimiter, consolidatePublicRoutes);
   app.use('/api/share/tests', consolidatePublicRateLimiter, testSharePublicRoutes);
+  // @MOB-055 Local media storage (when no S3 bucket is set): the signed URL is the permission.
+  const mediaController = require('./modules/media/media.controller');
+  app.put('/api/media-local/*', express.raw({ type: () => true, limit: '25mb' }), mediaController.localPut);
+  app.get('/api/media-local/*', mediaController.localGet);
   // @MOB-020 Authenticated mobile app API; each route also checks role and device session.
   app.use('/api/mobile/v1', requireAuth, mobileRoutes);
   // @MOB-160 Admins and the owner manage the mobile app's links, announcements, rules and requests.

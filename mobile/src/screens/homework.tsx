@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useHomework } from '../api/queries';
-import type { HomeworkAnswers, HomeworkItem, HomeworkQuestion, HomeworkStatus } from '../api/types';
+import type { HomeworkAnswers, HomeworkItem, HomeworkQuestion, HomeworkStatus, MediaFile } from '../api/types';
 import { Empty, ListRow, QueryView, Tag, text } from '../components/ui';
 import { useT } from '../i18n/LanguageContext';
 import { shortDate } from '../lib/format';
 import { colors, radius, space } from '../theme/tokens';
+import { AudioAnswer, FileAnswer } from './mediaAnswers';
 
 const ICONS: Record<string, string> = { vocabulary: '🔤', grammar: '🧩', reading: '📖', listening: '🎧', writing: '✍️', speaking: '🎤', other: '📝' };
 const TONE: Record<HomeworkStatus, 'blue' | 'ok' | 'warn' | 'bad'> = { new: 'blue', in_progress: 'warn', overdue: 'bad', submitted: 'warn', reviewed: 'ok' };
@@ -57,12 +58,15 @@ type QuestionProps = {
   onChange: (value: HomeworkAnswers[string]) => void;
   readOnly: boolean;
   mark: number | null | undefined;
+  // @MOB-143 Files the answers point to, and whether this viewer (the student) may open them.
+  media?: MediaFile[];
+  canOpenMedia?: boolean;
 };
 
 // @MOB-141 @MOB-142 Renders one question of any type. After submitting, marks show right/wrong.
-export function QuestionView({ q, index, value, onChange, readOnly, mark }: QuestionProps) {
+export function QuestionView({ q, index, value, onChange, readOnly, mark, media = [], canOpenMedia = false }: QuestionProps) {
   const { t } = useT();
-  const marked = mark !== undefined && q.type !== 'text';
+  const marked = mark !== undefined && mark !== null && q.type !== 'text';
   return (
     <View style={styles.question}>
       <View style={styles.qHead}>
@@ -104,7 +108,7 @@ export function QuestionView({ q, index, value, onChange, readOnly, mark }: Ques
 
       {q.type === 'match'
         ? q.left.map((left, i) => {
-            const current = Array.isArray(value) ? value : [];
+            const current = Array.isArray(value) ? (value as string[]) : [];
             return (
               <View key={i} style={{ marginBottom: space.sm }}>
                 <Text style={[text.muted, { marginBottom: 4 }]}>{left} →</Text>
@@ -148,6 +152,28 @@ export function QuestionView({ q, index, value, onChange, readOnly, mark }: Ques
             {q.min_words ? ` / ${q.min_words}` : ''} {t.words}
           </Text>
         </>
+      ) : null}
+
+      {q.type === 'audio' ? (
+        <AudioAnswer
+          value={typeof value === 'number' ? value : undefined}
+          onChange={(id) => onChange(id ?? '')}
+          readOnly={readOnly}
+          maxSeconds={q.max_seconds}
+          media={media}
+          canOpen={canOpenMedia}
+        />
+      ) : null}
+
+      {q.type === 'file' ? (
+        <FileAnswer
+          value={Array.isArray(value) ? (value as number[]) : undefined}
+          onChange={onChange}
+          readOnly={readOnly}
+          maxFiles={q.max_files}
+          media={media}
+          canOpen={canOpenMedia}
+        />
       ) : null}
     </View>
   );

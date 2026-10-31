@@ -10,7 +10,7 @@ import { useAppSelector } from '@/features/crm/hooks';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { showToast } from '@/utils/toast';
-import { classAPI, homeworkAPI, type Assignment, type BankLevel, type Question, type Submission, type Task } from './api';
+import { classAPI, homeworkAPI, type Assignment, type BankLevel, type MediaFile, type Question, type Submission, type Task } from './api';
 import { TaskEditor } from './TaskEditor';
 
 const selectClass = 'h-9 rounded-md border border-input bg-background px-2 text-sm';
@@ -234,6 +234,32 @@ const answerText = (q: Question, value: unknown) => {
   return String(value);
 };
 
+// @MOB-143 A recorded or attached answer. The signed link is fetched on click (it lasts 5 minutes):
+// audio plays in place, photos and PDFs open in a new tab.
+function MediaAnswer({ mediaId, media }: { mediaId: number; media?: MediaFile }) {
+  const { t } = useLanguage();
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const open = async () => {
+    try {
+      const { url } = getApiPayload<{ url: string }>(await homeworkAPI.media(mediaId));
+      if (media?.kind === 'audio') setAudioUrl(url);
+      else window.open(url, '_blank', 'noopener');
+    } catch {
+      showToast.error(t('Could not open the file.'));
+    }
+  };
+  if (audioUrl) return <audio controls autoPlay src={audioUrl} className="mt-1 h-9 w-full max-w-sm" />;
+  const label = media?.kind === 'audio' ? `🎤 ${t('Listen')}` : `${media?.kind === 'pdf' ? '📄' : '🖼️'} ${media?.file_name || t('Open file')}`;
+  return (
+    <Button size="sm" variant="outline" className="mr-1 mt-1 h-7" onClick={() => void open()}>
+      {label}
+    </Button>
+  );
+}
+
+const mediaIdsOf = (q: Question, value: unknown): number[] =>
+  q.type === 'audio' && typeof value === 'number' ? [value] : q.type === 'file' && Array.isArray(value) ? value.filter((v): v is number => typeof v === 'number') : [];
+
 // @MOB-165 Answers of one assignment, with grading.
 function SubmissionsPanel({ assignment }: { assignment: Assignment }) {
   const { t } = useLanguage();
@@ -281,7 +307,20 @@ function SubmissionsPanel({ assignment }: { assignment: Assignment }) {
             <ol className="ml-4 list-decimal text-sm">
               {questions.map((q) => (
                 <li key={q.id}>
-                  <span className="text-muted-foreground">{q.prompt}</span> — <b>{answerText(q, s.answers?.[q.id]) ?? t('Not answered')}</b>
+                  <span className="text-muted-foreground">{q.prompt}</span> —{' '}
+                  {q.type === 'audio' || q.type === 'file' ? (
+                    mediaIdsOf(q, s.answers?.[q.id]).length ? (
+                      <span className="inline-flex flex-wrap items-center">
+                        {mediaIdsOf(q, s.answers?.[q.id]).map((id) => (
+                          <MediaAnswer key={id} mediaId={id} media={s.media?.find((m) => m.media_id === id)} />
+                        ))}
+                      </span>
+                    ) : (
+                      <b>{t('Not answered')}</b>
+                    )
+                  ) : (
+                    <b>{answerText(q, s.answers?.[q.id]) ?? t('Not answered')}</b>
+                  )}
                 </li>
               ))}
             </ol>

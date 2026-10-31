@@ -1,5 +1,6 @@
 const repo = require('./homework.repository');
-const { validateContent, maxScore, forStudent, autoScore } = require('./taskContent');
+const { validateContent, maxScore, forStudent, autoScore, mediaIn } = require('./taskContent');
+const mediaService = require('../media/media.service');
 const studentService = require('../students/services/student.service');
 const notificationRepo = require('../mobile/repositories/mobileNotification.repository');
 
@@ -148,9 +149,23 @@ const assignmentDetail = async (actor: Actor, assignmentId: number) => {
   return { ...assignment, task: await repo.getTask(Number(assignment.task_id)) };
 };
 
+// @MOB-143 Each submission comes with the files its answers point to.
 const submissions = async (actor: Actor, assignmentId: number) => {
-  if (!(await findOwnAssignment(actor, assignmentId))) return null;
-  return repo.submissionsFor(assignmentId);
+  const assignment = await findOwnAssignment(actor, assignmentId);
+  if (!assignment) return null;
+  const rows = await repo.submissionsFor(assignmentId);
+  const task = await repo.getTask(Number(assignment.task_id));
+  return Promise.all(
+    rows.map(async (row: any) => ({ ...row, media: task?.content ? await mediaService.describe(mediaIn(task.content, row.answers || {}).ids) : [] })),
+  );
+};
+
+// @MOB-143 A signed link to a file in a submission of an assignment this teacher or admin may see.
+const mediaForStaff = async (actor: Actor, mediaId: number, baseUrl: string) => {
+  const media = await mediaService.byId(mediaId);
+  if (!media || media.status !== 'uploaded' || !media.assignment_id) return null;
+  if (!(await findOwnAssignment(actor, Number(media.assignment_id)))) return null;
+  return mediaService.downloadUrl(media, baseUrl);
 };
 
 // ---------------- Students (@MOB-054) ----------------
@@ -208,6 +223,8 @@ const detailForStudent = async (studentId: number, assignmentId: number) => {
     feedback: row.feedback ?? null,
     // After submitting, the student sees which questions were right (not the keys).
     per_question: result ? result.perQuestion : null,
+    // @MOB-143 Files attached to the answers, for names and sizes.
+    media: await mediaService.describe(mediaIn(row.content, row.answers || {}).ids),
   };
 };
 
@@ -227,6 +244,11 @@ const submit = async (studentId: number, assignmentId: number, answers: any) => 
   if (!row) return { error: 'not_found' as const };
   if (row.submission_status === 'submitted' || row.submission_status === 'reviewed') return { error: 'already_submitted' as const };
   const finalAnswers = answers ?? row.answers ?? {};
+  // @MOB-143 Recorded and attached answers must be this student's own finished uploads.
+  const media = mediaIn(row.content, finalAnswers);
+  if (media.problems.length) return { error: 'bad_media' as const, details: media.problems };
+  const badMedia = await mediaService.invalidOwnMedia(mainId, media.ids);
+  if (badMedia.length) return { error: 'bad_media' as const, details: badMedia };
   const result = autoScore(row.content, finalAnswers);
   const status = result.needsReview ? 'submitted' : 'reviewed';
   const submission = await repo.submit(assignmentId, mainId, {
@@ -237,6 +259,7 @@ const submit = async (studentId: number, assignmentId: number, answers: any) => 
     max_score: row.max_score,
   });
   if (!submission) return { error: 'already_submitted' as const };
+  await mediaService.attachToAssignment(mainId, media.ids, assignmentId);
   if (status === 'reviewed') await awardCoins(submission, mainId, row.title, null);
   return { submission: { ...submission, per_question: result.perQuestion } };
 };
@@ -304,6 +327,7 @@ module.exports = {
   deleteAssignment,
   assignmentDetail,
   submissions,
+  mediaForStaff,
   listForStudent,
   detailForStudent,
   saveAnswers,

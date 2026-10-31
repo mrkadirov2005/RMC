@@ -181,6 +181,21 @@ export const uz = {
   done: 'Tayyor',
   skip: "O'tkazib yuborish",
   socialAndConsent: 'Ijtimoiy tarmoqlar va rozilik',
+  record: 'Javobni yozib olish',
+  recordAgain: 'Qaytadan yozib olish',
+  stopRecording: "To'xtatish",
+  audioAnswer: 'Ovozli javob',
+  listen: 'Tinglash',
+  noAnswer: "Javob yo'q",
+  uploading: 'Yuklanmoqda…',
+  uploadFailed: "Yuklab bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
+  retryUpload: 'Qayta urinish',
+  micDenied: "Mikrofonga ruxsat berilmagan. Telefon sozlamalaridan ruxsat bering.",
+  attachment: 'Fayl',
+  removeFile: "O'chirish",
+  camera: 'Kamera',
+  gallery: 'Galereya',
+  filesLeft: (left: number, max: number) => `Yana ${left} ta fayl qo'shish mumkin (ko'pi bilan ${max})`,
 };
 
 export type Strings = typeof uz;
@@ -366,6 +381,21 @@ export const en: Strings = {
   done: 'Done',
   skip: 'Skip',
   socialAndConsent: 'Social accounts and consent',
+  record: 'Record your answer',
+  recordAgain: 'Record again',
+  stopRecording: 'Stop',
+  audioAnswer: 'Voice answer',
+  listen: 'Listen',
+  noAnswer: 'No answer',
+  uploading: 'Uploading…',
+  uploadFailed: 'Upload failed. Check the internet and try again.',
+  retryUpload: 'Try again',
+  micDenied: 'Microphone access is off. Allow it in the phone settings.',
+  attachment: 'File',
+  removeFile: 'Remove',
+  camera: 'Camera',
+  gallery: 'Gallery',
+  filesLeft: (left: number, max: number) => `${left} more file(s) allowed (at most ${max})`,
 };
 
 export const dictionaries = { uz, en };

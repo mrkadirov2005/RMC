@@ -19,5 +19,7 @@ router.get('/assignments/:id', homework.assignmentDetail);
 router.delete('/assignments/:id', homework.deleteAssignment);
 router.get('/assignments/:id/submissions', homework.submissions);
 router.post('/submissions/:id/review', homework.review);
+// @MOB-143 Recorded and attached answers.
+router.get('/media/:id', homework.media);
 
 module.exports = router;

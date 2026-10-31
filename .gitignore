@@ -5,3 +5,6 @@ node_modules
 backups/
 *.dump
 *.archive.gz
+
+# @MOB-055 Local media storage (development)
+service/uploads/

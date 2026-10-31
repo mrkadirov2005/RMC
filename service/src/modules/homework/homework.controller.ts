@@ -13,6 +13,7 @@ const ERRORS: Record<string, [number, string]> = {
   already_submitted: [409, 'Vazifa allaqachon topshirilgan'],
   not_submitted: [400, 'Vazifa hali topshirilmagan'],
   invalid_score: [400, "Ball noto'g'ri"],
+  bad_media: [400, "Biriktirilgan fayl topilmadi yoki hali yuklanmagan"],
 };
 
 const fail = (res: any, error: any, message: string) => {
@@ -122,6 +123,15 @@ const review = handle("Baholab bo'lmadi", async (req, res) => {
   sendResult(res, await homeworkService.review(actorOf(req), id, req.body), 'submission');
 });
 
+// @MOB-143 GET /api/homework/media/:id → a signed link to a student's recorded or attached answer.
+const media = handle("Faylni ochib bo'lmadi", async (req, res) => {
+  const id = idOf(req.params.id);
+  const { baseUrlOf } = require('../media/media.controller');
+  const result = id ? await homeworkService.mediaForStaff(actorOf(req), id, baseUrlOf(req)) : null;
+  if (!result) return res.status(404).json({ error: 'Fayl topilmadi' });
+  res.json(result);
+});
+
 // ---------------- Mobile (@MOB-054 @MOB-140) ----------------
 // Students act on themselves; a parent reads a linked child (req.child, set by requireLinkedChild).
 const learnerId = (req: any) => Number(req.child ? req.child.student_id : req.user.id);
@@ -166,6 +176,7 @@ module.exports = {
   assignmentDetail,
   submissions,
   review,
+  media,
   myHomework,
   homeworkDetail,
   saveAnswers,

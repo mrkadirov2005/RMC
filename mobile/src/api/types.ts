@@ -131,8 +131,22 @@ export type HomeworkQuestion =
   | { id: string; type: 'choice'; prompt: string; points: number; options: string[] }
   | { id: string; type: 'gap'; prompt: string; points: number }
   | { id: string; type: 'match'; prompt: string; points: number; left: string[]; options: string[] }
-  | { id: string; type: 'text'; prompt: string; points: number; min_words: number | null };
-export type HomeworkAnswers = Record<string, number | string | string[]>;
+  | { id: string; type: 'text'; prompt: string; points: number; min_words: number | null }
+  // @MOB-143 Recorded answer (a media id) and attached photos or PDFs (media ids).
+  | { id: string; type: 'audio'; prompt: string; points: number; max_seconds: number }
+  | { id: string; type: 'file'; prompt: string; points: number; max_files: number };
+export type HomeworkAnswers = Record<string, number | string | string[] | number[]>;
+
+// @MOB-055 An uploaded file.
+export type MediaFile = {
+  media_id: number;
+  kind: 'audio' | 'image' | 'pdf';
+  content_type: string;
+  size_bytes: number;
+  file_name: string | null;
+  status: 'pending' | 'uploaded' | 'rejected';
+  created_at: string;
+};
 export type HomeworkDetail = {
   assignment_id: number;
   title: string;
@@ -147,6 +161,7 @@ export type HomeworkDetail = {
   score: number | null;
   feedback: string | null;
   per_question: Record<string, number | null> | null;
+  media?: MediaFile[];
 };
 
 export type HelpKind = 'help' | 'complaint' | 'thanks' | 'suggestion';

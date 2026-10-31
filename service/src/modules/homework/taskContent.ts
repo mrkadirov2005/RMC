@@ -3,11 +3,14 @@
 //   gap:    { id, type: 'gap', prompt, answers: string[] }            (any listed answer is right)
 //   match:  { id, type: 'match', prompt, pairs: [left, right][] }     (student answers right side per left)
 //   text:   { id, type: 'text', prompt, min_words? }                  (teacher grades)
+//   audio:  { id, type: 'audio', prompt, max_seconds? }               (recorded answer; teacher grades)
+//   file:   { id, type: 'file', prompt, max_files? }                  (photos or PDFs; teacher grades)
+// Audio and file answers are media ids (one for audio, a list for files) of the student's uploads.
 // Each question has `points` (default 1). The app never receives the answer keys.
 
 type Question = {
   id: string;
-  type: 'choice' | 'gap' | 'match' | 'text';
+  type: 'choice' | 'gap' | 'match' | 'text' | 'audio' | 'file';
   prompt: string;
   points?: number;
   options?: string[];
@@ -15,6 +18,8 @@ type Question = {
   answers?: string[];
   pairs?: [string, string][];
   min_words?: number;
+  max_seconds?: number;
+  max_files?: number;
 };
 
 export type TaskContent = { questions: Question[] };
@@ -47,8 +52,13 @@ const validateContent = (content: any): string[] => {
       if (!Array.isArray(q.pairs) || q.pairs.length < 2 || !q.pairs.every((p: any) => Array.isArray(p) && p.length === 2 && nonEmpty(p[0], 300) && nonEmpty(p[1], 300))) {
         errors.push(`${at}: at least two [left, right] pairs`);
       }
+    } else if (q?.type === 'audio') {
+      // @MOB-143
+      if (q.max_seconds != null && !(Number.isInteger(q.max_seconds) && q.max_seconds >= 10 && q.max_seconds <= 600)) errors.push(`${at}: max_seconds must be 10–600`);
+    } else if (q?.type === 'file') {
+      if (q.max_files != null && !(Number.isInteger(q.max_files) && q.max_files >= 1 && q.max_files <= 5)) errors.push(`${at}: max_files must be 1–5`);
     } else if (q?.type !== 'text') {
-      errors.push(`${at}: type must be choice, gap, match or text`);
+      errors.push(`${at}: type must be choice, gap, match, text, audio or file`);
     }
   });
   return errors;
@@ -69,6 +79,8 @@ const forStudent = (content: TaskContent) => ({
       return { ...base, left: (q.pairs || []).map((p) => p[0]), options: shuffled };
     }
     if (q.type === 'text') return { ...base, min_words: q.min_words ?? null };
+    if (q.type === 'audio') return { ...base, max_seconds: q.max_seconds ?? 120 };
+    if (q.type === 'file') return { ...base, max_files: q.max_files ?? 3 };
     return base;
   }),
 });
@@ -97,4 +109,24 @@ const autoScore = (content: TaskContent, answers: Record<string, any>) => {
   return { score: Math.round(score * 100) / 100, needsReview, perQuestion };
 };
 
-module.exports = { validateContent, maxScore, forStudent, autoScore };
+// @MOB-143 Media ids an answer set points to, from audio and file questions only, with the
+// problems found (a list where one id was expected, too many files).
+const mediaIn = (content: TaskContent, answers: Record<string, any>) => {
+  const ids: number[] = [];
+  const problems: string[] = [];
+  content.questions.forEach((q) => {
+    const given = answers?.[q.id];
+    if (given == null || given === '') return;
+    if (q.type === 'audio') {
+      if (!Number.isInteger(given)) problems.push(q.id);
+      else ids.push(given);
+    } else if (q.type === 'file') {
+      const list = Array.isArray(given) ? given : [];
+      if (!Array.isArray(given) || list.length > (q.max_files ?? 3) || !list.every((id: any) => Number.isInteger(id))) problems.push(q.id);
+      else ids.push(...list);
+    }
+  });
+  return { ids: Array.from(new Set(ids)), problems };
+};
+
+module.exports = { validateContent, maxScore, forStudent, autoScore, mediaIn };
