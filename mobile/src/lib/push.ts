@@ -2,14 +2,16 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { createElement, useEffect } from 'react';
 import { Platform } from 'react-native';
 import { api } from '../api/client';
 
-// @MOB-126 Show pushes while the app is open too.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
-});
+// @MOB-126 Show pushes while the app is open too. The web build has no push module.
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  });
+}
 
 const projectId = () => (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId;
 
@@ -40,8 +42,9 @@ const openFrom = (response: Notifications.NotificationResponse | null | undefine
   if (typeof url === 'string' && url.startsWith('/')) router.push(url as never);
 };
 
-// @MOB-126 Registers once signed in, and opens the screen a tapped push points to.
-export function usePushNotifications(signedIn: boolean) {
+// @MOB-126 Registers once signed in, and opens the screen a tapped push points to. Native only:
+// the notification hooks throw on web, so callers render this through PushNotifications.
+function useNativePush(signedIn: boolean) {
   const lastResponse = Notifications.useLastNotificationResponse();
 
   useEffect(() => {
@@ -51,4 +54,14 @@ export function usePushNotifications(signedIn: boolean) {
   useEffect(() => {
     if (signedIn) openFrom(lastResponse);
   }, [signedIn, lastResponse]);
+}
+
+function NativePush({ signedIn }: { signedIn: boolean }) {
+  useNativePush(signedIn);
+  return null;
+}
+
+// @MOB-126 Mount once inside the auth provider.
+export function PushNotifications({ signedIn }: { signedIn: boolean }) {
+  return Platform.OS === 'web' ? null : createElement(NativePush, { signedIn });
 }

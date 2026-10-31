@@ -36,7 +36,9 @@ export default function RulesScreen() {
                 const pending = p.requires_acceptance && !p.accepted;
                 const expanded = open === p.policy_id || pending;
                 return (
-                  <Card key={p.policy_id} onPress={() => setOpen(open === p.policy_id ? null : p.policy_id)}>
+                  // A rule waiting for acceptance is always open and holds the Accept button, so it is not
+                  // itself pressable (a button inside a button is invalid on the web build).
+                  <Card key={p.policy_id} onPress={pending ? undefined : () => setOpen(open === p.policy_id ? null : p.policy_id)}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                       <Text style={[text.bold, { flex: 1, fontSize: 15.5 }]}>{p.title}</Text>
                       {p.requires_acceptance ? <Tag label={p.accepted ? t.accepted : t.needsAcceptance} tone={p.accepted ? 'ok' : 'warn'} /> : null}
