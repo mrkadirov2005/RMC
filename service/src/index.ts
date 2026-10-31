@@ -79,6 +79,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const consolidatePublicRoutes = require('./routes/consolidatePublicRoutes');
   const testSharePublicRoutes = require('./routes/testSharePublicRoutes');
   const mobileRoutes = require('./routes/mobileRoutes');
+  const mobileAdminRoutes = require('./routes/mobileAdminRoutes');
 
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
@@ -233,6 +234,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/share/tests', consolidatePublicRateLimiter, testSharePublicRoutes);
   // @MOB-020 Authenticated mobile app API; each route also checks role and device session.
   app.use('/api/mobile/v1', requireAuth, mobileRoutes);
+  // @MOB-160 Admins and the owner manage the mobile app's links, announcements, rules and requests.
+  app.use('/api/mobile-admin', requireAuth, requireRole('superuser'), mobileAdminRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {

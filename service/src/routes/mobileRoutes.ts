@@ -5,6 +5,7 @@ const { requireMobileRole, requireActiveMobileSession } = require('../modules/mo
 const auth = require('../modules/mobile/controllers/mobileAuth.controller');
 const learner = require('../modules/mobile/controllers/mobileLearner.controller');
 const notifications = require('../modules/mobile/controllers/mobileNotification.controller');
+const content = require('../modules/mobile/controllers/mobileContent.controller');
 
 // @MOB-020 Mobile app API, mounted at /api/mobile/v1. Sign-in, refresh and sign-out are public
 // and registered in index.ts. index.ts mounts this router behind requireAuth; every route here
@@ -34,6 +35,15 @@ router.get('/notifications', ...signedIn, requireMobileRole('student', 'parent')
 router.post('/notifications/read', ...signedIn, requireMobileRole('student', 'parent'), notifications.markRead);
 router.get('/notification-preferences', ...signedIn, requireMobileRole('student', 'parent'), notifications.getPreferences);
 router.put('/notification-preferences', ...signedIn, requireMobileRole('student', 'parent'), notifications.setPreference);
+
+// @MOB-060 @MOB-061 @MOB-062 @MOB-063 School content and requests, for students and parents.
+const anyMobileUser = [...signedIn, requireMobileRole('student', 'parent')];
+router.get('/links', ...anyMobileUser, content.links);
+router.get('/announcements', ...anyMobileUser, content.announcements);
+router.get('/policies', ...anyMobileUser, content.policies);
+router.post('/policies/:policyId/accept', ...anyMobileUser, content.acceptPolicy);
+router.get('/help-requests', ...anyMobileUser, content.listHelpRequests);
+router.post('/help-requests', ...anyMobileUser, content.createHelpRequest);
 
 // @MOB-031 The student's own data.
 router.get('/student/dashboard', ...student, learner.dashboard);

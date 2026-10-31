@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Card, ListRow, Pill, QueryView, Screen, SectionHeader, Tag, text } from '../../components/ui';
 import { useT } from '../../i18n/LanguageContext';
 import { initials } from '../../lib/format';
-import { NextLessonCard, NotificationBell, RecentResults, StatsRow } from '../../screens/learner';
+import { NextLessonCard, NotificationBell, RecentResults, SchoolNews, StatsRow } from '../../screens/learner';
 import { colors, space } from '../../theme/tokens';
 
 // @MOB-120 Student home: next lesson, attendance, coins, latest results and what is coming.
@@ -38,6 +38,7 @@ export default function StudentHome() {
                 <Tag label={t.frozen} tone="warn" />
               </Card>
             ) : null}
+            <SchoolNews />
             <NextLessonCard slots={data.schedule} />
             <StatsRow data={data} />
             <ListRow icon="🗓" title={t.schedule} onPress={() => router.push('/schedule')} />

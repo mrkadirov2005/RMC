@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  Announcement,
+  HelpKind,
+  HelpRequest,
+  OfficialLink,
+  Policy,
   AppNotification,
   NotificationPreference,
   Paged,
@@ -73,6 +78,16 @@ export const useNotifications = () =>
 
 export const markNotificationsRead = (notificationId?: number) =>
   api.request('/notifications/read', { method: 'POST', body: JSON.stringify(notificationId ? { notification_id: notificationId } : {}) });
+
+// @MOB-150 @MOB-151 @MOB-152 @MOB-153 School content and requests.
+export const useLinks = () => useQuery({ queryKey: ['links'], queryFn: () => get<{ items: OfficialLink[] }>('/links') });
+export const useAnnouncements = () =>
+  useQuery({ queryKey: ['announcements'], queryFn: () => get<Paged<Announcement>>('/announcements?page_size=50') });
+export const usePolicies = () => useQuery({ queryKey: ['policies'], queryFn: () => get<{ items: Policy[]; pending: number }>('/policies') });
+export const acceptPolicy = (policyId: number) => api.request(`/policies/${policyId}/accept`, { method: 'POST' });
+export const useHelpRequests = () => useQuery({ queryKey: ['help-requests'], queryFn: () => get<{ items: HelpRequest[] }>('/help-requests') });
+export const sendHelpRequest = (kind: HelpKind, message: string, studentId?: number | null) =>
+  api.request<HelpRequest>('/help-requests', { method: 'POST', body: JSON.stringify({ kind, message, student_id: studentId ?? undefined }) });
 
 // @MOB-114 Per-category notification switches.
 export const useNotificationPreferences = () =>

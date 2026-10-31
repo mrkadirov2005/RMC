@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Card, Empty, ListRow, QueryView, Screen, Tag, Title, text } from '../../components/ui';
 import { useT } from '../../i18n/LanguageContext';
 import { money, shortDate } from '../../lib/format';
-import { NextLessonCard, NotificationBell, RecentResults, StatsRow } from '../../screens/learner';
+import { NextLessonCard, NotificationBell, RecentResults, SchoolNews, StatsRow } from '../../screens/learner';
 import { ChildSwitcher, useParentChild } from '../../screens/ParentChild';
 
 // @MOB-130 Parent home for the selected child: payment due, next lesson, attendance, coins,
@@ -49,6 +49,7 @@ export default function ParentHome() {
                       </View>
                     </Card>
                   )}
+                  <SchoolNews />
                   <NextLessonCard slots={dash.schedule} />
                   <StatsRow data={dash} childId={childId} />
                   <RecentResults rows={dash.recent_grades} childId={childId} />

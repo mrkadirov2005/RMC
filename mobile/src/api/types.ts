@@ -105,6 +105,27 @@ export type AppNotification = {
 };
 export type NotificationPreference = { category: string; enabled: boolean };
 
+export type OfficialLink = { link_id: number; title: string; url: string; icon: string | null };
+export type Announcement = { announcement_id: number; title: string; body: string; audience: string; published_at: string };
+export type Policy = {
+  policy_id: number;
+  title: string;
+  version: number;
+  body: string;
+  requires_acceptance: boolean;
+  published_at: string;
+  accepted: boolean;
+};
+export type HelpKind = 'help' | 'complaint' | 'thanks' | 'suggestion';
+export type HelpRequest = {
+  request_id: number;
+  kind: HelpKind;
+  message: string;
+  status: 'submitted' | 'in_review' | 'resolved';
+  response: string | null;
+  created_at: string;
+};
+
 export type Device = {
   session_id: number;
   device_name: string | null;

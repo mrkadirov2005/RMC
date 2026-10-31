@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useDashboard } from '../../api/queries';
 import { useAuth } from '../../auth/AuthContext';
-import { Card, ListRow, Screen, SectionHeader, Tag, text } from '../../components/ui';
+import { Card, ListRow, Screen, SectionHeader, text } from '../../components/ui';
 import { useT } from '../../i18n/LanguageContext';
 import { fullName, initials } from '../../lib/format';
 import { colors, space } from '../../theme/tokens';
@@ -40,8 +40,10 @@ export default function Profile() {
       <ListRow icon="🪙" title={t.coins} onPress={() => router.push('/coins')} />
       <ListRow icon="💳" title={t.payments} onPress={() => router.push('/payments')} />
       <ListRow icon="⚙️" title={t.settings} onPress={() => router.push('/settings')} />
-      <ListRow icon="🔗" title={t.officialLinks} right={<Tag label={t.comingSoon} />} />
-      <ListRow icon="🙋" title={t.help} right={<Tag label={t.comingSoon} />} />
+      <ListRow icon="📣" title={t.announcements} onPress={() => router.push('/announcements')} />
+      <ListRow icon="📜" title={t.rules} onPress={() => router.push('/rules')} />
+      <ListRow icon="🔗" title={t.officialLinks} onPress={() => router.push('/links')} />
+      <ListRow icon="🙋" title={t.helpTitle} onPress={() => router.push('/help')} />
     </Screen>
   );
 }

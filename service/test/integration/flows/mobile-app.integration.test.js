@@ -215,4 +215,58 @@ describe('mobile app API with PostgreSQL', () => {
     await api().post('/api/mobile/v1/notifications/read').set(auth(token)).send({});
     expect((await api().get('/api/mobile/v1/notifications').set(auth(token))).body.unread).toBe(0);
   });
+
+  // @MOB-060 @MOB-061 @MOB-062 @MOB-063 @MOB-160 @MOB-161 @MOB-162 @MOB-164
+  test('admin content reaches the right users; rules need re-acceptance after a new version; requests get answers', async () => {
+    const { generateToken } = require('../../../src/middleware/auth');
+    const adminToken = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId });
+    const admin = (method, path) => api()[method](`/api/mobile-admin${path}`).set(auth(adminToken));
+    await pool.query('TRUNCATE mobile_notification_outbox, mobile_links, mobile_announcements, mobile_policies, mobile_help_requests RESTART IDENTITY CASCADE');
+
+    const student = (await api().post('/api/mobile/v1/auth/login').send({ username: 'aziza', password: 'secret-pass', ...device('stu-content') })).body.access_token;
+    const parent = (await api().post('/api/mobile/v1/auth/login').send({ username: 'karimov', password: 'secret-pass', ...device('par-content') })).body.access_token;
+
+    expect((await admin('post', '/links').send({ title: 'Telegram', url: 'javascript:alert(1)' })).status).toBe(400);
+    expect((await admin('post', '/links').send({ title: 'Telegram', url: 'https://t.me/temurbekschool', icon: '✈️' })).status).toBe(201);
+    const links = await api().get('/api/mobile/v1/links').set(auth(student));
+    expect(links.body.items).toEqual([expect.objectContaining({ title: 'Telegram', url: 'https://t.me/temurbekschool' })]);
+
+    const forParents = await admin('post', '/announcements').send({ title: 'Majlis', body: 'Ota-onalar majlisi shanba kuni', audience: 'parent', send_push: true });
+    expect(forParents.status).toBe(201);
+    expect(forParents.body.queued).toBe(1);
+    await admin('post', '/announcements').send({ title: 'Imtihon', body: 'Mock imtihon', audience: 'student' });
+    expect((await api().get('/api/mobile/v1/announcements').set(auth(parent))).body.items.map((a) => a.title)).toEqual(['Majlis']);
+    expect((await api().get('/api/mobile/v1/announcements').set(auth(student))).body.items.map((a) => a.title)).toEqual(['Imtihon']);
+
+    const policy = (await admin('post', '/policies').send({ title: "To'lov tartibi", body: "To'lov har oyning 5-sanasigacha." })).body;
+    let rules = (await api().get('/api/mobile/v1/policies').set(auth(parent))).body;
+    expect(rules.pending).toBe(1);
+    await api().post(`/api/mobile/v1/policies/${policy.policy_id}/accept`).set(auth(parent));
+    expect((await api().get('/api/mobile/v1/policies').set(auth(parent))).body.pending).toBe(0);
+
+    await admin('post', `/policies/${policy.policy_id}/versions`).send({ body: "To'lov har oyning 10-sanasigacha." });
+    rules = (await api().get('/api/mobile/v1/policies').set(auth(parent))).body;
+    expect(rules.items[0]).toMatchObject({ version: 2, accepted: false, body: "To'lov har oyning 10-sanasigacha." });
+    expect((await admin('get', `/policies/${policy.policy_id}/versions`)).body.items.map((v) => v.version)).toEqual([2, 1]);
+
+    expect((await api().post('/api/mobile/v1/help-requests').set(auth(parent)).send({ kind: 'help', message: 'x' })).status).toBe(400);
+    expect((await api().post('/api/mobile/v1/help-requests').set(auth(parent)).send({ kind: 'help', message: 'Savol bor', student_id: otherStudentId })).status).toBe(403);
+    const request = await api().post('/api/mobile/v1/help-requests').set(auth(parent)).send({ kind: 'thanks', message: 'Rahmat ustozga!', student_id: secondRecordId });
+    expect(request.status).toBe(201);
+
+    const inbox = await admin('get', '/help-requests?status=submitted');
+    expect(inbox.body.items).toEqual([expect.objectContaining({ request_id: request.body.request_id, sender_name: 'Ota Karimov', student_id: mainId })]);
+    await admin('patch', `/help-requests/${request.body.request_id}`).send({ status: 'resolved', response: 'Rahmat!' });
+
+    const mine = await api().get('/api/mobile/v1/help-requests').set(auth(parent));
+    expect(mine.body.items[0]).toMatchObject({ status: 'resolved', response: 'Rahmat!' });
+    const messages = (await pool.query(`SELECT category, body FROM mobile_notification_outbox WHERE user_type = 'parent' ORDER BY outbox_id`)).rows;
+    expect(messages).toEqual([
+      { category: 'announcements', body: 'Ota-onalar majlisi shanba kuni' },
+      { category: 'help', body: 'Rahmat!' },
+    ]);
+
+    // Students and parents cannot use the admin API.
+    expect((await api().get('/api/mobile-admin/links').set(auth(parent))).status).toBe(403);
+  });
 });

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { useAttendance, useCoins, useGrades, useNotifications, usePayments, useSchedule } from '../api/queries';
+import { useAnnouncements, useAttendance, useCoins, useGrades, useNotifications, usePayments, usePolicies, useSchedule } from '../api/queries';
 import type { Dashboard, GradeRow, MonthlyAverage, ScheduleSlot } from '../api/types';
 import { Bar, Card, Empty, ListRow, Pill, QueryView, Ring, SectionHeader, Tag, text } from '../components/ui';
 import { useT } from '../i18n/LanguageContext';
@@ -267,6 +267,30 @@ export function PaymentsSection({ childId }: { childId?: number | null }) {
         </>
       )}
     </QueryView>
+  );
+}
+
+// @MOB-151 @MOB-152 Home cards: rules waiting for acceptance, and the latest announcement.
+export function SchoolNews() {
+  const { t } = useT();
+  const policies = usePolicies();
+  const announcements = useAnnouncements();
+  const latest = announcements.data?.items[0];
+  return (
+    <>
+      {policies.data && policies.data.pending > 0 ? (
+        <ListRow icon="📜" title={t.rulesPending} right={<Tag label={String(policies.data.pending)} tone="warn" />} onPress={() => router.push('/rules')} />
+      ) : null}
+      {latest ? (
+        <Card onPress={() => router.push('/announcements')}>
+          <Text style={text.muted}>📣 {t.announcements}</Text>
+          <Text style={[text.bold, { marginTop: 4 }]}>{latest.title}</Text>
+          <Text style={{ color: colors.text, marginTop: 2 }} numberOfLines={2}>
+            {latest.body}
+          </Text>
+        </Card>
+      ) : null}
+    </>
   );
 }
 
