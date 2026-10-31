@@ -15,6 +15,7 @@ router.put('/tasks/:id', homework.updateTask);
 router.post('/tasks/:id/approve', homework.approveTask);
 router.get('/assignments', homework.listAssignments);
 router.post('/assignments', homework.createAssignment);
+router.get('/assignments/:id', homework.assignmentDetail);
 router.delete('/assignments/:id', homework.deleteAssignment);
 router.get('/assignments/:id/submissions', homework.submissions);
 router.post('/submissions/:id/review', homework.review);

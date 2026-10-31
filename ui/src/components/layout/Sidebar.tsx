@@ -257,6 +257,9 @@ const Sidebar = memo(() => {
 
     // Settings removed from sidebar — accessible via gear icon in header
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
+    // @MOB-163 Homework for the mobile app: bank, assigning, grading.
+    { label: 'Homework Bank', path: '/homework', iconName: 'Assignments', roles: ['superuser'], permission: 'MANAGE_TESTS' },
+    { label: 'Homework Bank', path: '/homework?tab=given', iconName: 'Assignments', roles: ['teacher'] },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
     { label: 'Cash report', path: '/cash', iconName: 'Finance', roles: ['superuser'], permission: 'CRUD_PAYMENT' },
     {

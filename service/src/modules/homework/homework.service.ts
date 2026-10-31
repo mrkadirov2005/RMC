@@ -141,6 +141,13 @@ const deleteAssignment = async (actor: Actor, assignmentId: number) => {
   return Boolean(await repo.deleteAssignment(assignmentId));
 };
 
+// @MOB-165 The assignment with its full task (answer keys included: only staff call this).
+const assignmentDetail = async (actor: Actor, assignmentId: number) => {
+  const assignment = await findOwnAssignment(actor, assignmentId);
+  if (!assignment) return null;
+  return { ...assignment, task: await repo.getTask(Number(assignment.task_id)) };
+};
+
 const submissions = async (actor: Actor, assignmentId: number) => {
   if (!(await findOwnAssignment(actor, assignmentId))) return null;
   return repo.submissionsFor(assignmentId);
@@ -295,6 +302,7 @@ module.exports = {
   createAssignment,
   listAssignments,
   deleteAssignment,
+  assignmentDetail,
   submissions,
   listForStudent,
   detailForStudent,

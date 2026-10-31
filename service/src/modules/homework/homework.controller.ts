@@ -101,6 +101,14 @@ const deleteAssignment = handle("O'chirib bo'lmadi", async (req, res) => {
   res.json({ message: "O'chirildi" });
 });
 
+// @MOB-165 GET /assignments/:id
+const assignmentDetail = handle("Vazifani yuklab bo'lmadi", async (req, res) => {
+  const id = idOf(req.params.id);
+  const detail = id ? await homeworkService.assignmentDetail(actorOf(req), id) : null;
+  if (!detail) return res.status(404).json({ error: 'Topilmadi' });
+  res.json(detail);
+});
+
 const submissions = handle("Javoblarni yuklab bo'lmadi", async (req, res) => {
   const id = idOf(req.params.id);
   const rows = id ? await homeworkService.submissions(actorOf(req), id) : null;
@@ -155,6 +163,7 @@ module.exports = {
   listAssignments,
   createAssignment,
   deleteAssignment,
+  assignmentDetail,
   submissions,
   review,
   myHomework,

@@ -104,6 +104,15 @@ describe('homework controller', () => {
     await controller.deleteAssignment(req({ params: { id: '3' } }), res);
     expect(res.json).toHaveBeenCalled();
 
+    // @MOB-165
+    service.assignmentDetail = jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce({ assignment_id: 3 });
+    res = createResponse();
+    await controller.assignmentDetail(req({ params: { id: '3' } }), res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    res = createResponse();
+    await controller.assignmentDetail(req({ params: { id: '3' } }), res);
+    expect(res.json).toHaveBeenCalledWith({ assignment_id: 3 });
+
     service.submissions.mockResolvedValueOnce(null);
     res = createResponse();
     await controller.submissions(req({ params: { id: '3' } }), res);

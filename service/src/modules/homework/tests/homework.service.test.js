@@ -143,6 +143,12 @@ describe('homework service', () => {
     await expect(service.deleteAssignment(admin, 9)).resolves.toBe(true);
     repo.submissionsFor.mockResolvedValue([{ submission_id: 1 }]);
     await expect(service.submissions(admin, 9)).resolves.toEqual([{ submission_id: 1 }]);
+
+    // @MOB-165
+    await expect(service.assignmentDetail(teacher, 9)).resolves.toBeNull();
+    repo.getAssignment.mockResolvedValue({ assignment_id: 9, task_id: 4, teacher_id: 6, center_id: 2 });
+    repo.getTask.mockResolvedValue({ task_id: 4, content: {} });
+    await expect(service.assignmentDetail(admin, 9)).resolves.toMatchObject({ assignment_id: 9, task: { task_id: 4 } });
   });
 
   // @MOB-054
