@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  Onboarding,
+  TelegramCheck,
   IdToken,
   Role,
   LinkRequest,
@@ -144,3 +146,11 @@ export const useIdToken = () =>
 export const useLinkRequests = () => useQuery({ queryKey: ['link-requests'], queryFn: () => get<{ items: LinkRequest[] }>('/parent/link-requests') });
 export const sendLinkRequest = (childQuery: string) =>
   api.request<{ message: string; code?: string }>('/parent/link-requests', { method: 'POST', body: JSON.stringify({ child_query: childQuery }) });
+
+// @MOB-112 @MOB-113 Onboarding state and its steps.
+export const useOnboarding = (enabled = true) => useQuery({ queryKey: ['onboarding'], queryFn: () => get<Onboarding>('/onboarding'), enabled });
+export const checkTelegram = () => api.request<TelegramCheck>('/onboarding/telegram/check', { method: 'POST' });
+export const markInstagramOpened = () => api.request('/onboarding/instagram-opened', { method: 'POST' });
+export const finishOnboarding = (skipped: boolean) => api.request('/onboarding/finish', { method: 'POST', body: JSON.stringify({ skipped }) });
+export const answerConsent = (studentId: number, granted: boolean) =>
+  api.request('/consents', { method: 'PUT', body: JSON.stringify({ student_id: studentId, kind: 'video', granted }) });

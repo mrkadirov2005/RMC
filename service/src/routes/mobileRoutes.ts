@@ -8,6 +8,7 @@ const notifications = require('../modules/mobile/controllers/mobileNotification.
 const content = require('../modules/mobile/controllers/mobileContent.controller');
 const homework = require('../modules/homework/homework.controller');
 const account = require('../modules/mobile/controllers/mobileAccount.controller');
+const onboarding = require('../modules/mobile/controllers/mobileOnboarding.controller');
 
 // @MOB-020 Mobile app API, mounted at /api/mobile/v1. Sign-in, refresh and sign-out are public
 // and registered in index.ts. index.ts mounts this router behind requireAuth; every route here
@@ -46,6 +47,13 @@ router.get('/policies', ...anyMobileUser, content.policies);
 router.post('/policies/:policyId/accept', ...anyMobileUser, content.acceptPolicy);
 router.get('/help-requests', ...anyMobileUser, content.listHelpRequests);
 router.post('/help-requests', ...anyMobileUser, content.createHelpRequest);
+
+// @MOB-112 @MOB-113 Optional first-run onboarding: Telegram channel, Instagram, consent.
+router.get('/onboarding', ...anyMobileUser, onboarding.state);
+router.post('/onboarding/telegram/check', ...anyMobileUser, onboarding.checkTelegram);
+router.post('/onboarding/instagram-opened', ...anyMobileUser, onboarding.instagramOpened);
+router.post('/onboarding/finish', ...anyMobileUser, onboarding.finish);
+router.put('/consents', ...anyMobileUser, onboarding.answerConsent);
 
 // @MOB-031 The student's own data.
 router.get('/student/dashboard', ...student, learner.dashboard);

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { Switch, Text, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { revokeDevice, setNotificationPreference, useDevices, useNotificationPreferences } from '../api/queries';
@@ -38,6 +39,9 @@ export default function SettingsScreen() {
           onChange={setLang}
         />
       </Card>
+
+      {/* @MOB-112 Onboarding again: Telegram, Instagram and video consent can be changed later. */}
+      <ListRow icon="🤝" title={t.socialAndConsent} onPress={() => router.push('/onboarding')} />
 
       {/* @MOB-114 @MOB-043 Turn each kind of notification on or off. */}
       <SectionHeader title={t.notifications} />

@@ -173,9 +173,11 @@ async function createApp(options: CreateAppOptions = {}) {
   app.post('/api/mobile/v1/auth/login', authRateLimiter, validateBody(MobileLoginDto), mobileAuthController.login);
   app.post('/api/mobile/v1/auth/refresh', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.refresh);
   app.post('/api/mobile/v1/auth/logout', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.logout);
-  // @MOB-024 Forgot password: an SMS code, then the new password.
-  app.post('/api/mobile/v1/auth/password-reset/request', authRateLimiter, validateBody(MobileResetRequestDto), mobileAccountController.requestPasswordReset);
-  app.post('/api/mobile/v1/auth/password-reset/confirm', authRateLimiter, validateBody(MobileResetConfirmDto), mobileAccountController.confirmPasswordReset);
+  // @MOB-024 Forgot password: an SMS code, then the new password. Its own per-IP limit, so resets do
+  // not use up the sign-in allowance (each account is also limited to 3 codes an hour and 5 tries a code).
+  const passwordResetRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+  app.post('/api/mobile/v1/auth/password-reset/request', passwordResetRateLimiter, validateBody(MobileResetRequestDto), mobileAccountController.requestPasswordReset);
+  app.post('/api/mobile/v1/auth/password-reset/confirm', passwordResetRateLimiter, validateBody(MobileResetConfirmDto), mobileAccountController.confirmPasswordReset);
 
   // Protected routes - require authentication + role-based access
   app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);

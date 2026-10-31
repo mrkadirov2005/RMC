@@ -183,3 +183,25 @@ export type IdToken = { token: string; expires_at: string; ttl_seconds: number }
 
 // @MOB-032 A parent's request to follow another child.
 export type LinkRequest = { request_id: number; child_query: string; status: 'Pending' | 'Approved' | 'Rejected'; created_at: string; decided_at: string | null };
+
+// @MOB-112 @MOB-113 First-run onboarding.
+export type TelegramStatus = 'verified' | 'not_member' | 'not_linked' | 'not_configured' | 'unavailable';
+export type TelegramCheck = { status: TelegramStatus; channel_url: string | null; bot_url: string | null };
+export type Consent = {
+  student_id: number;
+  first_name: string;
+  last_name: string;
+  kind: 'video';
+  minor: boolean;
+  granted: boolean | null;
+  answered_at: string | null;
+  can_answer: boolean;
+};
+export type Onboarding = {
+  show: boolean;
+  completed_at: string | null;
+  skipped: boolean;
+  telegram: TelegramCheck;
+  instagram: { url: string | null; opened: boolean };
+  consents: Consent[];
+};

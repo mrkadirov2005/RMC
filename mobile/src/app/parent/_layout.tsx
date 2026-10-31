@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { useAuth } from '../../auth/AuthContext';
 import { useT } from '../../i18n/LanguageContext';
 import { ParentChildProvider } from '../../screens/ParentChild';
+import { OnboardingGate } from '../../screens/OnboardingGate';
 import { colors } from '../../theme/tokens';
 
 const icon = (glyph: string) => ({ focused }: { focused: boolean }) => <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.55 }}>{glyph}</Text>;
@@ -15,6 +16,8 @@ export default function ParentLayout() {
   if (user && user.role !== 'parent') return <Redirect href="/student" />;
   return (
     <ParentChildProvider>
+      {/* @MOB-112 */}
+      <OnboardingGate />
       <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary, tabBarInactiveTintColor: colors.muted }}>
         <Tabs.Screen name="index" options={{ title: t.home, tabBarIcon: icon('🏠') }} />
         <Tabs.Screen name="children" options={{ title: t.myChildren, tabBarIcon: icon('👨‍👩‍👧') }} />

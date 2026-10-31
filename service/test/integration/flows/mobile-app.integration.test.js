@@ -18,7 +18,7 @@ describe('mobile app API with PostgreSQL', () => {
 
   beforeAll(async () => {
     pool = require('../../../src/db/pool');
-    await pool.query('TRUNCATE TABLE edu_centers, owners, parents, mobile_sessions RESTART IDENTITY CASCADE');
+    await pool.query('TRUNCATE TABLE edu_centers, owners, parents, mobile_sessions, mobile_password_resets, parent_link_requests, mobile_onboarding, mobile_consents RESTART IDENTITY CASCADE');
     centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Mobile Center', 'MOB-C') RETURNING center_id`)).rows[0].center_id;
     const teacherId = (await pool.query(
       `INSERT INTO teachers (center_id, employee_id, first_name, last_name) VALUES ($1, 'MOB-T', 'Temur', 'Aliyev') RETURNING teacher_id`, [centerId],
@@ -409,5 +409,41 @@ describe('mobile app API with PostgreSQL', () => {
     const stats = (await api().get('/api/mobile-admin/adoption').set(auth(adminToken))).body;
     expect(stats).toMatchObject({ parents_total: 1, parents_signed_in: 1, link_requests_pending: 0 });
     expect(stats.students_signed_in).toBeGreaterThanOrEqual(1);
+  });
+  // @MOB-112 @MOB-113
+  test('onboarding is optional; a parent answers consent for a minor, the student cannot', async () => {
+    const savedToken = process.env.TELEGRAM_BOT_TOKEN;
+    process.env.TELEGRAM_BOT_TOKEN = '';
+    try {
+      await pool.query("UPDATE students SET date_of_birth = '2013-04-12' WHERE student_id = $1", [mainId]);
+      // Signed in through the service, not the HTTP route, to stay under its per-minute limit.
+      const mobileAuth = require('../../../src/modules/mobile/services/mobileAuth.service');
+      const student = (await mobileAuth.login({ username: 'aziza', password: 'secret-pass', ...device('stu-onb') })).access_token;
+      const parent = (await mobileAuth.login({ username: 'karimov', password: 'secret-pass', ...device('par-onb') })).access_token;
+
+      const first = await api().get('/api/mobile/v1/onboarding').set(auth(student));
+      expect(first.body).toMatchObject({ show: true, telegram: { status: 'not_configured' } });
+      expect(first.body.consents).toEqual([expect.objectContaining({ student_id: mainId, minor: true, can_answer: false, granted: null })]);
+      expect((await api().put('/api/mobile/v1/consents').set(auth(student)).send({ student_id: mainId, kind: 'video', granted: true })).status).toBe(403);
+      // Skipping never blocks anything: the student's data still loads, and onboarding stops showing.
+      expect((await api().post('/api/mobile/v1/onboarding/finish').set(auth(student)).send({ skipped: true })).status).toBe(200);
+      expect((await api().get('/api/mobile/v1/onboarding').set(auth(student))).body).toMatchObject({ show: false, skipped: true });
+      expect((await api().get('/api/mobile/v1/student/dashboard').set(auth(student))).status).toBe(200);
+
+      expect((await api().put('/api/mobile/v1/consents').set(auth(parent)).send({ student_id: mainId, kind: 'video', granted: true })).status).toBe(200);
+      expect((await api().put('/api/mobile/v1/consents').set(auth(parent)).send({ student_id: mainId, kind: 'video', granted: false })).status).toBe(200);
+      // A child that is not theirs.
+      expect((await api().put('/api/mobile/v1/consents').set(auth(parent)).send({ student_id: 999999, kind: 'video', granted: true })).status).toBe(404);
+      const parentView = await api().get('/api/mobile/v1/onboarding').set(auth(parent));
+      expect(parentView.body.consents.find((c) => c.student_id === mainId)).toMatchObject({ granted: false, can_answer: true });
+      const history = await pool.query('SELECT granted FROM mobile_consents WHERE student_id = $1 ORDER BY consent_id', [mainId]);
+      expect(history.rows.map((r) => r.granted)).toEqual([true, false]);
+      await api().post('/api/mobile/v1/onboarding/instagram-opened').set(auth(parent));
+      await api().post('/api/mobile/v1/onboarding/finish').set(auth(parent)).send({});
+      const done = await pool.query("SELECT completed_at, skipped, instagram_opened_at FROM mobile_onboarding WHERE user_type = 'parent'");
+      expect(done.rows[0]).toMatchObject({ skipped: false, completed_at: expect.any(Date), instagram_opened_at: expect.any(Date) });
+    } finally {
+      process.env.TELEGRAM_BOT_TOKEN = savedToken;
+    }
   });
 });
