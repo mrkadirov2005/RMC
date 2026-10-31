@@ -167,3 +167,11 @@ export type Device = {
   last_used_at: string | null;
   is_current: boolean;
 };
+
+// @MOB-127 Monthly series for the home charts.
+export type Progress = {
+  months: string[];
+  attendance: { month: string; rate: number | null; lessons: number }[];
+  scores: { group: string; points: { month: string; average: number | null }[] }[];
+  coins: { month: string; balance: number; earned: number }[];
+};

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  Progress,
   HomeworkAnswers,
   HomeworkDetail,
   HomeworkItem,
@@ -91,6 +92,10 @@ export const acceptPolicy = (policyId: number) => api.request(`/policies/${polic
 export const useHelpRequests = () => useQuery({ queryKey: ['help-requests'], queryFn: () => get<{ items: HelpRequest[] }>('/help-requests') });
 export const sendHelpRequest = (kind: HelpKind, message: string, studentId?: number | null) =>
   api.request<HelpRequest>('/help-requests', { method: 'POST', body: JSON.stringify({ kind, message, student_id: studentId ?? undefined }) });
+
+// @MOB-127 Attendance, scores and coins by month for the home charts.
+export const useProgress = (childId?: number | null, enabled = true) =>
+  useQuery({ queryKey: ['progress', childId ?? 'me'], queryFn: () => get<Progress>(`${learnerBase(childId)}/progress`), enabled });
 
 // @MOB-140 Homework list and detail; parents read a child's (read only).
 export const useHomework = (childId?: number | null) =>

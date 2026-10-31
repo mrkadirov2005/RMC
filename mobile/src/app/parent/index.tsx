@@ -7,6 +7,7 @@ import { useT } from '../../i18n/LanguageContext';
 import { money, shortDate } from '../../lib/format';
 import { NextLessonCard, NotificationBell, RecentResults, SchoolNews, StatsRow } from '../../screens/learner';
 import { ChildSwitcher, useParentChild } from '../../screens/ParentChild';
+import { HomeCharts } from '../../screens/HomeCharts';
 
 // @MOB-130 Parent home for the selected child: payment due, next lesson, attendance, coins,
 // latest results.
@@ -53,6 +54,7 @@ export default function ParentHome() {
                   <NextLessonCard slots={dash.schedule} />
                   <StatsRow data={dash} childId={childId} />
                   <RecentResults rows={dash.recent_grades} childId={childId} />
+                  <HomeCharts childId={childId} />
                 </>
               )}
             </QueryView>

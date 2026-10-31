@@ -13,6 +13,13 @@ const GRADE_HISTORY_LIMIT = 500;
 const dateOf = (row: any) =>
   String(row?.session_date || row?.attendance_date || row?.payment_date || row?.debt_date || row?.created_at || '').slice(0, 10);
 const newestFirst = (a: any, b: any) => dateOf(b).localeCompare(dateOf(a));
+// Timestamps come back as Date objects from drizzle and as strings from raw SQL; both become
+// local "YYYY-MM-DD..." text so month grouping and sorting work the same way.
+const pad = (n: number) => String(n).padStart(2, '0');
+const isoLocal = (value: any) =>
+  value instanceof Date
+    ? `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:${pad(value.getSeconds())}`
+    : String(value ?? '');
 const fullName = (row: any, prefix = '') =>
   [row?.[`${prefix}first_name`], row?.[`${prefix}last_name`]].filter(Boolean).join(' ').trim() || null;
 
@@ -149,7 +156,7 @@ const coins = async (studentId: number, centerId: number | undefined, page: numb
       delta: Number(t.delta || 0),
       reason: t.reason ?? null,
       source_type: t.source_type ?? null,
-      created_at: t.created_at ?? null,
+      created_at: t.created_at == null ? null : isoLocal(t.created_at),
     }))
     .sort((a: any, b: any) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
   return { balance, ...paged(transactions, page, pageSize) };
@@ -215,6 +222,63 @@ const leaderboard = async (studentId: number, centerId: number, scope: string) =
   };
 };
 
+const lastMonths = (count: number, now: Date = new Date()) =>
+  Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+// @MOB-127 Monthly series for the home charts: attendance rate, average score per group, and the
+// coin balance at the end of each month (worked back from today's balance, so coins given before
+// the ledger existed still count).
+const progress = async (studentId: number, centerId?: number, months = 6, now: Date = new Date()) => {
+  const records = await linkedRecords(studentId, centerId);
+  if (records.length === 0) return null;
+  const ids = records.map((r: any) => Number(r.student_id));
+  const monthKeys = lastMonths(months, now);
+  const first = monthKeys[0];
+
+  const [attendanceRows, gradeRows, coinSummaries] = await Promise.all([
+    collect(ids, (id) => attendanceService.byStudent(id, centerId)),
+    collect(ids, async (id) => (await telegramStudentRepository.results(id, 1, GRADE_HISTORY_LIMIT)).data),
+    Promise.all(ids.map((id) => studentService.getCoinSummary(id, centerId))),
+  ]);
+
+  const attendance = monthKeys.map((month) => {
+    let present = 0;
+    let absent = 0;
+    attendanceRows.forEach((row: any) => {
+      if (monthOf(row) !== month) return;
+      const kind = attendanceKind(row.status);
+      if (kind === 'present') present += 1;
+      if (kind === 'absent') absent += 1;
+    });
+    const lessons = present + absent;
+    return { month, rate: lessons ? Math.round((present / lessons) * 100) : null, lessons };
+  });
+
+  const groups = Array.from(new Set(gradeRows.filter((r: any) => monthOf(r) >= first).map((r: any) => r.class_name || '—'))) as string[];
+  const scores = groups.map((group) => ({
+    group,
+    points: monthKeys.map((month) => {
+      const values = gradeRows
+        .filter((r: any) => (r.class_name || '—') === group && monthOf(r) === month && r.percentage != null)
+        .map((r: any) => Number(r.percentage));
+      return { month, average: values.length ? Math.round(values.reduce((a: number, b: number) => a + b, 0) / values.length) : null };
+    }),
+  }));
+
+  const balance = coinSummaries.reduce((sum: number, s: any) => sum + Number(s?.balance || 0), 0);
+  const transactions = coinSummaries
+    .flatMap((s: any) => (Array.isArray(s?.transactions) ? s.transactions : []))
+    .map((t: any) => ({ month: isoLocal(t.created_at).slice(0, 7), delta: Number(t.delta || 0) }));
+  const earnedIn = (month: string) => transactions.filter((t: any) => t.month === month).reduce((sum: number, t: any) => sum + t.delta, 0);
+  const after = (month: string) => transactions.filter((t: any) => t.month > month).reduce((sum: number, t: any) => sum + t.delta, 0);
+  const coins = monthKeys.map((month) => ({ month, balance: balance - after(month), earned: earnedIn(month) }));
+
+  return { months: monthKeys, attendance, scores, coins };
+};
+
 // @MOB-031 Everything the home screen needs in one request.
 const dashboard = async (studentId: number, centerId?: number) => {
   const [info, attendanceData, gradeData, coinData, scheduleData, paymentData] = await Promise.all([
@@ -237,6 +301,6 @@ const dashboard = async (studentId: number, centerId?: number) => {
   };
 };
 
-module.exports = { profile, attendance, schedule, grades, coins, payments, leaderboard, dashboard, attendanceKind };
+module.exports = { profile, attendance, schedule, grades, coins, payments, leaderboard, dashboard, progress, attendanceKind };
 
 export {};

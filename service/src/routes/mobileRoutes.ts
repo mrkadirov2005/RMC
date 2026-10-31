@@ -54,6 +54,8 @@ router.get('/student/grades', ...student, learner.grades);
 router.get('/student/coins', ...student, learner.coins);
 router.get('/student/payments', ...student, learner.payments);
 router.get('/student/leaderboard', ...student, learner.leaderboard);
+// @MOB-127 Home charts: attendance, scores and coins by month.
+router.get('/student/progress', ...student, learner.progress);
 // @MOB-054 Homework: list, open, autosave, submit.
 router.get('/student/homework', ...student, homework.myHomework);
 router.get('/student/homework/:assignmentId', ...student, homework.homeworkDetail);
@@ -68,6 +70,7 @@ router.get('/parent/children/:studentId/attendance', ...parentChild, learner.att
 router.get('/parent/children/:studentId/grades', ...parentChild, learner.grades);
 router.get('/parent/children/:studentId/coins', ...parentChild, learner.coins);
 router.get('/parent/children/:studentId/payments', ...parentChild, learner.payments);
+router.get('/parent/children/:studentId/progress', ...parentChild, learner.progress);
 // @MOB-054 A parent follows the child's homework (read only).
 router.get('/parent/children/:studentId/homework', ...parentChild, homework.myHomework);
 router.get('/parent/children/:studentId/homework/:assignmentId', ...parentChild, homework.homeworkDetail);

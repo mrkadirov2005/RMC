@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Card, ListRow, Pill, QueryView, Screen, SectionHeader, Tag, text } from '../../components/ui';
 import { useT } from '../../i18n/LanguageContext';
 import { initials } from '../../lib/format';
+import { HomeCharts } from '../../screens/HomeCharts';
 import { HomeworkList } from '../../screens/homework';
 import { NextLessonCard, NotificationBell, RecentResults, SchoolNews, StatsRow } from '../../screens/learner';
 import { colors, space } from '../../theme/tokens';
@@ -46,6 +47,7 @@ export default function StudentHome() {
             <SectionHeader title={t.pendingHomework} action={t.seeAll} onAction={() => router.push('/homework')} />
             <HomeworkList limit={3} />
             <RecentResults rows={data.recent_grades} />
+            <HomeCharts />
           </>
         )}
       </QueryView>

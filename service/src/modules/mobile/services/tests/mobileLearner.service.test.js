@@ -118,7 +118,7 @@ describe('mobile learner service', () => {
   // @MOB-029
   it('coins add up the balance of every group record', async () => {
     studentService.getCoinSummary.mockImplementation(async (id) =>
-      id === 9 ? null : { balance: id === 7 ? 100 : 40, transactions: [{ transaction_id: id, delta: 5, created_at: `2026-10-0${id - 6}` }] },
+      id === 9 ? null : { balance: id === 7 ? 100 : 40, transactions: [{ transaction_id: id, delta: 5, created_at: new Date(2026, 9, id - 6, 9) }] },
     );
 
     const result = await learner.coins(7, 2, 1, 20);
@@ -174,6 +174,54 @@ describe('mobile learner service', () => {
 
     studentService.getStudent.mockResolvedValueOnce(null);
     await expect(learner.leaderboard(7, 2, 'center')).resolves.toBeNull();
+  });
+
+  // @MOB-127
+  it('progress gives six months of attendance rate, scores per group and month-end coin balance', async () => {
+    attendanceService.byStudent.mockImplementation(async (id) =>
+      id === 7
+        ? [
+            { attendance_date: '2026-10-01', status: 'Present' },
+            { attendance_date: '2026-10-03', status: 'Absent' },
+            { attendance_date: '2026-09-10', status: 'Late' },
+            { attendance_date: '2026-03-01', status: 'Absent' },
+          ]
+        : [],
+    );
+    telegramRepo.results.mockImplementation(async (id) => ({
+      data:
+        id === 7
+          ? [{ session_date: '2026-10-05', class_name: 'B1', percentage: '80' }, { session_date: '2026-10-19', class_name: 'B1', percentage: '90' }]
+          : id === 8
+            ? [{ session_date: '2026-09-15', class_name: 'IELTS', percentage: '70' }, { session_date: '2026-01-15', class_name: 'Old', percentage: '10' }]
+            : [],
+    }));
+    studentService.getCoinSummary.mockImplementation(async (id) =>
+      id === 7
+        ? { balance: 100, transactions: [{ delta: 10, created_at: new Date(2026, 9, 21, 12) }, { delta: 5, created_at: '2026-09-02T10:00:00' }] }
+        : { balance: 20, transactions: [] },
+    );
+
+    const result = await learner.progress(7, 2, 6, new Date(2026, 9, 31));
+
+    expect(result.months).toEqual(['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10']);
+    expect(result.attendance.slice(-2)).toEqual([
+      { month: '2026-09', rate: 100, lessons: 1 },
+      { month: '2026-10', rate: 50, lessons: 2 },
+    ]);
+    expect(result.attendance[0]).toEqual({ month: '2026-05', rate: null, lessons: 0 });
+    expect(result.scores.map((s) => s.group)).toEqual(['B1', 'IELTS']);
+    expect(result.scores[0].points.at(-1)).toEqual({ month: '2026-10', average: 85 });
+    expect(result.scores[1].points.at(-2)).toEqual({ month: '2026-09', average: 70 });
+    expect(result.coins.slice(-3)).toEqual([
+      { month: '2026-08', balance: 125, earned: 0 },
+      { month: '2026-09', balance: 130, earned: 5 },
+      { month: '2026-10', balance: 140, earned: 10 },
+    ]);
+
+    studentService.listLinkedGroups.mockResolvedValue([]);
+    studentService.getStudent.mockResolvedValue(null);
+    await expect(learner.progress(7, 2)).resolves.toBeNull();
   });
 
   // @MOB-031
