@@ -65,6 +65,7 @@ services:
       SMS_DAILY_LIMIT: "${SMS_DAILY_LIMIT:-30}"
       # @MOB-055 Homework files from the app land here, then move to Google Drive (empty: they stay here).
       MEDIA_LOCAL_DIR: /media-uploads
+      MEDIA_PUBLIC_BASE_URL: "${MEDIA_PUBLIC_BASE_URL:-https://api-temurbek.e-tizim.uz}"
       GDRIVE_CLIENT_ID: "${GDRIVE_CLIENT_ID:-}"
       GDRIVE_CLIENT_SECRET: "${GDRIVE_CLIENT_SECRET:-}"
       GDRIVE_REFRESH_TOKEN: "${GDRIVE_REFRESH_TOKEN:-}"

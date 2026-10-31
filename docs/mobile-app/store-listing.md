@@ -1,5 +1,10 @@
 # TEMURBEK SCHOOL app: store listing and compliance draft (MOB-171)
 
+> **2026-10-31, owner's decisions:** no store accounts for now. The Android APK is downloaded from the
+> website (see `server-runbook.md` §4); there is no iPhone version yet. Under-13 students do get their
+> own logins, so a later Play listing falls under the Families policy (see Children). Homework files are
+> stored in Google Drive, not S3. Sentry stays off (no account). This draft is kept for a later store release.
+
 Draft answers for the App Store Connect and Google Play Console forms. Items marked **Decide** need the
 owner; everything else matches what the app does today (branch `mobile-app-r1`).
 
@@ -51,7 +56,7 @@ parent home, notifications.
 | --- | --- | --- | --- |
 | Name, login, phone (from the center's records) | Show the account; SMS code for password reset | Yes | No (SMS goes through the center's own phone gateway) |
 | Student's attendance, grades, coins, payments | App function | Yes | No |
-| Homework answers: text, voice recordings, photos, PDFs | App function (teacher grading) | Yes | Stored in the center's private storage (AWS S3 if configured) |
+| Homework answers: text, voice recordings, photos, PDFs | App function (teacher grading) | Yes | Stored in the center's Google Drive, opened by link |
 | Device push token, device name, app version | Notifications, signed-in device list | Yes | Expo push service delivers notifications |
 | Crash reports (only if Sentry is enabled) | Fix crashes | No: names, phones, logins and tokens are removed before sending | Sentry (processor) |
 | Telegram account link (bot) | Verify the channel step in onboarding | Yes | Telegram API (membership check) |
@@ -77,7 +82,7 @@ Not collected: location, contacts, advertising ID, browsing history, purchases. 
 
 ## Children
 
-Students can be under 13. **Decide** one of:
+Students can be under 13 and get their own logins (owner, 2026-10-31), so for a later Play listing option 1 applies:
 
 1. **Google Play target audience includes under-13** → the app falls under the Families policy: every SDK must
    be Families-compliant. Sentry is not on the Families self-certified list; build the Play version without
