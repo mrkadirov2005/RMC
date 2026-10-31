@@ -78,6 +78,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const consolidationRoutes = require('./routes/consolidationRoutes');
   const consolidatePublicRoutes = require('./routes/consolidatePublicRoutes');
   const testSharePublicRoutes = require('./routes/testSharePublicRoutes');
+  const mobileRoutes = require('./routes/mobileRoutes');
 
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
@@ -160,6 +161,16 @@ async function createApp(options: CreateAppOptions = {}) {
   app.post('/api/owners/auth/register', authRateLimiter, require('./modules/owners/controllers/owner.controller').register);
   app.post('/api/parents/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/parents').parentLogin);
 
+  // @MOB-020 Mobile app API: public version check and sign-in/refresh/sign-out. The refresh
+  // limit is looser than sign-in because a whole class behind one school IP refreshes often.
+  const mobileAuthController = require('./modules/mobile/controllers/mobileAuth.controller');
+  const { MobileLoginDto, MobileRefreshDto } = require('./dtos/mobile.dto');
+  const mobileRefreshRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false });
+  app.get('/api/mobile/v1/app-config', mobileAuthController.appConfig);
+  app.post('/api/mobile/v1/auth/login', authRateLimiter, validateBody(MobileLoginDto), mobileAuthController.login);
+  app.post('/api/mobile/v1/auth/refresh', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.refresh);
+  app.post('/api/mobile/v1/auth/logout', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.logout);
+
   // Protected routes - require authentication + role-based access
   app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);
   app.use('/api/teachers', requireAuth, requireRole('superuser', 'teacher'), teacherRoutes);
@@ -220,6 +231,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/consolidations', requireAuth, requireRole('superuser', 'teacher', 'student'), consolidationRoutes);
   app.use('/api/consolidate', consolidatePublicRateLimiter, consolidatePublicRoutes);
   app.use('/api/share/tests', consolidatePublicRateLimiter, testSharePublicRoutes);
+  // @MOB-020 Authenticated mobile app API; each route also checks role and device session.
+  app.use('/api/mobile/v1', requireAuth, mobileRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {
