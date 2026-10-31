@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  HomeworkAnswers,
+  HomeworkDetail,
+  HomeworkItem,
   Announcement,
   HelpKind,
   HelpRequest,
@@ -88,6 +91,24 @@ export const acceptPolicy = (policyId: number) => api.request(`/policies/${polic
 export const useHelpRequests = () => useQuery({ queryKey: ['help-requests'], queryFn: () => get<{ items: HelpRequest[] }>('/help-requests') });
 export const sendHelpRequest = (kind: HelpKind, message: string, studentId?: number | null) =>
   api.request<HelpRequest>('/help-requests', { method: 'POST', body: JSON.stringify({ kind, message, student_id: studentId ?? undefined }) });
+
+// @MOB-140 Homework list and detail; parents read a child's (read only).
+export const useHomework = (childId?: number | null) =>
+  useQuery({ queryKey: ['homework', childId ?? 'me'], queryFn: () => get<{ items: HomeworkItem[]; pending: number }>(`${learnerBase(childId)}/homework`) });
+
+export const useHomeworkDetail = (assignmentId: number, childId?: number | null) =>
+  useQuery({
+    queryKey: ['homework', childId ?? 'me', assignmentId],
+    queryFn: () => get<HomeworkDetail>(`${learnerBase(childId)}/homework/${assignmentId}`),
+    enabled: assignmentId > 0,
+  });
+
+// @MOB-141 Autosave and submit (students only).
+export const saveHomeworkAnswers = (assignmentId: number, answers: HomeworkAnswers) =>
+  api.request(`/student/homework/${assignmentId}/answers`, { method: 'PUT', body: JSON.stringify({ answers }) });
+
+export const submitHomework = (assignmentId: number, answers: HomeworkAnswers) =>
+  api.request(`/student/homework/${assignmentId}/submit`, { method: 'POST', body: JSON.stringify({ answers }) });
 
 // @MOB-114 Per-category notification switches.
 export const useNotificationPreferences = () =>

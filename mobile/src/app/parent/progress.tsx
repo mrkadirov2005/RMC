@@ -16,6 +16,7 @@ export default function Progress() {
         <Empty text={t.linkChildHint} />
       ) : (
         <>
+          <ListRow icon="📝" title={t.homework} onPress={() => router.push(`/homework?child=${childId}`)} />
           <ListRow icon="📅" title={t.attendance} onPress={() => router.push(`/attendance?child=${childId}`)} />
           <ListRow icon="🗓" title={t.schedule} onPress={() => router.push(`/schedule?child=${childId}`)} />
           <ResultsSection childId={childId} />

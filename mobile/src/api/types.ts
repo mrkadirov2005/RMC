@@ -116,6 +116,39 @@ export type Policy = {
   published_at: string;
   accepted: boolean;
 };
+export type HomeworkStatus = 'new' | 'in_progress' | 'overdue' | 'submitted' | 'reviewed';
+export type HomeworkItem = {
+  assignment_id: number;
+  title: string;
+  skill: string;
+  class_name: string | null;
+  due_at: string | null;
+  max_score: number | null;
+  score: number | null;
+  status: HomeworkStatus;
+};
+export type HomeworkQuestion =
+  | { id: string; type: 'choice'; prompt: string; points: number; options: string[] }
+  | { id: string; type: 'gap'; prompt: string; points: number }
+  | { id: string; type: 'match'; prompt: string; points: number; left: string[]; options: string[] }
+  | { id: string; type: 'text'; prompt: string; points: number; min_words: number | null };
+export type HomeworkAnswers = Record<string, number | string | string[]>;
+export type HomeworkDetail = {
+  assignment_id: number;
+  title: string;
+  skill: string;
+  instructions: string | null;
+  class_name: string | null;
+  due_at: string | null;
+  max_score: number | null;
+  status: HomeworkStatus;
+  task: { questions: HomeworkQuestion[] };
+  answers: HomeworkAnswers;
+  score: number | null;
+  feedback: string | null;
+  per_question: Record<string, number | null> | null;
+};
+
 export type HelpKind = 'help' | 'complaint' | 'thanks' | 'suggestion';
 export type HelpRequest = {
   request_id: number;

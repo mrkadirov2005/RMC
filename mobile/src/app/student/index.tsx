@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Card, ListRow, Pill, QueryView, Screen, SectionHeader, Tag, text } from '../../components/ui';
 import { useT } from '../../i18n/LanguageContext';
 import { initials } from '../../lib/format';
+import { HomeworkList } from '../../screens/homework';
 import { NextLessonCard, NotificationBell, RecentResults, SchoolNews, StatsRow } from '../../screens/learner';
 import { colors, space } from '../../theme/tokens';
 
@@ -42,8 +43,8 @@ export default function StudentHome() {
             <NextLessonCard slots={data.schedule} />
             <StatsRow data={data} />
             <ListRow icon="🗓" title={t.schedule} onPress={() => router.push('/schedule')} />
-            <SectionHeader title={t.homework} />
-            <ListRow icon="📝" title={t.homework} subtitle={t.homeworkSoon} right={<Tag label={t.comingSoon} />} />
+            <SectionHeader title={t.pendingHomework} action={t.seeAll} onAction={() => router.push('/homework')} />
+            <HomeworkList limit={3} />
             <RecentResults rows={data.recent_grades} />
           </>
         )}
