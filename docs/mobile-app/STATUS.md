@@ -13,10 +13,12 @@ ticket is tagged `@MOB-###` on the line before it (`grep -rn "@MOB-" service ui 
 | Homework | Bank (level > book > unit > lesson > task), one task format (choice, gap, matching, written), approval, assign to a group (optionally after the next lesson), autosave, auto-scoring, teacher grading, coins, notifications | MOB-050..054, 056, 140..142, 144, 163, 165 |
 | Notifications | Outbox and worker over Expo push, watchers for attendance, grades, coins, payments; inbox with unread count; per-category switches | MOB-040..043, 126 |
 | Content | Official links, announcements (with push), rules with versions and acceptance, help requests with answers | MOB-060..063, 150..153, 160..162, 164 |
-| Web panel | `/owner/mobile-app` (owner) and `/homework` (admins with Tests permission, teachers) | MOB-160..165 |
+| Account | Forgot password by SMS code (10 min, 5 tries, 3 codes an hour, all devices signed out); student ID QR that changes every minute; parent asks to add a child from the app, admin approves in the existing Telegram → Parent requests panel | MOB-024, 032, 111, 124, 125 |
+| Charts | Home charts of attendance, scores and coins, by month or by day | MOB-127, 128 |
+| Web panel | `/owner/mobile-app` (owner, with a Usage tab of adoption numbers), `/homework` (admins with Tests permission, teachers), `/student-id` (admins and teachers check a scanned ID) | MOB-160..166 |
 
 Tests: backend unit tests for every new module, plus `service/test/integration/flows/mobile-app.integration.test.js`
-(9 end-to-end flows on PostgreSQL); app tests for the API client and helpers. Screens were checked in Chrome
+(10 end-to-end flows on PostgreSQL); app tests for the API client and helpers. Screens were checked in Chrome
 against a seeded database.
 
 ## Needs you
@@ -24,15 +26,18 @@ against a seeded database.
 1. **Approve or decline** MOB-010, MOB-011, MOB-012 (they change existing code: secrets in compose, CORS, audit fixes).
 2. **Push on phones** needs an Expo/EAS project: `npx eas-cli init` in `mobile/`, which adds `extra.eas.projectId`;
    then a development build (`npx eas-cli build --profile development`). Expo Go cannot receive remote push.
-3. **Deploy**: four new migrations (`service/db/migrations/20261031*`) run on backend start. Rebuild only the
+3. **Deploy**: five new migrations (`service/db/migrations/20261031*`) run on backend start. Rebuild only the
    backend service.
-4. **Optional env**: `HOMEWORK_MAX_COINS` (default 5), `MOBILE_PUSH_WORKER=off`, `MOBILE_MIN_APP_VERSION`.
+4. **Optional env**: `HOMEWORK_MAX_COINS` (default 5), `MOBILE_PUSH_WORKER=off`, `MOBILE_MIN_APP_VERSION`,
+   `MOBILE_ID_SECRET` (signs the ID QR; falls back to `JWT_SECRET`).
+5. **SMS**: reset codes go through the existing SMS gateway (`SMS_GATEWAY_USERNAME`/`PASSWORD`). Without it, production
+   answers "SMS unavailable" and development prints the code in the server log. The account's phone is the student's
+   own phone, else the saved parent phone; a parent's own phone.
 
 ## Not built yet (next)
 
-- Audio/photo answers and attachments (MOB-055, 143), forgot password by SMS (MOB-024, 111), in-app child
-  link request (MOB-032), onboarding with Telegram check (MOB-112, 113), rotating QR (MOB-125),
-  flashcards (MOB-145), adoption dashboard (MOB-166), store release (MOB-170..175).
+- Audio/photo answers and attachments (MOB-055, 143), onboarding with Telegram check (MOB-112, 113),
+  flashcards (MOB-145), crash reporting (MOB-107), store release (MOB-170..175).
 - Release 2 and 3 modules (video, exams, speaking, surveys, chat, AI, premium).
 
 ## Try it locally

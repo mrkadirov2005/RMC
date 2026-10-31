@@ -16,7 +16,7 @@ const list = async (centerId?: number, status?: string) => {
   if (status) { params.push(status); where.push(`LOWER(r.status) = LOWER($${params.length})`); }
   const result = await pool.query(
     `SELECT r.request_id, r.center_id, r.student_id, r.telegram_chat_id, r.telegram_username, r.parent_name,
-            r.parent_phone, r.child_query, r.status, r.parent_id, r.decided_at, r.created_at,
+            r.parent_phone, r.child_query, r.status, r.parent_id, r.decided_at, r.created_at, r.source,
             s.first_name AS student_first_name, s.last_name AS student_last_name,
             s.phone AS student_phone, s.parent_name AS saved_parent_name, s.parent_phone AS saved_parent_phone,
             c.class_name
@@ -30,6 +30,16 @@ const list = async (centerId?: number, status?: string) => {
   );
   return result.rows;
 };
+
+// @MOB-032 A request made in the app is answered in the app's inbox (pushed to the parent's
+// phones); one from the bot is answered in its chat.
+const appNotice = (client: any, request: any, title: string, body: string) =>
+  client.query(
+    `INSERT INTO mobile_notification_outbox (user_type, user_id, category, title, body, data, dedupe_key)
+     VALUES ('parent', $1, 'announcements', $2, $3, $4, $5)
+     ON CONFLICT (dedupe_key) DO NOTHING`,
+    [request.requested_by_parent_id, title, body, JSON.stringify({ url: '/parent/children' }), `link_request:${request.request_id}:${title}`]
+  );
 
 const enqueueChatMessage = (client: any, request: any, kind: string, text: string, decidedById: number | null) =>
   client.query(
@@ -97,14 +107,16 @@ const approve = (id: number, centerId: number | undefined, decidedById: number |
   if (!request) return { error: 'not_found' as const };
   if (request.status !== 'Pending') return { error: 'already_decided' as const, status: request.status };
 
-  const parentId = await findOrCreateParent(client, request);
+  // @MOB-032 An app request names its parent already.
+  const fromApp = request.requested_by_parent_id != null;
+  const parentId = fromApp ? Number(request.requested_by_parent_id) : await findOrCreateParent(client, request);
   await client.query(
     `INSERT INTO parent_students (parent_id, student_id, center_id, relationship, is_primary)
      VALUES ($1, $2, $3, 'Parent', false)
      ON CONFLICT (parent_id, student_id) DO NOTHING`,
     [parentId, request.student_id, request.center_id]
   );
-  await client.query(
+  if (request.telegram_chat_id != null) await client.query(
     `INSERT INTO telegram_links (center_id, student_id, telegram_chat_id, telegram_user_id, role, phone, active)
      VALUES ($1, $2, $3, $4, 'parent', $5, true)
      ON CONFLICT (telegram_chat_id, student_id)
@@ -118,6 +130,10 @@ const approve = (id: number, centerId: number | undefined, decidedById: number |
     [id, parentId, decidedById]
   );
   const childName = [request.student_first_name, request.student_last_name].filter(Boolean).join(' ');
+  if (fromApp) {
+    await appNotice(client, request, 'So‘rov tasdiqlandi', `Farzandingiz ulandi: ${childName}.`);
+    return { request: updated.rows[0], parent_id: parentId };
+  }
   await enqueueChatMessage(client, request, 'parent_link_approved', [
     '✅ <b>So‘rovingiz tasdiqlandi</b>',
     '',
@@ -137,6 +153,10 @@ const reject = (id: number, centerId: number | undefined, decidedById: number | 
      WHERE request_id = $1 RETURNING *`,
     [id, decidedById]
   );
+  if (request.requested_by_parent_id != null) {
+    await appNotice(client, request, 'So‘rov tasdiqlanmadi', 'Farzandingizni ulash uchun markaz administratoriga murojaat qiling.');
+    return { request: updated.rows[0] };
+  }
   await enqueueChatMessage(client, request, 'parent_link_rejected', [
     '❌ <b>So‘rovingiz tasdiqlanmadi</b>',
     '',

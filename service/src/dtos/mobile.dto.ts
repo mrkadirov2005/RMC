@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 // @MOB-022 Mobile sign-in. `role` is optional: without it the server tries student, then parent.
 class MobileLoginDto {
@@ -42,6 +42,30 @@ class MobileRefreshDto {
   refresh_token!: string;
 }
 
-module.exports = { MobileLoginDto, MobileRefreshDto };
+// @MOB-024 Asking for a password reset code.
+class MobileResetRequestDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  username!: string;
+
+  @IsOptional()
+  @IsIn(['student', 'parent'])
+  role?: 'student' | 'parent';
+}
+
+// @MOB-024 The code from the SMS and the new password.
+class MobileResetConfirmDto extends MobileResetRequestDto {
+  @IsString()
+  @Matches(/^\d{6}$/, { message: "Kod 6 ta raqamdan iborat bo'lishi kerak" })
+  code!: string;
+
+  @IsString()
+  @MinLength(6, { message: "Parol kamida 6 ta belgidan iborat bo'lishi kerak" })
+  @MaxLength(100)
+  new_password!: string;
+}
+
+module.exports = { MobileLoginDto, MobileRefreshDto, MobileResetRequestDto, MobileResetConfirmDto };
 
 export {};

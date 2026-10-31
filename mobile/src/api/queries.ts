@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  IdToken,
+  Role,
+  LinkRequest,
   Progress,
   ProgressPeriod,
   HomeworkAnswers,
@@ -126,3 +129,18 @@ export const useNotificationPreferences = () =>
 
 export const setNotificationPreference = (category: string, enabled: boolean) =>
   api.request<{ items: NotificationPreference[] }>('/notification-preferences', { method: 'PUT', body: JSON.stringify({ category, enabled }) });
+
+// @MOB-024 @MOB-111 Forgot password (public: no token).
+export const requestPasswordReset = (username: string, role?: Role) =>
+  api.raw('/auth/password-reset/request', { method: 'POST', body: JSON.stringify({ username, role }) }) as Promise<{ message: string; phone_hint: string | null }>;
+export const confirmPasswordReset = (username: string, code: string, newPassword: string, role?: Role) =>
+  api.raw('/auth/password-reset/confirm', { method: 'POST', body: JSON.stringify({ username, code, new_password: newPassword, role }) }) as Promise<{ message: string }>;
+
+// @MOB-124 @MOB-125 A fresh QR token every minute, a little before the old one expires.
+export const useIdToken = () =>
+  useQuery({ queryKey: ['id-token'], queryFn: () => get<IdToken>('/student/id-token'), refetchInterval: 50_000, refetchIntervalInBackground: false, gcTime: 0 });
+
+// @MOB-032
+export const useLinkRequests = () => useQuery({ queryKey: ['link-requests'], queryFn: () => get<{ items: LinkRequest[] }>('/parent/link-requests') });
+export const sendLinkRequest = (childQuery: string) =>
+  api.request<{ message: string; code?: string }>('/parent/link-requests', { method: 'POST', body: JSON.stringify({ child_query: childQuery }) });

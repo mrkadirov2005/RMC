@@ -25,6 +25,8 @@ type ParentLinkRequest = {
   saved_parent_name?: string | null;
   saved_parent_phone?: string | null;
   class_name?: string | null;
+  // @MOB-032 'app' when the parent asked from the mobile app.
+  source?: string | null;
 };
 
 const statusTone = (status: string) => {
@@ -80,10 +82,10 @@ export const ParentLinkRequestsPanel = () => {
     try {
       if (action === 'approve') {
         await parentLinkRequestAPI.approve(row.request_id);
-        showToast.success(t('Parent linked. They were notified in the bot.'));
+        showToast.success(row.source === 'app' ? t('Parent linked. They were notified in the app.') : t('Parent linked. They were notified in the bot.'));
       } else {
         await parentLinkRequestAPI.reject(row.request_id);
-        showToast.success(t('Request rejected. The parent was notified in the bot.'));
+        showToast.success(row.source === 'app' ? t('Request rejected. The parent was notified in the app.') : t('Request rejected. The parent was notified in the bot.'));
       }
       await load();
     } catch {
@@ -148,7 +150,10 @@ export const ParentLinkRequestsPanel = () => {
               return (
                 <TableRow key={row.request_id}>
                   <TableCell>
-                    <div className="font-semibold">{row.parent_name || '-'}</div>
+                    <div className="flex items-center gap-1.5 font-semibold">
+                      {row.parent_name || '-'}
+                      {row.source === 'app' && <Badge variant="outline" className="px-1.5 py-0 text-[10px]">{t('Mobile app')}</Badge>}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {[row.parent_phone, row.telegram_username ? `@${row.telegram_username}` : null].filter(Boolean).join(' · ') || '-'}
                     </div>

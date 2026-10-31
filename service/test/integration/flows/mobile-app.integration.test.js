@@ -348,4 +348,66 @@ describe('mobile app API with PostgreSQL', () => {
     // Students and parents cannot reach the teacher API.
     expect((await api().get('/api/homework/bank').set(auth(student))).status).toBe(403);
   });
+  // @MOB-024 @MOB-032 @MOB-125 @MOB-166
+  test('password reset by code, student ID QR, parent link request from the app, adoption numbers', async () => {
+    const { generateToken } = require('../../../src/middleware/auth');
+    const adminToken = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId });
+    await pool.query("UPDATE students SET phone = '+998901234567' WHERE student_id = $1", [mainId]);
+
+    // No SMS gateway in tests: the code goes to the log.
+    const savedUser = process.env.SMS_GATEWAY_USERNAME;
+    process.env.SMS_GATEWAY_USERNAME = '';
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      const asked = await api().post('/api/mobile/v1/auth/password-reset/request').send({ username: 'aziza' });
+      expect(asked.status).toBe(200);
+      expect(asked.body.phone_hint).toBe('+998 ** *** ** 67');
+      const code = String(log.mock.calls.map((c) => c.join(' ')).find((l) => l.includes('password reset code'))).match(/(\d{6})$/)[1];
+      const stored = await pool.query('SELECT code_hash FROM mobile_password_resets WHERE user_id = $1', [mainId]);
+      expect(stored.rows[0].code_hash).not.toContain(code);
+
+      const signedIn = (await api().post('/api/mobile/v1/auth/login').send({ username: 'aziza', password: 'secret-pass', ...device('stu-reset') })).body.access_token;
+      const wrong = code === '000000' ? '111111' : '000000';
+      expect((await api().post('/api/mobile/v1/auth/password-reset/confirm').send({ username: 'aziza', code: wrong, new_password: 'brand-new' })).body.code).toBe('CODE_INVALID');
+      expect((await api().post('/api/mobile/v1/auth/password-reset/confirm').send({ username: 'aziza', code, new_password: 'brand-new' })).status).toBe(200);
+      // Single use, and every device was signed out.
+      expect((await api().post('/api/mobile/v1/auth/password-reset/confirm').send({ username: 'aziza', code, new_password: 'other-one' })).status).toBe(400);
+      expect((await api().get('/api/mobile/v1/me').set(auth(signedIn))).status).toBe(401);
+      expect((await api().post('/api/mobile/v1/auth/login').send({ username: 'aziza', password: 'brand-new', ...device('stu-reset') })).status).toBe(200);
+    } finally {
+      log.mockRestore();
+      process.env.SMS_GATEWAY_USERNAME = savedUser;
+      await pool.query('UPDATE students SET password_hash = $1 WHERE student_id = $2', [bcrypt.hashSync('secret-pass', 10), mainId]);
+    }
+
+    // Student ID: a fresh token verifies for staff; an edited one does not.
+    const student = (await api().post('/api/mobile/v1/auth/login').send({ username: 'aziza', password: 'secret-pass', ...device('stu-id') })).body.access_token;
+    const { token } = (await api().get('/api/mobile/v1/student/id-token').set(auth(student))).body;
+    const verify = (value) => api().get('/api/mobile-staff/student-id/verify').query({ token: value }).set(auth(adminToken));
+    const ok = await verify(token);
+    expect(ok.body).toMatchObject({ valid: true, student: { student_id: mainId, groups: ['B1', 'IELTS'] } });
+    expect((await verify(token.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A')))).body).toEqual({ valid: false, reason: 'bad_signature' });
+    expect((await api().get('/api/mobile-staff/student-id/verify').query({ token }).set(auth(student))).status).toBe(403);
+
+    // A parent asks for Bobur; a duplicate is refused; approval links him and tells the parent in the app.
+    const parent = (await api().post('/api/mobile/v1/auth/login').send({ username: 'karimov', password: 'secret-pass', ...device('par-link') })).body.access_token;
+    expect((await api().post('/api/mobile/v1/parent/link-requests').set(auth(parent)).send({ child_query: 'bobur' })).status).toBe(201);
+    expect((await api().post('/api/mobile/v1/parent/link-requests').set(auth(parent)).send({ child_query: 'bobur' })).status).toBe(409);
+    expect((await api().post('/api/mobile/v1/parent/link-requests').set(auth(parent)).send({ child_query: 'aziza' })).body.code).toBe('ALREADY_LINKED');
+    const pending = await api().get('/api/parent-link-requests').query({ status: 'Pending' }).set(auth(adminToken));
+    const request = pending.body.find((r) => r.source === 'app');
+    expect(request).toMatchObject({ student_id: otherStudentId, child_query: 'bobur', telegram_chat_id: null });
+    expect((await api().get('/api/mobile-admin/adoption').set(auth(adminToken))).body.link_requests_pending).toBe(1);
+    expect((await api().post(`/api/parent-link-requests/${request.request_id}/approve`).set(auth(adminToken))).status).toBe(200);
+    const children = await api().get('/api/mobile/v1/parent/children').set(auth(parent));
+    expect(children.body.items.map((c) => c.student_id).sort()).toEqual([mainId, otherStudentId].sort());
+    const inbox = await api().get('/api/mobile/v1/notifications').set(auth(parent));
+    expect(inbox.body.items[0]).toMatchObject({ title: 'So‘rov tasdiqlandi', body: expect.stringContaining('Aziza') });
+    const mine = await api().get('/api/mobile/v1/parent/link-requests').set(auth(parent));
+    expect(mine.body.items[0]).toMatchObject({ status: 'Approved' });
+
+    const stats = (await api().get('/api/mobile-admin/adoption').set(auth(adminToken))).body;
+    expect(stats).toMatchObject({ parents_total: 1, parents_signed_in: 1, link_requests_pending: 0 });
+    expect(stats.students_signed_in).toBeGreaterThanOrEqual(1);
+  });
 });

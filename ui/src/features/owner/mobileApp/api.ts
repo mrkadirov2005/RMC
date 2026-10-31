@@ -38,7 +38,22 @@ export type MobileHelpRequest = {
   created_at: string;
 };
 
+// @MOB-166 App adoption numbers.
+export type MobileAdoption = {
+  parents_total: number;
+  parents_signed_in: number;
+  parents_weekly_active: number;
+  students_total: number;
+  students_signed_in: number;
+  students_weekly_active: number;
+  homework_submitted_week: number;
+  homework_submitted_total: number;
+  link_requests_pending: number;
+};
+
 export const mobileAdminAPI = {
+  adoption: () => apiClient.get('/mobile-admin/adoption'),
+
   links: () => apiClient.get('/mobile-admin/links'),
   createLink: (data: { title: string; url: string; icon?: string; sort_order?: number }) => apiClient.post('/mobile-admin/links', data),
   updateLink: (id: number, data: Partial<MobileLink>) => apiClient.put(`/mobile-admin/links/${id}`, data),

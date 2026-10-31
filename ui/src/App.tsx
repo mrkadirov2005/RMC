@@ -32,6 +32,7 @@ const OwnerSmsPage = lazy(() => import('./features/owner/OwnerSmsPage'));
 const MobileAppPage = lazy(() => import('./features/owner/mobileApp/MobileAppPage'));
 // @MOB-163 Homework Bank, assigning and grading.
 const HomeworkPage = lazy(() => import('./features/crm/homework/HomeworkPage'));
+const StudentIdCheckPage = lazy(() => import('./features/crm/studentId/StudentIdCheckPage'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
 const StudentFormPage = lazy(() => import('./features/crm/students/StudentFormPage'));
 const StudentDetailPage = lazy(() => import('./features/crm/students/StudentDetailPage'));
@@ -383,6 +384,17 @@ function AppContent() {
             <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
               <Layout>
                 <HomeworkPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        {/* @MOB-125 Admins and teachers check a student's ID QR. */}
+        <Route
+          path="/student-id"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+              <Layout>
+                <StudentIdCheckPage />
               </Layout>
             </ProtectedRoute>
           }

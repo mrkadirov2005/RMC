@@ -10,9 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { showToast } from '@/utils/toast';
-import { classAPI, mobileAdminAPI, type MobileAnnouncement, type MobileHelpRequest, type MobileLink, type MobilePolicy } from './api';
+import { classAPI, mobileAdminAPI, type MobileAdoption, type MobileAnnouncement, type MobileHelpRequest, type MobileLink, type MobilePolicy } from './api';
 
 const TABS = [
+  { id: 'usage', label: 'Usage' },
   { id: 'announcements', label: 'Announcements' },
   { id: 'rules', label: 'Rules' },
   { id: 'links', label: 'Official links' },
@@ -386,10 +387,47 @@ function RequestsTab() {
   );
 }
 
+// @MOB-166 How many families use the app: signed in at least once, active in the last 7 days,
+// and homework sent from it.
+function UsageTab() {
+  const { t } = useLanguage();
+  const [data, setData] = useState<MobileAdoption | null>(null);
+  useEffect(() => {
+    mobileAdminAPI
+      .adoption()
+      .then((response) => setData(getApiPayload<MobileAdoption>(response)))
+      .catch(() => showToast.error(t('Could not load the data.')));
+  }, [t]);
+  if (!data) return <Empty loading />;
+
+  const share = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : '—');
+  const tiles = [
+    { label: t('Parents in the app'), value: data.parents_signed_in, note: t('{share} of {total} parents', { share: share(data.parents_signed_in, data.parents_total), total: data.parents_total }) },
+    { label: t('Students in the app'), value: data.students_signed_in, note: t('{share} of {total} active students', { share: share(data.students_signed_in, data.students_total), total: data.students_total }) },
+    { label: t('Active parents, last 7 days'), value: data.parents_weekly_active, note: null },
+    { label: t('Active students, last 7 days'), value: data.students_weekly_active, note: null },
+    { label: t('Homework sent, last 7 days'), value: data.homework_submitted_week, note: t('{total} in total', { total: data.homework_submitted_total }) },
+    { label: t('Link requests waiting'), value: data.link_requests_pending, note: t('Approve them under Telegram → Parent requests') },
+  ];
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {tiles.map((tile) => (
+        <Card key={tile.label}>
+          <CardContent className="grid gap-1 pt-5">
+            <span className="text-sm text-muted-foreground">{tile.label}</span>
+            <span className="text-3xl font-bold tabular-nums">{tile.value.toLocaleString('en-US')}</span>
+            {tile.note && <span className="text-xs text-muted-foreground">{tile.note}</span>}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 const MobileAppPage = () => {
   const { t } = useLanguage();
   const [params, setParams] = useSearchParams();
-  const tab = (TABS.some((item) => item.id === params.get('tab')) ? params.get('tab') : 'announcements') as TabId;
+  const tab = (TABS.some((item) => item.id === params.get('tab')) ? params.get('tab') : 'usage') as TabId;
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 px-4 py-4">
@@ -411,6 +449,7 @@ const MobileAppPage = () => {
           </button>
         ))}
       </div>
+      {tab === 'usage' && <UsageTab />}
       {tab === 'announcements' && <AnnouncementsTab />}
       {tab === 'rules' && <RulesTab />}
       {tab === 'links' && <LinksTab />}

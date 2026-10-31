@@ -166,12 +166,16 @@ async function createApp(options: CreateAppOptions = {}) {
   // @MOB-020 Mobile app API: public version check and sign-in/refresh/sign-out. The refresh
   // limit is looser than sign-in because a whole class behind one school IP refreshes often.
   const mobileAuthController = require('./modules/mobile/controllers/mobileAuth.controller');
-  const { MobileLoginDto, MobileRefreshDto } = require('./dtos/mobile.dto');
+  const { MobileLoginDto, MobileRefreshDto, MobileResetRequestDto, MobileResetConfirmDto } = require('./dtos/mobile.dto');
+  const mobileAccountController = require('./modules/mobile/controllers/mobileAccount.controller');
   const mobileRefreshRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false });
   app.get('/api/mobile/v1/app-config', mobileAuthController.appConfig);
   app.post('/api/mobile/v1/auth/login', authRateLimiter, validateBody(MobileLoginDto), mobileAuthController.login);
   app.post('/api/mobile/v1/auth/refresh', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.refresh);
   app.post('/api/mobile/v1/auth/logout', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.logout);
+  // @MOB-024 Forgot password: an SMS code, then the new password.
+  app.post('/api/mobile/v1/auth/password-reset/request', authRateLimiter, validateBody(MobileResetRequestDto), mobileAccountController.requestPasswordReset);
+  app.post('/api/mobile/v1/auth/password-reset/confirm', authRateLimiter, validateBody(MobileResetConfirmDto), mobileAccountController.confirmPasswordReset);
 
   // Protected routes - require authentication + role-based access
   app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);
@@ -237,6 +241,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/mobile/v1', requireAuth, mobileRoutes);
   // @MOB-160 Admins and the owner manage the mobile app's links, announcements, rules and requests.
   app.use('/api/mobile-admin', requireAuth, requireRole('superuser'), mobileAdminRoutes);
+  // @MOB-125 Admins and teachers check a scanned student ID (GET: a check changes nothing).
+  app.get('/api/mobile-staff/student-id/verify', requireAuth, requireRole('superuser', 'teacher'), mobileAccountController.verifyIdToken);
   // @MOB-052 Homework Bank, assigning and reviewing, for admins, the owner and teachers.
   app.use('/api/homework', requireAuth, requireRole('superuser', 'teacher'), homeworkRoutes);
 

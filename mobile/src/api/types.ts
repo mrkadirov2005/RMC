@@ -177,3 +177,9 @@ export type Progress = {
   scores: { group: string; points: { key: string; average: number | null }[] }[];
   coins: { key: string; balance: number; earned: number }[];
 };
+
+// @MOB-125 Token behind the student ID QR.
+export type IdToken = { token: string; expires_at: string; ttl_seconds: number };
+
+// @MOB-032 A parent's request to follow another child.
+export type LinkRequest = { request_id: number; child_query: string; status: 'Pending' | 'Approved' | 'Rejected'; created_at: string; decided_at: string | null };

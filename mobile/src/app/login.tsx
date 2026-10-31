@@ -1,6 +1,6 @@
-import { Redirect } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Role } from '../api/types';
 import { useAuth, type SignInResult } from '../auth/AuthContext';
@@ -88,6 +88,10 @@ export default function Login() {
           ) : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button title={busy ? t.signingIn : t.signIn} onPress={submit} loading={busy} disabled={!username.trim() || !password} />
+          {/* @MOB-111 */}
+          <Pressable onPress={() => router.push('/forgot-password')} accessibilityRole="link" style={{ alignSelf: 'center', padding: space.xs }}>
+            <Text style={styles.link}>{t.forgotPassword}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.langRow}>
@@ -117,5 +121,6 @@ const styles = StyleSheet.create({
   heading: { fontSize: font.title, fontWeight: '700', color: colors.text },
   input: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, paddingHorizontal: space.md, paddingVertical: 11, fontSize: font.body, color: colors.text, backgroundColor: colors.white },
   error: { color: colors.danger, fontSize: 13 },
+  link: { color: colors.primary, fontWeight: '600', fontSize: 13.5 },
   langRow: { alignItems: 'center', marginTop: space.lg },
 });
