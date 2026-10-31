@@ -3,9 +3,17 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from '../auth/AuthContext';
+import { AuthProvider, useAuth } from '../auth/AuthContext';
 import { LanguageProvider } from '../i18n/LanguageContext';
+import { usePushNotifications } from '../lib/push';
 import { colors } from '../theme/tokens';
+
+// @MOB-126 Push registration and tap handling need the signed-in state.
+function PushBridge() {
+  const { status } = useAuth();
+  usePushNotifications(status === 'signedIn');
+  return null;
+}
 
 // @MOB-105 Cached data stays fresh for a minute and is kept for a day, so screens open instantly
 // and still show the last data when offline.
@@ -22,6 +30,7 @@ export default function RootLayout() {
         <LanguageProvider>
           <AuthProvider>
             <StatusBar style="dark" />
+            <PushBridge />
             <Stack
               screenOptions={{
                 headerShown: false,

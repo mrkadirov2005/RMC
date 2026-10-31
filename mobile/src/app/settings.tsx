@@ -1,6 +1,6 @@
-import { Text } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { revokeDevice, useDevices } from '../api/queries';
+import { revokeDevice, setNotificationPreference, useDevices, useNotificationPreferences } from '../api/queries';
 import { useAuth } from '../auth/AuthContext';
 import { Button, Card, Chips, ListRow, QueryView, SectionHeader, Tag, text } from '../components/ui';
 import { useT } from '../i18n/LanguageContext';
@@ -12,7 +12,13 @@ export default function SettingsScreen() {
   const { t, lang, setLang } = useT();
   const { signOut } = useAuth();
   const devices = useDevices();
+  const prefs = useNotificationPreferences();
   const queryClient = useQueryClient();
+
+  const togglePreference = async (category: string, enabled: boolean) => {
+    const next = await setNotificationPreference(category, enabled);
+    queryClient.setQueryData(['notification-preferences'], next);
+  };
 
   const signOutDevice = async (sessionId: number) => {
     await revokeDevice(sessionId);
@@ -32,6 +38,21 @@ export default function SettingsScreen() {
           onChange={setLang}
         />
       </Card>
+
+      {/* @MOB-114 @MOB-043 Turn each kind of notification on or off. */}
+      <SectionHeader title={t.notifications} />
+      <QueryView query={prefs}>
+        {(data) => (
+          <Card>
+            {data.items.map((p) => (
+              <View key={p.category} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 }}>
+                <Text style={text.bold}>{t.categories[p.category] || p.category}</Text>
+                <Switch value={p.enabled} onValueChange={(value) => void togglePreference(p.category, value)} />
+              </View>
+            ))}
+          </Card>
+        )}
+      </QueryView>
 
       <SectionHeader title={t.devices} />
       <QueryView query={devices}>

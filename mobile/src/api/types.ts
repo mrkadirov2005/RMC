@@ -94,6 +94,17 @@ export type CoinsResponse = Paged<CoinTransaction> & { balance: number };
 export type PaymentsResponse = Paged<PaymentRow> & { outstanding: number; next_due_date: string | null; open_debts: OpenDebt[] };
 export type LeaderboardEntry = { rank: number; name: string; coins: number; is_me: boolean };
 export type Leaderboard = { scope: 'class' | 'center'; me: LeaderboardEntry | null; items: LeaderboardEntry[] };
+export type AppNotification = {
+  notification_id: number;
+  category: string;
+  title: string;
+  body: string;
+  data: { url?: string } | null;
+  created_at: string;
+  read_at: string | null;
+};
+export type NotificationPreference = { category: string; enabled: boolean };
+
 export type Device = {
   session_id: number;
   device_name: string | null;

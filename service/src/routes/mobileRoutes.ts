@@ -4,6 +4,7 @@ const express = require('express');
 const { requireMobileRole, requireActiveMobileSession } = require('../modules/mobile/mobileAccess');
 const auth = require('../modules/mobile/controllers/mobileAuth.controller');
 const learner = require('../modules/mobile/controllers/mobileLearner.controller');
+const notifications = require('../modules/mobile/controllers/mobileNotification.controller');
 
 // @MOB-020 Mobile app API, mounted at /api/mobile/v1. Sign-in, refresh and sign-out are public
 // and registered in index.ts. index.ts mounts this router behind requireAuth; every route here
@@ -24,7 +25,15 @@ const parentChild = [...parent, learner.requireLinkedChild];
  */
 router.get('/me', ...signedIn, requireMobileRole('student', 'parent'), auth.me);
 router.get('/devices', ...signedIn, requireMobileRole('student', 'parent'), auth.listDevices);
+// @MOB-040 Literal path before /devices/:sessionId so it is not read as a session id.
+router.put('/devices/current/push-token', ...signedIn, requireMobileRole('student', 'parent'), notifications.savePushToken);
 router.delete('/devices/:sessionId', ...signedIn, requireMobileRole('student', 'parent'), auth.revokeDevice);
+
+// @MOB-043 Inbox and per-category preferences.
+router.get('/notifications', ...signedIn, requireMobileRole('student', 'parent'), notifications.list);
+router.post('/notifications/read', ...signedIn, requireMobileRole('student', 'parent'), notifications.markRead);
+router.get('/notification-preferences', ...signedIn, requireMobileRole('student', 'parent'), notifications.getPreferences);
+router.put('/notification-preferences', ...signedIn, requireMobileRole('student', 'parent'), notifications.setPreference);
 
 // @MOB-031 The student's own data.
 router.get('/student/dashboard', ...student, learner.dashboard);

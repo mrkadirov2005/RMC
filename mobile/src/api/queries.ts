@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  AppNotification,
+  NotificationPreference,
+  Paged,
   AttendanceResponse,
   Child,
   CoinsResponse,
@@ -59,3 +62,21 @@ export const useChildren = (enabled = true) =>
 export const useDevices = () => useQuery({ queryKey: ['devices'], queryFn: () => get<{ items: Device[] }>('/devices') });
 
 export const revokeDevice = (sessionId: number) => api.request(`/devices/${sessionId}`, { method: 'DELETE' });
+
+// @MOB-126 Inbox; refetched every minute while a screen shows the bell.
+export const useNotifications = () =>
+  useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => get<Paged<AppNotification> & { unread: number }>('/notifications?page_size=50'),
+    refetchInterval: 60_000,
+  });
+
+export const markNotificationsRead = (notificationId?: number) =>
+  api.request('/notifications/read', { method: 'POST', body: JSON.stringify(notificationId ? { notification_id: notificationId } : {}) });
+
+// @MOB-114 Per-category notification switches.
+export const useNotificationPreferences = () =>
+  useQuery({ queryKey: ['notification-preferences'], queryFn: () => get<{ items: NotificationPreference[] }>('/notification-preferences') });
+
+export const setNotificationPreference = (category: string, enabled: boolean) =>
+  api.request<{ items: NotificationPreference[] }>('/notification-preferences', { method: 'PUT', body: JSON.stringify({ category, enabled }) });

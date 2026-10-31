@@ -82,6 +82,10 @@ export const uz = {
   groupChat: 'Guruh chati',
   news: 'Yangiliklar',
   days: { Monday: 'Dushanba', Tuesday: 'Seshanba', Wednesday: 'Chorshanba', Thursday: 'Payshanba', Friday: 'Juma', Saturday: 'Shanba', Sunday: 'Yakshanba' } as Record<string, string>,
+  notifications: 'Bildirishnomalar',
+  noNotifications: "Hozircha bildirishnoma yo'q",
+  new: 'Yangi',
+  categories: { attendance: 'Davomat', grades: 'Baholar', coins: 'Coinlar', payments: "To'lovlar", announcements: "E'lonlar" } as Record<string, string>,
   currency: "so'm",
 };
 
@@ -169,6 +173,10 @@ export const en: Strings = {
   groupChat: 'Group chat',
   news: 'News',
   days: { Monday: 'Monday', Tuesday: 'Tuesday', Wednesday: 'Wednesday', Thursday: 'Thursday', Friday: 'Friday', Saturday: 'Saturday', Sunday: 'Sunday' },
+  notifications: 'Notifications',
+  noNotifications: 'No notifications yet',
+  new: 'New',
+  categories: { attendance: 'Attendance', grades: 'Grades', coins: 'Coins', payments: 'Payments', announcements: 'Announcements' },
   currency: 'UZS',
 };
 

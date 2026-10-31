@@ -256,6 +256,8 @@ async function main() {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
   require('./modules/sms/services/sms.service').startSmsWorker();
+  // @MOB-041 Mobile push notifications (attendance, grades, coins, payments).
+  require('./modules/mobile/services/mobileNotification.service').startPushWorker();
 
   // Graceful shutdown - use a flag to prevent multiple calls
   let isShuttingDown = false;

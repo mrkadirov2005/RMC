@@ -171,4 +171,48 @@ describe('mobile app API with PostgreSQL', () => {
     expect(stillIn.status).toBe(200);
     expect(stillIn.body).toMatchObject({ role: 'parent', first_name: 'Ota' });
   });
+
+  // @MOB-040 @MOB-041 @MOB-042 @MOB-043
+  test('a new absence reaches the parent phone and inbox once; muted categories stay quiet', async () => {
+    const notifications = require('../../../src/modules/mobile/services/mobileNotification.service');
+    await pool.query('TRUNCATE mobile_event_checkpoints, mobile_notification_outbox, mobile_notification_prefs');
+    const parentLogin = (await api().post('/api/mobile/v1/auth/login').send({ username: 'karimov', password: 'secret-pass', ...device('par-push') })).body;
+    const token = parentLogin.access_token;
+
+    const saved = await api().put('/api/mobile/v1/devices/current/push-token').set(auth(token)).send({ push_token: 'ExponentPushToken[parent-phone]' });
+    expect(saved.status).toBe(200);
+
+    // First scan only sets the starting point: history is never pushed.
+    await notifications.scanAll();
+    expect((await pool.query('SELECT COUNT(*)::int AS n FROM mobile_notification_outbox')).rows[0].n).toBe(0);
+
+    const teacherId = (await pool.query('SELECT teacher_id FROM teachers LIMIT 1')).rows[0].teacher_id;
+    const classId = (await pool.query('SELECT class_id FROM students WHERE student_id = $1', [secondRecordId])).rows[0].class_id;
+    await pool.query(
+      `INSERT INTO attendance (center_id, student_id, class_id, teacher_id, attendance_date, status) VALUES ($1, $2, $3, $4, '2026-10-30', 'Absent')`,
+      [centerId, secondRecordId, classId, teacherId],
+    );
+    // Coins are muted by the student; the parent never gets coin messages anyway.
+    await pool.query(
+      `INSERT INTO mobile_notification_prefs (user_type, user_id, category, enabled) VALUES ('student', $1, 'coins', false)`,
+      [mainId],
+    );
+    await pool.query(`INSERT INTO student_coin_transactions (student_id, center_id, delta, reason) VALUES ($1, $2, 5, 'Faol')`, [mainId, centerId]);
+
+    await notifications.scanAll();
+    await notifications.scanAll();
+    const queued = (await pool.query('SELECT user_type, category, body FROM mobile_notification_outbox ORDER BY outbox_id')).rows;
+    expect(queued).toEqual([{ user_type: 'parent', category: 'attendance', body: 'Aziza darsga kelmadi (IELTS).' }]);
+
+    const fetchFn = jest.fn(async () => ({ ok: true, status: 200, json: async () => ({ data: [{ status: 'ok' }] }) }));
+    await expect(notifications.deliverDue(fetchFn)).resolves.toBe(1);
+    expect(JSON.parse(fetchFn.mock.calls[0][1].body)).toEqual([
+      expect.objectContaining({ to: 'ExponentPushToken[parent-phone]', title: 'Davomat', data: { url: `/attendance?child=${mainId}` } }),
+    ]);
+
+    const inbox = await api().get('/api/mobile/v1/notifications').set(auth(token));
+    expect(inbox.body).toMatchObject({ total: 1, unread: 1 });
+    await api().post('/api/mobile/v1/notifications/read').set(auth(token)).send({});
+    expect((await api().get('/api/mobile/v1/notifications').set(auth(token))).body.unread).toBe(0);
+  });
 });

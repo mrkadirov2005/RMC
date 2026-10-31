@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Card, ListRow, Pill, QueryView, Screen, SectionHeader, Tag, text } from '../../components/ui';
 import { useT } from '../../i18n/LanguageContext';
 import { initials } from '../../lib/format';
-import { NextLessonCard, RecentResults, StatsRow } from '../../screens/learner';
+import { NextLessonCard, NotificationBell, RecentResults, StatsRow } from '../../screens/learner';
 import { colors, space } from '../../theme/tokens';
 
 // @MOB-120 Student home: next lesson, attendance, coins, latest results and what is coming.
@@ -27,6 +27,7 @@ export default function StudentHome() {
           <Text style={text.muted}>{query.data?.student.groups.map((g) => g.class_name).filter(Boolean).join(' · ') || user?.class_name || ''}</Text>
         </View>
         {query.data ? <Pill label={`🪙 ${query.data.coins.balance.toLocaleString('en-US')}`} onPress={() => router.push('/coins')} /> : null}
+        <NotificationBell />
       </View>
 
       <QueryView query={query}>

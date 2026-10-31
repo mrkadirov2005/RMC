@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { useAttendance, useCoins, useGrades, usePayments, useSchedule } from '../api/queries';
+import { useAttendance, useCoins, useGrades, useNotifications, usePayments, useSchedule } from '../api/queries';
 import type { Dashboard, GradeRow, MonthlyAverage, ScheduleSlot } from '../api/types';
-import { Bar, Card, Empty, ListRow, QueryView, Ring, SectionHeader, Tag, text } from '../components/ui';
+import { Bar, Card, Empty, ListRow, Pill, QueryView, Ring, SectionHeader, Tag, text } from '../components/ui';
 import { useT } from '../i18n/LanguageContext';
 import { attendanceTone, hhmm, money, nextLesson, shortDate, WEEK_ORDER } from '../lib/format';
 import { colors, space } from '../theme/tokens';
@@ -268,6 +268,13 @@ export function PaymentsSection({ childId }: { childId?: number | null }) {
       )}
     </QueryView>
   );
+}
+
+// @MOB-126 Bell with the unread count; opens the inbox.
+export function NotificationBell() {
+  const { data } = useNotifications();
+  const unread = data?.unread ?? 0;
+  return <Pill label={unread > 0 ? `🔔 ${unread}` : '🔔'} onPress={() => router.push('/notifications')} />;
 }
 
 export function ProgressBar({ value }: { value: number }) {
