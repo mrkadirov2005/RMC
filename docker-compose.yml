@@ -2,9 +2,10 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: crm_postgres
+    # @MOB-010 Secrets come from .env next to this file (git-ignored, see .env.example).
     environment:
       POSTGRES_USER: crm_user
-      POSTGRES_PASSWORD: crm_password
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
       POSTGRES_DB: crm_db
     ports:
       - "5432:5432"
@@ -48,15 +49,16 @@ services:
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USER: crm_user
-      DB_PASSWORD: crm_password
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
       DB_NAME: crm_db
       OWNER_INVITE_KEY: "${OWNER_INVITE_KEY}"
-      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in .env}"
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: crm_logs
       REQUEST_LOG_TTL_DAYS: "90"
       OWNER_DATA_RESET_ENABLED: "${OWNER_DATA_RESET_ENABLED:-true}"
-      CORS_ALLOWED_ORIGINS: "*"
+      # @MOB-011 Only the web panel calls the API from a browser; the mobile app is not subject to CORS.
+      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-https://temurbek.e-tizim.uz}"
       # SMS to parents through the center's Android phone (SMS Gateway app). Empty: SMS is off.
       SMS_GATEWAY_USERNAME: "${SMS_GATEWAY_USERNAME:-}"
       SMS_GATEWAY_PASSWORD: "${SMS_GATEWAY_PASSWORD:-}"
@@ -86,7 +88,7 @@ services:
       DB_HOST: "${STUDIO_DB_HOST:-postgres}"
       DB_PORT: "${STUDIO_DB_PORT:-5432}"
       DB_USER: "${STUDIO_DB_USER:-crm_user}"
-      DB_PASSWORD: "${STUDIO_DB_PASSWORD:-crm_password}"
+      DB_PASSWORD: "${STUDIO_DB_PASSWORD:-${DB_PASSWORD:?Set DB_PASSWORD in .env}}"
       DB_NAME: "${STUDIO_DB_NAME:-crm_db}"
     command: ["npx", "drizzle-kit", "studio", "--config=drizzle.config.js", "--host=0.0.0.0", "--port=4983"]
     depends_on:
@@ -111,7 +113,7 @@ services:
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USER: crm_user
-      DB_PASSWORD: crm_password
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
       DB_NAME: crm_db
       BOT_DEFAULT_CENTER_ID: "${BOT_DEFAULT_CENTER_ID:-1}"
       BOT_REGISTRATION_CLASS_LABEL: "${BOT_REGISTRATION_CLASS_LABEL:-Unassigned}"
@@ -142,7 +144,7 @@ services:
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USER: crm_user
-      DB_PASSWORD: crm_password
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
       DB_NAME: crm_db
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: crm_logs

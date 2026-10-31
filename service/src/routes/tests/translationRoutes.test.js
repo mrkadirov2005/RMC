@@ -51,21 +51,13 @@ describe('translation routes DTO validation (RMC-044 / RMC-079)', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    // Discrepancy from the RMC-044 ticket's assumption: validateBody's plainToInstance call uses
-    // enableImplicitConversion: true, so class-transformer coerces a scalar (number/boolean/plain
-    // object) to its String() representation *before* @IsString() runs, rather than @IsString()
-    // rejecting it. Only non-coercible shapes (arrays, per the test above) are actually rejected.
-    // This differs from the old normalizeText, which silently turned any non-string into '' instead
-    // of a String()-coerced value -- but it is still not a clean 400 rejection for every non-string
-    // input the way the ticket described. Documented here rather than "fixed" in production code.
-    it('documents current behavior: a numeric translation value is coerced to its string form rather than rejected', async () => {
-      const { req, res, next } = await runMiddleware(BulkUpsertTranslationsDto, {
+    it('rejects a numeric value instead of turning it into a string', async () => {
+      const { res, next } = await runMiddleware(BulkUpsertTranslationsDto, {
         translations: [{ id: 'greeting', english: 12345, uzbek: 'Salom' }],
       });
 
-      expect(res.status).not.toHaveBeenCalled();
-      expect(next).toHaveBeenCalledTimes(1);
-      expect(req.body.translations[0].english).toBe('12345');
+      expect(next).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(400);
     });
 
     it('rejects a non-array translations payload with 400', async () => {

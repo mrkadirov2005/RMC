@@ -8,3 +8,4 @@ backups/
 
 # @MOB-055 Local media storage (development)
 service/uploads/
+.env
