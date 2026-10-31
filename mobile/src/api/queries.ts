@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import type {
   Progress,
+  ProgressPeriod,
   HomeworkAnswers,
   HomeworkDetail,
   HomeworkItem,
@@ -93,9 +94,13 @@ export const useHelpRequests = () => useQuery({ queryKey: ['help-requests'], que
 export const sendHelpRequest = (kind: HelpKind, message: string, studentId?: number | null) =>
   api.request<HelpRequest>('/help-requests', { method: 'POST', body: JSON.stringify({ kind, message, student_id: studentId ?? undefined }) });
 
-// @MOB-127 Attendance, scores and coins by month for the home charts.
-export const useProgress = (childId?: number | null, enabled = true) =>
-  useQuery({ queryKey: ['progress', childId ?? 'me'], queryFn: () => get<Progress>(`${learnerBase(childId)}/progress`), enabled });
+// @MOB-127 @MOB-128 Attendance, scores and coins by month or by day for the home charts.
+export const useProgress = (childId?: number | null, period: ProgressPeriod = 'month', enabled = true) =>
+  useQuery({
+    queryKey: ['progress', childId ?? 'me', period],
+    queryFn: () => get<Progress>(`${learnerBase(childId)}/progress?period=${period}`),
+    enabled,
+  });
 
 // @MOB-140 Homework list and detail; parents read a child's (read only).
 export const useHomework = (childId?: number | null) =>

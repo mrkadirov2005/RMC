@@ -177,7 +177,7 @@ describe('mobile learner service', () => {
   });
 
   // @MOB-127
-  it('progress gives six months of attendance rate, scores per group and month-end coin balance', async () => {
+  it('progress gives attendance rate, scores per group and coin balance by month or by day', async () => {
     attendanceService.byStudent.mockImplementation(async (id) =>
       id === 7
         ? [
@@ -202,22 +202,35 @@ describe('mobile learner service', () => {
         : { balance: 20, transactions: [] },
     );
 
-    const result = await learner.progress(7, 2, 6, new Date(2026, 9, 31));
+    const result = await learner.progress(7, 2, 'month', new Date(2026, 9, 31));
 
-    expect(result.months).toEqual(['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10']);
+    expect(result.period).toBe('month');
+    expect(result.keys).toEqual(['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10']);
     expect(result.attendance.slice(-2)).toEqual([
-      { month: '2026-09', rate: 100, lessons: 1 },
-      { month: '2026-10', rate: 50, lessons: 2 },
+      { key: '2026-09', rate: 100, lessons: 1 },
+      { key: '2026-10', rate: 50, lessons: 2 },
     ]);
-    expect(result.attendance[0]).toEqual({ month: '2026-05', rate: null, lessons: 0 });
+    expect(result.attendance[0]).toEqual({ key: '2026-05', rate: null, lessons: 0 });
     expect(result.scores.map((s) => s.group)).toEqual(['B1', 'IELTS']);
-    expect(result.scores[0].points.at(-1)).toEqual({ month: '2026-10', average: 85 });
-    expect(result.scores[1].points.at(-2)).toEqual({ month: '2026-09', average: 70 });
+    expect(result.scores[0].points.at(-1)).toEqual({ key: '2026-10', average: 85 });
+    expect(result.scores[1].points.at(-2)).toEqual({ key: '2026-09', average: 70 });
     expect(result.coins.slice(-3)).toEqual([
-      { month: '2026-08', balance: 125, earned: 0 },
-      { month: '2026-09', balance: 130, earned: 5 },
-      { month: '2026-10', balance: 140, earned: 10 },
+      { key: '2026-08', balance: 125, earned: 0 },
+      { key: '2026-09', balance: 130, earned: 5 },
+      { key: '2026-10', balance: 140, earned: 10 },
     ]);
+
+    // @MOB-128 By day: the last 30 days ending today, one point per lesson day.
+    const daily = await learner.progress(7, 2, 'day', new Date(2026, 9, 31, 15));
+    expect(daily.keys).toHaveLength(30);
+    expect(daily.keys[0]).toBe('2026-10-02');
+    expect(daily.keys.at(-1)).toBe('2026-10-31');
+    expect(daily.attendance.find((a) => a.key === '2026-10-03')).toEqual({ key: '2026-10-03', rate: 0, lessons: 1 });
+    expect(daily.attendance.find((a) => a.key === '2026-10-04')).toEqual({ key: '2026-10-04', rate: null, lessons: 0 });
+    expect(daily.scores.map((s) => s.group)).toEqual(['B1']);
+    expect(daily.scores[0].points.find((p) => p.key === '2026-10-19')).toEqual({ key: '2026-10-19', average: 90 });
+    expect(daily.coins.find((c) => c.key === '2026-10-20')).toEqual({ key: '2026-10-20', balance: 130, earned: 0 });
+    expect(daily.coins.find((c) => c.key === '2026-10-21')).toEqual({ key: '2026-10-21', balance: 140, earned: 10 });
 
     studentService.listLinkedGroups.mockResolvedValue([]);
     studentService.getStudent.mockResolvedValue(null);

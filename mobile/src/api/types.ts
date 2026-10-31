@@ -168,10 +168,12 @@ export type Device = {
   is_current: boolean;
 };
 
-// @MOB-127 Monthly series for the home charts.
+// @MOB-127 @MOB-128 Home chart series by month ("YYYY-MM") or day ("YYYY-MM-DD").
+export type ProgressPeriod = 'month' | 'day';
 export type Progress = {
-  months: string[];
-  attendance: { month: string; rate: number | null; lessons: number }[];
-  scores: { group: string; points: { month: string; average: number | null }[] }[];
-  coins: { month: string; balance: number; earned: number }[];
+  period: ProgressPeriod;
+  keys: string[];
+  attendance: { key: string; rate: number | null; lessons: number }[];
+  scores: { group: string; points: { key: string; average: number | null }[] }[];
+  coins: { key: string; balance: number; earned: number }[];
 };

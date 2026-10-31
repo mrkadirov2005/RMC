@@ -10,12 +10,14 @@ export const SERIES_COLORS = ['#205FB6', '#EB6834', '#1BAF7A'];
 export type Series = { label: string; values: (number | null)[] };
 
 type Props = {
-  months: string[];
+  keys: string[];
   series: Series[];
   max?: number;
   format?: (value: number) => string;
   height?: number;
-  monthLabel?: (month: string) => string;
+  label?: (key: string) => string;
+  // Join points across empty buckets (days without a lesson are not missing data).
+  connectGaps?: boolean;
 };
 
 const PAD = { top: 12, right: 12, bottom: 22, left: 34 };
@@ -28,7 +30,7 @@ const niceMax = (value: number) => {
 
 // @MOB-127 Small line chart: one y-axis, recessive grid, 2px lines, 8px markers, gaps where a
 // month has no data. Tap a month to read every series' value for it.
-export function LineChart({ months, series, max, format = (v) => String(v), height = 170, monthLabel = (m) => m.slice(5) }: Props) {
+export function LineChart({ keys: months, series, max, format = (v) => String(v), height = 170, label: monthLabel = (m) => m.slice(5), connectGaps = false }: Props) {
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
   const shown = series.slice(0, SERIES_COLORS.length);
@@ -40,13 +42,13 @@ export function LineChart({ months, series, max, format = (v) => String(v), heig
   const x = (i: number) => PAD.left + (months.length > 1 ? (plotW * i) / (months.length - 1) : plotW / 2);
   const y = (v: number) => PAD.top + plotH - (plotH * Math.max(0, Math.min(v, top))) / top;
 
-  // Lines break at missing months instead of inventing values.
+  // Lines break at empty buckets instead of inventing values, unless connectGaps is set.
   const pathOf = (vals: (number | null)[]) => {
     let d = '';
     let open = false;
     vals.forEach((v, i) => {
       if (v == null) {
-        open = false;
+        if (!connectGaps) open = false;
         return;
       }
       d += `${open ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
@@ -56,7 +58,32 @@ export function LineChart({ months, series, max, format = (v) => String(v), heig
   };
 
   const grid = [0, 0.5, 1].map((f) => Math.round(top * f));
-  const selected = active ?? months.length - 1;
+  // Until a tap, read out the latest bucket that has any value (today often has no lesson).
+  const lastWithData = months.reduce((found, _m, i) => (shown.some((s) => s.values[i] != null) ? i : found), months.length - 1);
+  const selected = active ?? lastWithData;
+  // Many points: markers only on the selected bucket, so the line stays solid; a series with one or
+  // two points keeps its markers, since it has little or no line to show.
+  const dense = months.length > 12;
+  // About six axis labels however many points there are. The selected bucket's label is placed first;
+  // every other label is kept only if its box (estimated from its length) overlaps none already kept.
+  const labelStep = Math.max(1, Math.ceil(months.length / 6));
+  const lastIndex = months.length - 1;
+  const anchorOf = (i: number) => (i === 0 ? 'start' : i === lastIndex ? 'end' : 'middle');
+  const spanOf = (i: number) => {
+    const w = monthLabel(months[i] || '').length * 6 + 6;
+    const left = anchorOf(i) === 'start' ? x(i) : anchorOf(i) === 'end' ? x(i) - w : x(i) - w / 2;
+    return [left, left + w] as const;
+  };
+  const candidates = [selected, ...months.map((_m, i) => i).filter((i) => i !== selected && (i % labelStep === 0 || i === lastIndex))];
+  const kept: (readonly [number, number])[] = [];
+  const visible = new Set<number>();
+  candidates.forEach((i) => {
+    const [a, b] = spanOf(i);
+    if (kept.some(([c, d]) => a < d && c < b)) return;
+    kept.push([a, b]);
+    visible.add(i);
+  });
+  const showLabel = (i: number) => visible.has(i);
 
   return (
     <View>
@@ -88,19 +115,28 @@ export function LineChart({ months, series, max, format = (v) => String(v), heig
                 {format(g)}
               </SvgText>
             ))}
-            {months.map((m, i) => (
-              <SvgText key={m} x={x(i)} y={height - 6} fontSize={10} fill={i === selected ? colors.text : colors.muted} textAnchor="middle">
-                {monthLabel(m)}
-              </SvgText>
-            ))}
+            {months.map((m, i) =>
+              showLabel(i) ? (
+                <SvgText
+                  key={m}
+                  x={x(i)}
+                  y={height - 6}
+                  fontSize={10}
+                  fill={i === selected ? colors.text : colors.muted}
+                  textAnchor={anchorOf(i)}
+                >
+                  {monthLabel(m)}
+                </SvgText>
+              ) : null,
+            )}
             {active != null ? <Line x1={x(active)} x2={x(active)} y1={PAD.top} y2={PAD.top + plotH} stroke={colors.muted} strokeWidth={1} strokeDasharray="3,3" /> : null}
             {shown.map((s, si) => (
               <Path key={s.label} d={pathOf(s.values)} stroke={SERIES_COLORS[si]} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
             ))}
             {shown.map((s, si) =>
               s.values.map((v, i) =>
-                v == null ? null : (
-                  <Circle key={`${s.label}-${i}`} cx={x(i)} cy={y(v)} r={i === selected ? 5 : 4} fill={SERIES_COLORS[si]} stroke={colors.white} strokeWidth={2} />
+                v == null || (dense && i !== selected && s.values.filter((w) => w != null).length > 2) ? null : (
+                  <Circle key={`${s.label}-${i}`} cx={x(i)} cy={y(v)} r={i === selected ? 5 : months.length > 12 ? 3 : 4} fill={SERIES_COLORS[si]} stroke={colors.white} strokeWidth={2} />
                 ),
               ),
             )}

@@ -68,8 +68,10 @@ const grades = withTarget("Baholarni yuklab bo'lmadi", (t, req) => learnerServic
 const coins = withTarget("Coinlarni yuklab bo'lmadi", (t, req) => learnerService.coins(t.studentId, t.centerId, ...paging(req)));
 // @MOB-030 Balance, due date and payment history.
 const payments = withTarget("To'lovlarni yuklab bo'lmadi", (t, req) => learnerService.payments(t.studentId, t.centerId, ...paging(req)));
-// @MOB-127 Monthly series for the home charts.
-const progress = withTarget("Grafiklarni yuklab bo'lmadi", (t) => learnerService.progress(t.studentId, t.centerId));
+// @MOB-127 @MOB-128 Home chart series: ?period=month (default) or ?period=day.
+const progress = withTarget("Grafiklarni yuklab bo'lmadi", (t, req) =>
+  learnerService.progress(t.studentId, t.centerId, req.query?.period === 'day' ? 'day' : 'month'),
+);
 // @MOB-031 Leaderboard: ?scope=class|center
 const leaderboard = withTarget("Reytingni yuklab bo'lmadi", (t, req) =>
   learnerService.leaderboard(t.studentId, t.centerId, req.query.scope === 'center' ? 'center' : 'class'),
