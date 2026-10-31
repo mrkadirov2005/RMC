@@ -6,6 +6,7 @@ const auth = require('../modules/mobile/controllers/mobileAuth.controller');
 const learner = require('../modules/mobile/controllers/mobileLearner.controller');
 const notifications = require('../modules/mobile/controllers/mobileNotification.controller');
 const content = require('../modules/mobile/controllers/mobileContent.controller');
+const homework = require('../modules/homework/homework.controller');
 
 // @MOB-020 Mobile app API, mounted at /api/mobile/v1. Sign-in, refresh and sign-out are public
 // and registered in index.ts. index.ts mounts this router behind requireAuth; every route here
@@ -53,6 +54,11 @@ router.get('/student/grades', ...student, learner.grades);
 router.get('/student/coins', ...student, learner.coins);
 router.get('/student/payments', ...student, learner.payments);
 router.get('/student/leaderboard', ...student, learner.leaderboard);
+// @MOB-054 Homework: list, open, autosave, submit.
+router.get('/student/homework', ...student, homework.myHomework);
+router.get('/student/homework/:assignmentId', ...student, homework.homeworkDetail);
+router.put('/student/homework/:assignmentId/answers', ...student, homework.saveAnswers);
+router.post('/student/homework/:assignmentId/submit', ...student, homework.submit);
 
 // @MOB-026 @MOB-027 @MOB-028 @MOB-029 @MOB-030 A parent's linked children.
 router.get('/parent/children', ...parent, learner.listChildren);
@@ -62,5 +68,8 @@ router.get('/parent/children/:studentId/attendance', ...parentChild, learner.att
 router.get('/parent/children/:studentId/grades', ...parentChild, learner.grades);
 router.get('/parent/children/:studentId/coins', ...parentChild, learner.coins);
 router.get('/parent/children/:studentId/payments', ...parentChild, learner.payments);
+// @MOB-054 A parent follows the child's homework (read only).
+router.get('/parent/children/:studentId/homework', ...parentChild, homework.myHomework);
+router.get('/parent/children/:studentId/homework/:assignmentId', ...parentChild, homework.homeworkDetail);
 
 module.exports = router;

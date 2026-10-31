@@ -269,4 +269,83 @@ describe('mobile app API with PostgreSQL', () => {
     // Students and parents cannot use the admin API.
     expect((await api().get('/api/mobile-admin/links').set(auth(parent))).status).toBe(403);
   });
+
+  // @MOB-050..MOB-056 @MOB-163 @MOB-165
+  test('homework: bank, approval, assignment after a lesson, autosave, scoring, review with coins', async () => {
+    const { generateToken } = require('../../../src/middleware/auth');
+    const adminToken = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId, username: 'admin1' });
+    const hw = (method, path) => api()[method](`/api/homework${path}`).set(auth(adminToken));
+    await pool.query('TRUNCATE hw_levels, hw_assignments, hw_submissions, mobile_notification_outbox RESTART IDENTITY CASCADE');
+    const b1 = (await pool.query("SELECT class_id FROM classes WHERE class_name = 'B1'")).rows[0].class_id;
+
+    const level = (await hw('post', '/bank/level').send({ title: 'B1' })).body;
+    const book = (await hw('post', '/bank/book').send({ title: 'Cambridge B1', parent_id: level.id })).body;
+    const unit = (await hw('post', '/bank/unit').send({ title: 'Unit 7', parent_id: book.id })).body;
+    const lesson = (await hw('post', '/bank/lesson').send({ title: 'Lesson 1', parent_id: unit.id })).body;
+    expect((await hw('get', '/bank')).body.levels[0].books[0].units[0].lessons[0]).toMatchObject({ lesson_id: lesson.id, task_count: 0 });
+
+    const content = {
+      questions: [
+        { id: 'q1', type: 'choice', prompt: 'reliable = ?', options: ['fast', 'can be trusted'], answer: 1 },
+        { id: 'q2', type: 'gap', prompt: 'Past of go: ___', answers: ['went'] },
+        { id: 'q3', type: 'text', prompt: 'Write two sentences about your weekend', points: 3 },
+      ],
+    };
+    expect((await hw('post', '/tasks').send({ lesson_id: lesson.id, title: 'Bad', skill: 'grammar', content: { questions: [] } })).status).toBe(400);
+    const task = (await hw('post', '/tasks').send({ lesson_id: lesson.id, title: 'Unit 7 vocabulary', skill: 'vocabulary', content })).body;
+    expect(Number(task.max_score)).toBe(5);
+    expect((await hw('post', '/assignments').send({ task_id: task.task_id, class_id: b1 })).body.code).toBe('NOT_APPROVED');
+    await hw('post', `/tasks/${task.task_id}/approve`);
+
+    const now = (await hw('post', '/assignments').send({ task_id: task.task_id, class_id: b1, due_at: '2026-12-01T18:00:00' })).body;
+    const later = (await hw('post', '/assignments').send({ task_id: task.task_id, class_id: b1, open_after_lesson: true })).body;
+
+    const student = (await api().post('/api/mobile/v1/auth/login').send({ username: 'aziza', password: 'secret-pass', ...device('stu-hw') })).body.access_token;
+    let list = (await api().get('/api/mobile/v1/student/homework').set(auth(student))).body;
+    expect(list.items.map((i) => i.assignment_id)).toEqual([now.assignment_id]);
+
+    // The second one opens once the group's next lesson after assigning has ended.
+    await pool.query("UPDATE hw_assignments SET created_at = LOCALTIMESTAMP - INTERVAL '2 days' WHERE assignment_id = $1", [later.assignment_id]);
+    await pool.query(
+      `INSERT INTO sessions (center_id, class_id, teacher_id, session_date, start_time, duration_minutes, end_time, status)
+       VALUES ($1, $2, 1, CURRENT_DATE - 1, '10:00', 90, '11:30', 'completed')`,
+      [centerId, b1],
+    );
+    list = (await api().get('/api/mobile/v1/student/homework').set(auth(student))).body;
+    expect(list.items.map((i) => i.assignment_id).sort()).toEqual([now.assignment_id, later.assignment_id].sort());
+    expect(list.pending).toBe(2);
+
+    const detail = (await api().get(`/api/mobile/v1/student/homework/${now.assignment_id}`).set(auth(student))).body;
+    expect(detail.task.questions[0]).toEqual({ id: 'q1', type: 'choice', prompt: 'reliable = ?', points: 1, options: ['fast', 'can be trusted'] });
+    expect(JSON.stringify(detail.task)).not.toContain('went');
+
+    await api().put(`/api/mobile/v1/student/homework/${now.assignment_id}/answers`).set(auth(student)).send({ answers: { q1: 1 } });
+    expect((await api().get(`/api/mobile/v1/student/homework/${now.assignment_id}`).set(auth(student))).body).toMatchObject({ status: 'in_progress', answers: { q1: 1 } });
+
+    const submitted = await api().post(`/api/mobile/v1/student/homework/${now.assignment_id}/submit`).set(auth(student))
+      .send({ answers: { q1: 1, q2: ' Went ', q3: 'I played football. I read a book.' } });
+    expect(submitted.status).toBe(200);
+    expect(submitted.body).toMatchObject({ status: 'submitted', per_question: { q1: 1, q2: 1, q3: null } });
+    expect(Number(submitted.body.auto_score)).toBe(2);
+    expect((await api().post(`/api/mobile/v1/student/homework/${now.assignment_id}/submit`).set(auth(student)).send({})).status).toBe(409);
+
+    const subs = (await hw('get', `/assignments/${now.assignment_id}/submissions`)).body.items;
+    expect(subs).toEqual([expect.objectContaining({ student_id: mainId, status: 'submitted', first_name: 'Aziza' })]);
+    expect((await hw('post', `/submissions/${subs[0].submission_id}/review`).send({ score: 9 })).body.code).toBe('INVALID_SCORE');
+    const coinsBefore = (await pool.query('SELECT coins FROM students WHERE student_id = $1', [mainId])).rows[0].coins;
+    const reviewed = await hw('post', `/submissions/${subs[0].submission_id}/review`).send({ score: 4, feedback: 'Yaxshi!' });
+    expect(reviewed.body).toMatchObject({ status: 'reviewed', coins_awarded: 4, feedback: 'Yaxshi!' });
+    // Re-grading adjusts the same coin row instead of paying twice.
+    await hw('post', `/submissions/${subs[0].submission_id}/review`).send({ score: 5 });
+    expect((await pool.query('SELECT coins FROM students WHERE student_id = $1', [mainId])).rows[0].coins).toBe(coinsBefore + 5);
+
+    const parent = (await api().post('/api/mobile/v1/auth/login').send({ username: 'karimov', password: 'secret-pass', ...device('par-hw') })).body.access_token;
+    const childList = (await api().get(`/api/mobile/v1/parent/children/${mainId}/homework`).set(auth(parent))).body;
+    expect(childList.items.find((i) => i.assignment_id === now.assignment_id)).toMatchObject({ status: 'reviewed', score: 5 });
+    const pushes = (await pool.query("SELECT user_type FROM mobile_notification_outbox WHERE category = 'homework' ORDER BY outbox_id")).rows.map((r) => r.user_type);
+    expect(pushes).toEqual(['student', 'parent', 'student', 'parent']);
+
+    // Students and parents cannot reach the teacher API.
+    expect((await api().get('/api/homework/bank').set(auth(student))).status).toBe(403);
+  });
 });

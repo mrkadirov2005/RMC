@@ -1,6 +1,6 @@
 const repo = require('../repositories/mobileNotification.repository');
 
-const CATEGORIES = ['attendance', 'grades', 'coins', 'payments', 'announcements'] as const;
+const CATEGORIES = ['attendance', 'grades', 'homework', 'coins', 'payments', 'announcements'] as const;
 type Category = (typeof CATEGORIES)[number];
 
 const EXPO_PUSH_URL = process.env.EXPO_PUSH_URL || 'https://exp.host/--/api/v2/push/send';

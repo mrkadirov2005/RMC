@@ -80,6 +80,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const testSharePublicRoutes = require('./routes/testSharePublicRoutes');
   const mobileRoutes = require('./routes/mobileRoutes');
   const mobileAdminRoutes = require('./routes/mobileAdminRoutes');
+  const homeworkRoutes = require('./routes/homeworkRoutes');
 
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
@@ -236,6 +237,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/mobile/v1', requireAuth, mobileRoutes);
   // @MOB-160 Admins and the owner manage the mobile app's links, announcements, rules and requests.
   app.use('/api/mobile-admin', requireAuth, requireRole('superuser'), mobileAdminRoutes);
+  // @MOB-052 Homework Bank, assigning and reviewing, for admins, the owner and teachers.
+  app.use('/api/homework', requireAuth, requireRole('superuser', 'teacher'), homeworkRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {
