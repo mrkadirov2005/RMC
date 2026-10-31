@@ -51,8 +51,22 @@ export type MobileAdoption = {
   link_requests_pending: number;
 };
 
+// @MOB-172 Versions of the Android app published for download from the website.
+export type MobileAppRelease = {
+  release_id: number;
+  version: string;
+  min_version: string;
+  download_url: string;
+  notes: string | null;
+  created_by_name: string | null;
+  created_at: string;
+};
+
 export const mobileAdminAPI = {
   adoption: () => apiClient.get('/mobile-admin/adoption'),
+
+  releases: () => apiClient.get('/mobile-admin/releases'),
+  publishRelease: (data: { version: string; min_version?: string; download_url: string; notes?: string }) => apiClient.post('/mobile-admin/releases', data),
 
   links: () => apiClient.get('/mobile-admin/links'),
   createLink: (data: { title: string; url: string; icon?: string; sort_order?: number }) => apiClient.post('/mobile-admin/links', data),

@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
 import { APP_VERSION } from '../config';
 import { APP_ENV, crashReportingEnabled, sendTestCrash } from '../lib/crash';
-import { Switch, Text, View } from 'react-native';
+import { compareVersions } from '../lib/version';
+import { Linking, Platform, Switch, Text, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { revokeDevice, sendHelpRequest, setNotificationPreference, useDevices, useNotificationPreferences } from '../api/queries';
 import { useAuth } from '../auth/AuthContext';
 import { Button, Card, Chips, ListRow, QueryView, SectionHeader, Tag, text } from '../components/ui';
+import { useAppConfig } from '../components/UpdateGate';
 import { useT } from '../i18n/LanguageContext';
 import { shortDate } from '../lib/format';
 import { DetailScreen } from '../screens/DetailScreen';
@@ -15,6 +17,7 @@ import { useState } from 'react';
 // @MOB-114 Language, signed-in devices and sign-out.
 export default function SettingsScreen() {
   const { t, lang, setLang } = useT();
+  const appConfig = useAppConfig();
   const { signOut } = useAuth();
   // @MOB-171 Accounts are made by the center, so deleting one is a request the admins carry out.
   const [deletion, setDeletion] = useState<'idle' | 'confirm' | 'busy' | 'sent' | 'failed'>('idle');
@@ -111,6 +114,13 @@ export default function SettingsScreen() {
           <Button title={t.deleteAccount} variant="secondary" onPress={() => setDeletion('confirm')} />
         ) : null}
       </Card>
+      {/* @MOB-175 A dismissed update reminder stays reachable here. */}
+      {appConfig.data?.latest_version && appConfig.data.download_url && Platform.OS !== 'ios' && compareVersions(APP_VERSION, appConfig.data.latest_version) < 0 ? (
+        <Card>
+          <Text style={[text.bold, { marginBottom: 8 }]}>{t.latestVersion(appConfig.data.latest_version)}</Text>
+          <Button title={t.downloadUpdate} onPress={() => void Linking.openURL(appConfig.data!.download_url!)} />
+        </Card>
+      ) : null}
       <Text style={[text.muted, { textAlign: 'center', fontSize: 12 }]}>
         {t.appName} {APP_VERSION}
         {APP_ENV !== 'production' ? ` · ${APP_ENV}` : ''}

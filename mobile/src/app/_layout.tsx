@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../auth/AuthContext';
+import { UpdateGate } from '../components/UpdateGate';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import { initCrashReporting, setCrashRole, withCrashReporting } from '../lib/crash';
 import { PushNotifications } from '../lib/push';
@@ -36,15 +37,18 @@ function RootLayout() {
           <AuthProvider>
             <StatusBar style="dark" />
             <PushBridge />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.background },
-                headerTintColor: colors.primary,
-                headerShadowVisible: false,
-                headerStyle: { backgroundColor: colors.background },
-              }}
-            />
+            {/* @MOB-175 Version check for the app installed from the website. */}
+            <UpdateGate>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.background },
+                  headerTintColor: colors.primary,
+                  headerShadowVisible: false,
+                  headerStyle: { backgroundColor: colors.background },
+                }}
+              />
+            </UpdateGate>
           </AuthProvider>
         </LanguageProvider>
       </QueryClientProvider>

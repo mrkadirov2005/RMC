@@ -216,6 +216,14 @@ export const uz = {
   deleteAccountConfirm: "Ha, o'chirishni so'rayman",
   deleteAccountSent: "So'rov yuborildi. Administrator siz bilan bog'lanadi.",
   deleteAccountMessage: "Hisobimni va unga bog'liq ma'lumotlarni o'chirishni so'rayman.",
+  updateRequired: 'Ilovani yangilang',
+  updateRequiredText: (current: string, latest: string) => `Bu versiya (${current}) endi ishlamaydi. Yangi versiyani (${latest}) o'rnating: eski ilova ustidan o'rnatiladi, ma'lumotlar saqlanib qoladi.`,
+  updateAskCenter: "Yangi versiyani markaz administratoridan so'rang.",
+  downloadUpdate: 'Yangi versiyani yuklab olish',
+  updateAvailable: (version: string) => `Yangi versiya ${version} chiqdi`,
+  update: 'Yangilash',
+  later: 'Keyinroq',
+  latestVersion: (version: string) => `Eng yangi versiya: ${version}`,
 };
 
 export type Strings = typeof uz;
@@ -436,6 +444,14 @@ export const en: Strings = {
   deleteAccountConfirm: 'Yes, request deletion',
   deleteAccountSent: 'Request sent. An administrator will contact you.',
   deleteAccountMessage: 'I ask to delete my account and the data linked to it.',
+  updateRequired: 'Update the app',
+  updateRequiredText: (current: string, latest: string) => `This version (${current}) no longer works. Install the new version (${latest}): it installs over the old app and keeps your data.`,
+  updateAskCenter: 'Ask the center administrator for the new version.',
+  downloadUpdate: 'Download the new version',
+  updateAvailable: (version: string) => `Version ${version} is out`,
+  update: 'Update',
+  later: 'Later',
+  latestVersion: (version: string) => `Newest version: ${version}`,
 };
 
 export const dictionaries = { uz, en };

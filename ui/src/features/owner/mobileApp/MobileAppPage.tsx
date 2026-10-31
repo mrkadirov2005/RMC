@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { showToast } from '@/utils/toast';
-import { classAPI, mobileAdminAPI, type MobileAdoption, type MobileAnnouncement, type MobileHelpRequest, type MobileLink, type MobilePolicy } from './api';
+import { buildApiUrl } from '@/shared/api/api';
+import { classAPI, mobileAdminAPI, type MobileAdoption, type MobileAnnouncement, type MobileAppRelease, type MobileHelpRequest, type MobileLink, type MobilePolicy } from './api';
 
 const TABS = [
   { id: 'usage', label: 'Usage' },
@@ -18,6 +19,7 @@ const TABS = [
   { id: 'rules', label: 'Rules' },
   { id: 'links', label: 'Official links' },
   { id: 'requests', label: 'Requests' },
+  { id: 'releases', label: 'App versions' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -424,6 +426,104 @@ function UsageTab() {
   );
 }
 
+// @MOB-172 The app is installed from the website: each new APK is uploaded to Google Drive and its
+// link published here. The app asks users to update; versions below the minimum must update.
+function ReleasesTab() {
+  const { t } = useLanguage();
+  const list = useList<MobileAppRelease>(mobileAdminAPI.releases);
+  const [form, setForm] = useState({ version: '', min_version: '', download_url: '', notes: '' });
+  const [saving, setSaving] = useState(false);
+  const current = list.items[0];
+  const downloadLink = buildApiUrl('mobile/v1/download');
+  const pageLink = `${window.location.origin}${window.location.pathname}#/app`;
+  const valid = /^\d+\.\d+\.\d+$/.test(form.version.trim()) && /^https:\/\//.test(form.download_url.trim()) && (!form.min_version.trim() || /^\d+\.\d+\.\d+$/.test(form.min_version.trim()));
+
+  const publish = async () => {
+    setSaving(true);
+    try {
+      await mobileAdminAPI.publishRelease({
+        version: form.version.trim(),
+        min_version: form.min_version.trim() || undefined,
+        download_url: form.download_url.trim(),
+        notes: form.notes.trim() || undefined,
+      });
+      setForm({ version: '', min_version: '', download_url: '', notes: '' });
+      void list.reload();
+    } catch {
+      // The API error is shown by the client.
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-4">
+      <Card>
+        <CardContent className="grid gap-2 pt-5 text-sm">
+          <div className="font-semibold">{t('Links to share with parents and students')}</div>
+          <div className="grid gap-1">
+            <span className="text-muted-foreground">{t('Download page')}</span>
+            <a className="break-all text-primary" href={pageLink} target="_blank" rel="noreferrer">{pageLink}</a>
+          </div>
+          <div className="grid gap-1">
+            <span className="text-muted-foreground">{t('Direct APK link (always the newest version)')}</span>
+            <a className="break-all text-primary" href={downloadLink} target="_blank" rel="noreferrer">{downloadLink}</a>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="grid gap-3 pt-5">
+          <div className="font-semibold">{t('Publish a new version')}</div>
+          <p className="text-sm text-muted-foreground">
+            {t('Upload the APK to Google Drive, share it with "Anyone with the link", and paste the link here.')}
+          </p>
+          <div className="grid gap-3 md:grid-cols-[140px_140px_1fr]">
+            <Field label={t('Version')}>
+              <Input value={form.version} placeholder={current ? current.version : '1.0.0'} onChange={(e) => setForm({ ...form, version: e.target.value })} />
+            </Field>
+            <Field label={t('Oldest version that still works')}>
+              <Input value={form.min_version} placeholder={current?.min_version ?? t('same as version')} onChange={(e) => setForm({ ...form, min_version: e.target.value })} />
+            </Field>
+            <Field label={t('Google Drive link to the APK')}>
+              <Input value={form.download_url} placeholder="https://drive.google.com/file/d/…/view" onChange={(e) => setForm({ ...form, download_url: e.target.value })} />
+            </Field>
+          </div>
+          <Field label={t("What's new")}>
+            <Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          </Field>
+          <p className="text-xs text-muted-foreground">
+            {t('Phones with a version older than the minimum must update before using the app; newer ones only see a reminder.')}
+          </p>
+          <div>
+            <Button disabled={!valid || saving} onClick={() => void publish()}>
+              {t('Publish version')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      {list.items.length === 0 && <Empty loading={list.loading} />}
+      {list.items.map((release, index) => (
+        <Card key={release.release_id}>
+          <CardContent className="flex flex-wrap items-center gap-3 pt-5">
+            <span className="text-lg font-bold tabular-nums">{release.version}</span>
+            {index === 0 && <Badge variant="success">{t('Current')}</Badge>}
+            <span className="text-sm text-muted-foreground">{t('Minimum {version}', { version: release.min_version })}</span>
+            <div className="min-w-0 flex-1 text-sm">
+              {release.notes && <div className="whitespace-pre-wrap">{release.notes}</div>}
+              <a className="break-all text-primary" href={release.download_url} target="_blank" rel="noreferrer">
+                {release.download_url}
+              </a>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {date(release.created_at)} {release.created_by_name ?? ''}
+            </span>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 const MobileAppPage = () => {
   const { t } = useLanguage();
   const [params, setParams] = useSearchParams();
@@ -454,6 +554,7 @@ const MobileAppPage = () => {
       {tab === 'rules' && <RulesTab />}
       {tab === 'links' && <LinksTab />}
       {tab === 'requests' && <RequestsTab />}
+      {tab === 'releases' && <ReleasesTab />}
     </div>
   );
 };

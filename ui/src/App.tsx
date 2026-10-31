@@ -18,6 +18,7 @@ const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then(
 const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
 const ConsolidatePublicPage = lazy(() => import('./features/public/ConsolidatePublicPage'));
 const SharedTestPage = lazy(() => import('./features/public/SharedTestPage'));
+const AppDownloadPage = lazy(() => import('./features/public/AppDownloadPage'));
 const ConsolidationsOverviewPage = lazy(() => import('./features/crm/consolidations/ConsolidationsOverviewPage'));
 const ConsolidationSessionPage = lazy(() => import('./features/student/ConsolidationSessionPage'));
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
@@ -362,6 +363,8 @@ function AppContent() {
         <Route path="/owner/register" element={<OwnerRegisterPage />} />
         <Route path="/consolidate/:shareToken" element={<ConsolidatePublicPage />} />
         <Route path="/share/tests/:shareToken" element={<SharedTestPage />} />
+        {/* @MOB-172 Public download page of the mobile app. */}
+        <Route path="/app" element={<AppDownloadPage />} />
         <Route path="/login/superuser" element={<LoginPage userType="superuser" />} />
         <Route path="/login/teacher" element={<LoginPage userType="teacher" />} />
         <Route path="/login/student" element={<LoginPage userType="student" />} />
