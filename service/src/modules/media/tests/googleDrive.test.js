@@ -27,7 +27,7 @@ describe('Google Drive storage', () => {
       .mockResolvedValueOnce(ok({ id: 'F1' }))
       .mockResolvedValueOnce(ok({ id: 'perm' }));
     const file = await drive.upload({ name: 'a.m4a', contentType: 'audio/mp4', data: Buffer.from('abc') });
-    expect(file).toEqual({ id: 'F1', downloadUrl: 'https://drive.google.com/uc?export=download&id=F1' });
+    expect(file).toEqual({ id: 'F1', downloadUrl: 'https://drive.usercontent.google.com/download?id=F1&export=download&confirm=t' });
 
     const [tokenUrl, tokenInit] = fetch.mock.calls[0];
     expect(tokenUrl).toBe('https://oauth2.googleapis.com/token');

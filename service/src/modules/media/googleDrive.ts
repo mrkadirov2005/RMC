@@ -17,7 +17,9 @@ const isConfigured = () => {
   return Boolean(c.clientId && c.clientSecret && c.refreshToken && c.folderId);
 };
 
-const directLink = (fileId: string) => `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`;
+// The address that returns the file itself (the older uc?export=download one can answer with a
+// warning page instead).
+const directLink = (fileId: string) => `https://drive.usercontent.google.com/download?id=${encodeURIComponent(fileId)}&export=download&confirm=t`;
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 

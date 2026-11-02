@@ -18,8 +18,8 @@ describe('mobile release service', () => {
 
   // @MOB-172
   it('turns Google Drive share links into direct download links', () => {
-    expect(service.directDownloadUrl('https://drive.google.com/file/d/1AbC-d_9/view?usp=sharing')).toBe('https://drive.google.com/uc?export=download&id=1AbC-d_9');
-    expect(service.directDownloadUrl('https://drive.google.com/open?id=XYZ')).toBe('https://drive.google.com/uc?export=download&id=XYZ');
+    expect(service.directDownloadUrl('https://drive.google.com/file/d/1AbC-d_9/view?usp=sharing')).toBe('https://drive.usercontent.google.com/download?id=1AbC-d_9&export=download&confirm=t');
+    expect(service.directDownloadUrl('https://drive.google.com/open?id=XYZ')).toBe('https://drive.usercontent.google.com/download?id=XYZ&export=download&confirm=t');
     expect(service.directDownloadUrl(' https://example.uz/app.apk ')).toBe('https://example.uz/app.apk');
   });
 
@@ -35,7 +35,7 @@ describe('mobile release service', () => {
     await expect(service.publish({ version: '1.2.0', download_url: 'https://drive.google.com/file/d/F9/view', notes: 'Fixes' }, 'admin')).resolves.toEqual({
       kind: 'ok', release: { release_id: 3 },
     });
-    expect(pool.query.mock.calls[1][1]).toEqual(['1.2.0', '1.0.0', 'https://drive.google.com/uc?export=download&id=F9', 'Fixes', 'admin']);
+    expect(pool.query.mock.calls[1][1]).toEqual(['1.2.0', '1.0.0', 'https://drive.usercontent.google.com/download?id=F9&export=download&confirm=t', 'Fixes', 'admin']);
   });
 
   it('the first version is its own minimum', async () => {
