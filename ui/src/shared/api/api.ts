@@ -127,7 +127,10 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (!error.response) {
+    // A request we cancelled or gave up on (timeout) got no answer, but the server is still there:
+    // only a failed connection means it is unreachable.
+    const gaveUp = axios.isCancel(error) || error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT';
+    if (!error.response && !gaveUp) {
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         store.dispatch(setOffline());
       } else {

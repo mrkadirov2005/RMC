@@ -19,7 +19,7 @@ const { axiosStub, client, toast, handleApiError, storeStub, scope, auth } = vi.
     responseHandlers,
   };
   return {
-    axiosStub: { default: { create: vi.fn(() => clientStub) } },
+    axiosStub: { default: { create: vi.fn(() => clientStub), isCancel: (error: any) => error?.code === 'ERR_CANCELED' } },
     client: clientStub,
     toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() },
     handleApiError: vi.fn(() => ''),
@@ -229,6 +229,15 @@ describe('response interceptor', () => {
     await expect(onResponseError()({ config: { url: '/students' } })).rejects.toBeDefined();
 
     expect(storeStub.dispatch).toHaveBeenCalledWith({ type: 'serviceStatus/backendUnreachable' });
+  });
+
+  it('does not call the backend unreachable for a request that timed out or was cancelled', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+
+    await expect(onResponseError()({ code: 'ECONNABORTED', config: { url: '/attendance' } })).rejects.toBeDefined();
+    await expect(onResponseError()({ code: 'ERR_CANCELED', config: { url: '/students' } })).rejects.toBeDefined();
+
+    expect(storeStub.dispatch).not.toHaveBeenCalledWith({ type: 'serviceStatus/backendUnreachable' });
   });
 
   it('lets a failed login surface without clearing the session', async () => {

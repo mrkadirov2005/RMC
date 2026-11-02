@@ -37,11 +37,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { showToast } from '@/utils/toast';
 import { generateTempPassword } from '@/utils/password';
-import { useAppDispatch } from '../hooks';
-import { fetchAttendanceForce } from '../../../slices/attendanceSlice';
-import { fetchPaymentsForce } from '../../../slices/paymentsSlice';
-import { fetchAssignmentsForce } from '../../../slices/assignmentsSlice';
-import { fetchGradesForce } from '../../../slices/gradesSlice';
+import { attendanceAPI, assignmentAPI, gradeAPI, paymentAPI } from '@/shared/api/api';
+import { unwrapApiRows } from '@/shared/api/response';
 import { getListRowBackground } from '../settings/listAppearance';
 import { StudentOverviewCards } from './components/StudentOverviewCards';
 import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, getNextStudentAccountStatus, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS, type StudentOverviewDraft } from './studentOverview';
@@ -154,7 +151,6 @@ interface CoinTransaction {
 const STUDENT_TABS = ['overview', 'groups', 'videos', 'attendance', 'payments', 'assignments', 'individual-tasks', 'grades', 'coins'] as const;
 const StudentDetailPage = () => {
   const { t } = useLanguage();
-  const dispatch = useAppDispatch();
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const [student, setStudent] = useState<Student | null>(null);
@@ -229,18 +225,16 @@ const StudentDetailPage = () => {
         }
       }
 
-      const [attendanceRes, paymentRes, assignmentRes, gradeRes, coinsRes] = await Promise.all([
-        dispatch(fetchAttendanceForce()).unwrap(),
-        dispatch(fetchPaymentsForce()).unwrap(),
-        dispatch(fetchAssignmentsForce()).unwrap(),
-        dispatch(fetchGradesForce()).unwrap(),
+      // Only this student's rows (the whole center's lists outgrew the request timeout); a section
+      // that fails stays empty instead of failing the page.
+      const rowsOf = (request: Promise<unknown>) => request.then((res) => unwrapApiRows<any>(res)).catch(() => []);
+      const [attendanceData, paymentData, assignmentData, gradeData, coinsRes] = await Promise.all([
+        rowsOf(attendanceAPI.getByStudent(Number(studentId))),
+        rowsOf(paymentAPI.getByStudent(Number(studentId))),
+        studentData.class_id ? rowsOf(assignmentAPI.getAll({ class_id: Number(studentData.class_id), limit: 200 })) : Promise.resolve([]),
+        rowsOf(gradeAPI.getByStudent(Number(studentId))),
         studentAPI.getCoins(Number(studentId)).catch(() => null),
       ]);
-
-      const attendanceData = Array.isArray(attendanceRes) ? attendanceRes : [];
-      const paymentData = Array.isArray(paymentRes) ? paymentRes : [];
-      const assignmentData = Array.isArray(assignmentRes) ? assignmentRes : [];
-      const gradeData = Array.isArray(gradeRes) ? gradeRes : [];
 // Handles coins data.
       const coinsData = (coinsRes as any)?.data || (coinsRes as any) || null;
 
