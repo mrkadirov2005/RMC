@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/table';
 import { formatMoney } from '@/utils/helpers';
 import { useSalaryOverview } from './hooks/useSalaryOverview';
-import { SalaryTotalTab } from './components/SalaryTotalTab';
-import { SalaryMonthlyTab } from './components/SalaryMonthlyTab';
+import { SalaryOverviewTab } from './components/SalaryOverviewTab';
+import { SalaryStudentsTab } from './components/SalaryStudentsTab';
 import { formatStudentPaidShare, monthInputValue, parseMonthInputValue, teacherFullName } from './model/salaryModel';
 import type { SalaryOverviewRow } from './types';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -24,9 +24,11 @@ import { PERMISSION_CODES } from '@/types';
 import { useRBAC } from '../hooks/useRBAC';
 import { resolveSubPageView } from '../rbac/adminPageAccess';
 
-type SalaryTab = 'total' | 'monthly' | 'list';
+type SalaryTab = 'total' | 'list' | 'students';
 
-const isSalaryTab = (value: string | null): value is SalaryTab => value === 'total' || value === 'monthly' || value === 'list';
+const isSalaryTab = (value: string | null): value is SalaryTab => value === 'total' || value === 'list' || value === 'students';
+// Total and Monthly are one tab now; old ?view=monthly links open it.
+const normalizeView = (value: string | null) => (value === 'monthly' ? 'total' : value);
 
 const SalaryPage = () => {
   const { t } = useLanguage();
@@ -34,7 +36,7 @@ const SalaryPage = () => {
   const [searchParams] = useSearchParams();
   const { canAccessSubPage } = useRBAC();
   // Only the salary views this admin was given; a hidden one falls back to an allowed view.
-  const allowedView = resolveSubPageView(PERMISSION_CODES.MANAGE_SALARY, searchParams.get('view') || 'total', canAccessSubPage);
+  const allowedView = resolveSubPageView(PERMISSION_CODES.MANAGE_SALARY, normalizeView(searchParams.get('view')) || 'total', canAccessSubPage);
   const activeTab: SalaryTab = isSalaryTab(allowedView) ? allowedView : 'total';
   const {
     year,
@@ -75,17 +77,10 @@ const SalaryPage = () => {
         }
       />
 
-      {activeTab === 'total' && (
-        <SectionPanel>
-          <SalaryTotalTab year={year} month={month} summary={summary} />
-        </SectionPanel>
-      )}
+      {activeTab === 'total' && <SalaryOverviewTab year={year} month={month} summary={summary} />}
 
-      {activeTab === 'monthly' && (
-        <SectionPanel>
-          <SalaryMonthlyTab />
-        </SectionPanel>
-      )}
+      {/* Which students of each teacher paid this month (what teachers see in their own account). */}
+      {activeTab === 'students' && <SalaryStudentsTab year={year} month={month} />}
 
       {activeTab === 'list' && (
         <>

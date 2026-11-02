@@ -59,6 +59,7 @@ export const PERMISSION_DESCRIPTIONS = {
   [PERMISSION_CODES.SALARY_TAB_TOTAL]: 'Salary totals',
   [PERMISSION_CODES.SALARY_TAB_MONTHLY]: 'Salaries by month',
   [PERMISSION_CODES.SALARY_TAB_LIST]: 'Teacher salary list',
+  [PERMISSION_CODES.SALARY_TAB_STUDENTS]: "Which students of each teacher paid",
   [PERMISSION_CODES.REPORTS_TAB_FINANCE]: 'Finance report',
   [PERMISSION_CODES.REPORTS_TAB_STUDENTS]: 'Student report',
   [PERMISSION_CODES.REPORTS_TAB_TEACHERS]: 'Teacher report',

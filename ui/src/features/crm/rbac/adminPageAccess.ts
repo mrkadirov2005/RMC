@@ -11,6 +11,8 @@ export interface AdminSubPageAccess {
    * does not get it.
    */
   feature?: boolean;
+  /** Codes of submenus merged into this one: an admin saved with any of them keeps access to it. */
+  legacyPermissions?: readonly string[];
 }
 
 export interface AdminPageAccess {
@@ -60,9 +62,15 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
     path: '/salary',
     permission: PERMISSION_CODES.MANAGE_SALARY,
     children: [
-      { label: 'Total', view: 'total', permission: PERMISSION_CODES.SALARY_TAB_TOTAL },
-      { label: 'Monthly', view: 'monthly', permission: PERMISSION_CODES.SALARY_TAB_MONTHLY },
+      // Total and Monthly are one tab now: an admin saved with only Monthly keeps it.
+      {
+        label: 'Total and monthly',
+        view: 'total',
+        permission: PERMISSION_CODES.SALARY_TAB_TOTAL,
+        legacyPermissions: [PERMISSION_CODES.SALARY_TAB_MONTHLY],
+      },
       { label: 'List', view: 'list', permission: PERMISSION_CODES.SALARY_TAB_LIST },
+      { label: "Students' payments", view: 'students', permission: PERMISSION_CODES.SALARY_TAB_STUDENTS },
     ],
   },
   { label: 'Assignments', path: '/assignments', permission: PERMISSION_CODES.CRUD_ASSIGNMENT },
@@ -115,10 +123,12 @@ export const canAccessSubPage = (permissions: readonly string[], parentPermissio
   if (!permissions.includes(parentPermission)) return false;
   const page = pageWithChildren(parentPermission);
   if (!page) return true;
-  if (page.children!.find((child) => child.permission === childPermission)?.feature) return permissions.includes(childPermission);
-  const childCodes = viewChildren(page).map((child) => child.permission);
-  if (!childCodes.some((code) => permissions.includes(code))) return true;
-  return permissions.includes(childPermission);
+  const child = page.children!.find((item) => item.permission === childPermission);
+  if (child?.feature) return permissions.includes(childPermission);
+  const has = (code: string) => permissions.includes(code);
+  const childCodes = viewChildren(page).flatMap((item) => [item.permission, ...(item.legacyPermissions || [])]);
+  if (!childCodes.some(has)) return true;
+  return has(childPermission) || (child?.legacyPermissions || []).some(has);
 };
 
 /**
