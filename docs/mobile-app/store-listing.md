@@ -76,7 +76,7 @@ Not collected: location, contacts, advertising ID, browsing history, purchases. 
   Photos and files, App info and performance (crash logs, if Sentry is enabled), Device or other IDs (push token).
 * Shared: No (service providers acting for the center are not "sharing" under Play's definition).
 * Encrypted in transit: Yes (HTTPS only).
-* Users can request deletion: Yes, in the app (Settings → Delete account) and by contacting the center.
+* Users can request deletion: Yes, by contacting the center (the in-app button was removed on 2026-11-02: children pressed it while playing; a store listing would need it back, behind a parent check).
   Play also needs a **web link** for deletion requests: **Decide** (a page with the center's contact and the
   same request text).
 
@@ -97,8 +97,8 @@ Video consent for minors is collected in onboarding and given by a parent (store
 
 ## Account deletion
 
-In-app: Settings → *Hisobni o'chirish* sends a request to the center's admins (Mobile app → Requests in the
-web panel). The center deletes the student or parent in RMC; payment records required by law are kept.
+Removed from the app on 2026-11-02 (owner's request: children pressed it while playing). Families ask the center; the
+center deletes the student or parent in RMC; payment records required by law are kept.
 
 ## Builds (MOB-172)
 
