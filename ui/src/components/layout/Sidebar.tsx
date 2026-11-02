@@ -8,7 +8,7 @@ import {
   ClipboardList, CheckCircle, Building2, AlertTriangle, FileQuestion,
   LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
-  DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown, MessageSquareText, Network,
+  DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown, MessageSquareText, Network, LockKeyhole,
   School, BadgeAlert, Server, ClipboardCheck,
   TrendingDown, BadgePercent, ChevronDown, GripVertical, Wallet, PanelLeft,
   PanelLeftClose, PanelLeftOpen,
@@ -59,6 +59,7 @@ const iconMap: Record<string, ElementType> = {
   Debts: BadgeAlert,
   Salary: Wallet,
   Owner: Crown,
+  Developer: LockKeyhole,
   Sms: MessageSquareText,
   Graph: Network,
   Centers: School,
@@ -91,6 +92,7 @@ const iconToneMap: Record<string, string> = {
   Debts: 'from-red-600 to-rose-700 shadow-red-500/25',
   Salary: 'from-teal-600 to-cyan-700 shadow-teal-500/25',
   Owner: 'from-fuchsia-600 to-indigo-700 shadow-fuchsia-500/25',
+  Developer: 'from-slate-700 to-slate-950 shadow-slate-500/25',
   Sms: 'from-emerald-500 to-teal-700 shadow-emerald-500/25',
   Graph: 'from-sky-500 to-indigo-700 shadow-sky-500/25',
   Centers: 'from-cyan-600 to-teal-700 shadow-cyan-500/25',
@@ -121,6 +123,7 @@ type MenuItem = {
   roles: string[];
   permission?: string;
   ownerOnly?: boolean;
+  developerOnly?: boolean;
   hideFromOwner?: boolean;
   // `permission` on a submenu is checked together with its parent's; see canAccessSubPage.
   children?: Array<{ label: string; path: string; iconName: string; permission?: string }>;
@@ -294,6 +297,8 @@ const Sidebar = memo(() => {
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
+    // Locks on any account and owner accounts; the developer account only.
+    { label: 'Developer', path: '/developer', iconName: 'Developer', roles: ['superuser'], developerOnly: true },
     // @MOB-160 Announcements, rules, links and requests of the student and parent mobile app.
     { label: 'Mobile app', path: '/owner/mobile-app', iconName: 'Sms', roles: ['superuser'], ownerOnly: true },
     // Every SMS sent to parents, with filters, and the templates. Admins see their own branch's.
@@ -316,6 +321,7 @@ const Sidebar = memo(() => {
       if (!user?.userType) return false;
       if (!item.roles?.includes(user.userType)) return false;
       if (item.ownerOnly && (user.role || '').toLowerCase() !== 'owner') return false;
+      if (item.developerOnly && !user.is_developer) return false;
       if (item.hideFromOwner && (user.role || '').toLowerCase() === 'owner') return false;
       if (item.permission && !canAccess(item.permission)) return false;
       return true;

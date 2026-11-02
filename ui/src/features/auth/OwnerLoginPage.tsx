@@ -67,6 +67,7 @@ export const OwnerLoginPage = () => {
             role: 'owner',
             userType: 'superuser',
             center_id: 0,
+            ...(owner.is_developer ? { is_developer: true } : {}),
           },
           token,
         })

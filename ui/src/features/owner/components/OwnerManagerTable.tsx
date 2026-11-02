@@ -22,6 +22,8 @@ interface OwnerManagerTableProps {
   onHardDelete: (id: number) => void;
   onResetPassword: (item: any) => void;
   canHardDelete: boolean;
+  /** Rows can be looked at only (owner accounts, for anyone but the developer). */
+  readOnly?: boolean;
 }
 
 // Renders status badge.
@@ -63,6 +65,7 @@ export const OwnerManagerTable = ({
   onHardDelete,
   onResetPassword,
   canHardDelete,
+  readOnly = false,
 }: OwnerManagerTableProps) => {
   const { t } = useLanguage();
 
@@ -124,24 +127,28 @@ export const OwnerManagerTable = ({
                               <KeyRound className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onEdit(item)}
-                            className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white"
-                            title={t('Edit')}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDelete(Number(rowId))}
-                            className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white"
-                            title={t('Delete')}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {!readOnly && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onEdit(item)}
+                                className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white"
+                                title={t('Edit')}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDelete(Number(rowId))}
+                                className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white"
+                                title={t('Delete')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                           {canHardDelete && (activeTab === 'teachers' || activeTab === 'students') && (
                             <Button
                               variant="ghost"

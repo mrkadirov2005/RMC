@@ -10,11 +10,15 @@ import { OwnerWelcomeHero } from './components/OwnerWelcomeHero';
 import { DeleteStudentDialog } from '../crm/students/components/DeleteStudentDialog';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { OwnerExecutiveDashboard } from './components/OwnerExecutiveDashboard';
+import { useAppSelector } from '../crm/hooks';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
   const { t } = useLanguage();
   const vm = useOwnerManager();
+  // Owner accounts are added, edited and removed by the developer only.
+  const isDeveloper = Boolean(useAppSelector((state) => state.auth.user?.is_developer));
+  const ownersReadOnly = vm.activeTab === 'owners' && !isDeveloper;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/70 to-fuchsia-50/60 text-foreground dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
@@ -30,6 +34,7 @@ const OwnerManager = memo(() => {
           needsCenterScope={vm.needsCenterScope}
           isScopedAndMissingCenter={vm.isScopedAndMissingCenter}
           onAdd={vm.handleOpenCreate}
+          canAdd={!ownersReadOnly}
           onTabChange={vm.handleTabChange}
           loading={vm.loading}
         />
@@ -54,6 +59,7 @@ const OwnerManager = memo(() => {
           onHardDelete={vm.handleHardDelete}
           onResetPassword={vm.handleResetPassword}
           canHardDelete={vm.canHardDelete}
+          readOnly={ownersReadOnly}
         />
 
         <DeleteStudentDialog

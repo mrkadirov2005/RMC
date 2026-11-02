@@ -10,6 +10,7 @@ import { compositeLabels } from './composite';
 import { consolidationsLabels } from './consolidations';
 import { dashboardLabels } from './dashboard';
 import { debtsLabels } from './debts';
+import { developerLabels } from './developer';
 import { financeLabels } from './finance';
 import { gradesLabels } from './grades';
 import { homeworkLabels } from './homework';
@@ -40,6 +41,7 @@ export const pageLabelTranslations: Record<string, string> = {
   ...consolidationsLabels,
   ...dashboardLabels,
   ...debtsLabels,
+  ...developerLabels,
   ...financeLabels,
   ...gradesLabels,
   ...homeworkLabels,

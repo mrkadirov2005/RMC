@@ -11,6 +11,8 @@ export interface AuthUser {
   roles?: string[]; // For teachers
   permissions?: string[]; // For superusers/admins
   can_hard_delete?: boolean;
+  /** The developer account: an owner with the developer page and locks on any account. */
+  is_developer?: boolean;
   userType: 'superuser' | 'teacher' | 'student';
   branch_id?: number;
   center_id: number;

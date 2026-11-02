@@ -1,0 +1,472 @@
+// The developer account's page: lock any account (owners included), lock everyone at once, and look
+// after owner accounts. Owners never see this page or the developer account itself.
+
+import { useCallback, useEffect, useState } from 'react';
+import { KeyRound, Loader2, Lock, LockOpen, Plus, Power, Search, ShieldAlert } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PageHeader } from '@/components/common/PageHeader';
+import { cn } from '@/lib/utils';
+import { getApiPayload } from '@/shared/api/response';
+import { showToast } from '@/utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useAppSelector } from '../crm/hooks';
+import { developerAPI, type DeveloperAccount, type DeveloperLock, type DeveloperOwner, type LockUserType, type Lockdown } from './api';
+
+const TYPES: { id: LockUserType; label: string }[] = [
+  { id: 'owner', label: 'Owners' },
+  { id: 'superuser', label: 'Admins' },
+  { id: 'teacher', label: 'Teachers' },
+  { id: 'student', label: 'Students' },
+  { id: 'parent', label: 'Parents' },
+];
+
+const TYPE_LABEL: Record<LockUserType, string> = {
+  owner: 'Owner',
+  superuser: 'Admin',
+  teacher: 'Teacher',
+  student: 'Student',
+  parent: 'Parent',
+};
+
+const fullName = (row: { first_name: string | null; last_name: string | null; username: string | null }) =>
+  [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || row.username || '—';
+
+const formatDate = (value: string | null) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+};
+
+type PendingLock = { type: LockUserType; id: number; name: string } | null;
+
+const DeveloperPanel = () => {
+  const { t } = useLanguage();
+
+  const [lockdown, setLockdown] = useState<Lockdown>({ enabled: false, reason: null, locked_at: null });
+  const [locks, setLocks] = useState<DeveloperLock[]>([]);
+  const [type, setType] = useState<LockUserType>('teacher');
+  const [query, setQuery] = useState('');
+  const [accounts, setAccounts] = useState<DeveloperAccount[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [owners, setOwners] = useState<DeveloperOwner[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  const [pendingLock, setPendingLock] = useState<PendingLock>(null);
+  const [reason, setReason] = useState('');
+  const [lockdownDialog, setLockdownDialog] = useState(false);
+  const [passwordFor, setPasswordFor] = useState<DeveloperOwner | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [addingOwner, setAddingOwner] = useState(false);
+  const [ownerForm, setOwnerForm] = useState({ username: '', password: '', first_name: '', last_name: '', email: '' });
+
+  const loadLocks = useCallback(async () => {
+    try {
+      const data = getApiPayload<{ items: DeveloperLock[]; lockdown: Lockdown }>(await developerAPI.locks());
+      setLocks(data?.items || []);
+      if (data?.lockdown) setLockdown(data.lockdown);
+    } catch {
+      // Shown by the API client.
+    }
+  }, []);
+
+  const loadOwners = useCallback(async () => {
+    try {
+      setOwners(getApiPayload<{ items: DeveloperOwner[] }>(await developerAPI.owners())?.items || []);
+    } catch {
+      // Shown by the API client.
+    }
+  }, []);
+
+  const search = useCallback(async () => {
+    setSearching(true);
+    try {
+      setAccounts(getApiPayload<{ items: DeveloperAccount[] }>(await developerAPI.accounts(type, query))?.items || []);
+    } catch {
+      setAccounts([]);
+    } finally {
+      setSearching(false);
+    }
+  }, [type, query]);
+
+  useEffect(() => {
+    void loadLocks();
+    void loadOwners();
+  }, [loadLocks, loadOwners]);
+
+  // Search as you type, after a short pause.
+  useEffect(() => {
+    const timer = window.setTimeout(() => void search(), 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const refresh = () => Promise.all([loadLocks(), loadOwners(), search()]);
+
+  const run = async (action: () => Promise<unknown>, done: string) => {
+    setBusy(true);
+    try {
+      await action();
+      showToast.success(done);
+      await refresh();
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmLock = async () => {
+    if (!pendingLock) return;
+    if (await run(() => developerAPI.lock(pendingLock.type, pendingLock.id, reason.trim() || undefined), t('Account locked'))) {
+      setPendingLock(null);
+    }
+  };
+
+  const unlock = (lockType: LockUserType, id: number) => run(() => developerAPI.unlock(lockType, id), t('Account unlocked'));
+
+  const toggleLockdown = async () => {
+    const enable = !lockdown.enabled;
+    if (await run(() => developerAPI.setLockdown(enable, enable ? reason.trim() || undefined : undefined), enable ? t('The system is closed') : t('The system is open'))) {
+      setLockdownDialog(false);
+    }
+  };
+
+  const resetPassword = async () => {
+    if (!passwordFor) return;
+    if (await run(() => developerAPI.resetOwnerPassword(passwordFor.owner_id, newPassword), t('Password changed'))) {
+      setPasswordFor(null);
+    }
+  };
+
+  const addOwner = async () => {
+    if (await run(() => developerAPI.createOwner(ownerForm), t('Owner added'))) {
+      setAddingOwner(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <PageHeader title={t('Developer')} description={t('Lock any account, close the whole system, and manage owner accounts. Only you see this page.')} />
+
+      {/* Lock on everyone */}
+      <section
+        className={cn(
+          'flex flex-wrap items-center gap-4 rounded-lg border p-4 shadow-sm',
+          lockdown.enabled ? 'border-rose-300 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/40' : 'bg-card'
+        )}
+      >
+        <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', lockdown.enabled ? 'bg-rose-600 text-white' : 'bg-muted text-muted-foreground')}>
+          <Power className="h-5 w-5" />
+        </div>
+        <div className="min-w-[200px] flex-1">
+          <div className="font-bold">{lockdown.enabled ? t('The system is closed for everyone') : t('Close the system for everyone')}</div>
+          <div className="text-sm text-muted-foreground">
+            {lockdown.enabled
+              ? `${t('Nobody but you can sign in or use the system.')} ${lockdown.reason ? `“${lockdown.reason}” · ` : ''}${formatDate(lockdown.locked_at)}`
+              : t('Owners, admins, teachers, students and parents are all signed out at once. You keep working.')}
+          </div>
+        </div>
+        <Button
+          variant={lockdown.enabled ? 'default' : 'destructive'}
+          className={lockdown.enabled ? 'bg-emerald-600 text-white hover:bg-emerald-700' : undefined}
+          disabled={busy}
+          onClick={() => {
+            setReason('');
+            setLockdownDialog(true);
+          }}
+        >
+          {lockdown.enabled ? t('Open the system') : t('Close the system')}
+        </Button>
+      </section>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
+        {/* Find and lock any account */}
+        <section className="rounded-lg border bg-card shadow-sm">
+          <div className="space-y-3 border-b p-4">
+            <h2 className="flex items-center gap-2 font-bold">
+              <ShieldAlert className="h-4 w-4 text-rose-600" />
+              {t('Lock an account')}
+            </h2>
+            <div className="inline-flex flex-wrap rounded-lg border bg-muted/40 p-1" role="tablist">
+              {TYPES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={type === item.id}
+                  onClick={() => setType(item.id)}
+                  className={cn('rounded-md px-3 py-1.5 text-sm font-semibold', type === item.id ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+                >
+                  {t(item.label)}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('Search by name or username')} className="pl-9" />
+            </div>
+          </div>
+          <div className="max-h-[480px] divide-y overflow-y-auto">
+            {searching && !accounts.length ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              </div>
+            ) : accounts.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">{t('No accounts found.')}</p>
+            ) : (
+              accounts.map((account) => (
+                <div key={`${account.user_type}-${account.user_id}`} className="flex flex-wrap items-center gap-3 px-4 py-2.5">
+                  <div className="min-w-[160px] flex-1">
+                    <div className="flex items-center gap-2 font-semibold">
+                      {fullName(account)}
+                      {account.locked && <Badge className="bg-rose-600 text-white hover:bg-rose-600">{t('Locked')}</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {account.username || '—'} · ID {account.user_id}
+                      {account.status ? ` · ${t(account.status)}` : ''}
+                      {account.lock_reason ? ` · “${account.lock_reason}”` : ''}
+                    </div>
+                  </div>
+                  {account.locked ? (
+                    <Button size="sm" variant="outline" className="gap-1.5" disabled={busy} onClick={() => void unlock(account.user_type, account.user_id)}>
+                      <LockOpen className="h-4 w-4" />
+                      {t('Unlock')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="gap-1.5"
+                      disabled={busy}
+                      onClick={() => {
+                        setReason('');
+                        setPendingLock({ type: account.user_type, id: account.user_id, name: fullName(account) });
+                      }}
+                    >
+                      <Lock className="h-4 w-4" />
+                      {t('Lock')}
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Everything locked now */}
+        <section className="rounded-lg border bg-card shadow-sm">
+          <h2 className="flex items-center gap-2 border-b p-4 font-bold">
+            <Lock className="h-4 w-4" />
+            {t('Locked accounts')}
+            <span className="rounded-full bg-muted px-2 text-xs tabular-nums">{locks.length}</span>
+          </h2>
+          <div className="max-h-[540px] divide-y overflow-y-auto">
+            {locks.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">{t('Nobody is locked.')}</p>
+            ) : (
+              locks.map((lock) => (
+                <div key={`${lock.user_type}-${lock.user_id}`} className="flex items-center gap-3 px-4 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold">{fullName(lock)}</div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {t(TYPE_LABEL[lock.user_type])} · {formatDate(lock.locked_at)}
+                      {lock.reason ? ` · “${lock.reason}”` : ''}
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => void unlock(lock.user_type, lock.user_id)}>
+                    {t('Unlock')}
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* Owner accounts */}
+      <section className="rounded-lg border bg-card shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
+          <h2 className="flex items-center gap-2 font-bold">
+            <KeyRound className="h-4 w-4" />
+            {t('Owner accounts')}
+          </h2>
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              setOwnerForm({ username: '', password: '', first_name: '', last_name: '', email: '' });
+              setAddingOwner(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            {t('Add owner')}
+          </Button>
+        </div>
+        <div className="divide-y">
+          {owners.map((owner) => (
+            <div key={owner.owner_id} className="flex flex-wrap items-center gap-3 px-4 py-2.5">
+              <div className="min-w-[180px] flex-1">
+                <div className="flex flex-wrap items-center gap-2 font-semibold">
+                  {fullName(owner)}
+                  {owner.is_developer && <Badge variant="outline">{t('You')}</Badge>}
+                  {owner.is_locked && <Badge className="bg-amber-500 text-white hover:bg-amber-500">{t('Wrong passwords')}</Badge>}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {owner.username} · {t('Last login')}: {formatDate(owner.last_login) || '—'}
+                </div>
+              </div>
+              {!owner.is_developer && (
+                <div className="flex gap-2">
+                  {owner.is_locked && (
+                    <Button size="sm" variant="outline" className="gap-1.5" disabled={busy} onClick={() => void run(() => developerAPI.unlockOwner(owner.owner_id), t('Account unlocked'))}>
+                      <LockOpen className="h-4 w-4" />
+                      {t('Unlock')}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    disabled={busy}
+                    onClick={() => {
+                      setNewPassword('');
+                      setPasswordFor(owner);
+                    }}
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    {t('New password')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Lock one account */}
+      <Dialog open={Boolean(pendingLock)} onOpenChange={(open) => !open && setPendingLock(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('Lock this account?')}</DialogTitle>
+            <DialogDescription>
+              {pendingLock && `${pendingLock.name} — ${t(TYPE_LABEL[pendingLock.type])}`}. {t('They are signed out at once and cannot sign in until you unlock them.')}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea rows={2} value={reason} onChange={(event) => setReason(event.target.value)} placeholder={t('Reason (only you see it)')} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingLock(null)}>
+              {t('Cancel')}
+            </Button>
+            <Button variant="destructive" disabled={busy} onClick={() => void confirmLock()}>
+              {t('Lock')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lock on everyone */}
+      <Dialog open={lockdownDialog} onOpenChange={setLockdownDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{lockdown.enabled ? t('Open the system?') : t('Close the system for everyone?')}</DialogTitle>
+            <DialogDescription>
+              {lockdown.enabled ? t('Everyone who is not locked one by one can sign in again.') : t('Every account but yours is signed out at once and cannot sign in until you open it again.')}
+            </DialogDescription>
+          </DialogHeader>
+          {!lockdown.enabled && <Textarea rows={2} value={reason} onChange={(event) => setReason(event.target.value)} placeholder={t('Reason (only you see it)')} />}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLockdownDialog(false)}>
+              {t('Cancel')}
+            </Button>
+            <Button
+              variant={lockdown.enabled ? 'default' : 'destructive'}
+              className={lockdown.enabled ? 'bg-emerald-600 text-white hover:bg-emerald-700' : undefined}
+              disabled={busy}
+              onClick={() => void toggleLockdown()}
+            >
+              {lockdown.enabled ? t('Open the system') : t('Close the system')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Owner password */}
+      <Dialog open={Boolean(passwordFor)} onOpenChange={(open) => !open && setPasswordFor(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('New password')}</DialogTitle>
+            <DialogDescription>{passwordFor ? `${fullName(passwordFor)} (${passwordFor.username})` : ''}</DialogDescription>
+          </DialogHeader>
+          <Input type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder={t('At least 8 characters')} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordFor(null)}>
+              {t('Cancel')}
+            </Button>
+            <Button disabled={busy || newPassword.length < 8} onClick={() => void resetPassword()}>
+              {t('Save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New owner */}
+      <Dialog open={addingOwner} onOpenChange={setAddingOwner}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('Add owner')}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(
+              [
+                ['first_name', 'First name', 'text'],
+                ['last_name', 'Last name', 'text'],
+                ['username', 'Username', 'text'],
+                ['email', 'Email', 'email'],
+                ['password', 'Password', 'password'],
+              ] as const
+            ).map(([field, label, inputType]) => (
+              <div key={field} className={cn('space-y-1', field === 'password' && 'sm:col-span-2')}>
+                <Label htmlFor={`owner-${field}`}>{t(label)}</Label>
+                <Input
+                  id={`owner-${field}`}
+                  type={inputType}
+                  autoComplete={field === 'password' ? 'new-password' : 'off'}
+                  value={ownerForm[field]}
+                  onChange={(event) => setOwnerForm((current) => ({ ...current, [field]: event.target.value }))}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddingOwner(false)}>
+              {t('Cancel')}
+            </Button>
+            <Button
+              disabled={busy || !ownerForm.username || ownerForm.password.length < 6 || !ownerForm.first_name || !ownerForm.last_name || !ownerForm.email}
+              onClick={() => void addOwner()}
+            >
+              {t('Add owner')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// Anyone but the developer gets an empty page and no requests (the server refuses them anyway).
+const DeveloperPage = () => {
+  const { t } = useLanguage();
+  const user = useAppSelector((state) => state.auth.user);
+  if (!user?.is_developer) {
+    return <p className="py-16 text-center text-sm text-muted-foreground">{t('Page not found')}</p>;
+  }
+  return <DeveloperPanel />;
+};
+
+export default DeveloperPage;

@@ -31,6 +31,7 @@ const OwnerGraphPage = lazy(() => import('./features/owner/graph/OwnerGraphPage'
 const OwnerSmsPage = lazy(() => import('./features/owner/OwnerSmsPage'));
 // @MOB-160 Content of the student and parent mobile app.
 const MobileAppPage = lazy(() => import('./features/owner/mobileApp/MobileAppPage'));
+const DeveloperPage = lazy(() => import('./features/developer/DeveloperPage'));
 // @MOB-163 Homework Bank, assigning and grading.
 const HomeworkPage = lazy(() => import('./features/crm/homework/HomeworkPage'));
 const StudentIdCheckPage = lazy(() => import('./features/crm/studentId/StudentIdCheckPage'));
@@ -398,6 +399,17 @@ function AppContent() {
             <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
               <Layout>
                 <StudentIdCheckPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        {/* Locks on any account and owner accounts: the developer account only (checked in the page too). */}
+        <Route
+          path="/developer"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+              <Layout>
+                <DeveloperPage />
               </Layout>
             </ProtectedRoute>
           }

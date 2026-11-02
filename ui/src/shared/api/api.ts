@@ -150,8 +150,12 @@ apiClient.interceptors.response.use(
       }
     };
 
+    // Locked by the developer (one account, or everyone): signed out like an expired session.
+    const lockCode = error.response?.status === 423 ? error.response?.data?.code : null;
+    const lockedOut = lockCode === 'ACCOUNT_LOCKED' || lockCode === 'SYSTEM_LOCKED';
+
     // Handle 401 (unauthorized) - token expired or invalid
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || lockedOut) {
       const url = error.config?.url || '';
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
