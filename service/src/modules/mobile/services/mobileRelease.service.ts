@@ -14,12 +14,14 @@ const compareVersions = (a: string, b: string) => {
 };
 
 // @MOB-172 A Google Drive "share" link opens a preview page; the app and the website need the file
-// itself, so share links are turned into direct download links.
+// itself, so share links are turned into direct download links. Drive's older uc?export=download
+// address shows a "can't scan this file" page for APKs; drive.usercontent.google.com with
+// confirm=t returns the file.
 const directDownloadUrl = (url: string) => {
   const text = String(url || '').trim();
   const match = text.match(/^https:\/\/drive\.google\.com\/(?:file\/d\/([\w-]+)|open\?id=([\w-]+))/);
   const id = match?.[1] || match?.[2];
-  return id ? `https://drive.google.com/uc?export=download&id=${id}` : text;
+  return id ? `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t` : text;
 };
 
 const latest = () => one(`SELECT * FROM mobile_app_releases WHERE platform = 'android' ORDER BY release_id DESC LIMIT 1`);

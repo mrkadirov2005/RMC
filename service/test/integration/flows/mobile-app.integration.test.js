@@ -602,15 +602,15 @@ describe('mobile app API with PostgreSQL', () => {
 
     const first = await admin().send({ version: '1.0.0', download_url: 'https://drive.google.com/file/d/APK1/view?usp=sharing' });
     expect(first.status).toBe(201);
-    expect(first.body).toMatchObject({ version: '1.0.0', min_version: '1.0.0', download_url: 'https://drive.google.com/uc?export=download&id=APK1', created_by_name: 'admin1' });
+    expect(first.body).toMatchObject({ version: '1.0.0', min_version: '1.0.0', download_url: 'https://drive.usercontent.google.com/download?id=APK1&export=download&confirm=t', created_by_name: 'admin1' });
     expect((await admin().send({ version: '1.0.0', download_url: 'https://x' })).body.code).toBe('NOT_NEWER');
     expect((await admin().send({ version: '1.1.0', min_version: '1.1.0', download_url: 'https://drive.google.com/file/d/APK2/view', notes: 'Yangi' })).status).toBe(201);
 
     const config = (await api().get('/api/mobile/v1/app-config')).body;
-    expect(config).toMatchObject({ min_app_version: '1.1.0', latest_version: '1.1.0', download_url: 'https://drive.google.com/uc?export=download&id=APK2', release_notes: 'Yangi' });
+    expect(config).toMatchObject({ min_app_version: '1.1.0', latest_version: '1.1.0', download_url: 'https://drive.usercontent.google.com/download?id=APK2&export=download&confirm=t', release_notes: 'Yangi' });
     const download = await api().get('/api/mobile/v1/download');
     expect(download.status).toBe(302);
-    expect(download.headers.location).toBe('https://drive.google.com/uc?export=download&id=APK2');
+    expect(download.headers.location).toBe('https://drive.usercontent.google.com/download?id=APK2&export=download&confirm=t');
     expect((await api().get('/api/mobile-admin/releases').set(auth(adminToken))).body.items.map((r) => r.version)).toEqual(['1.1.0', '1.0.0']);
 
     // Only admins publish.

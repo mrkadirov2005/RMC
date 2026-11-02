@@ -81,11 +81,11 @@ describe('media service', () => {
     it('moves a checked file to Drive, keeps the link and deletes the backend copy', async () => {
       drive.isConfigured.mockReturnValue(true);
       storage.readLocal.mockResolvedValue(Buffer.from('abc'));
-      drive.upload.mockResolvedValue({ id: 'F1', downloadUrl: 'https://drive.google.com/uc?export=download&id=F1' });
+      drive.upload.mockResolvedValue({ id: 'F1', downloadUrl: 'https://drive.usercontent.google.com/download?id=F1&export=download&confirm=t' });
       pool.query.mockResolvedValue(rows([]));
       await expect(service.moveToDrive(row)).resolves.toBe(true);
       expect(drive.upload).toHaveBeenCalledWith({ name: 'homework_student-7_0b2f8a3e-5c1d-4e6f-8a9b-1c2d3e4f5a6b.m4a', contentType: 'audio/mp4', data: Buffer.from('abc') });
-      expect(pool.query.mock.calls[0][1]).toEqual([5, 'F1', 'https://drive.google.com/uc?export=download&id=F1']);
+      expect(pool.query.mock.calls[0][1]).toEqual([5, 'F1', 'https://drive.usercontent.google.com/download?id=F1&export=download&confirm=t']);
       expect(storage.remove).toHaveBeenCalledWith(row.storage_key);
     });
 
@@ -103,8 +103,8 @@ describe('media service', () => {
     });
 
     it('serves the Drive link once the file is there, a signed backend link before', async () => {
-      await expect(service.downloadUrl({ ...row, download_url: 'https://drive.google.com/uc?export=download&id=F1' }, 'http://api')).resolves.toMatchObject({
-        url: 'https://drive.google.com/uc?export=download&id=F1', expires_in: null,
+      await expect(service.downloadUrl({ ...row, download_url: 'https://drive.usercontent.google.com/download?id=F1&export=download&confirm=t' }, 'http://api')).resolves.toMatchObject({
+        url: 'https://drive.usercontent.google.com/download?id=F1&export=download&confirm=t', expires_in: null,
       });
       expect(storage.presignGet).not.toHaveBeenCalled();
       storage.presignGet.mockResolvedValue('http://api/signed');
