@@ -2,7 +2,7 @@
 // group by group. The same data teachers see in their own account, in one place for the owner.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Phone, RefreshCw, Search, Users } from 'lucide-react';
+import { ChevronDown, ChevronsDownUp, ChevronsUpDown, Loader2, Phone, RefreshCw, Search, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -170,11 +170,14 @@ const TeacherStudents = ({ teacherId, teacherName, year, month }: { teacherId: n
   const { rows, loading, failed, reload } = useTeacherStudentPayments(teacherId, year, month);
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
+  // Groups start closed; a header click opens one, the button above opens or closes all.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     setFilter('all');
     setSearch('');
-  }, [teacherId]);
+    setOpenGroups(new Set());
+  }, [teacherId, year, month]);
 
   const totals = useMemo(() => totalStudentPayments(rows), [rows]);
   const groups = useMemo(() => {
@@ -186,6 +189,21 @@ const TeacherStudents = ({ teacherId, teacherName, year, month }: { teacherId: n
     );
     return groupStudentPayments(shown);
   }, [filter, rows, search]);
+
+  const groupKey = (classId: number | null) => String(classId ?? 'none');
+  // While searching, every group with a match is open so results are not hidden.
+  const searching = search.trim().length > 0;
+  const isOpen = (classId: number | null) => searching || openGroups.has(groupKey(classId));
+  const allOpen = groups.length > 0 && groups.every((group) => isOpen(group.classId));
+  const toggleGroup = (classId: number | null) =>
+    setOpenGroups((current) => {
+      const next = new Set(current);
+      const key = groupKey(classId);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  const toggleAll = () => setOpenGroups(allOpen ? new Set() : new Set(groups.map((group) => groupKey(group.classId))));
 
   const filters: { id: Filter; label: string; count: number }[] = [
     { id: 'all', label: t('All'), count: totals.students },
@@ -231,6 +249,16 @@ const TeacherStudents = ({ teacherId, teacherName, year, month }: { teacherId: n
             <span className="tabular-nums opacity-80">{item.count}</span>
           </button>
         ))}
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1.5 text-xs"
+          onClick={toggleAll}
+          disabled={!groups.length || searching}
+        >
+          {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" /> : <ChevronsUpDown className="h-3.5 w-3.5" />}
+          {allOpen ? t('Close all') : t('Open all')}
+        </Button>
         <div className="relative ml-auto w-full sm:w-56">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search students...')} className="h-8 pl-8 text-xs" />
@@ -256,22 +284,36 @@ const TeacherStudents = ({ teacherId, teacherName, year, month }: { teacherId: n
         <div className="space-y-3">
           {groups.map((group) => {
             const groupTotal = group.paid + group.partial + group.unpaid;
+            const open = isOpen(group.classId);
             return (
               <section key={String(group.classId)} className="overflow-hidden rounded-lg border">
-                <header className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-muted/40 px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.classId)}
+                  aria-expanded={open}
+                  className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 bg-muted/40 px-3 py-2 text-left hover:bg-muted/70"
+                >
+                  <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', !open && '-rotate-90')} />
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-bold">{group.className}</span>
                   {group.monthlyFee > 0 && <span className="text-xs text-muted-foreground">{formatMoney(group.monthlyFee)}</span>}
                   <span className="ml-auto text-xs font-semibold tabular-nums">
                     {t('{paid} of {total} paid', { paid: group.paid, total: groupTotal })}
                   </span>
+                  {group.unpaid > 0 && (
+                    <span className="rounded-full bg-rose-100 px-1.5 text-[0.6875rem] font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-200">
+                      {group.unpaid}
+                    </span>
+                  )}
                   <ProgressBar value={percent(group.paid, groupTotal)} className="sm:w-28" />
-                </header>
-                <div className="divide-y">
-                  {group.students.map((row) => (
-                    <StudentLine key={row.student_id} row={row} />
-                  ))}
-                </div>
+                </button>
+                {open && (
+                  <div className="divide-y">
+                    {group.students.map((row) => (
+                      <StudentLine key={row.student_id} row={row} />
+                    ))}
+                  </div>
+                )}
               </section>
             );
           })}

@@ -16,7 +16,7 @@ describe('branch admin page access catalog', () => {
       'SMS', 'Centers', 'Settings',
     ]);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'SMS')?.children?.map((child) => child.view)).toEqual(['messages', 'templates']);
-    expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total', 'Monthly', 'List', "Students' payments"]);
+    expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total and monthly', 'List', "Students' payments"]);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Retention')?.children?.map((child) => child.label)).toEqual(['Retention', 'Intake']);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Reports')?.children?.map((child) => child.view)).toEqual([
       'finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes',
@@ -34,13 +34,13 @@ describe('admin submenu access', () => {
   it('lets an admin saved before submenus existed keep every submenu', () => {
     expect(canAccessSubPage(['MANAGE_SALARY'], 'MANAGE_SALARY', 'SALARY_TAB_LIST')).toBe(true);
     expect(expandLegacySubPagePermissions(['MANAGE_SALARY'])).toEqual(
-      expect.arrayContaining(['MANAGE_SALARY', 'SALARY_TAB_TOTAL', 'SALARY_TAB_MONTHLY', 'SALARY_TAB_LIST'])
+      expect.arrayContaining(['MANAGE_SALARY', 'SALARY_TAB_TOTAL', 'SALARY_TAB_LIST', 'SALARY_TAB_STUDENTS'])
     );
   });
 
   it('shows only the chosen submenus once any are chosen, and none without the page', () => {
-    const permissions = ['MANAGE_SALARY', 'SALARY_TAB_MONTHLY'];
-    expect(canAccessSubPage(permissions, 'MANAGE_SALARY', 'SALARY_TAB_MONTHLY')).toBe(true);
+    const permissions = ['MANAGE_SALARY', 'SALARY_TAB_LIST'];
+    expect(canAccessSubPage(permissions, 'MANAGE_SALARY', 'SALARY_TAB_LIST')).toBe(true);
     expect(canAccessSubPage(permissions, 'MANAGE_SALARY', 'SALARY_TAB_TOTAL')).toBe(false);
     expect(canAccessSubPage(['SALARY_TAB_TOTAL'], 'MANAGE_SALARY', 'SALARY_TAB_TOTAL')).toBe(false);
     expect(expandLegacySubPagePermissions(permissions)).toEqual(permissions);
@@ -68,7 +68,15 @@ describe('admin submenu access', () => {
     const allow = (parent: string, child: string) => canAccessSubPage(['MANAGE_SALARY', 'SALARY_TAB_LIST'], parent, child);
     expect(resolveSubPageView('MANAGE_SALARY', 'total', allow)).toBe('list');
     expect(resolveSubPageView('MANAGE_SALARY', 'list', allow)).toBe('list');
-    expect(resolveSubPageView('MANAGE_SALARY', 'monthly', () => true)).toBe('monthly');
+    // Monthly was merged into Total.
+    expect(resolveSubPageView('MANAGE_SALARY', 'monthly', () => true)).toBe('total');
+  });
+
+  it('keeps the merged Total and monthly tab for an admin saved with only the old Monthly tab', () => {
+    const permissions = ['MANAGE_SALARY', 'SALARY_TAB_MONTHLY'];
+    expect(canAccessSubPage(permissions, 'MANAGE_SALARY', 'SALARY_TAB_TOTAL')).toBe(true);
+    expect(canAccessSubPage(permissions, 'MANAGE_SALARY', 'SALARY_TAB_LIST')).toBe(false);
+    expect(canAccessSubPage(permissions, 'MANAGE_SALARY', 'SALARY_TAB_STUDENTS')).toBe(false);
   });
 
   describe('dashboard payments chart switch', () => {

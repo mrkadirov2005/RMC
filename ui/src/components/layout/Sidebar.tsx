@@ -267,8 +267,7 @@ const Sidebar = memo(() => {
     {
       label: 'Salary', path: '/salary', iconName: 'Salary', roles: ['superuser'], permission: 'MANAGE_SALARY',
       children: [
-        { label: 'Total', path: '/salary?view=total', iconName: 'Salary', permission: 'SALARY_TAB_TOTAL' },
-        { label: 'Monthly', path: '/salary?view=monthly', iconName: 'Salary', permission: 'SALARY_TAB_MONTHLY' },
+        { label: 'Total and monthly', path: '/salary?view=total', iconName: 'Salary', permission: 'SALARY_TAB_TOTAL' },
         { label: 'List', path: '/salary?view=list', iconName: 'Salary', permission: 'SALARY_TAB_LIST' },
         { label: "Students' payments", path: '/salary?view=students', iconName: 'Salary', permission: 'SALARY_TAB_STUDENTS' },
       ],
