@@ -10,9 +10,9 @@ import { SelectField } from '../../students/components/SelectField';
 import { formLabelClassName } from '@/components/ui/form-control';
 import { cn } from '@/lib/utils';
 import { getExpectedAmountForMonth, type BillingPeriodRecord } from '@/shared/billingPeriod';
-import type { Payment } from '../types';
+import type { Payment, Student } from '../types';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
-import { discountAPI } from '../api';
+import { discountAPI, studentAPI } from '../api';
 import type { PaymentStudentGroupOption } from '../utils/paymentStudentGroups';
 import {
   getMonthKey,
@@ -58,7 +58,16 @@ interface PaymentFormDialogProps {
   amountHint?: string;
   disableCenterSelect?: boolean;
   submitDisabled?: boolean;
+  // When set, the student box asks the server as you type (after a short pause) instead of filtering
+  // studentOptions, and hands the matches back so the page can show the chosen student's details.
+  onStudentsFound?: (students: Student[]) => void;
 }
+
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_LIMIT = 10;
+const studentIdOf = (student: Student) => Number(student.student_id || student.id || 0);
+const studentNameOf = (student: Student) =>
+  `${student.first_name || ''} ${student.last_name || ''}`.trim() || `ID ${studentIdOf(student)}`;
 
 const shellClass =
   'rounded-2xl border border-slate-200/90 bg-white shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950/96';
@@ -101,6 +110,7 @@ export const PaymentFormDialog = ({
   amountHint,
   disableCenterSelect = false,
   submitDisabled = false,
+  onStudentsFound,
 }: PaymentFormDialogProps) => {
   const { t } = useLanguage();
   const normalizedAmount = Number(formData.amount || 0);
@@ -113,18 +123,76 @@ export const PaymentFormDialog = ({
   const [activeDiscount, setActiveDiscount] = useState<any>(null);
   const [discountLoading, setDiscountLoading] = useState(false);
   const [discountLoadFailed, setDiscountLoadFailed] = useState(false);
-  const selectedStudentOption = useMemo(
-    () => studentOptions.find((option) => String(option.value) === String(formData.student_id || '')),
-    [formData.student_id, studentOptions]
+  const serverSearch = Boolean(onStudentsFound);
+  const [serverResults, setServerResults] = useState<Student[]>([]);
+  const [serverSearching, setServerSearching] = useState(false);
+  const [serverSearchFailed, setServerSearchFailed] = useState(false);
+  const selectedStudentOption = useMemo(() => {
+    if (serverSearch) {
+      return formData.student_id && selectedStudent?.name
+        ? { value: Number(formData.student_id), label: selectedStudent.name }
+        : undefined;
+    }
+    return studentOptions.find((option) => String(option.value) === String(formData.student_id || ''));
+  }, [formData.student_id, selectedStudent?.name, serverSearch, studentOptions]);
+  const serverStudentOptions = useMemo(
+    () =>
+      serverResults.map((student) => ({
+        id: studentIdOf(student),
+        value: studentIdOf(student),
+        label: studentNameOf(student),
+        detail: [student.class_name, `ID ${studentIdOf(student)}`].filter(Boolean).join(' · '),
+      })),
+    [serverResults]
   );
-  const filteredStudentOptions = useMemo(() => {
+
+  // Asks the server once typing pauses; a newer query makes older answers stale.
+  useEffect(() => {
+    if (!serverSearch || !studentPickerOpen) return;
+    const query = studentSearch.trim();
+    if (query.length < 2 || (selectedStudentOption && query === selectedStudentOption.label)) {
+      setServerResults([]);
+      setServerSearching(false);
+      setServerSearchFailed(false);
+      return;
+    }
+    let stale = false;
+    setServerSearching(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await studentAPI.getAll({ q: query, page: 1, limit: SEARCH_LIMIT });
+        const payload = (response as any)?.data ?? response;
+        const rows: Student[] = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
+        if (stale) return;
+        setServerResults(rows);
+        setServerSearchFailed(false);
+        onStudentsFound?.(rows);
+      } catch {
+        if (!stale) {
+          setServerResults([]);
+          setServerSearchFailed(true);
+        }
+      } finally {
+        if (!stale) setServerSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      stale = true;
+      window.clearTimeout(timer);
+    };
+    // onStudentsFound changes identity on every render of some pages; the query is what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverSearch, studentPickerOpen, studentSearch, selectedStudentOption?.label]);
+
+  const filteredStudentOptions = useMemo((): (Option & { detail?: string })[] => {
+    if (serverSearch) return serverStudentOptions;
     const query = studentSearch.trim().toLowerCase();
     const source = studentOptions.filter((option) => String(option.value) !== '');
     if (!query) return source.slice(0, 8);
     return source
       .filter((option) => option.label.toLowerCase().includes(query))
       .slice(0, 12);
-  }, [studentOptions, studentSearch]);
+  }, [serverSearch, serverStudentOptions, studentOptions, studentSearch]);
 
   useEffect(() => {
     if (selectedStudentOption && !studentPickerOpen) {
@@ -335,17 +403,26 @@ export const PaymentFormDialog = ({
                           }
                         }, 120);
                       }}
-                      placeholder={isLoadingOptions ? t('Loading students...') : t('Search student by name or batch...')}
+                      placeholder={
+                        !serverSearch && isLoadingOptions ? t('Loading students...') : t('Search student by name or batch...')
+                      }
                       className="pl-9"
                       autoComplete="off"
                       required
                     />
                     {studentPickerOpen && (
                       <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-                        {isLoadingOptions ? (
+                        {serverSearch && studentSearch.trim().length < 2 ? (
                           <div className="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
-                            {t('Loading students...')}
+                            {t('Type at least 2 characters.')}
                           </div>
+                        ) : (serverSearch ? serverSearching : isLoadingOptions) ? (
+                          <div className="flex items-center gap-2 px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            {serverSearch ? t('Loading...') : t('Loading students...')}
+                          </div>
+                        ) : serverSearch && serverSearchFailed ? (
+                          <div className="px-3 py-3 text-sm text-destructive">{t('Could not load the data.')}</div>
                         ) : filteredStudentOptions.length === 0 ? (
                           <div className="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
                             {t('No students found')}
@@ -372,6 +449,9 @@ export const PaymentFormDialog = ({
                                   }`}
                                 >
                                   <span className="truncate font-medium">{option.label}</span>
+                                  {option.detail ? (
+                                    <span className="ml-3 shrink-0 text-xs text-slate-500 dark:text-slate-400">{option.detail}</span>
+                                  ) : null}
                                 </button>
                               );
                             })}

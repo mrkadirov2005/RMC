@@ -45,6 +45,7 @@ const PaymentsPage = () => {
     isLoadingOptions,
     classes,
     students,
+    rememberStudents,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
@@ -222,6 +223,7 @@ const PaymentsPage = () => {
           }
           studentGroupOptions={studentGroupOptions}
           onStudentGroupChange={handleStudentGroupChange}
+          onStudentsFound={rememberStudents}
           paymentHistory={selectedStudentHistory}
           historyExpectedAmount={Number(selectedClass?.payment_amount || 0)}
           historyBillingPeriod={selectedStudent}
