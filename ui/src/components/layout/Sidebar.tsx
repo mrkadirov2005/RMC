@@ -270,6 +270,7 @@ const Sidebar = memo(() => {
         { label: 'Total', path: '/salary?view=total', iconName: 'Salary', permission: 'SALARY_TAB_TOTAL' },
         { label: 'Monthly', path: '/salary?view=monthly', iconName: 'Salary', permission: 'SALARY_TAB_MONTHLY' },
         { label: 'List', path: '/salary?view=list', iconName: 'Salary', permission: 'SALARY_TAB_LIST' },
+        { label: "Students' payments", path: '/salary?view=students', iconName: 'Salary', permission: 'SALARY_TAB_STUDENTS' },
       ],
     },
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },

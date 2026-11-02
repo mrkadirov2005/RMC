@@ -16,7 +16,7 @@ describe('branch admin page access catalog', () => {
       'SMS', 'Centers', 'Settings',
     ]);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'SMS')?.children?.map((child) => child.view)).toEqual(['messages', 'templates']);
-    expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total', 'Monthly', 'List']);
+    expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total', 'Monthly', 'List', "Students' payments"]);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Retention')?.children?.map((child) => child.label)).toEqual(['Retention', 'Intake']);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Reports')?.children?.map((child) => child.view)).toEqual([
       'finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes',

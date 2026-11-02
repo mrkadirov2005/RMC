@@ -63,6 +63,7 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
       { label: 'Total', view: 'total', permission: PERMISSION_CODES.SALARY_TAB_TOTAL },
       { label: 'Monthly', view: 'monthly', permission: PERMISSION_CODES.SALARY_TAB_MONTHLY },
       { label: 'List', view: 'list', permission: PERMISSION_CODES.SALARY_TAB_LIST },
+      { label: "Students' payments", view: 'students', permission: PERMISSION_CODES.SALARY_TAB_STUDENTS },
     ],
   },
   { label: 'Assignments', path: '/assignments', permission: PERMISSION_CODES.CRUD_ASSIGNMENT },

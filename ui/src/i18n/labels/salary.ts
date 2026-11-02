@@ -1,4 +1,12 @@
 export const salaryLabels: Record<string, string> = {
+  "Students' payments": "O'quvchilar to'lovi",
+  'Which students of each teacher paid': "Har bir o'qituvchining qaysi o'quvchilari to'lagan",
+  '{paid} of {total} paid': "{total} tadan {paid} tasi to'lagan",
+  'No students in this period.': "Bu oyda o'quvchilar yo'q.",
+  Retry: 'Qayta urinish',
+  'Made a payment': "To'lov qilgan",
+  'No payment yet': "Hali to'lamagan",
+  'Students who made a payment this month': "Shu oyda to'lov qilgan o'quvchilar",
   'Avg. Students Paid': "O'rtacha to'lagan o'quvchilar",
   'Back to Salaries': 'Maoshlarga qaytish',
   'Last recorded:': 'Oxirgi qayd:',

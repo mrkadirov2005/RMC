@@ -17,6 +17,7 @@ import { formatMoney } from '@/utils/helpers';
 import { useSalaryOverview } from './hooks/useSalaryOverview';
 import { SalaryTotalTab } from './components/SalaryTotalTab';
 import { SalaryMonthlyTab } from './components/SalaryMonthlyTab';
+import { SalaryStudentsTab } from './components/SalaryStudentsTab';
 import { formatStudentPaidShare, monthInputValue, parseMonthInputValue, teacherFullName } from './model/salaryModel';
 import type { SalaryOverviewRow } from './types';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -24,9 +25,10 @@ import { PERMISSION_CODES } from '@/types';
 import { useRBAC } from '../hooks/useRBAC';
 import { resolveSubPageView } from '../rbac/adminPageAccess';
 
-type SalaryTab = 'total' | 'monthly' | 'list';
+type SalaryTab = 'total' | 'monthly' | 'list' | 'students';
 
-const isSalaryTab = (value: string | null): value is SalaryTab => value === 'total' || value === 'monthly' || value === 'list';
+const isSalaryTab = (value: string | null): value is SalaryTab =>
+  value === 'total' || value === 'monthly' || value === 'list' || value === 'students';
 
 const SalaryPage = () => {
   const { t } = useLanguage();
@@ -86,6 +88,9 @@ const SalaryPage = () => {
           <SalaryMonthlyTab />
         </SectionPanel>
       )}
+
+      {/* Which students of each teacher paid this month (what teachers see in their own account). */}
+      {activeTab === 'students' && <SalaryStudentsTab year={year} month={month} />}
 
       {activeTab === 'list' && (
         <>
