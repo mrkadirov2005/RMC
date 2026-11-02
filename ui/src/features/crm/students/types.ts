@@ -1,3 +1,4 @@
+import type { PaymentMonth } from './utils/paymentMonths';
 // Shared TypeScript types.
 
 export interface Student {
@@ -47,6 +48,8 @@ export interface Student {
   payment_count_this_month?: number;
   payment_status_this_month?: string | null;
   last_payment_date_this_month?: string | null;
+  /** Group view: payment state for the month before last, last month and this month; null when it could not be loaded. */
+  payment_months?: PaymentMonth[] | null;
   username?: string;
   password?: string;
   is_discounted?: boolean;
@@ -76,6 +79,7 @@ export interface Class {
   center_id?: number;
   teacher_id?: number;
   student_count?: number;
+  payment_amount?: number | string | null;
   section?: string | null;
   room_assignments?: Array<{ day?: string | null }>;
 }
