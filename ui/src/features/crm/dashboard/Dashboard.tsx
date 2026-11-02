@@ -34,7 +34,8 @@ const Dashboard = memo(() => {
   const selectedMonth = useMemo(() => new Date(), []);
   const scope: DashboardScope = { type: 'all', value: 'all' };
   const { loading, scopedCollections, stats } = useDashboardData(role, selectedMonth, scope);
-  const paymentHook = usePaymentsPage();
+  // The payment dialog searches students on the server; no need to download all of them here.
+  const paymentHook = usePaymentsPage({ loadAllStudents: false });
   const selectedStudent = paymentHook.students.find(
     (student) => Number(student.student_id || student.id || 0) === Number(paymentHook.formData.student_id || 0)
   );
@@ -150,6 +151,7 @@ const Dashboard = memo(() => {
         centerOptions={centerOptions}
         isLoadingOptions={isLoadingOptions}
         showStudentSelect
+        onStudentsFound={paymentHook.rememberStudents}
         showCenterSelect={Boolean(centerOptions.length)}
         selectedStudent={
           selectedStudent

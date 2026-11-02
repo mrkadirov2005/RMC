@@ -1,4 +1,6 @@
 export const paymentsLabels: Record<string, string> = {
+  'Type at least 2 characters.': 'Kamida 2 ta harf kiriting.',
+  'Could not load the data.': "Ma'lumotlarni yuklab bo'lmadi.",
   'Search by name or phone': "Ism yoki telefon bo'yicha qidirish",
   'Last payment': "Oxirgi to'lov",
   'No students match these filters.': "Bu filtrlarga mos o'quvchi topilmadi.",

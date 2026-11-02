@@ -93,7 +93,8 @@ const DashboardPaymentsPage = () => {
   // Bumped after a payment is saved here, so the list shows the new status.
   const [refresh, setRefresh] = useState(0);
   const [sendingSms, setSendingSms] = useState(false);
-  const paymentHook = usePaymentsPage();
+  // The payment dialog searches students on the server; no need to download all of them here.
+  const paymentHook = usePaymentsPage({ loadAllStudents: false });
   // The student a payment is being recorded for: their card, group fee and payment history.
   const selectedStudent = paymentHook.students.find(
     (student) => Number(student.student_id || student.id || 0) === Number(paymentHook.formData.student_id || 0)
@@ -441,6 +442,7 @@ const DashboardPaymentsPage = () => {
         centerOptions={paymentHook.centerOptions}
         isLoadingOptions={paymentHook.isLoadingOptions}
         showStudentSelect
+        onStudentsFound={paymentHook.rememberStudents}
         showCenterSelect={Boolean(paymentHook.centerOptions.length)}
         selectedStudent={
           selectedStudent
