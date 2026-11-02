@@ -21,7 +21,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const rateLimit = require('express-rate-limit');
   const swaggerUI = require('swagger-ui-express');
   const swaggerDocs = require('./swagger/swagger');
-  const { requireAuth, requireRole, requireOwner } = require('./middleware/auth');
+  const { requireAuth, requireRole, requireOwner, requireDeveloper } = require('./middleware/auth');
   const { validateBody } = require('./middleware/validation');
   const { CredentialsDto } = require('./dtos/request.dto');
   const { initMongo, closeMongo } = require('./db/mongo');
@@ -68,6 +68,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const roomSlotsRoutes = require('./routes/roomSlotsRoutes');
   const calendarRoutes = require('./routes/calendarRoutes');
   const requestLogRoutes = require('./routes/requestLogRoutes');
+  const developerRoutes = require('./routes/developerRoutes');
   const translationRoutes = require('./routes/translationRoutes');
   const systemRoutes = require('./routes/systemRoutes');
   const settingsRoutes = require('./routes/settingsRoutes');
@@ -213,6 +214,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/subjects', requireAuth, requireRole('superuser', 'teacher'), subjectRoutes);
   app.use('/api/superusers', requireAuth, requireRole('superuser'), superuserRoutes);
   app.use('/api/owners', requireAuth, requireOwner, ownerRoutes);
+  app.use('/api/developer', requireAuth, requireDeveloper, developerRoutes);
   app.use('/api/tests', requireAuth, testRoutes);
   app.use('/api/settings', requireAuth, settingsRoutes);
 

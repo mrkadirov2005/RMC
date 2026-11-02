@@ -7,7 +7,7 @@ const getAuditLogs = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
-    const rows = await auditLogService.listLogs(req.query, centerId ?? undefined);
+    const rows = await auditLogService.listLogs(req.query, centerId ?? undefined, req.user?.is_developer === true);
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);

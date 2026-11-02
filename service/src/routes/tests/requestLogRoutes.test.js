@@ -115,7 +115,8 @@ describe('request log routes', () => {
     it('leaves the filter open for an unknown tab', async () => {
       await request(app).get('/request-logs?kind=aliens').expect(200);
 
-      expect(lastFilter()).toEqual({});
+      // Only the developer's own requests stay hidden.
+      expect(lastFilter()).toEqual({ developer: { $ne: true } });
     });
   });
 

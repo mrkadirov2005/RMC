@@ -1,4 +1,5 @@
 const { generateToken } = require('../../../middleware/auth');
+const accessLock = require('../../developer/accessLock');
 const parentService = require('../services/parent.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 
@@ -105,6 +106,7 @@ const parentLogin = async (req: any, res: any) => {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { parent } = result;
+    if (await accessLock.refuseLockedLogin(res, 'parent', parent.parent_id)) return;
     const token = generateToken({
       id: parent.parent_id,
       email: parent.email,

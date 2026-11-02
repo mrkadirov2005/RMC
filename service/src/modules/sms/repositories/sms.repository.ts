@@ -157,8 +157,12 @@ const findSenderName = async (user: any) => {
   if (!id) return null;
   const table = user.userType === 'teacher' ? 'teachers' : String(user.role || '').toLowerCase() === 'owner' ? 'owners' : 'superusers';
   const idColumn = table === 'teachers' ? 'teacher_id' : table === 'owners' ? 'owner_id' : 'superuser_id';
+  // The developer account is shown as "Tizim".
+  const name = table === 'owners'
+    ? `CASE WHEN COALESCE(is_developer, FALSE) THEN 'Tizim' ELSE NULLIF(trim(concat_ws(' ', first_name, last_name)), '') END`
+    : `NULLIF(trim(concat_ws(' ', first_name, last_name)), '')`;
   const result = await pool.query(
-    `SELECT NULLIF(trim(concat_ws(' ', first_name, last_name)), '') AS name FROM ${table} WHERE ${idColumn} = $1`,
+    `SELECT ${name} AS name FROM ${table} WHERE ${idColumn} = $1`,
     [id]
   ).catch(() => ({ rows: [] }));
   return result.rows[0]?.name || null;

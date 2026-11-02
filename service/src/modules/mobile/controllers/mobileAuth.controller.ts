@@ -15,6 +15,9 @@ const login = async (req: any, res: any) => {
     if (result.kind === 'inactive') {
       return res.status(403).json({ error: 'Hisob faol emas', code: 'ACCOUNT_INACTIVE' });
     }
+    if (result.kind === 'locked') {
+      return res.status(423).json({ error: result.error, code: result.code });
+    }
     if (result.kind !== 'ok') {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri", code: 'INVALID_CREDENTIALS' });
     }

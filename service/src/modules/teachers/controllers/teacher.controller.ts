@@ -1,4 +1,5 @@
 const { generateToken, generatePaymentToken } = require('../../../middleware/auth');
+const accessLock = require('../../developer/accessLock');
 const teacherService = require('../services/teacher.service');
 const teacherPaymentService = require('../services/teacher_payment.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
@@ -232,6 +233,7 @@ const teacherLogin = async (req: any, res: any) => {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { teacher } = result;
+    if (await accessLock.refuseLockedLogin(res, 'teacher', teacher.teacher_id)) return;
     const token = generateToken({
       id: teacher.teacher_id,
       email: teacher.email,
@@ -287,6 +289,7 @@ const teacherPaymentLogin = async (req: any, res: any) => {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { teacher } = result;
+    if (await accessLock.refuseLockedLogin(res, 'teacher', teacher.teacher_id)) return;
     const token = generatePaymentToken({
       id: teacher.teacher_id,
       email: teacher.email,

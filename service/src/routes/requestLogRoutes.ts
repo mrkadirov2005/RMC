@@ -50,6 +50,8 @@ router.get('/', async (req: any, res: any) => {
     const to = String(req.query.to || '').trim();
 
     const filter: any = {};
+    // The developer's requests are seen by the developer only.
+    if (req.user?.is_developer !== true) filter.developer = { $ne: true };
 
     if (kind === 'owner') {
       filter.userType = 'superuser';

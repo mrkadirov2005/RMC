@@ -205,8 +205,12 @@ const findReceipt = async (id: number, centerId?: number) => {
 // Full name of the owner or admin account that is recording a payment.
 const findStaffName = async (table: 'owners' | 'superusers', id: number) => {
   const key = table === 'owners' ? 'owner_id' : 'superuser_id';
+  // The developer account is shown as "Tizim".
+  const developer = table === 'owners' ? 'COALESCE(is_developer, FALSE)' : 'FALSE';
   const result = await pool.query(
-    `SELECT NULLIF(trim(concat_ws(' ', first_name, last_name)), '') AS full_name, username FROM ${table} WHERE ${key} = $1`,
+    `SELECT CASE WHEN ${developer} THEN 'Tizim' ELSE NULLIF(trim(concat_ws(' ', first_name, last_name)), '') END AS full_name,
+            CASE WHEN ${developer} THEN 'Tizim' ELSE username END AS username
+       FROM ${table} WHERE ${key} = $1`,
     [id]
   );
   const row = result.rows[0];

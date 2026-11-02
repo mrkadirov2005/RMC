@@ -1,5 +1,6 @@
 const { generateToken } = require('../../../middleware/auth');
 const ownerService = require('../services/owner.service');
+const accessLock = require('../../developer/accessLock');
 import type { Request, Response } from 'express';
 import type {
   CreateOwnerDto,
@@ -19,6 +20,8 @@ const {
 
 type IdParams = { id: string };
 
+const DEVELOPER_DISPLAY_NAME = 'Tizim';
+
 const DEVELOPMENT_OWNER_INVITE_KEY = 'owner-create-2026';
 const resolveOwnerInviteKey = (
   environment = process.env.NODE_ENV,
@@ -30,9 +33,11 @@ const resolveOwnerInviteKey = (
   return DEVELOPMENT_OWNER_INVITE_KEY;
 };
 
-const getAllOwners = async (_req: Request, res: Response) => {
+const isDeveloper = (req: any) => accessLock.isDeveloperUser(req.user);
+
+const getAllOwners = async (req: Request, res: Response) => {
   try {
-    res.json(await ownerService.listOwners());
+    res.json(await ownerService.listOwners(isDeveloper(req)));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Egalarni yuklab bo'lmadi", details: error.message || String(error) });
@@ -41,7 +46,7 @@ const getAllOwners = async (_req: Request, res: Response) => {
 
 const getOwnerById = async (req: Request<IdParams>, res: Response) => {
   try {
-    const row = await ownerService.getOwner(Number(req.params.id));
+    const row = await ownerService.getOwner(Number(req.params.id), isDeveloper(req));
     if (!row) return res.status(404).json({ error: 'Ega topilmadi' });
     res.json(row);
   } catch (error: any) {
@@ -74,14 +79,14 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
       return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: parseValidationError(validation.error) });
     }
 
+    // Owners are added by the developer; signing up needs the invite key set on the server.
     const expectedKey = resolveOwnerInviteKey();
-    // if (!expectedKey) {
-    //   return res.status(500).json({ error: "Egani ro'yxatdan o'tkazish sozlanmagan." });
-    // }
-    // TODO Warning: this block above is temporarily disabled with this comment and needs to be re-enabled after setup
-    // if (String(validation.data.invite_key || '').trim() !== expectedKey) {
-    //   return res.status(403).json({ error: 'Invalid keyword' });
-    // }
+    if (!expectedKey) {
+      return res.status(500).json({ error: "Egani ro'yxatdan o'tkazish sozlanmagan." });
+    }
+    if (String(validation.data.invite_key || '').trim() !== expectedKey) {
+      return res.status(403).json({ error: 'Invalid keyword' });
+    }
 
     const out = await ownerService.registerOwner(validation.data);
     if (out.error === 'username_taken') {
@@ -152,6 +157,9 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
     }
     const { username, password } = validation.data;
     const result = await ownerService.authenticate(username, password);
+    // The developer's sign-ins, failed ones too, stay out of the logs owners read.
+    const developer = Boolean((result as any).owner?.is_developer);
+    if (developer) res.locals.developerRequest = true;
     if (result.kind === 'locked') {
       return res.status(403).json({ error: 'Hisob bloklangan' });
     }
@@ -162,13 +170,16 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { owner } = result;
+    if (await accessLock.refuseLockedLogin(res, 'owner', owner.owner_id, developer)) return;
+    // The developer acts as "Tizim": names recorded from the token (payments, homework, ...) never show who.
     const token = generateToken({
       id: owner.owner_id,
-      username: owner.username,
-      email: owner.email,
+      username: developer ? DEVELOPER_DISPLAY_NAME : owner.username,
+      email: developer ? undefined : owner.email,
       userType: 'superuser',
       role: 'owner',
       can_hard_delete: Boolean(owner.can_hard_delete),
+      ...(developer ? { is_developer: true } : {}),
     });
     res.json({
       message: 'Tizimga muvaffaqiyatli kirildi',
@@ -182,6 +193,7 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
         role: 'owner',
         status: owner.status,
         can_hard_delete: Boolean(owner.can_hard_delete),
+        is_developer: developer,
       },
     });
   } catch (error: any) {
@@ -195,6 +207,10 @@ const changePassword = async (req: Request<IdParams, unknown, ChangeOwnerPasswor
     const validation = changeOwnerPasswordDtoSchema.safeParse(req.body);
     if (!validation.success) {
       return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: parseValidationError(validation.error) });
+    }
+    // Only your own password; the developer resets others from the developer page.
+    if (Number(req.params.id) !== Number((req as any).user?.id)) {
+      return res.status(403).json({ error: "Faqat o'z parolingizni o'zgartira olasiz." });
     }
     const { old_password, new_password } = validation.data;
     const out = await ownerService.changePassword(Number(req.params.id), old_password, new_password);

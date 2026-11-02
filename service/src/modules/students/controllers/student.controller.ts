@@ -1,4 +1,5 @@
 const { generateToken } = require('../../../middleware/auth');
+const accessLock = require('../../developer/accessLock');
 const studentService = require('../services/student.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 const { studentBelongsToTeacher } = require('../../../shared/tenantDb');
@@ -382,6 +383,7 @@ const studentLogin = async (req: any, res: any) => {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { student } = result;
+    if (await accessLock.refuseLockedLogin(res, 'student', student.student_id)) return;
     const token = generateToken({
       id: student.student_id,
       email: student.email,

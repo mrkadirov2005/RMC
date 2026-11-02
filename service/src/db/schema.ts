@@ -588,6 +588,8 @@ const owners = pgTable('owners', {
   isLocked: boolean('is_locked'),
   loginAttempts: integer('login_attempts'),
   canHardDelete: boolean('can_hard_delete'),
+  isDeveloper: boolean('is_developer'),
+  lockedAt: timestamp('locked_at'),
   lastLogin: timestamp('last_login'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),

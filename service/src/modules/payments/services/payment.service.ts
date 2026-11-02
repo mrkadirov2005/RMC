@@ -182,6 +182,7 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
 // admins both sign in as userType "superuser"; role "owner" tells them apart.
 const resolveCashierName = async (user: any): Promise<string | null> => {
   if (!user?.id || user.userType !== 'superuser') return null;
+  if (user.is_developer === true) return 'Tizim';
   const name = await paymentRepository.findStaffName(user.role === 'owner' ? 'owners' : 'superusers', Number(user.id));
   return name || user.username || null;
 };

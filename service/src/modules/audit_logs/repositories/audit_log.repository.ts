@@ -4,8 +4,10 @@ const { auditLogs } = require('../../../db/schema');
 
 const db = pool.db;
 
-const findFiltered = (filters: { entityType?: string; entityId?: number; userType?: string; userId?: number; centerId?: number } = {}, limit?: number, offset?: number) => {
+const findFiltered = (filters: { entityType?: string; entityId?: number; userType?: string; userId?: number; centerId?: number; includeDeveloper?: boolean } = {}, limit?: number, offset?: number) => {
   const conditions: any[] = [];
+  // Rows written by the developer are shown to the developer only.
+  if (!filters.includeDeveloper) conditions.push(sql`(${auditLogs.details}->>'by_developer') IS DISTINCT FROM 'true'`);
   if (filters.entityType) conditions.push(eq(auditLogs.entityType, filters.entityType));
   if (filters.entityId) conditions.push(eq(auditLogs.entityId, filters.entityId));
   if (filters.userType) conditions.push(eq(auditLogs.userType, filters.userType));

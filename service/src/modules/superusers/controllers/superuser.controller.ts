@@ -1,4 +1,5 @@
 const { generateToken } = require('../../../middleware/auth');
+const accessLock = require('../../developer/accessLock');
 const superuserService = require('../services/superuser.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 
@@ -91,6 +92,7 @@ const login = async (req: any, res: any) => {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { superuser } = result;
+    if (await accessLock.refuseLockedLogin(res, 'superuser', superuser.superuser_id)) return;
     const token = generateToken({
       id: superuser.superuser_id,
       username: superuser.username,

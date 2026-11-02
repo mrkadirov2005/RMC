@@ -77,7 +77,7 @@ describe('owners controller handlers', () => {
 
       await controller.getOwnerById({ params: { id: '1' } }, res);
 
-      expect(ownerService.getOwner).toHaveBeenCalledWith(1);
+      expect(ownerService.getOwner).toHaveBeenCalledWith(1, false);
       expect(res.json).toHaveBeenCalledWith({ owner_id: 1 });
     });
 
@@ -342,10 +342,19 @@ describe('owners controller handlers', () => {
   describe('changePassword', () => {
     const body = { old_password: 'Str0ngPassword!', new_password: 'Ev3nStronger!' };
 
+    it("refuses to change another owner's password", async () => {
+      const res = createResponse();
+
+      await controller.changePassword({ params: { id: '2' }, body, user: { id: 1 } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(ownerService.changePassword).not.toHaveBeenCalled();
+    });
+
     it('refuses a body that fails validation', async () => {
       const res = createResponse();
 
-      await controller.changePassword({ params: { id: '1' }, body: {} }, res);
+      await controller.changePassword({ params: { id: '1' }, body: {}, user: { id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(ownerService.changePassword).not.toHaveBeenCalled();
@@ -355,7 +364,7 @@ describe('owners controller handlers', () => {
       const res = createResponse();
       ownerService.changePassword.mockResolvedValue({ ok: false, reason: 'not_found' });
 
-      await controller.changePassword({ params: { id: '1' }, body }, res);
+      await controller.changePassword({ params: { id: '1' }, body, user: { id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Ega topilmadi' });
@@ -365,7 +374,7 @@ describe('owners controller handlers', () => {
       const res = createResponse();
       ownerService.changePassword.mockResolvedValue({ ok: false, reason: 'bad_password' });
 
-      await controller.changePassword({ params: { id: '1' }, body }, res);
+      await controller.changePassword({ params: { id: '1' }, body, user: { id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: "Joriy parol noto'g'ri" });
@@ -375,7 +384,7 @@ describe('owners controller handlers', () => {
       const res = createResponse();
       ownerService.changePassword.mockResolvedValue({ ok: true });
 
-      await controller.changePassword({ params: { id: '1' }, body }, res);
+      await controller.changePassword({ params: { id: '1' }, body, user: { id: 1 } }, res);
 
       expect(ownerService.changePassword).toHaveBeenCalledWith(1, body.old_password, body.new_password);
       expect(res.json).toHaveBeenCalledWith({ message: "Parol muvaffaqiyatli o'zgartirildi" });
@@ -385,7 +394,7 @@ describe('owners controller handlers', () => {
       const res = createResponse();
       ownerService.changePassword.mockRejectedValue(new Error('hash failed'));
 
-      await controller.changePassword({ params: { id: '1' }, body }, res);
+      await controller.changePassword({ params: { id: '1' }, body, user: { id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'zgartirib bo'lmadi", details: 'hash failed' });
