@@ -12,6 +12,8 @@ import { buildApiUrl } from '../../../shared/api/api';
 
 const PING_TIMEOUT_MS = 6000;
 const PING_INTERVAL_MS = 30000;
+const PING_ATTEMPTS = 2;
+const PING_RETRY_DELAY_MS = 5000;
 
 // Handles ping backend.
 const pingBackend = async () => {
@@ -47,16 +49,21 @@ export const useServiceStatus = () => {
     }
 
     dispatch(setChecking());
-    try {
-      await pingBackend();
-      dispatch(setHealthy());
-    } catch {
-      if (!navigator.onLine) {
-        dispatch(setOffline());
+    // One slow answer (the server busy with a big response) is not an outage: ask again before warning.
+    for (let attempt = 0; attempt < PING_ATTEMPTS; attempt += 1) {
+      if (attempt > 0) await new Promise((resolve) => window.setTimeout(resolve, PING_RETRY_DELAY_MS));
+      try {
+        await pingBackend();
+        dispatch(setHealthy());
         return;
+      } catch {
+        if (!navigator.onLine) {
+          dispatch(setOffline());
+          return;
+        }
       }
-      dispatch(setBackendUnreachable());
     }
+    dispatch(setBackendUnreachable());
   }, [dispatch]);
 
 // Runs side effects for this component.
