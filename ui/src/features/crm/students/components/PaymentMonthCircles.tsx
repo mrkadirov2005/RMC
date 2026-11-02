@@ -11,7 +11,7 @@ export const monthShortLabel = (key: string) => MONTHS[Number(key.slice(5, 7)) -
 // Inline colors: the panel's theme overrides recolor Tailwind background classes.
 const STATE_STYLE: Record<PaymentMonthState, { backgroundColor: string; borderColor: string }> = {
   full: { backgroundColor: '#10b981', borderColor: '#10b981' },
-  partial: { backgroundColor: '#f59e0b', borderColor: '#f59e0b' },
+  partial: { backgroundColor: '#facc15', borderColor: '#eab308' },
   none: { backgroundColor: '#f43f5e', borderColor: '#f43f5e' },
   outside: { backgroundColor: 'transparent', borderColor: '#94a3b8' },
 };
@@ -46,7 +46,7 @@ export const PaymentMonthsHeader = () => {
 const MONTHS_FULL = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
 const monthFullLabel = (key: string) => `${MONTHS_FULL[Number(key.slice(5, 7)) - 1] || key} ${key.slice(0, 4)}`;
 
-/** The month before last, last month and this month: green paid, amber partly, red not paid, hollow not in the group.
+/** The month before last, last month and this month: green paid, yellow partly, red not paid, hollow not in the group.
  * Hovering (or focusing) a circle names its month and shows the amounts. */
 export const PaymentMonthCircles = ({ student, showLabels = false }: { student: Student; showLabels?: boolean }) => {
   const { t } = useLanguage();
