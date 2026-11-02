@@ -16,6 +16,8 @@ const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
 export const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api');
 export const buildApiUrl = (path: string) => `${API_BASE_URL}/${path.replace(/^\/+/, '')}`;
 
+const FULL_LIST_TIMEOUT_MS = 60000;
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 8000,
@@ -210,6 +212,9 @@ export const studentAPI = {
   getAll: (params?: object, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/students', {
       params: params ? { ...params, _cacheBust: Date.now() } : params,
+      // The full list (no limit) is over 1 MB; on a slow connection it takes longer than the default
+      // 8 s, and a timed-out request left the payment dialog's student search empty.
+      timeout: params && (params as { limit?: unknown }).limit ? undefined : FULL_LIST_TIMEOUT_MS,
       headers: {
         ...(options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : {}),
         'Cache-Control': 'no-cache',
