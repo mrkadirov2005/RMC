@@ -78,6 +78,9 @@ async function createApp(options: CreateAppOptions = {}) {
   const consolidationRoutes = require('./routes/consolidationRoutes');
   const consolidatePublicRoutes = require('./routes/consolidatePublicRoutes');
   const testSharePublicRoutes = require('./routes/testSharePublicRoutes');
+  const mobileRoutes = require('./routes/mobileRoutes');
+  const mobileAdminRoutes = require('./routes/mobileAdminRoutes');
+  const homeworkRoutes = require('./routes/homeworkRoutes');
 
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
@@ -160,6 +163,25 @@ async function createApp(options: CreateAppOptions = {}) {
   app.post('/api/owners/auth/register', authRateLimiter, require('./modules/owners/controllers/owner.controller').register);
   app.post('/api/parents/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/parents').parentLogin);
 
+  // @MOB-020 Mobile app API: public version check and sign-in/refresh/sign-out. The refresh
+  // limit is looser than sign-in because a whole class behind one school IP refreshes often.
+  const mobileAuthController = require('./modules/mobile/controllers/mobileAuth.controller');
+  const { MobileLoginDto, MobileRefreshDto, MobileResetRequestDto, MobileResetConfirmDto } = require('./dtos/mobile.dto');
+  const mobileAccountController = require('./modules/mobile/controllers/mobileAccount.controller');
+  const mobileRefreshRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false });
+  // @MOB-172 @MOB-175 The app is installed from the website: version check and the APK download link.
+  const mobileReleaseController = require('./modules/mobile/controllers/mobileRelease.controller');
+  app.get('/api/mobile/v1/app-config', mobileReleaseController.appConfig);
+  app.get('/api/mobile/v1/download', mobileReleaseController.download);
+  app.post('/api/mobile/v1/auth/login', authRateLimiter, validateBody(MobileLoginDto), mobileAuthController.login);
+  app.post('/api/mobile/v1/auth/refresh', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.refresh);
+  app.post('/api/mobile/v1/auth/logout', mobileRefreshRateLimiter, validateBody(MobileRefreshDto), mobileAuthController.logout);
+  // @MOB-024 Forgot password: an SMS code, then the new password. Its own per-IP limit, so resets do
+  // not use up the sign-in allowance (each account is also limited to 3 codes an hour and 5 tries a code).
+  const passwordResetRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+  app.post('/api/mobile/v1/auth/password-reset/request', passwordResetRateLimiter, validateBody(MobileResetRequestDto), mobileAccountController.requestPasswordReset);
+  app.post('/api/mobile/v1/auth/password-reset/confirm', passwordResetRateLimiter, validateBody(MobileResetConfirmDto), mobileAccountController.confirmPasswordReset);
+
   // Protected routes - require authentication + role-based access
   app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);
   app.use('/api/teachers', requireAuth, requireRole('superuser', 'teacher'), teacherRoutes);
@@ -220,6 +242,18 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/consolidations', requireAuth, requireRole('superuser', 'teacher', 'student'), consolidationRoutes);
   app.use('/api/consolidate', consolidatePublicRateLimiter, consolidatePublicRoutes);
   app.use('/api/share/tests', consolidatePublicRateLimiter, testSharePublicRoutes);
+  // @MOB-055 Uploads land on the backend first (then move to Google Drive): the signed URL is the permission.
+  const mediaController = require('./modules/media/media.controller');
+  app.put('/api/media-local/*', express.raw({ type: () => true, limit: '25mb' }), mediaController.localPut);
+  app.get('/api/media-local/*', mediaController.localGet);
+  // @MOB-020 Authenticated mobile app API; each route also checks role and device session.
+  app.use('/api/mobile/v1', requireAuth, mobileRoutes);
+  // @MOB-160 Admins and the owner manage the mobile app's links, announcements, rules and requests.
+  app.use('/api/mobile-admin', requireAuth, requireRole('superuser'), mobileAdminRoutes);
+  // @MOB-125 Admins and teachers check a scanned student ID (GET: a check changes nothing).
+  app.get('/api/mobile-staff/student-id/verify', requireAuth, requireRole('superuser', 'teacher'), mobileAccountController.verifyIdToken);
+  // @MOB-052 Homework Bank, assigning and reviewing, for admins, the owner and teachers.
+  app.use('/api/homework', requireAuth, requireRole('superuser', 'teacher'), homeworkRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {
@@ -243,6 +277,9 @@ async function main() {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
   require('./modules/sms/services/sms.service').startSmsWorker();
+  // @MOB-041 Mobile push notifications (attendance, grades, coins, payments).
+  require('./modules/mobile/services/mobileNotification.service').startPushWorker();
+  require('./modules/media/media.service').startDriveSync();
 
   // Graceful shutdown - use a flag to prevent multiple calls
   let isShuttingDown = false;

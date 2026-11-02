@@ -13,9 +13,11 @@ const authenticatePaymentAccess = async (username: string, password: string) => 
   if (teacher.status !== 'Active') return { kind: 'inactive' as const };
 
   const creds = await paymentCredentialRepository.findByTeacherId(teacher.teacher_id);
-  if (!creds || !creds.is_active) return { kind: 'invalid' as const };
+  // @MOB-012 The repository returns Drizzle's camelCase fields; reading snake_case here made
+  // every payment-access login fail.
+  if (!creds || !creds.isActive) return { kind: 'invalid' as const };
 
-  const verification = verifyPassword(password, creds.password_hash);
+  const verification = verifyPassword(password, creds.passwordHash);
   if (!verification.valid) return { kind: 'invalid' as const };
   if (verification.legacy) {
     await paymentCredentialRepository.upsertPassword(teacher.teacher_id, hashPassword(password));

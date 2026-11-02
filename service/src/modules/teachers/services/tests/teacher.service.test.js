@@ -152,8 +152,8 @@ describe('teachers service', () => {
         password_hash: hashPassword('main-login-secret'),
       });
       teacherPaymentRepository.findByTeacherId.mockResolvedValue({
-        password_hash: hashPassword('payment-only-secret'),
-        is_active: true,
+        passwordHash: hashPassword('payment-only-secret'),
+        isActive: true,
       });
 
       // Main login's password does not unlock payment access...
@@ -171,8 +171,8 @@ describe('teachers service', () => {
     it('blocks payment access when the payment credential row is inactive, regardless of correct password', async () => {
       teacherRepository.findByUsername.mockResolvedValue({ teacher_id: 4, status: 'Active' });
       teacherPaymentRepository.findByTeacherId.mockResolvedValue({
-        password_hash: hashPassword('payment-only-secret'),
-        is_active: false,
+        passwordHash: hashPassword('payment-only-secret'),
+        isActive: false,
       });
 
       await expect(teacherPaymentService.authenticatePaymentAccess('ali', 'payment-only-secret')).resolves.toEqual({

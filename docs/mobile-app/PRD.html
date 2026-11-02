@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEMURBEK SCHOOL LC Mobile App – PRD</title>
+<style>
+  :root{--p:hsl(215 70% 42%);--pl:hsl(215 70% 95%);--bg:#f6f8fb;--fg:#17202e;--mut:#5d6b80;--line:#dde3ec;--ok:#12805c;--warn:#b25e09;--bad:#b3261e}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--fg);background:var(--bg)}
+  .wrap{display:grid;grid-template-columns:240px 1fr;max-width:1180px;margin:0 auto}
+  nav{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:28px 16px;border-right:1px solid var(--line)}
+  nav b{display:block;color:var(--p);margin-bottom:12px}
+  nav a{display:block;padding:5px 8px;color:var(--mut);text-decoration:none;border-radius:6px;font-size:13.5px}
+  nav a:hover{background:var(--pl);color:var(--p)}
+  main{padding:36px 40px 80px;min-width:0}
+  h1{font-size:30px;margin:0 0 4px}
+  h2{font-size:21px;margin:46px 0 10px;padding-top:10px;border-top:1px solid var(--line);color:var(--p)}
+  h3{font-size:16px;margin:24px 0 6px}
+  .meta{color:var(--mut);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;margin:10px 0 18px;background:#fff;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--pl);font-weight:600}
+  .tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+  .mvp{background:#dff3ea;color:var(--ok)}.p2{background:#e3ecfb;color:var(--p)}.p3{background:#f1e8fb;color:#6b3fa0}
+  .chg{background:#fdeed8;color:var(--warn)}.cut{background:#fbe3e1;color:var(--bad)}
+  .box{background:#fff;border:1px solid var(--line);border-left:4px solid var(--p);border-radius:8px;padding:12px 16px;margin:14px 0}
+  .box.warn{border-left-color:var(--warn)}.box.bad{border-left-color:var(--bad)}
+  code{background:#eaeef5;padding:1px 5px;border-radius:4px;font-size:12.5px}
+  pre{background:#101a2b;color:#dbe6ff;padding:14px;border-radius:8px;overflow:auto;font-size:12.5px}
+  ul,ol{padding-left:22px}li{margin:3px 0}
+  @media(max-width:860px){.wrap{display:block}nav{display:none}main{padding:20px 16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <b>PRD v1.0</b>
+  <a href="#s1">1. Summary</a><a href="#s2">2. RMC today</a><a href="#s3">3. Goals and non-goals</a>
+  <a href="#s4">4. Roles</a><a href="#s5">5. Module decisions</a><a href="#s6">6. Key improvements</a>
+  <a href="#s7">7. Architecture</a><a href="#s8">8. CRM integration</a><a href="#s9">9. Data model additions</a>
+  <a href="#s10">10. Non-functional targets</a><a href="#s11">11. Security and compliance</a>
+  <a href="#s12">12. Release plan</a><a href="#s13">13. Risks</a><a href="#s14">14. Open questions</a>
+  <a href="timeline.html" style="margin-top:14px;color:var(--p)">Timeline →</a>
+  <a href="prototype.html" style="color:var(--p)">Clickable prototype →</a>
+</nav>
+<main>
+<h1>TEMURBEK SCHOOL LC Student and Parent Mobile App</h1>
+<div class="meta">Product Requirements Document · based on client brief TZ v2.0 (30.10.2026) and an audit of the RMC codebase · prepared 2026-10-30</div>
+
+<h2 id="s1">1. Summary</h2>
+<p>The brief describes a 10-module learning platform. Built in full it is roughly 1,700 focused hours of work (see the <a href="timeline.html">timeline</a>), about four years at 2 hours a day for one person. This PRD therefore keeps the client's full vision but splits it into releases, and puts three decisions first:</p>
+<ol>
+  <li><b>RMC stays the source of truth.</b> The mobile app is a new client of the existing <code>service/</code> backend (Express + Postgres + Drizzle), exposed through a versioned <code>/api/mobile/v1</code> namespace. The unfinished <code>nest/</code> port is not extended.</li>
+  <li><b>The first release is a trust-builder, not the whole LMS.</b> Parents see attendance, grades, coins and payments; students see schedule and homework; everyone gets push notifications. This is mostly exposing data RMC already holds, so it is the cheapest and most visible win.</li>
+  <li><b>Buy or reuse for the expensive parts.</b> Live classroom, video hosting, chat and speech-to-text are built from managed services, not from scratch. The Telegram bot is kept as an adoption bridge for parents.</li>
+</ol>
+<div class="box warn"><b>Two blockers to settle in Phase 0:</b> (a) personal-data storage rules in Uzbekistan versus the current AWS hosting region; (b) Apple and Google billing rules for AI Premium and Premium Video. Both can change cost and architecture.</div>
+
+<h2 id="s2">2. RMC today: what we can reuse and what is missing</h2>
+<p>Findings from reading the repository. Items marked "verify" were not read in detail.</p>
+<table>
+<tr><th>Area</th><th>Already in RMC</th><th>Gap for the mobile app</th></tr>
+<tr><td>Auth</td><td>JWT login for student, parent, teacher, superuser, owner (<code>/api/students/auth/login</code>, <code>/api/parents/auth/login</code>…); bcrypt; rate-limited; multi-tenant by <code>center_id</code>; RBAC middleware</td><td>No refresh token, 24h expiry only, no device table, no password reset, no mobile session management</td></tr>
+<tr><td>Student data</td><td><code>/api/portal</code>: dashboard, attendance, grades, tests, schedule; calendar; classes</td><td>Needs mobile-shaped responses, pagination and caching headers</td></tr>
+<tr><td>Parent link</td><td><code>parents</code>, <code>parent_students</code> tables, <code>parent_link_requests</code> approved by admin, Telegram parent link flow</td><td><b>No parent-scoped data endpoints</b> (children, attendance, grades, payments). <code>/api/parents</code> is superuser-only (verify <code>modules/parents</code>)</td></tr>
+<tr><td>Coins</td><td>Ledger <code>student_coin_transactions</code> with a unique index that blocks double awards; balance = sum of deltas; lesson scoring rules (absent and excused students get 0 coins)</td><td>Awards only. No spending, rewards store or redemption flow</td></tr>
+<tr><td>Payments</td><td>payments, debts, invoices, payment plans, discounts, refunds; Telegram bot already reads payments</td><td>Superuser-only API; no student/parent view; no online gateway</td></tr>
+<tr><td>Tests and vocabulary</td><td><code>tests</code>, submissions, answers, results; <code>consolidations</code> (word sets, trials, answers)</td><td>No timer/autosave exam engine, no question bank hierarchy, no homework submissions or files</td></tr>
+<tr><td>Notifications</td><td>In-app inbox table, SMS gateway, Telegram outbox (5s poll)</td><td><b>No push (FCM/APNs), no device tokens, no websocket</b></td></tr>
+<tr><td>Telegram</td><td>Bot with student sign-in, parent link, registration, required-channel membership check</td><td>Reuse the membership check for the onboarding step (Section 6.5)</td></tr>
+<tr><td>Web UI</td><td>React 19 + Vite + Tailwind, shadcn-style components, blue theme (<code>215 70% 42%</code>), light/dark, Uzbek labels (English present in code)</td><td>Owner and Academic panels need new pages (surveys, content, links, news)</td></tr>
+<tr><td>Ops</td><td>Docker Compose on one AWS EC2 t3a.small; S3 backups; CI</td><td>Single small host runs Postgres, Mongo, API and bot. It must be resized and monitored before adding video, chat and AI load</td></tr>
+<tr><td>Missing entirely</td><td colspan="2">Chat, AI, video lessons, surveys, news/stories, announcements, file/media storage, referrals, bookings, certificates, any mobile client</td></tr>
+</table>
+<div class="box bad"><b>Fix before exposing to phones.</b> <code>docs/backend-module-audit.md</code> lists open findings: privilege escalation in superuser routes, a rooms IDOR, a default <code>OWNER_INVITE_KEY</code>, missing DTO validation on refunds and debts. The compose file has hardcoded secrets and CORS is <code>*</code>. These become more serious once minors' data is reachable from public apps.</div>
+
+<h2 id="s3">3. Goals and non-goals</h2>
+<h3>Goals</h3>
+<ol>
+  <li>Parents see attendance, grades, coins, payments and teacher feedback in real time.</li>
+  <li>Homework, mock exams and the monthly speaking assessment run inside one tracked flow.</li>
+  <li>Students are rewarded for activity: coins, streaks, leaderboard, AI practice.</li>
+  <li>The Owner can measure quality: surveys, teacher ratings, app adoption.</li>
+</ol>
+<h3>Non-goals</h3>
+<ul>
+  <li>Replacing the CRM or rebuilding finance, salary and cash reporting inside the app.</li>
+  <li>Student-to-student private video calls (excluded by the brief).</li>
+  <li>Presenting AI scores as official IELTS or CEFR results.</li>
+  <li>Gating core lessons behind social-media follows.</li>
+</ul>
+<h3>Success metrics (set final numbers after the CRM audit)</h3>
+<table>
+<tr><th>Metric</th><th>Target, 3 months after Release 1</th></tr>
+<tr><td>Students opening the app weekly</td><td>70%</td></tr>
+<tr><td>Parents linked to at least one child</td><td>60%</td></tr>
+<tr><td>Homework submitted in-app, of total assigned</td><td>80%</td></tr>
+<tr><td>Push delivery success</td><td>95%</td></tr>
+<tr><td>Crash-free sessions</td><td>99.5%</td></tr>
+<tr><td>Support questions about "where is my child's grade/payment"</td><td>Down 50%</td></tr>
+</table>
+
+<h2 id="s4">4. Roles and surfaces</h2>
+<table>
+<tr><th>Role</th><th>Surface</th><th>Notes</th></tr>
+<tr><td>Student</td><td>Mobile app</td><td>One account, many groups/courses; data scoped per group</td></tr>
+<tr><td>Parent</td><td>Mobile app (same binary, role-based navigation)</td><td>Many children per account; link verified through RMC <code>parent_students</code></td></tr>
+<tr><td>Teacher, Support Teacher</td><td>Web panel first; mobile later</td><td>Grade homework, approve speaking scores, feedback. Attendance and lesson scoring stay in RMC</td></tr>
+<tr><td>Academic Director / Manager</td><td>Web panel</td><td>Homework bank, test bank, speaking questions, monitoring, moderation</td></tr>
+<tr><td>Admin / Reception</td><td>Existing RMC</td><td>No new UI except announcements and request handling</td></tr>
+<tr><td>Owner</td><td>Web panel</td><td>Surveys, rules, official links, news, analytics, permissions, audit log</td></tr>
+</table>
+<p>Recommendation: <b>one app, two experiences.</b> Choose the experience from the account role at login. A separate parent app doubles store review and maintenance for no gain.</p>
+
+<h2 id="s5">5. Module decisions</h2>
+<p>Verdicts: <span class="tag mvp">Release 1</span> <span class="tag p2">Release 2</span> <span class="tag p3">Release 3</span> <span class="tag chg">Change the approach</span> <span class="tag cut">Cut or defer</span></p>
+<table>
+<tr><th>Module</th><th>Verdict</th><th>What to build and what to change</th></tr>
+<tr><td>01 Dashboard and profile</td><td><span class="tag mvp">R1</span></td><td>Dashboard from existing <code>/portal/dashboard</code>. Digital Student ID as a rotating QR (60s token) so screenshots cannot be reused. Learning path and goals: simple level + milestones in R1, richer later. Online registration: a lead form feeding the existing <code>leads</code> table, not a second enrollment system.</td></tr>
+<tr><td>1.5 Official links</td><td><span class="tag mvp">R1</span></td><td>Table of links managed in the Owner panel, cached in the app. No release needed to change them.</td></tr>
+<tr><td>1.6 Social onboarding</td><td><span class="tag chg">Change</span></td><td>Soft, skippable step. Telegram can be verified (bot already checks channel membership); Instagram cannot. Show "Followed" only for verified Telegram. Never block lessons on it. See 6.5.</td></tr>
+<tr><td>02 Homework Center</td><td><span class="tag mvp">R1</span></td><td>Build one generic task engine (question types: choice, gap-fill, matching, short text, audio answer, file upload). Vocabulary, grammar, reading and listening become content, not separate code. Reuse <code>consolidation_*</code> tables for vocabulary and spaced repetition.</td></tr>
+<tr><td>2.2 Homework Bank</td><td><span class="tag mvp">R1</span> basic</td><td>Level → Book → Unit → Lesson → Homework tables with draft/approved status. Auto-open homework when the lesson is marked in RMC (event from lesson control). Approval workflow UI in the Owner/Academic panel.</td></tr>
+<tr><td>2.4 Digital Library</td><td><span class="tag p2">R2</span></td><td>PDF/audio with search, bookmarks. Offline download after core content works.</td></tr>
+<tr><td>2.5 Regular video</td><td><span class="tag p2">R2</span></td><td>Use a managed video service (HLS, signed URLs). Do not self-host video on the EC2 box.</td></tr>
+<tr><td>2.6 Premium video</td><td><span class="tag p3">R3</span> <span class="tag chg">Billing</span></td><td>Digital content bought inside the app is subject to Apple IAP and Google Play Billing (store fee applies). Decide model in Phase 0 (6.6).</td></tr>
+<tr><td>03 Exams</td><td><span class="tag p2">R2</span></td><td>Extend the existing tests module: server-side timer, autosave every answer, resume after disconnect, attempt limits, manual review queue. IELTS Mock last, since Writing/Speaking need teacher grading.</td></tr>
+<tr><td>3.3 Monthly speaking video</td><td><span class="tag p2">R2</span></td><td>Core differentiator. Record on device (720p, 90s cap), resumable direct-to-storage upload, transcode to HLS, AI draft score as background job, teacher confirms 4 × 25 rubric, result posted to RMC and parent push. Under-18 consent captured at onboarding.</td></tr>
+<tr><td>04 Progress and portfolio</td><td><span class="tag mvp">R1</span> results, <span class="tag p2">R2</span> journey</td><td>Charts only compare like with like (same level and test type). Speaking Journey ships with the speaking assessment.</td></tr>
+<tr><td>05 AI practice</td><td><span class="tag p3">R3</span></td><td>One AI backend, two UI entry points (Practice Center and Assistant). Limits enforced on the server in Asia/Tashkent time. Cost guard per user per day. AI output labelled "practice feedback, not an official score".</td></tr>
+<tr><td>06 Group chat</td><td><span class="tag p2">R2</span></td><td>Compare a managed chat SDK against a self-built Socket.IO service on cost and time. Moderation, report and pinned messages are required either way. Tell users that managers can view group chats.</td></tr>
+<tr><td>6.2 News and stories</td><td><span class="tag p2">R2</span></td><td>News feed first; stories (24h, highlights) afterwards.</td></tr>
+<tr><td>6.3 Speaking Partner</td><td><span class="tag cut">Defer</span></td><td>Random audio matching between minors is the highest-risk feature. If kept: same level and group branch only, scheduled sessions, parental opt-in, one-tap report, server-side session logs. Release 3 or later.</td></tr>
+<tr><td>6.4 Battle Arena</td><td><span class="tag p3">R3</span></td><td>Needs a real-time game server and a large enough user base. Start with async 1v1 (turn-based), then live.</td></tr>
+<tr><td>6.5 Teacher communication</td><td><span class="tag p2">R2</span> messages, <span class="tag p3">R3</span> video</td><td>Text and voice notes first; video call only on teacher accept.</td></tr>
+<tr><td>07 Coins and rewards</td><td><span class="tag mvp">R1</span> wallet, <span class="tag p2">R2</span> store</td><td>Wallet reads the existing ledger. Store adds <code>coin_redemptions</code> and spends with a negative ledger row inside one transaction that checks balance. Referral: 50 coins on first CRM-confirmed payment, deduplicated by the existing unique index (source = referral).</td></tr>
+<tr><td>7.3 Leaderboard</td><td><span class="tag mvp">R1</span></td><td>Reuse the rankings logic already behind the Telegram bot. Show names/coins only, never grades or money.</td></tr>
+<tr><td>08 Schedule and bookings</td><td><span class="tag mvp">R1</span> schedule, <span class="tag p2">R2</span> bookings</td><td>Booking Engine as one generic table (type, slot, capacity, status). Live Classroom: R1 shows a "Join online lesson" link to Zoom/Meet; the integrated classroom is R3 and built on a media SDK, not from scratch.</td></tr>
+<tr><td>09 Parent portal</td><td><span class="tag mvp">R1</span></td><td>The highest-value part of release 1. Needs the new parent-scoped API. Payments are read-only in R1 (status and history from RMC); online payment via local gateways after that.</td></tr>
+<tr><td>10 Help, rules, surveys</td><td><span class="tag mvp">R1</span> help/rules, <span class="tag p2">R2</span> surveys</td><td>Help Center and Policies with Read &amp; Accept and versioning in R1. Survey Builder, teacher ratings and analytics in R2 (anonymity rules in 6.7).</td></tr>
+</table>
+
+<h2 id="s6">6. Key improvements to the brief</h2>
+<h3>6.1 Parents first</h3>
+<p>The brief ranks the student experience first, but RMC already has most student data and none of the parent API. Parents decide whether the school feels transparent and they pay the fees. Ship the parent portal and push notifications in the first release.</p>
+<h3>6.2 Use Telegram as the bridge</h3>
+<p>Many parents already use the bot. Add a deep link from bot messages to the app and keep Telegram as a fallback channel for notifications until app adoption passes the target.</p>
+<h3>6.3 One generic task engine</h3>
+<p>Six homework types and seven vocabulary mechanics sound like thirteen features. A JSON-schema driven task renderer makes them one feature plus content. Teachers and the Academic Director get faster authoring too.</p>
+<h3>6.4 Offline and weak-network behaviour</h3>
+<p>Cache dashboard, schedule and last grades; queue homework answers and exam autosaves locally and sync with idempotency keys. This also covers the "internet dropped during exam" requirement.</p>
+<h3>6.5 Social onboarding, honestly</h3>
+<ul>
+  <li>Telegram: the bot can check membership with <code>getChatMember</code> if it is an admin of the channel, as the existing required-channel check does.</li>
+  <li>Instagram: no public API to verify a follow. Treat it as "open the page", with no verified state.</li>
+  <li>Show an accurate label ("Opened" / "Verified") instead of a checkbox that implies verification.</li>
+</ul>
+<h3>6.6 Store billing</h3>
+<ul>
+  <li>Tuition is payment for a real-world service: external gateways (Payme, Click, Uzum) are normally allowed. Confirm current store policy before launch.</li>
+  <li>AI Premium and Premium Video are digital goods: expect Apple IAP and Google Play Billing with the store commission. Price accordingly or sell through the center (offline/CRM) and unlock by account.</li>
+</ul>
+<h3>6.7 Survey privacy that holds up</h3>
+<p>Store the respondent mapping separately from answers, show results only when a group has at least 5 responses, and report teacher ratings as aggregates. Decide the KPI weight and minimum respondent count with the Owner in writing.</p>
+<h3>6.8 Avoid building video infrastructure</h3>
+<ul>
+  <li>Video lessons: managed HLS host with signed URLs.</li>
+  <li>Speaking videos: presigned upload straight to object storage, then transcode.</li>
+  <li>Live classroom: LiveKit, Agora or a Zoom SDK; whiteboard via an embeddable library.</li>
+</ul>
+<h3>6.9 Client technology</h3>
+<p>The brief recommends Flutter. The existing team code is TypeScript (React, Redux, Express). <b>Recommendation: React Native with Expo</b> if one developer owns both backend and app, because DTO types and API clients can be shared and push, OTA fixes and store builds are streamlined. Flutter is a fine choice if the developer prefers Dart or the client requires it. The prototype and API design are independent of this choice.</p>
+
+<h2 id="s7">7. Architecture</h2>
+<pre>
+ Mobile app (Student / Parent)        Web panel (Teacher, Academic, Owner)
+          │  HTTPS + JWT (access 15m, refresh 30d)      │
+          ▼                                             ▼
+ ┌─────────────────── RMC service (Express, /api/mobile/v1) ───────────────────┐
+ │ auth · parent-scope · homework · exams · coins · notifications · content    │
+ └──────┬──────────────┬───────────────┬──────────────┬────────────────────────┘
+        │              │               │              │
+   Postgres        Object storage    Redis +        Managed services
+   (existing +     (S3 compatible:   job queue      · FCM / APNs push
+   new mobile      videos, files,    (push, AI,     · video host (HLS)
+   tables)         media)            transcode)     · STT/LLM/TTS (AI)
+        │                                           · chat / media SDK
+   Existing RMC modules (attendance, grades, payments, coins) stay the source of truth
+   Telegram bot (kept) · SMS gateway (kept)
+</pre>
+<ul>
+  <li><b>Single backend.</b> Extend <code>service/src/modules</code> with the same controller/service/repository layout. Do not touch <code>nest/</code>.</li>
+  <li><b>Mobile namespace.</b> <code>/api/mobile/v1/*</code> with its own DTOs and pagination. Web UI routes stay unchanged.</li>
+  <li><b>Background jobs.</b> Add Redis and a queue (BullMQ) for push fan-out, AI feedback, transcoding and referral checks.</li>
+  <li><b>Real-time.</b> Socket.IO for chat and battles when R2 arrives; polling and push are enough for R1.</li>
+</ul>
+
+<h2 id="s8">8. CRM integration</h2>
+<p>Since the "CRM" is RMC itself, integration means shared tables and internal events, not an external API. Ownership per entity:</p>
+<table>
+<tr><th>Data</th><th>Owner system</th><th>Mobile access</th></tr>
+<tr><td>Students, parents, parent links, groups, teachers, timetable</td><td>RMC</td><td>Read</td></tr>
+<tr><td>Attendance, lesson grades, coin awards, payments, debts</td><td>RMC</td><td>Read</td></tr>
+<tr><td>Homework bank, submissions, exam attempts, speaking videos and scores</td><td>New mobile tables in same Postgres</td><td>Read and write; teacher-approved results copied to RMC grades</td></tr>
+<tr><td>Coin spending, referrals</td><td>Same ledger (<code>student_coin_transactions</code>)</td><td>Server-side only</td></tr>
+<tr><td>Surveys, news, links, policies, chat, AI usage</td><td>New mobile tables</td><td>Read and write by role</td></tr>
+</table>
+<p>Events from RMC to app: lesson marked → open homework; attendance saved → push to parent; grade or coin posted → push; payment confirmed → push and referral check; debt created → reminder. Implement as an internal event bus and an outbox table, with idempotency keys so retries do not duplicate.</p>
+
+<h2 id="s9">9. Data model additions (first pass)</h2>
+<table>
+<tr><th>Group</th><th>New tables</th><th>Release</th></tr>
+<tr><td>Auth</td><td>device_tokens, refresh_tokens, password_resets, consents (video, privacy, policy versions)</td><td>R1</td></tr>
+<tr><td>Content</td><td>official_links, announcements, policies, policy_versions, policy_acceptances</td><td>R1</td></tr>
+<tr><td>Homework</td><td>hw_levels, hw_books, hw_units, hw_lessons, hw_tasks, hw_assignments, hw_submissions, hw_attempts, media_files</td><td>R1</td></tr>
+<tr><td>Help</td><td>help_requests, help_request_events</td><td>R1</td></tr>
+<tr><td>Exams</td><td>extend tests: exam_attempts, exam_autosaves, review_queue</td><td>R2</td></tr>
+<tr><td>Speaking</td><td>speaking_prompts, speaking_submissions, speaking_scores</td><td>R2</td></tr>
+<tr><td>Quality</td><td>surveys, survey_questions, survey_audience, survey_responses, respondent_registry, teacher_rating_summaries</td><td>R2</td></tr>
+<tr><td>Community</td><td>chat_rooms, chat_messages, chat_reports, news_posts, stories, comments</td><td>R2</td></tr>
+<tr><td>Rewards</td><td>rewards, coin_redemptions, referrals, bookings, booking_slots</td><td>R2</td></tr>
+<tr><td>Premium</td><td>ai_usage_daily, subscriptions, store_receipts, courses, course_lessons, course_purchases, battles</td><td>R3</td></tr>
+</table>
+
+<h2 id="s10">10. Non-functional targets (proposed; confirm after the audit)</h2>
+<table>
+<tr><th>Area</th><th>Proposed target</th><th>Note</th></tr>
+<tr><td>API response, p95</td><td>&lt; 500 ms for reads, &lt; 800 ms for writes</td><td>Measure with the existing request logs</td></tr>
+<tr><td>Availability</td><td>99.5% monthly in R1; 99.9% only after leaving a single host</td><td>Current setup is one t3a.small</td></tr>
+<tr><td>Concurrent users</td><td>Plan for 15% of enrolled students online at the daily peak</td><td>Get actual enrollment from RMC first</td></tr>
+<tr><td>Backups</td><td>Daily full to S3 (exists); add continuous WAL archiving. RPO 1h, RTO 4h</td><td>Restore drill every quarter</td></tr>
+<tr><td>App start / screens</td><td>Cold start &lt; 2.5 s on a mid-range Android; screen load &lt; 1 s from cache</td><td></td></tr>
+<tr><td>Push</td><td>95% delivered within 60 s</td><td></td></tr>
+<tr><td>Chat delivery</td><td>99.9% of messages delivered, p95 &lt; 2 s</td><td>R2</td></tr>
+<tr><td>AI response</td><td>First token &lt; 1.5 s; spoken turn round trip &lt; 3 s</td><td>R3</td></tr>
+<tr><td>Video playback</td><td>Start &lt; 3 s; adaptive 360p–1080p</td><td>R2</td></tr>
+<tr><td>Compatibility</td><td>Android 8+, iOS 15+</td><td>Adjust to actual device stats</td></tr>
+<tr><td>Monitoring</td><td>Crash reporting, uptime alerts, queue-depth and error-rate alarms</td><td>R1</td></tr>
+<tr><td>Updates</td><td>Staged rollout, minimum-supported-version check, feature flags for server-driven content</td><td></td></tr>
+</table>
+
+<h2 id="s11">11. Security and compliance</h2>
+<ul>
+  <li><b>Auth:</b> short-lived access token (15 min), rotating refresh token, device list with remote sign-out, password reset, rate limits, optional biometric unlock.</li>
+  <li><b>Parent link:</b> only through an RMC-approved <code>parent_students</code> row; the app can request a link but cannot create one.</li>
+  <li><b>Data isolation:</b> every query is scoped by <code>center_id</code> and by the caller's role; add automated tests for cross-student and cross-parent access.</li>
+  <li><b>Minors:</b> consent for video recording, retention rules (propose 12 months for speaking videos), no public student profiles, chat moderation with reporting and blocking.</li>
+  <li><b>Encryption:</b> TLS everywhere, encrypted storage and backups, secrets out of the compose file.</li>
+  <li><b>Data residency:</b> Uzbekistan's personal-data law requires attention to where citizens' data is stored. Production runs on AWS EC2; confirm region and whether a local server or provider is required. Get legal confirmation in Phase 0.</li>
+  <li><b>Store policies:</b> privacy labels, account deletion in-app, children's data declarations, content rating.</li>
+  <li><b>Audit:</b> extend <code>audit_logs</code> to mobile writes, moderation actions and policy acceptances.</li>
+</ul>
+
+<h2 id="s12">12. Release plan</h2>
+<table>
+<tr><th>Release</th><th>Contents</th><th>Exit criteria</th></tr>
+<tr><td>Phase 0 Discovery</td><td>Audit, decisions, API spec, Figma and prototype, hardening list</td><td>Client signs scope, hosting, billing and consent decisions</td></tr>
+<tr><td>R1 Core app</td><td>Auth, parent portal, student dashboard, schedule, attendance, results, coins wallet, homework center, payments view, push, links, onboarding, help, rules, basic Owner panel</td><td>One pilot group (about 15 families) uses it for 3 weeks; crash-free 99%</td></tr>
+<tr><td>R2 Learning and quality</td><td>Video academy, library, exams, monthly speaking, surveys and teacher rating, news and stories, referral, rewards store, bookings, chat, teacher tools</td><td>Speaking assessment completed by 80% of pilot students</td></tr>
+<tr><td>R3 Advanced</td><td>AI, premium subscription and video, live classroom, battle arena, teacher video calls, speaking partner (if approved), analytics</td><td>Billing and safety reviews passed</td></tr>
+</table>
+
+<h2 id="s13">13. Risks</h2>
+<table>
+<tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr>
+<tr><td>Scope is about 1,700 hours</td><td>One person at 2 h/day finishes in about 4 years</td><td>Ship R1 only first; raise hours or add a developer for R2/R3; buy managed services</td></tr>
+<tr><td>Data-residency rules</td><td>Possible hosting move</td><td>Resolve in Phase 0</td></tr>
+<tr><td>Store review and billing</td><td>Rejection or a 15–30% fee</td><td>Review policies early; keep tuition external; decide premium model</td></tr>
+<tr><td>Single small server</td><td>Slow API, downtime at peak</td><td>Resize, split DB, add monitoring before launch</td></tr>
+<tr><td>Minors' safety (chat, partner, video)</td><td>Reputation and legal exposure</td><td>Moderation, consent, defer random partner matching</td></tr>
+<tr><td>AI cost and quality</td><td>Runaway bill; weak scoring</td><td>Per-user caps, cheap model for drafts, teacher final say</td></tr>
+<tr><td>Low adoption by parents</td><td>Value not realised</td><td>Telegram deep links, onboarding at school, push reminders</td></tr>
+<tr><td>Existing security findings</td><td>Data exposure</td><td>Close audit findings before public launch</td></tr>
+</table>
+
+<h2 id="s14">14. Open questions for the client</h2>
+<ol>
+  <li>How many students, parents and branches are active today? (sets capacity and cost)</li>
+  <li>Is hosting outside Uzbekistan acceptable, or must data live on a local server?</li>
+  <li>Which payment providers should parents use, and who is the merchant of record?</li>
+  <li>Will Premium Video and AI Premium be sold in the app (store billing) or through the center?</li>
+  <li>Is Instagram follow a requirement or a recommendation? Should it ever block access?</li>
+  <li>Teacher interface: web only at first, or is a teacher mobile app required in R2?</li>
+  <li>Who owns content creation for the Homework Bank and speaking questions, and by when?</li>
+  <li>Is Speaking Partner with random matching still wanted after the safety conditions in Section 5?</li>
+  <li>Budget range and target launch date for R1, to choose between solo work at 2 h/day and a larger team.</li>
+</ol>
+</main>
+</div>
+</body>
+</html>

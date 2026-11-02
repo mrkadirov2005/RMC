@@ -247,3 +247,11 @@ Verified after each commit and again at the end: `tsc --noEmit` clean, jest at e
 2. **Translation DTO validation partially bypassed by type coercion.** `RMC-044`'s new `@IsString()` constraint on translation fields is undermined by `validateBody`'s `enableImplicitConversion: true`: class-transformer coerces a scalar non-string (e.g. a number or boolean) to its string form before `@IsString()` runs, so `{ english: 12345 }` is silently accepted as `"12345"`. Only non-coercible shapes (arrays, objects) are actually rejected. The array-size cap (`@ArrayMaxSize(2000)`) is unaffected and works correctly.
 
 Neither bug was in scope to fix under this ticket batch; both are documented here and pinned by a test (characterizing current behavior) so they don't silently worsen, and so they're visible for a future ticket.
+
+## D.2 Remaining fixes (2026-10-31, MOB-010..012)
+
+* The two bugs above are fixed: payment-access login reads the repository's camelCase fields, and translation
+  fields keep the value as sent, so a number is rejected with 400 instead of becoming a string.
+* `docker-compose.yml` no longer holds the database password or `JWT_SECRET`; both come from `.env` (see
+  `.env.example`) and compose refuses to start without them.
+* CORS allows only the web panel (`https://temurbek.e-tizim.uz`) unless `CORS_ALLOWED_ORIGINS` says otherwise.

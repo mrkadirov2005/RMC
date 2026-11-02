@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEMURBEK SCHOOL LC – Clickable Prototype</title>
+<style>
+  :root{--p:hsl(215 70% 42%);--pd:hsl(215 70% 32%);--pl:hsl(215 70% 95%);--bg:#f4f7fb;--fg:#17202e;--mut:#6a778b;--line:#e2e8f1;--ok:#12805c;--warn:#c27a0e;--bad:#c0392b}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#dfe6f0;color:var(--fg)}
+  .stage{display:flex;gap:32px;justify-content:center;align-items:flex-start;padding:24px;min-height:100vh;flex-wrap:wrap}
+  .side{width:290px;background:#fff;border-radius:14px;padding:18px;font-size:13px;line-height:1.5;box-shadow:0 2px 10px #0001}
+  .side h1{font-size:17px;margin:0 0 2px;color:var(--p)}
+  .side h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:16px 0 6px}
+  .seg{display:flex;background:var(--pl);border-radius:10px;padding:3px}
+  .seg button{flex:1;border:0;background:none;padding:7px;border-radius:8px;font-weight:600;color:var(--p);cursor:pointer}
+  .seg button.on{background:var(--p);color:#fff}
+  .jump{display:flex;flex-wrap:wrap;gap:5px}
+  .jump button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;cursor:pointer}
+  .jump button:hover{border-color:var(--p);color:var(--p)}
+  .phone{width:390px;height:800px;background:#000;border-radius:44px;padding:11px;box-shadow:0 16px 40px #0003;position:relative;flex:none}
+  .screen{width:100%;height:100%;background:var(--bg);border-radius:34px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:34px;display:flex;justify-content:space-between;align-items:center;padding:6px 22px 0;font-size:13px;font-weight:600;background:var(--bg)}
+  .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:100px;height:24px;background:#000;border-radius:14px;z-index:5}
+  #app{flex:1;overflow-y:auto;padding:0 16px 20px}
+  #app::-webkit-scrollbar{display:none}
+  #nav{display:flex;background:#fff;border-top:1px solid var(--line);padding:6px 4px 14px}
+  #nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--mut);cursor:pointer;padding:4px 0}
+  #nav button .ic{font-size:20px;filter:grayscale(1);opacity:.7}
+  #nav button.on{color:var(--p);font-weight:700}#nav button.on .ic{filter:none;opacity:1}
+  .top{display:flex;align-items:center;gap:10px;padding:8px 0 12px}
+  .back{border:0;background:#fff;width:34px;height:34px;border-radius:50%;box-shadow:0 1px 4px #0002;cursor:pointer;font-size:16px}
+  .ttl{font-size:19px;font-weight:700;flex:1}
+  .av{width:42px;height:42px;border-radius:50%;background:var(--p);color:#fff;display:grid;place-items:center;font-weight:700}
+  .pill{background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px #0001}
+  .card.blue{background:linear-gradient(135deg,var(--p),var(--pd));color:#fff}
+  .card.click{cursor:pointer}.card.click:active{transform:scale(.99)}
+  .h{font-size:15px;font-weight:700;margin:16px 0 8px;display:flex;justify-content:space-between;align-items:center}
+  .h small{font-weight:500;color:var(--p);font-size:12px;cursor:pointer}
+  .row{display:flex;align-items:center;gap:10px}
+  .grow{flex:1;min-width:0}
+  .mut{color:var(--mut);font-size:12.5px}
+  .b{font-weight:700}
+  .ico{width:40px;height:40px;border-radius:12px;background:var(--pl);display:grid;place-items:center;font-size:20px;flex:none}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--pl);color:var(--p)}
+  .tag.ok{background:#dff3ea;color:var(--ok)}.tag.warn{background:#fdeed8;color:var(--warn)}.tag.bad{background:#fbe3e1;color:var(--bad)}.tag.prem{background:#2b2146;color:#ffd770}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:12px;background:var(--p);color:#fff;font-weight:700;font-size:14.5px;cursor:pointer;text-align:center}
+  .btn.sec{background:var(--pl);color:var(--p)}.btn.red{background:var(--bad)}.btn:disabled{opacity:.45;cursor:default}
+  .btn.sm{display:inline-block;width:auto;padding:7px 14px;font-size:13px}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 13px;font-size:13px;white-space:nowrap;cursor:pointer}
+  .chip.on{background:var(--p);color:#fff;border-color:var(--p)}
+  .bar{height:8px;background:#e6ecf5;border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--p);border-radius:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tile{background:#fff;border-radius:16px;padding:14px;cursor:pointer;box-shadow:0 1px 3px #0001}
+  .tile .ico{margin-bottom:8px}
+  .opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:14.5px;cursor:pointer}
+  .opt.sel{border-color:var(--p);background:var(--pl)}.opt.right{border-color:var(--ok);background:#e6f6ef}.opt.wrong{border-color:var(--bad);background:#fdeceb}
+  .bubble{max-width:78%;padding:9px 12px;border-radius:14px;margin:5px 0;font-size:14px;line-height:1.4}
+  .bubble.me{background:var(--p);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+  .bubble.you{background:#fff;border-bottom-left-radius:4px;box-shadow:0 1px 2px #0001}
+  .bubble small{display:block;font-size:10.5px;opacity:.7;margin-bottom:1px}
+  .inp{display:flex;gap:8px;margin-top:8px}
+  .inp input,.fld{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;background:#fff;width:100%}
+  .fld{display:block;margin-bottom:10px;font-family:inherit}
+  .stories{display:flex;gap:12px;overflow-x:auto;padding:2px 0 8px}
+  .story{text-align:center;font-size:11px;flex:none;cursor:pointer}
+  .story div{width:58px;height:58px;border-radius:50%;border:3px solid var(--p);display:grid;place-items:center;font-size:24px;background:#fff;margin-bottom:3px}
+  .toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#17202e;color:#fff;padding:9px 16px;border-radius:99px;font-size:13px;z-index:9;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+  .sheet{position:absolute;inset:0;background:#0006;z-index:8;display:flex;align-items:flex-end}
+  .sheet>div{background:#fff;width:100%;border-radius:24px 24px 0 0;padding:18px 16px 30px}
+  .ring{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:conic-gradient(var(--p) calc(var(--v)*1%),#e6ecf5 0)}
+  .ring span{background:#fff;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-size:14px}
+  .bars{display:flex;align-items:flex-end;gap:10px;height:120px;padding-top:6px}
+  .bars div{flex:1;background:var(--p);border-radius:6px 6px 0 0;position:relative;min-height:4px}
+  .bars div span{position:absolute;top:-16px;left:0;right:0;text-align:center;font-size:11px;font-weight:600}
+  .bars div em{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--mut);font-style:normal}
+  .mic{width:72px;height:72px;border-radius:50%;border:0;background:var(--p);color:#fff;font-size:30px;cursor:pointer;margin:0 auto;display:block}
+  .mic.rec{background:var(--bad);animation:pulse 1s infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 12px #c0392b30}}
+  .switch{width:44px;height:26px;border-radius:99px;background:#cfd8e6;position:relative;cursor:pointer;flex:none;transition:.2s}
+  .switch i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+  .switch.on{background:var(--p)}.switch.on i{left:21px}
+  .slogan{font-size:11px;letter-spacing:.14em;font-weight:700;color:var(--p)}
+  .logo{width:64px;height:64px;border-radius:18px;background:var(--p);color:#fff;display:grid;place-items:center;font-weight:800;font-size:22px}
+  .center{text-align:center}
+  .qr{width:96px;height:96px;background:repeating-conic-gradient(#17202e 0 25%,#fff 0 50%) 0 0/16px 16px;border:6px solid #fff;border-radius:6px}
+  @media(max-width:760px){.side{width:100%}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="side">
+    <h1>TEMURBEK SCHOOL LC</h1>
+    <div class="mut">Clickable prototype of the Student and Parent app. Everything on the phone is interactive; data is fake.</div>
+    <h3>Role</h3>
+    <div class="seg"><button id="rS" class="on" onclick="setRole('student')">Student</button><button id="rP" onclick="setRole('parent')">Parent</button></div>
+    <h3>Jump to a screen</h3>
+    <div class="jump" id="jump"></div>
+    <h3>Try this</h3>
+    <div class="mut">
+      1. Student: Home → pending homework → answer the quiz.<br>
+      2. Practice → AI Speaking → tap the mic.<br>
+      3. Profile → Wallet → redeem a reward.<br>
+      4. Home → Monthly speaking → record and submit.<br>
+      5. Parent: switch role, change child, open Payments.
+    </div>
+    <h3>Design notes</h3>
+    <div class="mut">Primary blue from the RMC web theme (hsl 215 70% 42%). Bottom navigation follows the brief: Student Home | Learn | Practice | Community | Profile; Parent Home | My Children | Progress | Payments | More. Press Restart to see the first-run onboarding.</div>
+    <div style="margin-top:12px"><button class="btn sec sm" onclick="restart()">Restart</button></div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="status"><span>9:41</span><span>5G ▮▮▮</span></div>
+      <div id="app"></div>
+      <div id="nav"></div>
+      <div class="toast" id="toast"></div>
+      <div id="sheetHost"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = {
+  role:'student', tab:'home', stack:[], learnTab:'hw', commTab:'chat', lbFilter:'Group', child:0,
+  coins:1240, redeemed:{}, streak:12, liked:{}, msgs:[
+    ['Aziza','Teacher, did we finish unit 7?',0],['Mr. Temur','Yes. Homework is in the app, due Friday.',1],['Bobur','Thanks! Where is the vocab set?',0]
+  ],
+  quiz:{i:0,score:0,sel:null,done:false}, flash:{i:0,flip:false}, ai:{used:57,msgs:[['ai','Hi Aziza! Let us practise. What did you do last weekend?']],rec:false},
+  speak:{stage:0,t:0,consent:false}, exam:{t:1200,i:0,ans:{},timer:null}, battle:{r:0,me:0,opp:0,sel:null,done:false},
+  partner:{stage:0,t:300}, hwSub:{}, survey:{r:{}}, onboarded:false, lang:'English', push:{hw:true,pay:true,grade:true,news:false},
+  help:{type:null,sent:false}, payPaid:false
+};
+const CHILDREN=[{n:'Aziza Karimova',g:'B1 Pre-IELTS',t:'Mr. Temur',br:'Chilonzor',att:94,hw:82,coins:1240,avg:86,due:480000},
+                {n:'Jasur Karimov',g:'A2 Elementary',t:'Ms. Dilnoza',br:'Chilonzor',att:88,hw:64,coins:610,avg:74,due:0}];
+const fmt = n => n.toLocaleString('en-US').replace(/,/g,' ');
+
+/* ---------- helpers ---------- */
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800)}
+function hdr(title,back){return `<div class="top">${back?`<button class="back" onclick="back()">←</button>`:''}<div class="ttl">${title}</div></div>`}
+function sw(k,obj){return `<div class="switch ${obj[k]?'on':''}" onclick="${obj===S.push?`S.push.${k}=!S.push.${k}`:''};render()"><i></i></div>`}
+function sheet(html){$('sheetHost').innerHTML=`<div class="sheet" onclick="if(event.target===this)closeSheet()"><div>${html}</div></div>`}
+function closeSheet(){$('sheetHost').innerHTML=''}
+function mm(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function stopTimers(){clearInterval(S.exam.timer);S.exam.timer=null;clearInterval(S._t);S._t=null}
+function listRow(ic,title,sub,go,right){go=String(go).replace(/"/g,'&quot;');return `<div class="card click row" onclick="${go}"><div class="ico">${ic}</div><div class="grow"><div class="b">${title}</div><div class="mut">${sub||''}</div></div>${right||'<span class="mut">›</span>'}</div>`}
+
+/* ---------- navigation ---------- */
+const TABS={student:[['home','🏠','Home'],['learn','📚','Learn'],['practice','🎯','Practice'],['community','💬','Community'],['profile','👤','Profile']],
+            parent:[['p.home','🏠','Home'],['p.children','👨‍👩‍👧','My Children'],['p.progress','📈','Progress'],['p.payments','💳','Payments'],['p.more','⋯','More']]};
+function setRole(r){S.role=r;S.tab=TABS[r][0][0];S.stack=[];stopTimers();$('rS').classList.toggle('on',r==='student');$('rP').classList.toggle('on',r==='parent');buildJump();render()}
+function tab(t){S.tab=t;S.stack=[];stopTimers();render()}
+function go(s){S.stack.push(s);if(s==='exam')S.exam={t:1200,i:0,ans:{},timer:null,started:false};render()}
+function back(){S.stack.pop();stopTimers();render()}
+function cur(){return S.stack.length?S.stack[S.stack.length-1]:S.tab}
+function restart(){stopTimers();location.reload()}
+
+/* ---------- screens ---------- */
+const V={};
+
+V.onboarding=()=>`<div class="center" style="padding-top:30px"><div class="logo" style="margin:0 auto 12px">TS</div><div class="b" style="font-size:20px">TEMURBEK SCHOOL LC</div><div class="slogan">QAT'IYAT. MEHNAT. NATIJA.</div></div>
+<div class="card" style="margin-top:24px"><div class="b">Stay in the loop</div><div class="mut" style="margin-bottom:12px">Follow our channels for news, results and events. This step is optional.</div>
+<div class="row" style="margin-bottom:8px"><div class="ico">✈️</div><div class="grow"><div class="b">Telegram channel</div><div class="mut">${S.tg?'Verified: you are a member':'Not verified yet'}</div></div><button class="btn sm sec" onclick="S.tg=true;toast('Telegram membership verified');render()">${S.tg?'Done':'Open'}</button></div>
+<div class="row"><div class="ico">📷</div><div class="grow"><div class="b">Instagram</div><div class="mut">${S.ig?'Opened (cannot be verified)':'Not opened yet'}</div></div><button class="btn sm sec" onclick="S.ig=true;toast('Instagram opened');render()">${S.ig?'Opened':'Open'}</button></div></div>
+<div class="card"><div class="b">Video recording consent</div><div class="mut" style="margin:4px 0 8px">Monthly speaking videos are stored for 12 months and seen by your teacher and parent.</div>
+<label class="row"><input type="checkbox" ${S.speak.consent?'checked':''} onchange="S.speak.consent=this.checked"> <span class="mut">I (or my parent) agree</span></label></div>
+<button class="btn" onclick="S.onboarded=true;S.stack=[];render()">Continue</button>
+<button class="btn sec" style="margin-top:8px" onclick="S.onboarded=true;S.stack=[];render()">Skip for now</button>`;
+
+V.home=()=>`<div class="top"><div class="av">AK</div><div class="grow"><div class="b" style="font-size:17px">Salom, Aziza</div><div class="mut">B1 Pre-IELTS · Chilonzor</div></div><div class="pill" onclick="go('wallet')">🪙 ${fmt(S.coins)}</div></div>
+<div class="row" style="margin-bottom:12px"><span class="pill">🔥 ${S.streak}-day streak</span><span class="pill" onclick="go('notifs')">🔔 3</span></div>
+<div class="card click" style="border:1.5px solid var(--p)" onclick="go('survey')"><div class="row"><div class="ico">📝</div><div class="grow"><div class="b">Quarterly survey</div><div class="mut">Rate your teachers · 2 min · until 15 Nov</div></div><span class="tag warn">Open</span></div></div>
+<div class="card blue"><div class="mut" style="color:#cfe0ff">Next lesson · Today</div><div class="b" style="font-size:20px;margin:2px 0">IELTS Reading · 14:00</div><div style="opacity:.9">Room 3 · Mr. Temur · Group B1-2</div></div>
+<div class="h">Pending homework <small onclick="tab('learn')">See all</small></div>
+${listRow('🔤','Unit 7 Vocabulary','Due Fri 31 Oct · 10 words',"go('hw')",'<span class="tag warn">Due soon</span>')}
+${listRow('✍️','Writing Task 1: graph','Due Mon 3 Nov',"go('hw2')",'<span class="tag">New</span>')}
+<div class="h">Monthly speaking</div>
+${listRow('🎤','October assessment','Record a 90 second answer · 1 day left',"go('speaking')",'<span class="tag bad">Due</span>')}
+<div class="h">Upcoming exam</div>
+${listRow('📄','IELTS Mock #3','In 5 days · 5 Nov, 10:00',"go('exam')")}
+<div class="h">Announcements</div>
+<div class="card"><div class="b">Winter schedule from 1 December</div><div class="mut">Check the calendar for changes in your group.</div></div>
+<div class="h">Continue learning</div>
+<div class="card click" onclick="tab('learn')"><div class="b">Grammar: Conditionals</div><div class="mut" style="margin:3px 0 8px">Video 4 of 9</div><div class="bar"><i style="width:44%"></i></div></div>`;
+
+V.notifs=()=>hdr('Notifications',1)+listRow('✅','Homework graded','Unit 6 Vocabulary: 9/10 · +10 coins','')+listRow('📅','Lesson moved','Friday lesson is now 16:00','')+listRow('📢','School news','Winter olympiad registration is open','');
+
+V.learn=()=>{const t=S.learnTab;
+return hdr('Learn')+`<div class="chips">${[['hw','Homework'],['lib','Library'],['vid','Videos'],['ex','Exams']].map(([k,l])=>`<div class="chip ${t===k?'on':''}" onclick="S.learnTab='${k}';render()">${l}</div>`).join('')}</div>`+
+(t==='hw'?
+  listRow('🔤','Unit 7 Vocabulary','Vocabulary · due Fri',"go('hw')",'<span class="tag warn">Due soon</span>')+
+  listRow('✍️','Writing Task 1: graph','Writing · due Mon',"go('hw2')",'<span class="tag">New</span>')+
+  listRow('🎧','Listening: Section 2','Listening · due Wed',"go('hw')",'<span class="tag ok">Done 8/10</span>')+
+  listRow('📖','Reading: Passage 3','Reading · graded',"go('hw')",'<span class="tag ok">Graded 7/9</span>')+
+  `<div class="card"><div class="b">Mastery unlock</div><div class="mut" style="margin:3px 0 8px">Score 70% on Unit 7 to unlock Unit 8.</div><div class="bar"><i style="width:60%"></i></div></div>`
+:t==='lib'?
+  `<div class="inp" style="margin:0 0 10px"><input placeholder="Search books, audio, PDFs"></div>`+
+  listRow('📘','Cambridge IELTS 17','E-book · bookmarked','toast("Opening book")')+listRow('🎧','Graded Readers B1','Audio · 12 tracks','toast("Opening audio")')+listRow('📄','Grammar cheat sheets','PDF · download for offline','toast("Downloaded for offline")','<span class="tag">⬇</span>')
+:t==='vid'?
+  listRow('▶️','Grammar: Conditionals','Included in your course · 9 lessons','toast("Playing video")')+listRow('▶️','Pronunciation basics','Included · 6 lessons','toast("Playing video")')+
+  `<div class="card" style="background:#2b2146;color:#fff"><span class="tag prem">PREMIUM</span><div class="b" style="margin-top:6px">IELTS Writing Masterclass</div><div class="mut" style="color:#c9bde6;margin-bottom:8px">Sold separately · 24 lessons</div><button class="btn sm" style="background:#ffd770;color:#2b2146" onclick="toast('Opens store purchase')">View course</button></div>`
+:
+  listRow('📄','IELTS Mock #3','5 Nov · timer, autosave',"go('exam')",'<span class="tag warn">Upcoming</span>')+listRow('📊','Level Test: B1 → B2','Attempts left: 1',"go('exam')")+listRow('✅','Exam history','Mock #2: 6.5 · Level test: 78%','toast("Showing history")')+
+  `<div class="card"><div class="b">Preparation checklist</div><div class="mut">✔ Bring ID &nbsp; ✔ Charge phone &nbsp; ○ Review Unit 5–7</div></div>`);};
+
+V.hw=()=>{const q=S.quiz,Q=[['Meaning of "reliable"?',['easy to carry','can be trusted','very quick'],1],['Choose the right word: She is very ___ at maths.',['good','well','best'],0],['Opposite of "increase"?',['rise','grow','decrease'],2]];
+if(q.done)return hdr('Unit 7 Vocabulary',1)+`<div class="card center"><div style="font-size:44px">🎉</div><div class="b" style="font-size:20px">${q.score}/${Q.length} correct</div><div class="mut" style="margin:6px 0 12px">Submitted. Your teacher will confirm; coins follow the CRM rules.</div><span class="tag ok">+${q.score*3} coins pending</span></div><button class="btn" onclick="S.quiz={i:0,score:0,sel:null,done:false};back()">Back to homework</button>`;
+const c=Q[q.i];return hdr('Unit 7 Vocabulary',1)+`<div class="mut" style="margin-bottom:6px">Question ${q.i+1} of ${Q.length}</div><div class="bar" style="margin-bottom:14px"><i style="width:${q.i/Q.length*100}%"></i></div><div class="card"><div class="b" style="font-size:16px">${c[0]}</div></div>`+
+c[1].map((o,i)=>`<button class="opt ${q.sel===null?'':(i===c[2]?'right':(i===q.sel?'wrong':''))}" ${q.sel!==null?'disabled':''} onclick="S.quiz.sel=${i};if(${i}===${c[2]})S.quiz.score++;render()">${o}</button>`).join('')+
+(q.sel!==null?`<button class="btn" onclick="S.quiz.sel=null;S.quiz.i++;if(S.quiz.i>=${Q.length})S.quiz.done=true;render()">${q.i+1<Q.length?'Next':'Finish'}</button>`:'');};
+
+V.hw2=()=>hdr('Writing Task 1',1)+`<div class="card"><div class="b">The graph shows internet use by age group.</div><div class="mut">Write at least 150 words. Teacher feedback arrives in 48 h.</div></div><textarea class="fld" rows="7" placeholder="Start writing..." oninput="S.hwSub.w=this.value;$('wc').textContent=this.value.trim().split(/\\s+/).filter(Boolean).length">${S.hwSub.w||''}</textarea><div class="mut" style="margin-bottom:10px"><span id="wc">0</span> / 150 words · draft autosaved</div><button class="btn" onclick="toast('Submitted to teacher');back()">Submit</button>`;
+
+V.exam=()=>{const E=S.exam,Q=[['Paragraph B mainly argues that…',['cities grow faster than villages','remote work changes housing demand','public transport is cheaper']],['The writer’s attitude to automation is…',['hostile','cautious','indifferent']],['TRUE / FALSE / NOT GIVEN: Paragraph C mentions salaries.',['TRUE','FALSE','NOT GIVEN']]];
+if(!E.started)return hdr('IELTS Mock #3',1)+`<div class="card"><div class="b">Rules</div><div class="mut" style="margin-top:4px">• 20 minutes (demo) · 3 questions<br>• Answers autosave; if your internet drops you can resume<br>• 1 attempt · tab switching is logged<br>• Reading is auto-scored, Writing is reviewed by a teacher</div></div><button class="btn" onclick="startExam()">Start exam</button>`;
+if(E.done)return hdr('Exam submitted',1)+`<div class="card center"><div style="font-size:44px">📨</div><div class="b" style="font-size:18px">Answers saved</div><div class="mut">Reading score: ${Object.keys(E.ans).length}/${Q.length} answered. Results appear after review.</div></div><button class="btn" onclick="S.stack=[];tab('learn')">Done</button>`;
+const c=Q[E.i];return hdr('IELTS Mock #3',0)+`<div class="row" style="margin-bottom:10px"><span class="pill">⏱ <span id="tm">${mm(E.t)}</span></span><span class="grow"></span><span class="tag ok">Autosaved</span></div><div class="mut">Question ${E.i+1} of ${Q.length}</div><div class="card"><div class="b">${c[0]}</div></div>`+
+c[1].map((o,i)=>`<button class="opt ${E.ans[E.i]===i?'sel':''}" onclick="S.exam.ans[S.exam.i]=${i};render()">${o}</button>`).join('')+
+`<div class="grid2"><button class="btn sec" ${E.i?'':'disabled'} onclick="S.exam.i--;render()">Previous</button>${E.i<Q.length-1?`<button class="btn" onclick="S.exam.i++;render()">Next</button>`:`<button class="btn red" onclick="S.exam.done=true;stopTimers();render()">Submit</button>`}</div>`;};
+function startExam(){S.exam.started=true;S.exam.timer=setInterval(()=>{S.exam.t--;const e=$('tm');if(e)e.textContent=mm(S.exam.t);if(S.exam.t<=0){S.exam.done=true;stopTimers();render()}},1000);render()}
+
+V.speaking=()=>{const s=S.speak,st=s.stage;
+let body='';
+if(st===0)body=`<div class="card"><div class="mut">Question for level B1</div><div class="b" style="font-size:17px;margin-top:4px">Describe a person who has influenced you. Say who they are, what they did, and why they matter.</div></div>
+<div class="card"><div class="b">Scoring (100 points)</div><div class="mut">Fluency 25 · Vocabulary 25 · Grammar 25 · Pronunciation 25</div></div>
+<label class="row" style="margin-bottom:10px"><input type="checkbox" ${s.consent?'checked':''} onchange="S.speak.consent=this.checked;render()"><span class="mut">I consent to video recording and storage</span></label>
+<button class="btn" ${s.consent?'':'disabled'} onclick="S.speak.stage=1;S.speak.t=0;render()">Open camera</button>`;
+if(st===1)body=`<div class="card center" style="background:#17202e;color:#fff;height:260px;display:grid;place-items:center"><div><div style="font-size:54px">📹</div><div id="rt" class="b" style="font-size:22px">${mm(s.t)}</div><div style="opacity:.7">${S._t?'Recording… max 01:30':'Camera preview'}</div></div></div>
+<button class="mic ${S._t?'rec':''}" onclick="toggleRec()">${S._t?'■':'●'}</button>`;
+if(st===2)body=`<div class="card center"><div class="b">Uploading video…</div><div class="bar" style="margin:12px 0"><i id="up" style="width:${s.up||0}%"></i></div><div class="mut">Upload resumes automatically if the connection drops.</div></div>`;
+if(st===3)body=`<div class="card center"><div style="font-size:44px">✅</div><div class="b" style="font-size:18px">Submitted</div><div class="mut" style="margin:6px 0 12px">AI draft feedback is ready. Your teacher gives the official score.</div><div class="row" style="justify-content:center;gap:6px"><span class="tag">Fluency ~19</span><span class="tag">Vocab ~20</span><span class="tag">Grammar ~18</span><span class="tag">Pron ~21</span></div><div class="mut" style="margin-top:8px">Draft only. Not an official result.</div></div><button class="btn" onclick="S.speak.stage=0;S.stack=[];render()">Done</button>`;
+return hdr('Monthly speaking',st!==1&&st!==2)+body;};
+function toggleRec(){if(S._t){clearInterval(S._t);S._t=null;S.speak.stage=2;S.speak.up=0;render();S._t=setInterval(()=>{S.speak.up+=12;const e=$('up');if(e)e.style.width=Math.min(100,S.speak.up)+'%';if(S.speak.up>=100){clearInterval(S._t);S._t=null;S.speak.stage=3;render()}},300)}
+else{S._t=setInterval(()=>{S.speak.t++;const e=$('rt');if(e)e.textContent=mm(S.speak.t);if(S.speak.t>=90)toggleRec()},1000);render()}}
+
+V.practice=()=>hdr('Practice')+`<div class="card click" onclick="go('ai')"><div class="row"><div class="ico">🤖</div><div class="grow"><div class="b">AI Speaking</div><div class="mut">Free: ${mm(180-S.ai.used)} left today</div></div><span class="tag prem">PREMIUM 60m</span></div></div>
+<div class="grid2">
+<div class="tile" onclick="go('flash')"><div class="ico">🗂</div><div class="b">Flashcards</div><div class="mut">Spaced repetition</div></div>
+<div class="tile" onclick="toast('Grammar Coach opens')"><div class="ico">🧩</div><div class="b">Grammar Coach</div><div class="mut">Explain and drill</div></div>
+<div class="tile" onclick="go('battle')"><div class="ico">⚔️</div><div class="b">Battle Arena</div><div class="mut">1 vs 1 vocabulary</div></div>
+<div class="tile" onclick="go('partner')"><div class="ico">🎙</div><div class="b">Speaking Partner</div><div class="mut">5-minute audio chat</div></div>
+<div class="tile" onclick="toast('Pronunciation Coach opens')"><div class="ico">🔊</div><div class="b">Pronunciation</div><div class="mut">Say it, get feedback</div></div>
+<div class="tile" onclick="toast('Writing feedback opens')"><div class="ico">📝</div><div class="b">Writing Feedback</div><div class="mut">AI draft review</div></div></div>
+<div class="h">Daily challenge</div><div class="card"><div class="row"><div class="ico">🔥</div><div class="grow"><div class="b">Learn 10 words</div><div class="mut">6 / 10 · +5 coins</div><div class="bar" style="margin-top:6px"><i style="width:60%"></i></div></div></div></div>`;
+
+V.ai=()=>hdr('AI Speaking',1)+`<div class="card row"><div class="grow"><div class="mut">Daily limit resets at 00:00 Tashkent time</div><div class="bar" style="margin-top:6px"><i style="width:${S.ai.used/180*100}%"></i></div></div><span class="b">${mm(180-S.ai.used)}</span></div>
+<div>${S.ai.msgs.map(m=>`<div class="bubble ${m[0]==='ai'?'you':'me'}"><small>${m[0]==='ai'?'AI coach':'You'}</small>${m[1]}</div>`).join('')}</div>
+<button class="mic" style="margin-top:14px;width:60px;height:60px;font-size:24px" onclick="aiTalk()">🎤</button><div class="mut center" style="margin-top:6px">Tap to speak (demo adds a sample answer). Practice feedback, not an official IELTS or CEFR score.</div>
+<div class="card" style="margin-top:12px;background:#2b2146;color:#fff"><b>Want 60 minutes a day?</b><div class="mut" style="color:#c9bde6;margin:3px 0 8px">Premium subscription, separate from video courses.</div><button class="btn sm" style="background:#ffd770;color:#2b2146" onclick="toast('Opens store subscription')">See Premium</button></div>`;
+function aiTalk(){if(S.ai.used>=180){toast('Daily free limit reached');return}
+const a=['I went to the park with my friends and we played football.','Last weekend I visited my grandmother in Samarkand.'],r=['Nice! Try adding a detail: how did you feel? Also: "went to the park" is correct.','Great sentence. Tip: say "I visited" with a clear /t/ at the end.'];const k=S.ai.msgs.length%2;
+S.ai.msgs.push(['me',a[k]]);S.ai.msgs.push(['ai',r[k]]);S.ai.used+=25;render()}
+
+V.flash=()=>{const W=[['reliable','can be trusted'],['increase','to become bigger'],['achieve','to succeed in reaching a goal']],f=S.flash,w=W[f.i%W.length];
+return hdr('Flashcards',1)+`<div class="card center click" style="height:200px;display:grid;place-items:center" onclick="S.flash.flip=!S.flash.flip;render()"><div><div class="mut">${f.flip?'Meaning':'Word'} · tap to flip</div><div class="b" style="font-size:26px;margin-top:6px">${f.flip?w[1]:w[0]}</div></div></div>
+<div class="grid2"><button class="btn sec" onclick="S.flash.i++;S.flash.flip=false;toast('Review again in 1 day');render()">Hard</button><button class="btn" onclick="S.flash.i++;S.flash.flip=false;toast('Review again in 4 days');render()">Easy</button></div>`;};
+
+V.battle=()=>{const b=S.battle,Q=[['"abundant" means…',['rare','plentiful','small'],1],['Past of "choose"?',['chose','choosed','chosen'],0],['Synonym of "begin"?',['stop','start','wait'],1]];
+if(b.done)return hdr('Battle result',1)+`<div class="card center"><div style="font-size:44px">${b.me>=b.opp?'🏆':'💪'}</div><div class="b" style="font-size:20px">${b.me>=b.opp?'You won':'Good fight'}</div><div class="mut">You ${b.me} – ${b.opp} Bobur</div><div class="tag ok" style="margin-top:8px">${b.me>=b.opp?'+20':'+5'} coins</div></div><button class="btn" onclick="S.battle={r:0,me:0,opp:0,sel:null,done:false};back()">Back</button>`;
+const c=Q[b.r];return hdr('1 vs 1 · Vocabulary',1)+`<div class="card row"><div class="grow center"><div class="b">You</div><div style="font-size:24px">${b.me}</div></div><div class="mut">Round ${b.r+1}/3</div><div class="grow center"><div class="b">Bobur</div><div style="font-size:24px">${b.opp}</div></div></div><div class="card"><div class="b">${c[0]}</div></div>`+
+c[1].map((o,i)=>`<button class="opt ${b.sel===null?'':(i===c[2]?'right':(i===b.sel?'wrong':''))}" ${b.sel!==null?'disabled':''} onclick="battlePick(${i},${c[2]})">${o}</button>`).join('');};
+function battlePick(i,r){const b=S.battle;b.sel=i;if(i===r)b.me++;if(Math.random()<.55)b.opp++;render();setTimeout(()=>{b.sel=null;b.r++;if(b.r>=3)b.done=true;render()},900)}
+
+V.partner=()=>{const p=S.partner;
+if(p.stage===0)return hdr('Speaking Partner',1)+`<div class="card"><div class="b">Safety first</div><div class="mut">Audio only · same level · 5 minutes · you can report or block any time.</div></div><button class="btn" onclick="findPartner()">Find a partner</button>`;
+if(p.stage===1)return hdr('Searching…',1)+`<div class="card center"><div style="font-size:44px">🔎</div><div class="b">Matching with a B1 student</div></div>`;
+return hdr('On call',0)+`<div class="card center"><div class="av" style="margin:0 auto 8px;width:64px;height:64px">DS</div><div class="b">Dilshod (B1)</div><div class="b" style="font-size:26px;margin:8px 0" id="pt">${mm(p.t)}</div></div><div class="card"><div class="mut">Topic</div><div class="b">What is your favourite season and why?</div></div><div class="grid2"><button class="btn sec" onclick="toast('Added to favourites')">★ Favourite</button><button class="btn red" onclick="toast('Reported and blocked');endPartner()">Report</button></div><button class="btn" style="margin-top:10px" onclick="endPartner()">End call</button>`;};
+function findPartner(){S.partner.stage=1;render();setTimeout(()=>{if(cur()!=='partner')return;S.partner.stage=2;S.partner.t=300;render();S._t=setInterval(()=>{S.partner.t--;const e=$('pt');if(e)e.textContent=mm(S.partner.t);if(S.partner.t<=0)endPartner()},1000)},1500)}
+function endPartner(){clearInterval(S._t);S._t=null;S.partner.stage=0;S.stack=[];render()}
+
+V.community=()=>{const t=S.commTab;return hdr('Community')+`<div class="chips">${[['chat','Group chat'],['news','News'],['lb','Leaderboard']].map(([k,l])=>`<div class="chip ${t===k?'on':''}" onclick="S.commTab='${k}';render()">${l}</div>`).join('')}</div>`+
+(t==='chat'?`<div class="card" style="padding:10px"><div class="mut">📌 Pinned: Friday exam moved to 10:00</div></div>${S.msgs.map(m=>`<div class="bubble ${m[2]===0&&m[0]==='Aziza'?'me':'you'}"><small>${m[0]}</small>${m[1]}</div>`).join('')}<div class="inp"><input id="mi" placeholder="Message" onkeydown="if(event.key==='Enter')sendMsg()"><button class="btn sm" onclick="sendMsg()">Send</button></div><div class="mut" style="margin-top:6px">Managers can moderate group chats. Long-press a message to report.</div>`
+:t==='news'?`<div class="stories">${[['🏆','Results'],['🎉','Event'],['📣','News'],['👩‍🏫','Teachers']].map(s=>`<div class="story" onclick="toast('Story opens (24h)')"><div>${s[0]}</div>${s[1]}</div>`).join('')}</div>
+${[['Winter olympiad registration is open','Register until 20 Nov in Bookings.','n1'],['October top students','Congratulations to our group leaders!','n2']].map(n=>`<div class="card"><div class="b">${n[0]}</div><div class="mut" style="margin:3px 0 8px">${n[1]}</div><span class="pill" onclick="S.liked.${n[2]}=!S.liked.${n[2]};render()">${S.liked[n[2]]?'❤️':'🤍'} ${S.liked[n[2]]?25:24}</span> <span class="mut">· 312 views</span></div>`).join('')}`
+:`<div class="chips">${['Group','Level','Branch','Month'].map(f=>`<div class="chip ${S.lbFilter===f?'on':''}" onclick="S.lbFilter='${f}';render()">${f}</div>`).join('')}</div>
+${[['Bobur T.',1310],['Aziza K. (you)',S.coins],['Madina S.',1190],['Sardor R.',1010],['Nilufar A.',940]].sort((a,b)=>b[1]-a[1]).map((r,i)=>`<div class="card row" style="padding:10px 14px"><div class="b" style="width:24px">${i+1}</div><div class="grow b">${r[0]}</div><div>🪙 ${fmt(r[1])}</div></div>`).join('')}<div class="mut">Only names and coins are shown. Grades and payments stay private.</div>`);};
+function sendMsg(){const i=$('mi');if(!i||!i.value.trim())return;S.msgs.push(['Aziza',i.value.trim(),0]);render()}
+
+V.profile=()=>`<div class="card blue"><div class="row"><div class="av" style="background:#fff;color:var(--p);width:52px;height:52px">AK</div><div class="grow"><div class="b" style="font-size:18px">Aziza Karimova</div><div style="opacity:.85">B1 Pre-IELTS · Mr. Temur</div></div><div class="qr"></div></div><div style="margin-top:10px;opacity:.85;font-size:12px">Digital Student ID · ID 20418 · QR refreshes every minute</div></div>
+${listRow('🪙','Coins and rewards','Balance '+fmt(S.coins),"go('wallet')")}${listRow('🎞','Speaking Journey','Jan A2 → Oct B1+',"go('journey')")}${listRow('🧭','Learning path and goals','B1 → B2 · 62% complete',"go('path')")}${listRow('🔗','Official links','Telegram · Instagram · Website',"go('links')")}${listRow('🙋','Help and feedback','Ask, complain, thank, suggest',"go('help')")}${listRow('📜','Rules and policies','3 updates to accept',"go('rules')")}${listRow('⚙️','Settings','Language, notifications, security',"go('settings')")}${listRow('🎁','Invite friends','Earn 50 coins per friend',"go('invite')")}`;
+
+V.wallet=()=>{const R=[['Notebook set',300],['Cafe voucher',500],['Free mock exam',900]];
+return hdr('Coins',1)+`<div class="card blue center"><div style="opacity:.8">Balance</div><div style="font-size:34px;font-weight:800">🪙 ${fmt(S.coins)}</div></div>
+<div class="h">Rewards store</div>${R.map(r=>`<div class="card row"><div class="ico">🎁</div><div class="grow"><div class="b">${r[0]}</div><div class="mut">${S.redeemed[r[0]]?'Requested · awaiting approval':'🪙 '+r[1]}</div></div><button class="btn sm ${S.coins<r[1]||S.redeemed[r[0]]?'sec':''}" ${S.redeemed[r[0]]?'disabled':''} onclick="redeem('${r[0]}',${r[1]})">${S.redeemed[r[0]]?'Pending':'Redeem'}</button></div>`).join('')}
+<div class="h">History</div>${[['Lesson 24 Oct','+8'],['Homework Unit 6','+10'],['Absent 22 Oct','0'],['Referral: Madina','+50']].map(t=>`<div class="card row" style="padding:10px 14px"><div class="grow">${t[0]}</div><div class="b" style="color:${t[1]==='0'?'var(--mut)':'var(--ok)'}">${t[1]}</div></div>`).join('')}`;};
+function redeem(n,p){if(S.coins<p){toast('Not enough coins');return}S.coins-=p;S.redeemed[n]=1;toast('Request sent for approval');render()}
+
+V.journey=()=>hdr('Speaking Journey',1)+[['January','A2',62],['April','A2+',68],['July','B1',74],['October','B1+',79]].map(j=>`<div class="card click row" onclick="toast('Playing video with teacher feedback')"><div class="ico">▶️</div><div class="grow"><div class="b">${j[0]} · ${j[1]}</div><div class="mut">Score ${j[2]}/100</div></div><span class="mut">Compare</span></div>`).join('');
+V.path=()=>hdr('Learning path',1)+`<div class="card"><div class="b">B1 → B2</div><div class="bar" style="margin:8px 0"><i style="width:62%"></i></div><div class="mut">Unit 7 of 12 · target exam: IELTS 6.5 in March</div></div>${[['Reach 6.5 in Reading','done'],['Complete 20 speaking practices','12/20'],['Score 80+ in monthly speaking','in progress']].map(g=>`<div class="card row"><div class="grow">${g[0]}</div><span class="tag">${g[1]}</span></div>`).join('')}`;
+V.links=()=>hdr('Official links',1)+[['✈️','Official Telegram channel'],['📷','Official Instagram'],['🧑‍💼','Founder Telegram channel'],['🌐','Official website']].map(l=>listRow(l[0],l[1],'Opens outside the app','toast("Opening link")')).join('')+`<div class="mut">Links are managed by the Owner and update without an app release.</div>`;
+V.invite=()=>hdr('Invite friends',1)+`<div class="card center"><div class="mut">Your code</div><div class="b" style="font-size:26px;letter-spacing:.1em">AZIZA-4821</div><div class="mut" style="margin:8px 0">You get 50 coins when your friend’s first payment is confirmed.</div><button class="btn" onclick="toast('Link copied')">Share link</button></div>`;
+V.rules=()=>hdr('Rules and policies',1)+['Attendance and punctuality','Payment policy','Student code of conduct','Homework and assessment','Coins and rewards','Digital safety and privacy'].map((r,i)=>listRow('📄',r,i<3?'New version · tap to accept':'Accepted','toast("Marked as read and accepted")',i<3?'<span class="tag warn">Update</span>':'<span class="tag ok">✔</span>')).join('');
+V.settings=()=>hdr('Settings',1)+`<div class="card"><div class="b" style="margin-bottom:8px">Language</div><div class="chips" style="margin:0">${['Uzbek','English','Russian'].map(l=>`<div class="chip ${S.lang===l||(S.lang==='English'&&l==='Uzbek'&&false)?'on':''}" onclick="S.lang='${l}';toast('Language: ${l}');render()">${l}</div>`).join('')}</div></div>
+<div class="card"><div class="b" style="margin-bottom:8px">Notifications</div>${[['hw','Homework and deadlines'],['pay','Payments'],['grade','Grades and coins'],['news','School news']].map(n=>`<div class="row" style="margin-bottom:8px"><div class="grow">${n[1]}</div>${sw(n[0],S.push)}</div>`).join('')}</div>
+${listRow('🔒','Security','Devices, password, biometric','toast("Opens security")')}${listRow('🗑','Delete account','Required by store rules','toast("Opens deletion flow")')}`;
+
+V.help=()=>{const h=S.help;if(h.sent)return hdr('Help and feedback',1)+`<div class="card center"><div style="font-size:40px">📨</div><div class="b">Request sent</div><div class="mut" style="margin:6px 0 10px">Status</div><div class="row" style="justify-content:center"><span class="tag ok">Submitted</span> → <span class="tag">In review</span> → <span class="tag">Resolved</span></div></div><button class="btn" onclick="S.help={type:null,sent:false};back()">Done</button>`;
+if(!h.type)return hdr('Help and feedback',1)+[['🙋','Ask for help','Topic you did not understand'],['⚠️','Submit complaint','Goes to the responsible manager'],['💛','Say thank you','To a teacher or staff member'],['💡','Share suggestion','Ideas to improve the school']].map(x=>listRow(x[0],x[1],x[2],`S.help.type='${x[1]}';render()`)).join('');
+return hdr(h.type,1)+`<textarea class="fld" rows="6" placeholder="Describe in text. You can also attach audio or a photo."></textarea><div class="grid2"><button class="btn sec" onclick="toast('Audio attached')">🎤 Audio</button><button class="btn sec" onclick="toast('Photo attached')">📷 Photo</button></div><button class="btn" style="margin-top:10px" onclick="S.help.sent=true;render()">Send</button>`;};
+
+V.survey=()=>{const C=['Lesson explanation quality','Respect and fair treatment','Student support','Lesson engagement','Overall satisfaction'];
+return hdr('Teacher rating',1)+`<div class="card"><div class="b">Mr. Temur · IELTS Reading</div><div class="mut">One response per teacher per survey. Results are shown only as group summaries.</div></div>${C.map((c,i)=>`<div class="card"><div class="mut">${c}</div><div style="font-size:26px;margin-top:4px">${[1,2,3,4,5].map(n=>`<span style="cursor:pointer;opacity:${(S.survey.r[i]||0)>=n?1:.25}" onclick="S.survey.r[${i}]=${n};render()">★</span>`).join('')}</div></div>`).join('')}<button class="btn" ${Object.keys(S.survey.r).length<5?'disabled':''} onclick="toast('Thank you! Survey submitted');S.survey.r={};back()">Submit</button>`;};
+
+/* ---------- parent ---------- */
+function kid(){return CHILDREN[S.child]}
+function childBar(){return `<div class="chips">${CHILDREN.map((c,i)=>`<div class="chip ${S.child===i?'on':''}" onclick="S.child=${i};render()">${c.n.split(' ')[0]}</div>`).join('')}</div>`}
+V['p.home']=()=>{const c=kid();return `<div class="top"><div class="grow"><div class="b" style="font-size:18px">Hello, Karimov family</div><div class="mut">Parent account · 2 children</div></div><span class="pill" onclick="go('notifs')">🔔 2</span></div>${childBar()}
+${c.due?`<div class="card click" style="border:1.5px solid var(--warn)" onclick="tab('p.payments')"><div class="row"><div class="ico">💳</div><div class="grow"><div class="b">Payment due 5 Nov</div><div class="mut">${fmt(c.due)} UZS outstanding</div></div><span class="tag warn">Pay</span></div></div>`:`<div class="card"><div class="row"><div class="ico">✅</div><div class="grow"><div class="b">Payments up to date</div></div></div></div>`}
+<div class="card blue"><div class="mut" style="color:#cfe0ff">Today</div><div class="b" style="font-size:18px">${c.g} · 14:00</div><div style="opacity:.9">Attendance: <b>Present</b> · Teacher ${c.t}</div></div>
+<div class="grid2"><div class="card center"><div class="ring" style="--v:${c.att};margin:0 auto 6px"><span>${c.att}%</span></div><div class="mut">Attendance</div></div><div class="card center"><div class="ring" style="--v:${c.hw};margin:0 auto 6px"><span>${c.hw}%</span></div><div class="mut">Homework done</div></div></div>
+<div class="grid2"><div class="card"><div class="mut">Average score</div><div class="b" style="font-size:24px">${c.avg}</div></div><div class="card"><div class="mut">Coins</div><div class="b" style="font-size:24px">🪙 ${fmt(c.coins)}</div></div></div>
+<div class="h">Latest teacher feedback</div><div class="card"><div class="b">${c.t}</div><div class="mut">“Great progress in speaking. Please revise Unit 6 vocabulary at home.”</div></div>
+<div class="h">Monthly speaking</div>${listRow('🎞','October video','Score 79/100 · confirmed by teacher',"go('journey')")}`;};
+V['p.children']=()=>hdr('My Children')+CHILDREN.map((c,i)=>`<div class="card click" onclick="S.child=${i};tab('p.home')"><div class="row"><div class="av">${c.n[0]}</div><div class="grow"><div class="b">${c.n}</div><div class="mut">${c.g} · ${c.br}</div><div class="mut">Teacher ${c.t}</div></div><span class="mut">›</span></div></div>`).join('')+`<button class="btn sec" onclick="toast('Link request sent to the center for approval')">+ Link another child</button><div class="mut" style="margin-top:6px">Links are verified against center records.</div>`;
+V['p.progress']=()=>{const c=kid(),m=[['Jun',c.avg-8],['Jul',c.avg-5],['Aug',c.avg-6],['Sep',c.avg-2],['Oct',c.avg]];return hdr('Progress')+childBar()+`<div class="card"><div class="b" style="margin-bottom:22px">Monthly average · same level only</div><div class="bars" style="margin-bottom:22px">${m.map(x=>`<div style="height:${x[1]}%"><span>${x[1]}</span><em>${x[0]}</em></div>`).join('')}</div></div>
+${listRow('🎞','Speaking Journey','Jan A2 → Oct B1+',"go('journey')")}${listRow('📅','Attendance history',c.att+'% this term','toast("Showing attendance")')}${listRow('📄','Upcoming exams','IELTS Mock #3 · 5 Nov',"go('exam')")}`;};
+V['p.payments']=()=>{const c=kid();return hdr('Payments')+childBar()+`<div class="card blue"><div style="opacity:.8">Outstanding balance</div><div style="font-size:30px;font-weight:800">${S.payPaid?0:fmt(c.due)} UZS</div><div style="opacity:.85">${c.due&&!S.payPaid?'Deadline 5 Nov':'No debt'}</div></div>
+${c.due&&!S.payPaid?`<button class="btn" onclick="payOptions()">Pay now</button>`:''}<div class="h">History</div>${[['Oct tuition','480 000','Paid 3 Oct'],['Sep tuition','480 000','Paid 2 Sep'],['Registration','150 000','Paid 20 Aug']].map(p=>`<div class="card row" style="padding:10px 14px"><div class="grow"><div class="b">${p[0]}</div><div class="mut">${p[2]}</div></div><div class="b">${p[1]}</div></div>`).join('')}<div class="mut">Status mirrors the center’s official records.</div>`;};
+function payOptions(){sheet(`<div class="b" style="font-size:17px;margin-bottom:10px">Choose payment method</div>${['Payme','Click','Uzum Bank','Pay at the center'].map(m=>`<button class="opt" onclick="S.payPaid=true;closeSheet();toast('Opening ${m}… payment confirmed (demo)');render()">${m}</button>`).join('')}`)}
+V['p.more']=()=>hdr('More')+listRow('💬','Message teacher','Text, voice note or call request',"go('pchat')")+listRow('📝','Parent survey','Satisfaction feedback · 3 min',"go('survey')")+listRow('🎥','Video consent','Manage recording permission','toast("Consent settings")')+listRow('🔗','Official links','',"go('links')")+listRow('📜','Rules and policies','',"go('rules')")+listRow('🙋','Help and feedback','',"go('help')")+listRow('⚙️','Settings','',"go('settings')");
+V.pchat=()=>hdr('Mr. Temur',1)+`<div class="bubble you"><small>Mr. Temur</small>Aziza is doing well. Please check the new homework.</div><div class="bubble me"><small>You</small>Thank you! Can we have a short call this week?</div><div class="grid2" style="margin-top:12px"><button class="btn sec" onclick="toast('Voice note recording…')">🎤 Voice</button><button class="btn" onclick="toast('Call request sent. Starts only if the teacher accepts')">📞 Request call</button></div>`;
+
+/* ---------- render ---------- */
+function render(){
+  const c=cur();
+  if(!S.onboarded&&S.role==='student'&&!S.stack.length){$('app').innerHTML=V.onboarding();$('nav').innerHTML='';return}
+  const f=V[c]||(()=>hdr(c,1)+'<div class="card">Screen not designed yet.</div>');
+  $('app').innerHTML=f();
+  const root=S.stack.length===0;
+  $('nav').innerHTML=TABS[S.role].map(t=>`<button class="${(S.tab===t[0]&&root)||(S.tab===t[0]&&!root)?'on':''}" onclick="tab('${t[0]}')"><span class="ic">${t[1]}</span>${t[2]}</button>`).join('');
+  const st=$('app');if(S._lastScreen!==c){st.scrollTop=0;S._lastScreen=c}
+}
+const JUMPS={student:[['home','Home'],['learn','Learn'],['hw','Quiz'],['exam','Exam'],['speaking','Speaking'],['ai','AI'],['battle','Battle'],['partner','Partner'],['community','Community'],['wallet','Wallet'],['survey','Survey'],['help','Help'],['settings','Settings']],
+  parent:[['p.home','Home'],['p.children','Children'],['p.progress','Progress'],['p.payments','Payments'],['p.more','More'],['pchat','Teacher chat']]};
+function buildJump(){$('jump').innerHTML=JUMPS[S.role].map(j=>`<button onclick="jumpTo('${j[0]}')">${j[1]}</button>`).join('')}
+function jumpTo(s){S.onboarded=true;stopTimers();const t=TABS[S.role].map(x=>x[0]);S.stack=[];if(t.includes(s)){S.tab=s}else{S.tab=S.role==='student'?(['wallet','survey','help','settings'].includes(s)?'profile':(['hw','exam'].includes(s)?'learn':(['speaking'].includes(s)?'home':'practice'))):'p.more';S.stack=[s];if(s==='exam')S.exam={t:1200,i:0,ans:{},timer:null,started:false}}render()}
+buildJump();render();
+</script>
+</body>
+</html>

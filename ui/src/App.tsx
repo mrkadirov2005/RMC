@@ -18,6 +18,7 @@ const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then(
 const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
 const ConsolidatePublicPage = lazy(() => import('./features/public/ConsolidatePublicPage'));
 const SharedTestPage = lazy(() => import('./features/public/SharedTestPage'));
+const AppDownloadPage = lazy(() => import('./features/public/AppDownloadPage'));
 const ConsolidationsOverviewPage = lazy(() => import('./features/crm/consolidations/ConsolidationsOverviewPage'));
 const ConsolidationSessionPage = lazy(() => import('./features/student/ConsolidationSessionPage'));
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
@@ -28,6 +29,11 @@ const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
 const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
 const OwnerGraphPage = lazy(() => import('./features/owner/graph/OwnerGraphPage'));
 const OwnerSmsPage = lazy(() => import('./features/owner/OwnerSmsPage'));
+// @MOB-160 Content of the student and parent mobile app.
+const MobileAppPage = lazy(() => import('./features/owner/mobileApp/MobileAppPage'));
+// @MOB-163 Homework Bank, assigning and grading.
+const HomeworkPage = lazy(() => import('./features/crm/homework/HomeworkPage'));
+const StudentIdCheckPage = lazy(() => import('./features/crm/studentId/StudentIdCheckPage'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
 const StudentFormPage = lazy(() => import('./features/crm/students/StudentFormPage'));
 const StudentDetailPage = lazy(() => import('./features/crm/students/StudentDetailPage'));
@@ -357,6 +363,8 @@ function AppContent() {
         <Route path="/owner/register" element={<OwnerRegisterPage />} />
         <Route path="/consolidate/:shareToken" element={<ConsolidatePublicPage />} />
         <Route path="/share/tests/:shareToken" element={<SharedTestPage />} />
+        {/* @MOB-172 Public download page of the mobile app. */}
+        <Route path="/app" element={<AppDownloadPage />} />
         <Route path="/login/superuser" element={<LoginPage userType="superuser" />} />
         <Route path="/login/teacher" element={<LoginPage userType="teacher" />} />
         <Route path="/login/student" element={<LoginPage userType="student" />} />
@@ -368,6 +376,39 @@ function AppContent() {
             <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
               <Layout>
                 <OwnerManager />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        {/* @MOB-163 Homework Bank for admins with the Tests permission and for teachers. */}
+        <Route
+          path="/homework"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+              <Layout>
+                <HomeworkPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        {/* @MOB-125 Admins and teachers check a student's ID QR. */}
+        <Route
+          path="/student-id"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+              <Layout>
+                <StudentIdCheckPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        {/* @MOB-160 Mobile app content, owner only for now. */}
+        <Route
+          path="/owner/mobile-app"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+              <Layout>
+                <MobileAppPage />
               </Layout>
             </ProtectedRoute>
           }

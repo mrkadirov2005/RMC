@@ -1,0 +1,39 @@
+# @MOB-173 Checks the API and the web panel from outside every 10 minutes, so an alert arrives even
+# when the whole server is down. Needs repository secrets ALERT_TELEGRAM_BOT_TOKEN and
+# ALERT_TELEGRAM_CHAT_ID. Scheduled workflows only run from the default branch.
+name: Uptime
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check API and web panel
+        env:
+          BOT: ${{ secrets.ALERT_TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.ALERT_TELEGRAM_CHAT_ID }}
+        run: |
+          failed=""
+          for url in https://api-temurbek.e-tizim.uz/api/health https://temurbek.e-tizim.uz/; do
+            ok=""
+            for attempt in 1 2 3; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo 000)
+              [ "$code" = 200 ] && ok=1 && break
+              sleep 20
+            done
+            [ -n "$ok" ] || failed="$failed\n• $url → $code"
+          done
+          if [ -n "$failed" ]; then
+            if [ -n "$BOT" ] && [ -n "$CHAT" ]; then
+              curl -s -o /dev/null "https://api.telegram.org/bot${BOT}/sendMessage" \
+                --data-urlencode "chat_id=${CHAT}" --data-urlencode "text=$(printf "🔴 TEMURBEK SCHOOL is not responding:$failed")"
+            fi
+            printf "Down:$failed\n"
+            exit 1
+          fi
+          echo "All up"

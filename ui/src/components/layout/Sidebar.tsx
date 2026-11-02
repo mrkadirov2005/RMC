@@ -257,6 +257,11 @@ const Sidebar = memo(() => {
 
     // Settings removed from sidebar — accessible via gear icon in header
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
+    // @MOB-163 Homework for the mobile app: bank, assigning, grading.
+    { label: 'Homework Bank', path: '/homework', iconName: 'Assignments', roles: ['superuser'], permission: 'MANAGE_TESTS' },
+    { label: 'Homework Bank', path: '/homework?tab=given', iconName: 'Assignments', roles: ['teacher'] },
+    // @MOB-125 Check a student's ID QR from the mobile app.
+    { label: 'Student ID check', path: '/student-id', iconName: 'Students', roles: ['superuser', 'teacher'] },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
     { label: 'Cash report', path: '/cash', iconName: 'Finance', roles: ['superuser'], permission: 'CRUD_PAYMENT' },
     {
@@ -289,6 +294,8 @@ const Sidebar = memo(() => {
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
+    // @MOB-160 Announcements, rules, links and requests of the student and parent mobile app.
+    { label: 'Mobile app', path: '/owner/mobile-app', iconName: 'Sms', roles: ['superuser'], ownerOnly: true },
     // Every SMS sent to parents, with filters, and the templates. Admins see their own branch's.
     {
       label: 'SMS', path: '/owner/sms', iconName: 'Sms', roles: ['superuser'], permission: 'VIEW_SMS',

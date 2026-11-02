@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEMURBEK SCHOOL LC Mobile App – Timeline</title>
+<style>
+  :root{--p:hsl(215 70% 42%);--pl:hsl(215 70% 95%);--bg:#f6f8fb;--fg:#17202e;--mut:#5d6b80;--line:#dde3ec}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--fg);background:var(--bg)}
+  main{max-width:1180px;margin:0 auto;padding:30px 20px 80px}
+  h1{font-size:28px;margin:0 0 4px}h2{font-size:19px;color:var(--p);margin:34px 0 8px}
+  .meta{color:var(--mut)}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:14px 0}
+  .ctl{display:flex;flex-wrap:wrap;gap:16px;align-items:end}
+  label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+  input[type=number],input[type=date]{padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:14px;width:110px}
+  .chk{flex-direction:row;align-items:center;gap:6px;font-size:13px;color:var(--fg)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .kpi b{display:block;font-size:22px;color:var(--p)}.kpi span{font-size:12px;color:var(--mut)}
+  table{border-collapse:collapse;width:100%;background:#fff;font-size:13px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+  th{background:var(--pl)}td.n{text-align:right;font-variant-numeric:tabular-nums}
+  tr.ph td{background:#eaf1fc;font-weight:600}
+  .gantt{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow:auto}
+  .grow{display:grid;grid-template-columns:260px 1fr;gap:10px;align-items:center;padding:2px 0}
+  .grow .lb{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track{position:relative;height:16px;background:repeating-linear-gradient(90deg,#f0f3f8 0 1px,transparent 1px 8.333%);}
+  .bar{position:absolute;top:2px;height:12px;border-radius:4px;min-width:3px}
+  .p0{background:#7a8aa3}.p1{background:var(--p)}.p2{background:#1a9b73}.p3{background:#8a55c8}
+  .axis{display:grid;grid-template-columns:260px 1fr;gap:10px;font-size:11px;color:var(--mut);margin-bottom:4px}
+  .ticks{display:flex;justify-content:space-between}
+  .note{background:#fff8ec;border:1px solid #f0d9b0;border-radius:10px;padding:12px 16px;margin:14px 0}
+  .legend span{display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+<main>
+<h1>Timeline: working 2 hours a day</h1>
+<div class="meta">Companion to <a href="PRD.html">PRD.html</a> · dates are computed live from the hours below · prepared 2026-10-30</div>
+
+<div class="panel">
+  <div class="ctl">
+    <label>Hours per working day<input id="hpd" type="number" min="0.5" max="12" step="0.5" value="2"></label>
+    <label>Working days per week<input id="dpw" type="number" min="1" max="7" value="5"></label>
+    <label>Start date<input id="start" type="date" value="2026-11-02"></label>
+    <label>Buffer (%) for bugs, reviews, rework<input id="buf" type="number" min="0" max="100" value="20"></label>
+    <label class="chk"><input type="checkbox" class="ph" value="0" checked> Phase 0</label>
+    <label class="chk"><input type="checkbox" class="ph" value="1" checked> Phase 1</label>
+    <label class="chk"><input type="checkbox" class="ph" value="2" checked> Phase 2</label>
+    <label class="chk"><input type="checkbox" class="ph" value="3" checked> Phase 3</label>
+  </div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="note"><b>Reading this honestly.</b> At 2 hours a day, 5 days a week, the whole brief takes years. Phases 0 and 1 (design plus the core student and parent app) are a realistic first goal of about a year. Phase 2 and 3 only fit if you raise the daily hours, add a second developer, or buy managed services (video, chat, live classes). Uncheck phases above or change the hours to see the dates move.</div>
+
+<h2>Phase summary</h2>
+<table id="sum"></table>
+
+<h2>Schedule</h2>
+<div class="legend panel"><span><i class="p0"></i>Phase 0 Discovery</span><span><i class="p1"></i>Phase 1 Core app</span><span><i class="p2"></i>Phase 2 Learning and quality</span><span><i class="p3"></i>Phase 3 Advanced</span></div>
+<div class="gantt"><div class="axis"><div></div><div class="ticks" id="ticks"></div></div><div id="gantt"></div></div>
+
+<h2>Work packages</h2>
+<table id="pk"></table>
+
+<h2>Assumptions</h2>
+<ul>
+  <li>Hours are focused development hours by one person, already assuming AI-assisted coding. Meetings with the client are not counted.</li>
+  <li>Working days are the first N weekdays of each week (5 = Monday to Friday). No holidays are removed; add buffer if needed.</li>
+  <li>Estimates exclude Figma polish beyond the core screens, content writing for the Homework Bank, and store-review waiting time (plan 1 to 2 weeks per release).</li>
+  <li>Phase 0 includes the design work in this folder (<a href="prototype.html">clickable prototype</a>), which can be moved into Figma.</li>
+</ul>
+</main>
+<script>
+const PK = [
+  // [phase, name, hours]
+  [0,'CRM / API audit and gap list',8],
+  [0,'Requirements validation and client decisions (hosting, billing, consent)',8],
+  [0,'Architecture and database design for mobile tables',10],
+  [0,'OpenAPI spec for /api/mobile/v1',10],
+  [0,'Figma UI kit and core Student and Parent screens',24],
+  [0,'Prototype review rounds with client',6],
+
+  [1,'Backend: mobile auth (refresh, device tokens, reset, parent login)',24],
+  [1,'Backend: parent-scoped read APIs (children, attendance, grades, payments, coins)',24],
+  [1,'Backend: push notifications (FCM), preferences, outbox',20],
+  [1,'Backend: homework bank, assignments, submissions, file upload',40],
+  [1,'Backend: links, announcements, policies with accept and versioning',20],
+  [1,'App: foundation (project, theme, i18n, navigation, API client, CI)',30],
+  [1,'App: onboarding, login, social follow step',20],
+  [1,'App: student dashboard, schedule, attendance',36],
+  [1,'App: results and coin wallet',24],
+  [1,'App: homework center (vocabulary, grammar, reading, writing)',50],
+  [1,'App: parent portal (dashboard, children, progress)',44],
+  [1,'App: payments view and reminders',16],
+  [1,'App: help center, rules, official links, settings',24],
+  [1,'Web: Owner panel basics (links, news, rules, push composer)',30],
+  [1,'QA, store listings, review, pilot with one group',40],
+
+  [2,'Video academy: hosting, player, access control, progress',50],
+  [2,'Digital library and offline downloads',40],
+  [2,'Exam engine and mock exams (timer, autosave, scoring, review)',70],
+  [2,'Monthly video speaking assessment (record, upload, teacher review, CRM write)',60],
+  [2,'Speaking portfolio and journey',16],
+  [2,'Survey builder, periodic surveys, teacher rating, analytics',70],
+  [2,'School news and stories with moderation',40],
+  [2,'Referral system',16],
+  [2,'Rewards store and redemption',24],
+  [2,'Unified booking engine',40],
+  [2,'Group chat (real-time, voice, files, moderation)',70],
+  [2,'Teacher tools: feedback, grading, interventions',50],
+  [2,'Student services: absence, group and schedule change requests, parent surveys',24],
+  [2,'Hardening, QA, release',40],
+
+  [3,'AI platform backend (speech to text, LLM, text to speech, limits, cost guard)',70],
+  [3,'AI practice center app',60],
+  [3,'AI Premium subscription (store billing, receipts)',40],
+  [3,'Premium video academy with store billing',50],
+  [3,'Integrated live classroom',100],
+  [3,'Speaking partner (matching, audio, safety)',50],
+  [3,'Battle arena (real-time)',70],
+  [3,'Teacher and parent video calls',30],
+  [3,'Advanced analytics and extended gamification',50],
+  [3,'Hardening, QA, release',50]
+];
+const PH = ['Phase 0 · Discovery and design','Phase 1 · Core Student and Parent app','Phase 2 · Learning and quality control','Phase 3 · Advanced and premium'];
+const $ = id => document.getElementById(id);
+const fmt = d => d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+const mon = d => d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
+
+function render(){
+  const hpd = Math.max(0.5, +$('hpd').value||2), dpw = Math.min(7,Math.max(1,+$('dpw').value||5));
+  const buf = Math.max(0, +$('buf').value||0)/100;
+  const on = [...document.querySelectorAll('.ph')].filter(c=>c.checked).map(c=>+c.value);
+  const startStr = $('start').value || '2026-11-02';
+  let cur = new Date(startStr+'T00:00:00'), left = hpd;
+  const isWork = d => ((d.getDay()+6)%7) < dpw;
+  while(!isWork(cur)) cur.setDate(cur.getDate()+1);
+
+  const rows = PK.filter(p=>on.includes(p[0])).map(p=>({ph:p[0],name:p[1],h:Math.round(p[2]*(1+buf)*10)/10,base:p[2]}));
+  rows.forEach(r=>{
+    let rem = r.h, first = true;
+    while(rem>1e-9){
+      if(left<=1e-9){ do{ cur.setDate(cur.getDate()+1); }while(!isWork(cur)); left = hpd; }
+      if(first){ r.s = new Date(cur); first=false; }
+      const use = Math.min(left,rem); left-=use; rem-=use;
+    }
+    r.e = new Date(cur);
+  });
+  if(!rows.length){ $('kpis').innerHTML=''; $('sum').innerHTML=''; $('gantt').innerHTML=''; $('pk').innerHTML=''; $('ticks').innerHTML=''; return; }
+
+  const t0 = rows[0].s, t1 = rows[rows.length-1].e, span = Math.max(1,t1-t0);
+  const totalH = rows.reduce((a,r)=>a+r.h,0), baseH = rows.reduce((a,r)=>a+r.base,0);
+  const weeks = totalH/(hpd*dpw);
+  $('kpis').innerHTML = [
+    [Math.round(baseH)+' h','estimated work'],[Math.round(totalH)+' h','with '+Math.round(buf*100)+'% buffer'],
+    [weeks.toFixed(0)+' weeks','at '+hpd+' h × '+dpw+' days'],[fmt(t1),'finish date'],
+    [(weeks/52).toFixed(1)+' years','elapsed']
+  ].map(k=>`<div class="kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join('');
+
+  // phase summary
+  let s = '<tr><th>Phase</th><th>Hours (with buffer)</th><th>Start</th><th>End</th><th>Milestone</th></tr>';
+  const ms = ['Scope, API spec and design signed off','Pilot group using parent + student app','Speaking assessment, exams and surveys live','AI, live class and premium launched'];
+  on.forEach(i=>{
+    const rs = rows.filter(r=>r.ph===i);
+    s += `<tr><td>${PH[i]}</td><td class="n">${Math.round(rs.reduce((a,r)=>a+r.h,0))}</td><td>${fmt(rs[0].s)}</td><td>${fmt(rs[rs.length-1].e)}</td><td>${ms[i]}</td></tr>`;
+  });
+  $('sum').innerHTML = s;
+
+  // gantt
+  let g = '', ticks='';
+  const n = 8;
+  for(let i=0;i<=n;i++){ ticks += `<span>${mon(new Date(t0.getTime()+span*i/n))}</span>`; }
+  $('ticks').innerHTML = ticks;
+  rows.forEach(r=>{
+    const l = (r.s-t0)/span*100, w = Math.max(0.3,(r.e-r.s)/span*100+0.4);
+    g += `<div class="grow"><div class="lb" title="${r.name}">${r.name}</div><div class="track"><div class="bar p${r.ph}" style="left:${l}%;width:${w}%" title="${fmt(r.s)} – ${fmt(r.e)}"></div></div></div>`;
+  });
+  $('gantt').innerHTML = g;
+
+  // table
+  let t = '<tr><th>#</th><th>Package</th><th>Phase</th><th>Base h</th><th>With buffer h</th><th>Start</th><th>End</th></tr>', k=0, last=-1;
+  rows.forEach(r=>{
+    if(r.ph!==last){ t += `<tr class="ph"><td colspan="7">${PH[r.ph]}</td></tr>`; last=r.ph; }
+    t += `<tr><td class="n">${++k}</td><td>${r.name}</td><td>${r.ph}</td><td class="n">${r.base}</td><td class="n">${r.h}</td><td>${fmt(r.s)}</td><td>${fmt(r.e)}</td></tr>`;
+  });
+  $('pk').innerHTML = t;
+}
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',render));
+render();
+</script>
+</body>
+</html>

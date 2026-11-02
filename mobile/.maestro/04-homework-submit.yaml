@@ -1,0 +1,22 @@
+# @MOB-170 Homework: open the first new task, answer a choice question, submit.
+# Needs an open assignment for the student with a multiple-choice first question.
+appId: uz.temurbekschool.app
+---
+- runFlow:
+    file: _login.yaml
+    env:
+      USER: ${STUDENT_USER}
+      PASS: ${STUDENT_PASS}
+- tapOn: "O'qish"
+- tapOn:
+    text: "Yangi"
+    index: 0
+- assertVisible: "Topshirish"
+- tapOn:
+    id: "choice-0-0"
+    optional: true
+- scrollUntilVisible:
+    element: "Topshirish"
+- tapOn: "Topshirish"
+- assertVisible:
+    text: "(Tekshirilmoqda|Baholangan)"

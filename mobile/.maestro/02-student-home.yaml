@@ -1,0 +1,17 @@
+# @MOB-170 Student home: next lesson, stats, charts with the month/day switch, ID QR.
+appId: uz.temurbekschool.app
+---
+- runFlow:
+    file: _login.yaml
+    env:
+      USER: ${STUDENT_USER}
+      PASS: ${STUDENT_PASS}
+- assertVisible: "Davomat"
+- assertVisible: "Coinlar"
+- scrollUntilVisible:
+    element: "Kunlar bo'yicha"
+- tapOn: "Kunlar bo'yicha"
+- assertVisible: "Davomat dinamikasi"
+- tapOn: "Profil"
+- assertVisible:
+    text: ".*soniyada yangilanadi"

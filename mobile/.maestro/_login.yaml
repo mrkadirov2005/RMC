@@ -1,0 +1,20 @@
+# @MOB-170 Shared: sign in with USER / PASS and skip the optional onboarding.
+appId: uz.temurbekschool.app
+tags:
+  - util
+---
+- launchApp:
+    clearState: true
+- tapOn: "Login"
+- inputText: ${USER}
+- tapOn: "Parol"
+- inputText: ${PASS}
+- hideKeyboard
+- tapOn:
+    text: "Kirish"
+    index: 1
+- runFlow:
+    when:
+      visible: "O'tkazib yuborish"
+    commands:
+      - tapOn: "O'tkazib yuborish"
