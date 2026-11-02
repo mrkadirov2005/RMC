@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { studentAPI } from '../api';
 import {
   createPayment,
   deletePayment,
@@ -39,7 +40,13 @@ import { useLanguage } from '@/i18n/LanguageContext';
 const folderPageSizeOptions = [12, 24, 48];
 const paymentPageSizeOptions = [10, 25, 50, 100];
 
-export const usePaymentsPage = () => {
+type UsePaymentsPageOptions = {
+  // Dashboards only need students for the payment dialog, which searches the server itself, so they
+  // skip downloading the whole student list (over 1 MB).
+  loadAllStudents?: boolean;
+};
+
+export const usePaymentsPage = ({ loadAllStudents = true }: UsePaymentsPageOptions = {}) => {
   const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -53,12 +60,28 @@ export const usePaymentsPage = () => {
   const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
   const classes = useAppSelector((state) => state.classes.items) as Class[];
   const students = useAppSelector((state) => state.students.items) as Student[];
+  // Students found by the payment dialog's server search, so the chosen student's fee, groups and
+  // history show even when the full list was not downloaded.
+  const [foundStudents, setFoundStudents] = useState<Student[]>([]);
+  const rememberStudents = useCallback((list: Student[]) => {
+    if (!list.length) return;
+    setFoundStudents((current) => {
+      const byId = new Map(current.map((student) => [Number(student.student_id || student.id || 0), student]));
+      list.forEach((student) => byId.set(Number(student.student_id || student.id || 0), student));
+      return Array.from(byId.values());
+    });
+  }, []);
+  const knownStudents = useMemo(() => {
+    if (!foundStudents.length) return students;
+    const ids = new Set(students.map((student) => Number(student.student_id || student.id || 0)));
+    return [...students, ...foundStudents.filter((student) => !ids.has(Number(student.student_id || student.id || 0)))];
+  }, [foundStudents, students]);
   const studentOptions = useAppSelector(selectStudentOptions);
   const allCenterOptions = useAppSelector(selectCenterOptions);
   const centerOptions = isOwner ? allCenterOptions : [];
   const isLoadingOptions = useAppSelector(
     (state) =>
-      state.students.loading || state.teachers.loading || state.classes.loading || (isOwner && state.centers.loading)
+      (loadAllStudents && state.students.loading) || state.teachers.loading || state.classes.loading || (isOwner && state.centers.loading)
   );
   const loadingData = useAppSelector(
     (state) => state.teachers.loading || state.classes.loading || state.students.loading
@@ -92,12 +115,12 @@ export const usePaymentsPage = () => {
     dispatch(fetchPayments());
     dispatch(fetchTeachersThunk());
     dispatch(fetchClassesThunk());
-    dispatch(fetchStudentsThunk());
+    if (loadAllStudents) dispatch(fetchStudentsThunk());
     if (isOwner) {
       dispatch(fetchCentersThunk());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, isOwner]);
+  }, [dispatch, isOwner, loadAllStudents]);
 
   useEffect(() => {
     setFolderPage(1);
@@ -112,7 +135,7 @@ export const usePaymentsPage = () => {
       dispatch(fetchPaymentsForce());
       dispatch(fetchTeachersThunk());
       dispatch(fetchClassesThunk());
-      dispatch(fetchStudentsThunk());
+      if (loadAllStudents) dispatch(fetchStudentsThunk());
       if (isOwner) {
         dispatch(fetchCentersThunk());
       }
@@ -144,6 +167,18 @@ export const usePaymentsPage = () => {
     dispatch(setPaymentsEditingId(null));
     setFormData(createPaymentDraft(getResolvedCenterId(user) ?? 0, { student_id: studentId, ...overrides }));
     dispatch(setPaymentsModalOpen(true));
+    // Pages that skip the full student list load just this student, for the dialog's card and fee.
+    const known = knownStudents.some((student) => Number(student.student_id || student.id || 0) === Number(studentId));
+    if (!known) {
+      studentAPI
+        .getById(studentId)
+        .then((response) => {
+          const payload = (response as any)?.data ?? response;
+          const student = payload?.data && !payload.student_id ? payload.data : payload;
+          if (student && (student.student_id || student.id)) rememberStudents([student as Student]);
+        })
+        .catch(() => undefined);
+    }
   };
 
   const handleCloseModal = () => {
@@ -491,7 +526,7 @@ export const usePaymentsPage = () => {
   };
 
   const getStudentName = (studentId: number): string => {
-    const student = students.find((s) => (s.student_id || s.id) === studentId);
+    const student = knownStudents.find((s) => (s.student_id || s.id) === studentId);
     if (student) return `${student.first_name} ${student.last_name}`;
     const payment = state.items.find((p) => Number(p.student_id) === Number(studentId));
     const fallbackName = `${payment?.student_first_name || ''} ${payment?.student_last_name || ''}`.trim();
@@ -529,7 +564,9 @@ export const usePaymentsPage = () => {
     state,
     teachers,
     classes,
-    students,
+    // The downloaded list plus students found by the dialog's search.
+    students: knownStudents,
+    rememberStudents,
 
     // UI state
     activeTab,
