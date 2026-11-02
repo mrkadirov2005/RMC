@@ -23,13 +23,8 @@ export const ServiceStatusGuard = ({ children }: ServiceStatusGuardProps) => {
       return;
     }
 
-    if (status === 'backend-unreachable') {
-      showToast.error('Backend is unreachable. Some actions may not work until the service is back.', {
-        autoClose: false,
-      });
-      return;
-    }
-
+    // No "server unreachable" warning: a slow answer looked like an outage. Failed requests still
+    // show their own error.
     if (status === 'healthy') {
       showToast.dismiss();
     }
