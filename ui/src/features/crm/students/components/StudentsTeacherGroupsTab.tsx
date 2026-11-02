@@ -12,6 +12,7 @@ import { StudentsTableView } from './StudentsTableView';
 import type { Class, Student } from '../types';
 import { getGroupWeekdays } from '@/shared/groupLabel';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { getPaymentMonths, recentMonthKeys } from '../utils/paymentMonths';
 
 interface Option {
   id?: number;
@@ -68,83 +69,36 @@ const getRows = unwrapApiRows;
 
 type PaymentRow = {
   student_id?: number;
-  student_first_name?: string;
-  student_last_name?: string;
   payment_date?: string;
   amount?: number | string;
+  discount_amount?: number | string;
   payment_status?: string;
   status?: string;
   payment_type?: string;
 };
 
-const normalizeName = (firstName?: string, lastName?: string) =>
-  [firstName, lastName]
-    .map((part) => String(part || '').trim().toLowerCase())
-    .filter(Boolean)
-    .join(' ');
-
-const getMonthKey = (value: Date | string) => {
-  if (value instanceof Date) {
-    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`;
-  }
-  const raw = String(value || '').trim();
-  const match = raw.match(/^(\d{4})-(\d{2})/);
-  if (match) return `${match[1]}-${match[2]}`;
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return '';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-};
-
-const isCompletedPayment = (payment: PaymentRow) => {
-  const status = String(payment.status || payment.payment_status || '').trim().toLowerCase();
-  return status === 'completed' || status === 'paid';
-};
-
-const mergeMonthlyPayments = (students: Student[], payments: PaymentRow[]) => {
-  const currentMonth = getMonthKey(new Date());
-  const byStudentId = new Map<number, PaymentRow[]>();
-  const byStudentName = new Map<string, PaymentRow[]>();
-
-  payments
-    .filter((payment) => isCompletedPayment(payment))
-    .filter((payment) => getMonthKey(payment.payment_date || '') === currentMonth)
-    .filter((payment) => String(payment.payment_type || '') !== 'Transfer Adjustment')
-    .forEach((payment) => {
-      const studentId = toId(payment.student_id);
-      if (studentId) {
-        const rows = byStudentId.get(studentId) || [];
-        rows.push(payment);
-        byStudentId.set(studentId, rows);
+// Each student's own payments, a few requests at a time, turned into the three month circles.
+// A student whose payments could not be loaded gets no circles (shown as unknown, not unpaid).
+const PAYMENT_REQUESTS_AT_ONCE = 6;
+const withPaymentMonths = async (students: Student[], monthlyFee: unknown) => {
+  const monthKeys = recentMonthKeys();
+  const result: Student[] = new Array(students.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < students.length) {
+      const index = next++;
+      const student = students[index];
+      const studentId = toId(student.student_id || student.id);
+      try {
+        const payments = studentId ? getRows<PaymentRow>(await paymentAPI.getByStudent(studentId, { _fresh: Date.now() })) : [];
+        result[index] = { ...student, payment_months: getPaymentMonths(student, monthlyFee, payments, monthKeys) };
+      } catch {
+        result[index] = { ...student, payment_months: null };
       }
-
-      const nameKey = normalizeName(payment.student_first_name, payment.student_last_name);
-      if (nameKey) {
-        const rows = byStudentName.get(nameKey) || [];
-        rows.push(payment);
-        byStudentName.set(nameKey, rows);
-      }
-    });
-
-  return students.map((student) => {
-    const studentId = toId(student.student_id || student.id);
-    const nameKey = normalizeName(student.first_name, student.last_name);
-    const rows = (studentId ? byStudentId.get(studentId) : undefined) || byStudentName.get(nameKey) || [];
-    if (rows.length === 0) return student;
-
-    const amount = rows.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-    const latest = rows
-      .slice()
-      .sort((a, b) => String(b.payment_date || '').localeCompare(String(a.payment_date || '')))[0];
-
-    return {
-      ...student,
-      paid_this_month: true,
-      payment_amount_this_month: amount,
-      payment_count_this_month: rows.length,
-      last_payment_date_this_month: latest?.payment_date || student.last_payment_date_this_month,
-      payment_status_this_month: latest?.status || latest?.payment_status || student.payment_status_this_month || 'Completed',
-    };
-  });
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(PAYMENT_REQUESTS_AT_ONCE, students.length) }, worker));
+  return result;
 };
 
 type TeacherClassRow = {
@@ -378,13 +332,13 @@ export const StudentsTeacherGroupsTab = ({
         return getRows<Student>(fallbackResponse);
       };
 
-      const [studentsResponse, paymentsResponse] = await Promise.all([
-        fetchClassStudents(),
-        paymentAPI.getAll({ page: 1, limit: 200 }).catch(() => ({ data: [] })),
-      ]);
+      const studentsResponse = await fetchClassStudents();
       const classStudents = Array.isArray(studentsResponse) ? studentsResponse : getRows<Student>(studentsResponse);
-      const currentPayments = getRows<PaymentRow>(paymentsResponse);
-      setSelectedClassStudents(mergeMonthlyPayments(classStudents, currentPayments));
+      // Show the list right away; the payment circles fill in when each student's payments arrive.
+      setSelectedClassStudents(classStudents);
+      setClassLoading(false);
+      const withMonths = await withPaymentMonths(classStudents, row?.cls.payment_amount);
+      setSelectedClassStudents((current) => (current === classStudents ? withMonths : current));
     } catch (error: any) {
       setSelectedClassStudents([]);
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to load class students.');

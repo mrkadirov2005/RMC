@@ -1,7 +1,7 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, BookOpen, Coins, CreditCard, GraduationCap, Info, CalendarDays, KeyRound, MoreVertical, Pencil, Phone, School, Trash2, UserCheck } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, Coins, GraduationCap, Info, CalendarDays, KeyRound, MoreVertical, Pencil, Phone, School, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -21,6 +21,7 @@ import { getStatusVariant, isTransferredStudentStatus, isIncomingTransfer, INCOM
 import { ActionReasonPicker, isReasonReady, resolveReasonId } from './ActionReasonPicker';
 import { DeleteStudentDialog } from './DeleteStudentDialog';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PaymentMonthCircles, PaymentMonthsHeader } from './PaymentMonthCircles';
 
 type TeacherOption = {
   id?: string | number;
@@ -337,40 +338,6 @@ export const StudentsTableView = ({
     }
     return null;
   };
-  const formatMoney = (value: unknown) => {
-    const amount = Number(value || 0);
-    if (!Number.isFinite(amount) || amount <= 0) return '';
-    return `${amount.toLocaleString()} UZS`;
-  };
-  const formatDate = (value: unknown) => {
-    if (!value) return '';
-    const date = new Date(String(value));
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleDateString();
-  };
-  const getPaymentLabel = (student: Student) => {
-    if (student.free_this_month) return 'Free of charge';
-    if (!student.paid_this_month) return 'Unpaid';
-    const amount = formatMoney(student.payment_amount_this_month);
-    return amount ? `Paid ${amount}` : 'Paid';
-  };
-  const getPaymentTitle = (student: Student) => {
-    const date = formatDate(student.last_payment_date_this_month);
-    const status = String(student.payment_status_this_month || '').trim();
-    if (student.free_this_month) return 'Discount covers the whole fee';
-    if (!student.paid_this_month) return 'No completed payment recorded this month';
-    return [status || 'Completed', date].filter(Boolean).join(' / ');
-  };
-  const renderPaymentChip = (student: Student) => (
-    <span
-      className={`${chipClass} ${student.paid_this_month ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}
-      title={getPaymentTitle(student)}
-    >
-      <CreditCard className="h-3 w-3" />
-      <span className="max-w-[150px] truncate">{getPaymentLabel(student)}</span>
-    </span>
-  );
-
   const renderActions = (student: Student) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -615,7 +582,7 @@ export const StudentsTableView = ({
                           <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
                           <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
                           <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{t('{count} age', { count: getAge(student) })}</span>
-                          {showMonthlyPaymentStatus && renderPaymentChip(student)}
+                          {showMonthlyPaymentStatus && <PaymentMonthCircles student={student} showLabels />}
                         </div>
                       </div>
                     </div>
@@ -632,7 +599,7 @@ export const StudentsTableView = ({
                         <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
                         <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
                         <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{t('{count} age', { count: getAge(student) })}</span>
-                        {showMonthlyPaymentStatus && renderPaymentChip(student)}
+                        {showMonthlyPaymentStatus && <PaymentMonthCircles student={student} showLabels />}
                       </div>
                     </div>
                   )}
@@ -696,7 +663,11 @@ export const StudentsTableView = ({
             <TableHead className="h-8 px-2 text-xs">{t('School class')}</TableHead>
             <TableHead className="h-8 px-2 text-xs">{t('Phone')}</TableHead>
             <TableHead className="h-8 px-2 text-xs">{t('Age')}</TableHead>
-            {showMonthlyPaymentStatus && <TableHead className="h-8 px-2 text-xs">{t('This month')}</TableHead>}
+            {showMonthlyPaymentStatus && (
+              <TableHead className="h-auto px-2 py-1 text-xs">
+                <PaymentMonthsHeader />
+              </TableHead>
+            )}
             <TableHead className="h-8 px-2 text-right text-xs"></TableHead>
           </TableRow>
         </TableHeader>
@@ -782,7 +753,7 @@ export const StudentsTableView = ({
                 </TableCell>
                 {showMonthlyPaymentStatus && (
                   <TableCell className="px-2 py-2">
-                    {renderPaymentChip(student)}
+                    <PaymentMonthCircles student={student} />
                   </TableCell>
                 )}
                 <TableCell className="px-2 py-2 text-right">

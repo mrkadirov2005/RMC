@@ -1,4 +1,7 @@
 export const studentsLabels: Record<string, string> = {
+  'Paid in full': "To'liq to'langan",
+  'Not paid': "To'lanmagan",
+  'Not in the group this month': "Bu oy guruhda bo'lmagan",
   'Set start date': 'Boshlanish sanasini belgilash',
   'The first month is billed from this day.': 'Birinchi oy shu kundan hisoblanadi.',
   'Note (required)': "Izoh (majburiy)",
