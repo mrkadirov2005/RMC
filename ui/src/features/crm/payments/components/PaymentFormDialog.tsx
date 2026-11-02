@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { getExpectedAmountForMonth, type BillingPeriodRecord } from '@/shared/billingPeriod';
 import type { Payment, Student } from '../types';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
-import { discountAPI, studentAPI } from '../api';
+import { discountAPI, paymentAPI, studentAPI } from '../api';
 import type { PaymentStudentGroupOption } from '../utils/paymentStudentGroups';
 import {
   getMonthKey,
@@ -51,6 +51,7 @@ interface PaymentFormDialogProps {
   selectedStudent?: StudentSummary | null;
   studentGroupOptions?: PaymentStudentGroupOption[];
   onStudentGroupChange?: (studentId: number) => void;
+  // No longer used: the dialog loads the chosen student's payments itself.
   paymentHistory?: Partial<Payment>[];
   historyExpectedAmount?: number;
   // The selected record's transfer dates, so months it only partly spent in the group expect a prorated fee.
@@ -104,7 +105,6 @@ export const PaymentFormDialog = ({
   selectedStudent,
   studentGroupOptions = [],
   onStudentGroupChange,
-  paymentHistory = [],
   historyExpectedAmount = 0,
   historyBillingPeriod = null,
   amountHint,
@@ -277,18 +277,61 @@ export const PaymentFormDialog = ({
     });
   }, [discountAmount, finalAmount, hasDiscount, isEditing, normalizedAmount, setFormData]);
 
+  // The chosen student's payments, loaded for that student alone: always current, and a slow or
+  // failed load shows as such instead of six months of "None".
+  const historyStudentId = Number(formData.student_id || 0);
+  const [studentPayments, setStudentPayments] = useState<{ studentId: number; rows: Partial<Payment>[] } | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyFailed, setHistoryFailed] = useState(false);
+  useEffect(() => {
+    if (!open || !historyStudentId) {
+      setStudentPayments(null);
+      setHistoryLoading(false);
+      setHistoryFailed(false);
+      return;
+    }
+    let cancelled = false;
+    setHistoryLoading(true);
+    setHistoryFailed(false);
+    paymentAPI
+      .getByStudent(historyStudentId, { _fresh: Date.now() })
+      .then((response) => {
+        if (cancelled) return;
+        const payload = (response as any)?.data ?? response;
+        const rows: Partial<Payment>[] = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload?.items)
+              ? payload.items
+              : [];
+        setStudentPayments({ studentId: historyStudentId, rows });
+      })
+      .catch(() => {
+        if (!cancelled) setHistoryFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, historyStudentId]);
+  const historyRows =
+    studentPayments && studentPayments.studentId === historyStudentId ? studentPayments.rows : null;
+
   const historyMonths = useMemo(() => getSixMonthWindow(historyWindowEnd), [historyWindowEnd]);
   const historyPaymentsByMonth = useMemo(() => {
     const monthKeys = new Set(historyMonths.map(getMonthKey));
     const map = new Map<string, Partial<Payment>[]>();
-    paymentHistory
+    (historyRows ?? [])
       .filter((payment) => monthKeys.has(getMonthKey(payment.payment_date)))
       .forEach((payment) => {
         const key = getMonthKey(payment.payment_date);
         map.set(key, [...(map.get(key) || []), payment]);
       });
     return map;
-  }, [historyMonths, paymentHistory]);
+  }, [historyMonths, historyRows]);
   const canMoveHistoryForward = getMonthKey(historyWindowEnd) < getMonthKey(getMonthStart());
   const shouldShowHistory = Boolean(selectedStudent && Number(formData.student_id || 0));
 
@@ -531,6 +574,18 @@ export const PaymentFormDialog = ({
                     </div>
                   ))}
                 </div>
+                {historyLoading || !historyRows ? (
+                  <div className="flex items-center justify-center gap-2 bg-white px-3 py-4 text-sm text-slate-500 dark:bg-slate-950/70 dark:text-slate-400">
+                    {historyFailed ? (
+                      <span className="font-medium text-rose-600">{t('Could not load the data.')}</span>
+                    ) : (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t('Loading...')}
+                      </>
+                    )}
+                  </div>
+                ) : (
                 <div className="grid grid-cols-6 bg-white dark:bg-slate-950/70">
                   {historyMonths.map((month) => {
                     const rows = historyPaymentsByMonth.get(getMonthKey(month)) || [];
@@ -550,6 +605,7 @@ export const PaymentFormDialog = ({
                     );
                   })}
                 </div>
+                )}
               </div>
             </section>
           ) : null}
