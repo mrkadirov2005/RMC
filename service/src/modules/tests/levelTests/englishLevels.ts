@@ -96,11 +96,12 @@ const insertLevelTest = async (db: any, test: LevelTest, centerId: number, creat
     [centerId, testId, test.passage.title, test.passage.content, test.passage.content.split(/\s+/).filter(Boolean).length, test.level]
   );
   const passageId = Number(passage.rows[0].passage_id);
+  // Not required: a question left blank simply scores nothing, so a student can always hand in.
   for (const [index, question] of test.questions.entries()) {
     await db.query(
       `INSERT INTO test_questions (center_id, test_id, passage_id, question_text, question_type, marks, negative_marks,
                                    question_order, options, correct_answer, explanation, is_required)
-       VALUES ($1, $2, $3, $4, $5, 1, 0, $6, $7::jsonb, $8::jsonb, $9, TRUE)`,
+       VALUES ($1, $2, $3, $4, $5, 1, 0, $6, $7::jsonb, $8::jsonb, $9, FALSE)`,
       [
         centerId,
         testId,
