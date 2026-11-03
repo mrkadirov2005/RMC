@@ -1,5 +1,7 @@
 // Domain types for the teacher salary tracking feature.
 
+import type { TeacherEarningsTotals } from '@/features/teacher/payments/types';
+
 export interface SalaryRecord {
   salary_id: number;
   center_id?: number | null;
@@ -61,6 +63,11 @@ export interface SalaryPaymentProgress {
   remaining: number;
 }
 
+/** The overview's figures of the month's salary by pay rate (the late payments only counted). */
+export interface SalaryEarningsSummary extends TeacherEarningsTotals {
+  late_count: number;
+}
+
 export interface SalaryOverviewRow {
   teacher_id: number;
   first_name?: string;
@@ -71,6 +78,9 @@ export interface SalaryOverviewRow {
   advance_total?: number;
   student_stats: SalaryStudentStats;
   payment_progress?: SalaryPaymentProgress | null;
+  /** The teacher's pay rate, % of the money their students paid. */
+  salary_percentage?: number | string | null;
+  earnings?: SalaryEarningsSummary | null;
 }
 
 export interface SalaryHistoryEntry {

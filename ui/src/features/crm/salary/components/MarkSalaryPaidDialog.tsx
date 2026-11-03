@@ -41,6 +41,8 @@ interface MarkSalaryPaidDialogProps {
   existingNotes?: string | null;
   /** Advances already given against this month; they come off what is still to be paid. */
   advanceTotal?: number;
+  /** The month's salary by the teacher's pay rate: the amount offered for a salary not recorded yet. */
+  suggestedAmount?: number | null;
 }
 
 export const MarkSalaryPaidDialog = ({
@@ -55,6 +57,7 @@ export const MarkSalaryPaidDialog = ({
   existingPaymentMethod,
   existingNotes,
   advanceTotal = 0,
+  suggestedAmount,
 }: MarkSalaryPaidDialogProps) => {
   const { t } = useLanguage();
   const dispatch = useAppDispatch();
@@ -66,11 +69,11 @@ export const MarkSalaryPaidDialog = ({
 
   useEffect(() => {
     if (!open) return;
-    const defaultAmount = existingAmount != null ? existingAmount : studentStats.collected_amount;
+    const defaultAmount = existingAmount != null ? existingAmount : suggestedAmount ?? studentStats.collected_amount;
     setAmount(defaultAmount != null ? String(defaultAmount) : '');
     setPaymentMethod(existingPaymentMethod && PAYMENT_METHODS.includes(existingPaymentMethod) ? existingPaymentMethod : 'Cash');
     setNotes(existingNotes || '');
-  }, [open, existingAmount, existingPaymentMethod, existingNotes, studentStats.collected_amount]);
+  }, [open, existingAmount, existingPaymentMethod, existingNotes, studentStats.collected_amount, suggestedAmount]);
 
   const parsedAmount = Number(amount);
   const isValid = amount.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount >= 0;
@@ -133,7 +136,9 @@ export const MarkSalaryPaidDialog = ({
               placeholder="e.g. 500"
             />
             <p className="text-[0.6875rem] text-muted-foreground">
-              {t('Pre-filled from the amount collected this month — edit to set the actual salary.')}
+              {suggestedAmount != null
+                ? t("Pre-filled with the salary by the teacher's pay rate, advances included — edit to set the actual salary.")
+                : t('Pre-filled from the amount collected this month — edit to set the actual salary.')}
             </p>
             {advanceTotal > 0 && (
               <p className="text-xs font-semibold text-sky-700 dark:text-sky-400">

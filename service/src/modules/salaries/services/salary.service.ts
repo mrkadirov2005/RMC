@@ -3,6 +3,7 @@ const salaryRepository = require('../repositories/salary.repository');
 const { methodGroup, EXPENSE_METHODS } = require('../../cash_report/services/cashReport.service');
 const paymentRepository = require('../../payments/repositories/payment.repository');
 const { buildTeacherGroupPayments } = require('./groupPayments');
+const { buildTeacherEarnings, summarizeEarnings } = require('./earnings');
 const teacherService = require('../../teachers/services/teacher.service');
 const ownerService = require('../../owners/services/owner.service');
 const superuserService = require('../../superusers/services/superuser.service');
@@ -45,15 +46,27 @@ const studentPaymentProgress = async (centerId: number | undefined, year: number
 
 const getOverview = async ({ centerId, year, month }: { centerId?: number; year?: number; month?: number }) => {
   const period = year && month ? { year: Number(year), month: Number(month) } : getPreviousPeriod();
-  const [teachersOverview, progress] = await Promise.all([
+  const [teachersOverview, earningPayments, progress] = await Promise.all([
     salaryRepository.listTeacherOverview({ centerId, year: period.year, month: period.month }),
+    salaryRepository.findEarningPayments({ centerId, year: period.year, month: period.month }),
     // The list still loads when this fails; the line just stays empty.
     studentPaymentProgress(centerId, period.year, period.month).catch((error: any) => {
       console.error('Salary student payment progress failed:', error);
       return new Map();
     }),
   ]);
-  const teachers = teachersOverview.map((row: any) => ({ ...row, payment_progress: progress.get(Number(row.teacher_id)) || null }));
+  const paymentsByTeacher = new Map<number, any[]>();
+  earningPayments.forEach((payment: any) => {
+    const key = Number(payment.teacher_id);
+    paymentsByTeacher.set(key, [...(paymentsByTeacher.get(key) || []), payment]);
+  });
+  const teachers = teachersOverview.map((row: any) => ({
+    ...row,
+    payment_progress: progress.get(Number(row.teacher_id)) || null,
+    earnings: summarizeEarnings(
+      buildTeacherEarnings({ salaryPercentage: row.salary_percentage, payments: paymentsByTeacher.get(Number(row.teacher_id)) || [] })
+    ),
+  }));
   return { year: period.year, month: period.month, teachers };
 };
 
@@ -247,14 +260,24 @@ const getMyGroupPayments = async ({ teacherId, centerId, monthKey }: { teacherId
   const [year, month] = monthKey.split('-').map(Number);
   const rows = await salaryRepository.findTeacherGroupPaymentRows({ teacherId, centerId, year, month });
   if (!rows) return null;
-  return buildTeacherGroupPayments({
-    monthKey,
-    salaryPercentage: rows.teacher.salary_percentage,
-    classes: rows.classes,
-    students: rows.students,
-    payments: rows.payments,
-    salary: rows.salary,
-  });
+  const [earningPayments, advances] = await Promise.all([
+    salaryRepository.findEarningPayments({ centerId, teacherId, year, month }),
+    salaryRepository.listAdvances([teacherId], centerId, { year, month }),
+  ]);
+  return {
+    ...buildTeacherGroupPayments({
+      monthKey,
+      salaryPercentage: rows.teacher.salary_percentage,
+      classes: rows.classes,
+      students: rows.students,
+      payments: rows.payments,
+      salary: rows.salary,
+    }),
+    // The month's salary by the pay rate, with the late payments it includes, and the advances taken.
+    earnings: buildTeacherEarnings({ salaryPercentage: rows.teacher.salary_percentage, payments: earningPayments }),
+    advances,
+    advance_total: salaryRepository.sumAdvances(advances),
+  };
 };
 
 module.exports = {

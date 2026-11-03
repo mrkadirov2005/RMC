@@ -1,19 +1,30 @@
 // "List" tab: every teacher for the salary month at a glance. How much of what their students owe came
-// in (a line; hover for the figures), the salary, the advances and what the teacher has received.
-// A click opens the teacher's panel with everything for the month.
+// in (a line; hover for the figures), the salary by the teacher's pay rate, how much of it the teacher
+// has received (advances and the paid salary, a line) and received / owed.
+// A click opens the teacher's salary page for the month.
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Loader2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PaginationBar } from '@/components/common/PaginationBar';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { collectedPercent, formatSalaryPeriod, progressTone, receivedSoFar, resolveSalaryStatus, teacherFullName } from '../model/salaryModel';
+import {
+  collectedPercent,
+  formatAmount,
+  formatSalaryPeriod,
+  monthInputValue,
+  payoutParts,
+  payoutStatus,
+  progressTone,
+  teacherFullName,
+} from '../model/salaryModel';
 import type { SalaryOverviewRow } from '../types';
-import { PaymentLine, STATUS_STYLE } from './SalaryPaymentLine';
-import { TeacherSalaryPanel } from './TeacherSalaryPanel';
+import { PaymentLine, PayoutLine, STATUS_STYLE } from './SalaryPaymentLine';
 
+const COLUMNS = 'lg:grid-cols-[minmax(160px,1.2fr)_minmax(170px,1.4fr)_minmax(120px,0.9fr)_minmax(180px,1.4fr)_minmax(150px,1fr)_20px]';
 
 const Tile = ({ label, value, detail, tone }: { label: string; value: string | number; detail?: string; tone?: string }) => (
   <div className="rounded-lg border bg-card px-3 py-2.5 shadow-sm">
@@ -44,31 +55,39 @@ interface SalaryListTabProps {
   };
 }
 
+const rowFigures = (row: SalaryOverviewRow) => {
+  const { advances, paidOut } = payoutParts(row.salary, row.advance_total);
+  const due = Number(row.earnings?.due) || 0;
+  return { advances, paidOut, received: advances + paidOut, due };
+};
+
 export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onSearch, pagination }: SalaryListTabProps) => {
   const { t } = useLanguage();
-  const [openTeacherId, setOpenTeacherId] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   const totals = useMemo(
     () =>
       allRows.reduce(
         (sum, row) => {
           const progress = row.payment_progress;
+          const figures = rowFigures(row);
           return {
             teachers: sum.teachers + 1,
-            paid: sum.paid + (row.salary?.is_paid ? 1 : 0),
-            salaries: sum.salaries + (Number(row.salary?.amount) || 0),
-            advances: sum.advances + (Number(row.advance_total) || 0),
-            received: sum.received + receivedSoFar(row.salary, row.advance_total),
+            settled: sum.settled + (payoutStatus(figures.received, figures.due) === 'paid' && figures.due > 0 ? 1 : 0),
+            due: sum.due + figures.due,
+            advances: sum.advances + figures.advances,
+            received: sum.received + figures.received,
+            left: sum.left + Math.max(0, figures.due - figures.received),
             expected: sum.expected + (progress?.expected || 0),
             collected: sum.collected + (progress?.collected || 0),
           };
         },
-        { teachers: 0, paid: 0, salaries: 0, advances: 0, received: 0, expected: 0, collected: 0 }
+        { teachers: 0, settled: 0, due: 0, advances: 0, received: 0, left: 0, expected: 0, collected: 0 }
       ),
     [allRows]
   );
   const overallPercent = collectedPercent(totals);
-  const openRow = allRows.find((row) => row.teacher_id === openTeacherId) || null;
+  const monthKey = monthInputValue(year, month);
 
   return (
     <div className="space-y-3">
@@ -79,9 +98,9 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
           detail={`${formatMoney(totals.collected)} / ${formatMoney(totals.expected)}`}
           tone={progressTone(overallPercent).text}
         />
-        <Tile label={t('Salaries paid')} value={`${totals.paid}/${totals.teachers}`} detail={formatMoney(totals.salaries)} tone="text-primary" />
-        <Tile label={t('Advances given')} value={formatMoney(totals.advances)} tone="text-sky-600" />
-        <Tile label={t('Teachers received')} value={formatMoney(totals.received)} detail={t('advances + paid salaries')} tone="text-emerald-600" />
+        <Tile label={t('Salaries by pay rate')} value={formatMoney(totals.due)} detail={t('{count} of {total} fully paid', { count: totals.settled, total: totals.teachers })} tone="text-primary" />
+        <Tile label={t('Teachers received')} value={formatMoney(totals.received)} detail={t('Advances: {amount}', { amount: formatMoney(totals.advances) })} tone="text-emerald-600" />
+        <Tile label={t('Left to pay')} value={formatMoney(totals.left)} tone="text-rose-600" />
       </div>
 
       <div className="rounded-lg border bg-card shadow-sm">
@@ -96,12 +115,11 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
         </div>
 
         {/* Column titles (wide screens; on a phone each row stacks). */}
-        <div className="hidden grid-cols-[minmax(160px,1.3fr)_minmax(180px,1.6fr)_repeat(3,minmax(110px,1fr))_110px_20px] gap-4 border-b px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-wide text-muted-foreground lg:grid">
+        <div className={cn('hidden gap-4 border-b px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-wide text-muted-foreground lg:grid', COLUMNS)}>
           <span>{t('Teacher')}</span>
           <span>{t('Student payments')}</span>
           <span className="text-right">{t('Salary')}</span>
-          <span className="text-right">{t('Advance')}</span>
-          <span className="text-right">{t('Received')}</span>
+          <span>{t('Received of salary')}</span>
           <span>{t('Status')}</span>
           <span />
         </div>
@@ -115,14 +133,15 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
         ) : (
           <div className="divide-y">
             {rows.map((row) => {
-              const status = resolveSalaryStatus(row.salary, row.advance_total);
-              const style = STATUS_STYLE[status];
+              const figures = rowFigures(row);
+              const style = STATUS_STYLE[payoutStatus(figures.received, figures.due)];
+              const rate = Number(row.earnings?.rate ?? row.salary_percentage) || 0;
               return (
                 <button
                   key={row.teacher_id}
                   type="button"
-                  onClick={() => setOpenTeacherId(row.teacher_id)}
-                  className="grid w-full grid-cols-2 items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors hover:bg-muted/40 lg:grid-cols-[minmax(160px,1.3fr)_minmax(180px,1.6fr)_repeat(3,minmax(110px,1fr))_110px_20px]"
+                  onClick={() => navigate(`/salary/${row.teacher_id}?month=${monthKey}`)}
+                  className={cn('grid w-full grid-cols-2 items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors hover:bg-muted/40', COLUMNS)}
                 >
                   <div className="col-span-2 min-w-0 lg:col-span-1">
                     <div className="truncate font-semibold">{teacherFullName(row)}</div>
@@ -133,10 +152,22 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
                   <div className="col-span-2 lg:col-span-1">
                     <PaymentLine progress={row.payment_progress} />
                   </div>
-                  <Figure label={t('Salary')} value={row.salary ? formatMoney(row.salary.amount) : '—'} />
-                  <Figure label={t('Advance')} value={Number(row.advance_total) > 0 ? formatMoney(row.advance_total || 0) : '—'} tone="text-sky-600" />
-                  <Figure label={t('Received')} value={receivedSoFar(row.salary, row.advance_total) > 0 ? formatMoney(receivedSoFar(row.salary, row.advance_total)) : '—'} tone="text-emerald-600" />
-                  <span className={cn('w-fit rounded-full px-2.5 py-1 text-xs font-bold', style.className)}>{t(style.label)}</span>
+                  <div className="flex items-baseline justify-between gap-2 lg:block lg:text-right">
+                    <span className="text-xs text-muted-foreground lg:hidden">{t('Salary')}</span>
+                    <span>
+                      <span className="block font-bold tabular-nums">{formatMoney(figures.due)}</span>
+                      <span className="block text-[0.6875rem] text-muted-foreground">
+                        {rate > 0 ? t('{rate}% rate', { rate }) : t('No pay rate set')}
+                        {row.earnings?.late_count ? ` · ${t('{count} late', { count: row.earnings.late_count })}` : ''}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <PayoutLine advances={figures.advances} paidOut={figures.paidOut} due={figures.due} />
+                  </div>
+                  <span className={cn('w-fit whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold tabular-nums', style.className)}>
+                    {formatAmount(figures.received)} / {formatAmount(figures.due)}
+                  </span>
                   <ChevronRight className="hidden h-4 w-4 text-muted-foreground lg:block" />
                 </button>
               );
@@ -160,16 +191,6 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
           />
         </div>
       </div>
-
-      {openRow && <TeacherSalaryPanel row={openRow} year={year} month={month} onClose={() => setOpenTeacherId(null)} />}
     </div>
   );
 };
-
-/** A money figure: right-aligned in the wide layout, labelled when the row stacks on a phone. */
-const Figure = ({ label, value, tone }: { label: string; value: string; tone?: string }) => (
-  <div className="flex items-baseline justify-between gap-2 lg:block lg:text-right">
-    <span className="text-xs text-muted-foreground lg:hidden">{label}</span>
-    <span className={cn('font-semibold tabular-nums', value !== '—' && tone)}>{value}</span>
-  </div>
-);

@@ -297,6 +297,7 @@ const listTeachers = (centerId?: number) => {
       center_id: teachers.centerId,
       first_name: teachers.firstName,
       last_name: teachers.lastName,
+      salary_percentage: teachers.salaryPercentage,
     })
     .from(teachers)
     .where(and(...conditions))
@@ -406,6 +407,7 @@ const listTeacherOverview = async ({
     first_name: teacher.first_name,
     last_name: teacher.last_name,
     center_id: teacher.center_id,
+    salary_percentage: teacher.salary_percentage,
     salary: salaryByTeacher.get(Number(teacher.teacher_id)) || null,
     student_stats: toStudentStats(statsByTeacher.get(Number(teacher.teacher_id))),
   }));
@@ -453,6 +455,49 @@ const listHistoryForTeacher = async (teacherId: number, centerId: number | undef
     });
   }
   return history;
+};
+
+// The payments a month's salary is paid from, per teacher (the student's group teacher):
+//  - on time: dated in the month and entered by its end (Tashkent time);
+//  - late: dated in an earlier month (from the salary start) but entered during this month.
+// A payment entered after its month is over is never added to that month; it counts in the month it
+// came in, so a finished month's salary stays what it was.
+const findEarningPayments = async ({ centerId, teacherId, year, month }: { centerId?: number; teacherId?: number; year: number; month: number }) => {
+  const { start, end } = monthRange(year, month);
+  const monthKey = `${year}-${pad2(month)}`;
+  const startIndex = salaryStartIndex();
+  const salaryStart = `${Math.floor(startIndex / 12)}-${pad2((startIndex % 12) + 1)}-01`;
+  const params: any[] = [start, end, monthKey, salaryStart];
+  let scope = '';
+  if (centerId) {
+    params.push(centerId);
+    scope += ` AND s.center_id = $${params.length}`;
+  }
+  if (teacherId) {
+    params.push(teacherId);
+    scope += ` AND COALESCE(c.teacher_id, s.teacher_id) = $${params.length}`;
+  }
+  const result = await pool.query(
+    `SELECT paid.*, paid.payment_date < $1::date AS late FROM (
+       SELECT p.payment_id, p.student_id, p.amount, p.payment_date, p.created_at,
+              to_char(p.payment_date, 'YYYY-MM') AS for_month,
+              to_char((p.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Tashkent', 'YYYY-MM') AS entered_month,
+              to_char((p.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Tashkent', 'YYYY-MM-DD') AS entered_day,
+              COALESCE(c.teacher_id, s.teacher_id) AS teacher_id,
+              s.first_name, s.last_name, c.class_id, c.class_name
+         FROM payments p
+         JOIN students s ON s.student_id = p.student_id
+         LEFT JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
+        WHERE p.deleted_at IS NULL
+          AND LOWER(p.payment_status) IN ('completed', 'paid')
+          AND p.payment_date >= $4::date AND p.payment_date < $2::date${scope}
+     ) paid
+     WHERE (payment_date >= $1::date AND (entered_month IS NULL OR entered_month <= $3))
+        OR (payment_date < $1::date AND entered_month = $3)
+     ORDER BY created_at, payment_id`,
+    params
+  );
+  return result.rows;
 };
 
 // Raw rows behind a teacher's own per-group payment view for one month: their classes, the
@@ -578,6 +623,7 @@ module.exports = {
   listHistoryForTeacher,
   monthlySummary,
   findTeacherGroupPaymentRows,
+  findEarningPayments,
   insertAdvance,
   deleteAdvance,
   listAdvances,
