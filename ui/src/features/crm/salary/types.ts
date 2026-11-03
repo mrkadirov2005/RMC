@@ -50,6 +50,17 @@ export interface SalaryStudentStats {
   collected_amount: number;
 }
 
+/** A teacher's students in the salary month: what they should pay and what they paid. */
+export interface SalaryPaymentProgress {
+  students: number;
+  paid_students: number;
+  partial_students: number;
+  unpaid_students: number;
+  expected: number;
+  collected: number;
+  remaining: number;
+}
+
 export interface SalaryOverviewRow {
   teacher_id: number;
   first_name?: string;
@@ -59,6 +70,7 @@ export interface SalaryOverviewRow {
   /** Advances given against this month's salary. */
   advance_total?: number;
   student_stats: SalaryStudentStats;
+  payment_progress?: SalaryPaymentProgress | null;
 }
 
 export interface SalaryHistoryEntry {

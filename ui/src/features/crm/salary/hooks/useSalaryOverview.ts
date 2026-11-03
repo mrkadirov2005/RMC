@@ -70,6 +70,7 @@ export const useSalaryOverview = () => {
     setSearch,
     loading,
     rows: pagedRows,
+    allRows: overview as SalaryOverviewRow[],
     totalRows: filteredRows.length,
     page,
     setPage,

@@ -1,6 +1,7 @@
 const { sql } = require('drizzle-orm');
 const salaryRepository = require('../repositories/salary.repository');
 const { methodGroup, EXPENSE_METHODS } = require('../../cash_report/services/cashReport.service');
+const paymentRepository = require('../../payments/repositories/payment.repository');
 const { buildTeacherGroupPayments } = require('./groupPayments');
 const teacherService = require('../../teachers/services/teacher.service');
 const ownerService = require('../../owners/services/owner.service');
@@ -12,14 +13,48 @@ const getPreviousPeriod = () => {
   return { year: prev.getFullYear(), month: prev.getMonth() + 1 };
 };
 
+// Each teacher's students in the salary month: what they should pay and what they paid, from the
+// same calculation as Dashboard → To'lovlar (fees, discounts, a first month from the start date).
+const studentPaymentProgress = async (centerId: number | undefined, year: number, month: number) => {
+  const mm = String(month).padStart(2, '0');
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const summary = await paymentRepository.findStudentPaymentSummary({
+    centerId,
+    from: `${year}-${mm}-01`,
+    to: `${year}-${mm}-${String(lastDay).padStart(2, '0')}`,
+    months: 1,
+    limit: 0,
+    offset: 0,
+  });
+  const num = (value: unknown) => Math.round(Number(value || 0) * 100) / 100;
+  const byTeacher = new Map<number, any>();
+  (summary?.by_teacher || []).forEach((row: any) => {
+    if (row.teacher_id == null) return;
+    byTeacher.set(Number(row.teacher_id), {
+      students: Number(row.students) || 0,
+      paid_students: Number(row.paid_students) || 0,
+      partial_students: Number(row.partial_students) || 0,
+      unpaid_students: Number(row.unpaid_students) || 0,
+      expected: num(row.expected),
+      collected: num(row.collected),
+      remaining: num(row.remaining),
+    });
+  });
+  return byTeacher;
+};
+
 const getOverview = async ({ centerId, year, month }: { centerId?: number; year?: number; month?: number }) => {
   const period = year && month ? { year: Number(year), month: Number(month) } : getPreviousPeriod();
-  const teachersOverview = await salaryRepository.listTeacherOverview({
-    centerId,
-    year: period.year,
-    month: period.month,
-  });
-  return { year: period.year, month: period.month, teachers: teachersOverview };
+  const [teachersOverview, progress] = await Promise.all([
+    salaryRepository.listTeacherOverview({ centerId, year: period.year, month: period.month }),
+    // The list still loads when this fails; the line just stays empty.
+    studentPaymentProgress(centerId, period.year, period.month).catch((error: any) => {
+      console.error('Salary student payment progress failed:', error);
+      return new Map();
+    }),
+  ]);
+  const teachers = teachersOverview.map((row: any) => ({ ...row, payment_progress: progress.get(Number(row.teacher_id)) || null }));
+  return { year: period.year, month: period.month, teachers };
 };
 
 const getTeacherDetail = async ({

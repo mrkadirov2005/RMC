@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  collectedPercent,
+  progressTone,
+  receivedSoFar,
   formatSalaryPeriod,
   formatStudentPaidShare,
   monthInputValue,
@@ -76,5 +79,27 @@ describe('remainingAfterAdvances', () => {
     expect(remainingAfterAdvances(1000000, 300000)).toBe(700000);
     expect(remainingAfterAdvances('500000', '600000')).toBe(0);
     expect(remainingAfterAdvances(null, 100)).toBe(0);
+  });
+});
+
+describe('salary list figures', () => {
+  it('the share of student payments that came in, capped at 100', () => {
+    expect(collectedPercent({ expected: 10000, collected: 5000 })).toBe(50);
+    expect(collectedPercent({ expected: 10000, collected: 12000 })).toBe(100);
+    expect(collectedPercent({ expected: 0, collected: 0 })).toBe(0);
+    expect(collectedPercent(null)).toBe(0);
+  });
+
+  it('green from 90%, amber from 50%, red below', () => {
+    expect(progressTone(95).text).toBe('text-emerald-600');
+    expect(progressTone(50).text).toBe('text-amber-600');
+    expect(progressTone(49).text).toBe('text-rose-600');
+  });
+
+  it('what the teacher received: the advances, and the whole salary once it is paid', () => {
+    expect(receivedSoFar(null, 200000)).toBe(200000);
+    expect(receivedSoFar({ is_paid: false, amount: 1000000 }, 200000)).toBe(200000);
+    expect(receivedSoFar({ is_paid: true, amount: 1000000 }, 200000)).toBe(1000000);
+    expect(receivedSoFar({ is_paid: true, amount: '1000000' }, 0)).toBe(1000000);
   });
 });

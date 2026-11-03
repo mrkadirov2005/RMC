@@ -60,3 +60,24 @@ export const remainingAfterAdvances = (amount: number | string | null | undefine
   const left = (Number(amount) || 0) - (Number(advanceTotal) || 0);
   return Math.max(0, Math.round(left * 100) / 100);
 };
+
+/** Share of the expected student payments that came in, 0-100 (over 100 counts as 100). */
+export const collectedPercent = (progress?: { expected: number; collected: number } | null): number => {
+  if (!progress || !(progress.expected > 0)) return 0;
+  return Math.min(100, Math.round((progress.collected / progress.expected) * 100));
+};
+
+/** Colour of the student payment line: green from 90%, amber from 50%, red below. */
+export const progressTone = (percent: number): { bar: string; text: string } =>
+  percent >= 90
+    ? { bar: '#10b981', text: 'text-emerald-600' }
+    : percent >= 50
+      ? { bar: '#f59e0b', text: 'text-amber-600' }
+      : { bar: '#f43f5e', text: 'text-rose-600' };
+
+/** What the teacher has actually received for the month: advances, plus the rest once the salary is paid. */
+export const receivedSoFar = (salary: { is_paid?: boolean; amount?: number | string } | null | undefined, advanceTotal?: number | string | null): number => {
+  const advances = Number(advanceTotal) || 0;
+  if (!salary?.is_paid) return Math.round(advances * 100) / 100;
+  return Math.round(Math.max(Number(salary.amount) || 0, advances) * 100) / 100;
+};
