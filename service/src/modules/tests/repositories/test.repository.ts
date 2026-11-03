@@ -317,18 +317,20 @@ const findAll = async (filters: Record<string, any> = {}) => {
   }
   if (filters.public_only) conditions.push(sql`COALESCE(${tests.isPrivate}, false) = false`);
   // The list cards show how big each test is and how much it has been used, so the
-  // counts come back with the rows rather than as a request per card.
+  // counts come back with the rows rather than as a request per card. The outer table is named
+  // in full: inside a subquery a bare test_id would be the subquery's own column, and every card
+  // would count the whole center.
   const query = db
     .select({
       ...testSelection,
-      question_count: sql<number>`(SELECT COUNT(*)::int FROM test_questions q WHERE q.test_id = ${tests.testId})`,
+      question_count: sql<number>`(SELECT COUNT(*)::int FROM test_questions q WHERE q.test_id = "tests"."test_id")`,
       submission_count: sql<number>`(
         SELECT COUNT(*)::int FROM test_submissions ts
-        WHERE ts.test_id = ${tests.testId} AND ts.status IN ('submitted', 'graded')
+        WHERE ts.test_id = "tests"."test_id" AND ts.status IN ('submitted', 'graded')
       )`,
       awaiting_grading_count: sql<number>`(
         SELECT COUNT(*)::int FROM test_submissions ts
-        WHERE ts.test_id = ${tests.testId} AND ts.status = 'submitted'
+        WHERE ts.test_id = "tests"."test_id" AND ts.status = 'submitted'
       )`,
     })
     .from(tests);

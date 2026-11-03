@@ -79,6 +79,14 @@ describe('English level tests with PostgreSQL', () => {
     expect(Number(result.obtained_marks)).toBe(30);
   });
 
+  test('the tests list counts each test\'s own questions and submissions', async () => {
+    const list = (await api().get('/api/tests').set(auth(admin))).body;
+    const rows = Array.isArray(list) ? list : list.data || list.items || [];
+    const byLevel = new Map(rows.map((row) => [row.test_data?.level_test?.level, row]));
+    expect(byLevel.get('B1')).toMatchObject({ question_count: 30, submission_count: 1 });
+    expect(byLevel.get('A1')).toMatchObject({ question_count: 30, submission_count: 0 });
+  });
+
   test('always picking the first option fails', async () => {
     const result = await takeB1((question) => (question.question_type === 'true_false' ? { value: true } : { index: 0 }));
     expect(result.status).toBe('graded');
