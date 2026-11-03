@@ -32,6 +32,37 @@ class MarkSalaryPaidDto {
   notes?: string;
 }
 
+class AddSalaryAdvanceDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  teacher_id!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  salary_year!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  salary_month!: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.01)
+  amount!: number;
+
+  @IsOptional()
+  @IsString()
+  payment_method?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
 class UpdateSalaryDto {
   @IsOptional()
   @Type(() => Number)
@@ -54,6 +85,7 @@ class UpdateSalaryDto {
 
 module.exports = {
   MarkSalaryPaidDto,
+  AddSalaryAdvanceDto,
   UpdateSalaryDto,
 };
 

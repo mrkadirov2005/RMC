@@ -16,7 +16,9 @@ import {
 } from '@/components/ui/table';
 import { useSalaryTeacherDetail } from './hooks/useSalaryTeacherDetail';
 import { MarkSalaryPaidDialog } from './components/MarkSalaryPaidDialog';
-import { formatSalaryPeriod, formatStudentPaidShare, resolvePreviousMonth, teacherFullName } from './model/salaryModel';
+import { SalaryAdvanceDialog } from './components/SalaryAdvanceDialog';
+import { TeacherStudentsPaidDialog } from './components/TeacherStudentsPaidDialog';
+import { formatSalaryPeriod, formatStudentPaidShare, remainingAfterAdvances, resolvePreviousMonth, resolveSalaryStatus, teacherFullName } from './model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
 import type { SalaryHistoryEntry, SalaryStudentStats } from './types';
 
@@ -43,10 +45,17 @@ const SalaryTeacherDetailPage = () => {
     paymentMethod?: string | null;
     notes?: string | null;
     studentStats: SalaryStudentStats;
+    advanceTotal: number;
   } | null>(null);
+  // The month an advance is being given for / whose paying students are shown.
+  const [advancePeriod, setAdvancePeriod] = useState<{ year: number; month: number } | null>(null);
+  const [studentsPeriod, setStudentsPeriod] = useState<{ year: number; month: number } | null>(null);
 
   const currentPeriod = useMemo(() => resolvePreviousMonth(), []);
   const teacherName = detail ? teacherFullName(detail.teacher) : '';
+
+  const advancesFor = (period: { year: number; month: number } | null) =>
+    detail?.history.find((entry) => period && entry.salary_year === period.year && entry.salary_month === period.month)?.advances ?? [];
 
   const openMarkPaidFor = (entry: SalaryHistoryEntry) => {
     setDialogPeriod({
@@ -56,6 +65,7 @@ const SalaryTeacherDetailPage = () => {
       paymentMethod: entry.salary?.payment_method,
       notes: entry.salary?.notes,
       studentStats: entry.student_stats,
+      advanceTotal: entry.advance_total ?? 0,
     });
   };
 
@@ -106,6 +116,7 @@ const SalaryTeacherDetailPage = () => {
                 <TableRow>
                   <TableHead>{t('Month')}</TableHead>
                   <TableHead>{t('Amount')}</TableHead>
+                  <TableHead>{t('Advance')}</TableHead>
                   <TableHead>{t('Paid?')}</TableHead>
                   <TableHead>{t('Marked By')}</TableHead>
                   <TableHead>{t('Students Paid')}</TableHead>
@@ -118,12 +129,25 @@ const SalaryTeacherDetailPage = () => {
                   <TableRow key={`${entry.salary_year}-${entry.salary_month}`}>
                     <TableCell className="font-medium">{formatSalaryPeriod(entry.salary_year, entry.salary_month)}</TableCell>
                     <TableCell>{entry.salary ? formatMoney(entry.salary.amount) : '—'}</TableCell>
+                    <TableCell>{entry.advance_total ? formatMoney(entry.advance_total) : '—'}</TableCell>
                     <TableCell>
-                      {entry.salary?.is_paid ? (
-                        <Badge variant="success">{t('Paid')}</Badge>
-                      ) : (
-                        <Badge variant="warning">{t('Unpaid')}</Badge>
-                      )}
+                      {(() => {
+                        const status = resolveSalaryStatus(entry.salary, entry.advance_total);
+                        if (status === 'paid') return <Badge variant="success">{t('Paid')}</Badge>;
+                        if (status === 'pending') {
+                          return (
+                            <div className="space-y-0.5">
+                              <Badge variant="info">{t('Pending')}</Badge>
+                              {entry.salary && (
+                                <p className="text-[0.6875rem] text-muted-foreground">
+                                  {t('Left to pay: {amount}', { amount: formatMoney(remainingAfterAdvances(entry.salary.amount, entry.advance_total)) })}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        }
+                        return <Badge variant="warning">{t('Unpaid')}</Badge>;
+                      })()}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {entry.salary?.marked_by_name
@@ -134,7 +158,13 @@ const SalaryTeacherDetailPage = () => {
                     <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                       {entry.salary?.notes || '—'}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="whitespace-nowrap text-right">
+                      <Button variant="ghost" size="sm" onClick={() => setStudentsPeriod({ year: entry.salary_year, month: entry.salary_month })}>
+                        {t('Students who paid')}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setAdvancePeriod({ year: entry.salary_year, month: entry.salary_month })}>
+                        {t('Advance')}
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => openMarkPaidFor(entry)}>
                         {entry.salary?.is_paid ? t('Edit') : t('Mark Paid')}
                       </Button>
@@ -159,6 +189,30 @@ const SalaryTeacherDetailPage = () => {
           existingAmount={dialogPeriod.amount}
           existingPaymentMethod={dialogPeriod.paymentMethod}
           existingNotes={dialogPeriod.notes}
+          advanceTotal={dialogPeriod.advanceTotal}
+        />
+      )}
+
+      {advancePeriod && (
+        <SalaryAdvanceDialog
+          open
+          onOpenChange={(open) => { if (!open) setAdvancePeriod(null); }}
+          teacherId={teacherId}
+          teacherName={teacherName || `Teacher #${teacherId}`}
+          salaryYear={advancePeriod.year}
+          salaryMonth={advancePeriod.month}
+          advances={advancesFor(advancePeriod)}
+        />
+      )}
+
+      {studentsPeriod && (
+        <TeacherStudentsPaidDialog
+          open
+          onOpenChange={(open) => { if (!open) setStudentsPeriod(null); }}
+          teacherId={teacherId}
+          teacherName={teacherName || `Teacher #${teacherId}`}
+          salaryYear={studentsPeriod.year}
+          salaryMonth={studentsPeriod.month}
         />
       )}
     </div>

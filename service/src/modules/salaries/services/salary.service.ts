@@ -1,5 +1,6 @@
 const { sql } = require('drizzle-orm');
 const salaryRepository = require('../repositories/salary.repository');
+const { methodGroup, EXPENSE_METHODS } = require('../../cash_report/services/cashReport.service');
 const { buildTeacherGroupPayments } = require('./groupPayments');
 const teacherService = require('../../teachers/services/teacher.service');
 const ownerService = require('../../owners/services/owner.service');
@@ -66,6 +67,41 @@ const resolveActingUserIdentity = async (actingUser: any, centerId?: number) => 
   };
 };
 
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// Centers bill by Tashkent time, so a payout is spent on the Tashkent day.
+const tashkentToday = () =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+
+const teacherDisplayName = async (teacherId: number, centerId?: number) => {
+  const teacher = await teacherService.getTeacher(teacherId, centerId);
+  return [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ').trim() || `#${teacherId}`;
+};
+
+// A paid salary is money out of the kassa too: what is paid out now, after the advances (those already
+// left the kassa when they were given), as "Maosh: <teacher> — <month year>".
+const reconcileSalaryExpense = async (salary: any, centerId: number | undefined, createdByName: string | null) => {
+  if (!salary) return;
+  const advances = await salaryRepository.listAdvances([Number(salary.teacher_id)], centerId, {
+    year: Number(salary.salary_year),
+    month: Number(salary.salary_month),
+  });
+  const due = salary.is_paid ? Math.max(0, Math.round((Number(salary.amount) - salaryRepository.sumAdvances(advances)) * 100) / 100) : 0;
+  const group = methodGroup(salary.payment_method || 'Cash');
+  const method = EXPENSE_METHODS[(group === 'other' ? 'cash' : group) as 'cash' | 'card' | 'bank'];
+  const teacherName = await teacherDisplayName(Number(salary.teacher_id), centerId);
+  await salaryRepository.syncSalaryExpense({
+    salaryId: salary.salary_id,
+    expenseId: salary.expense_id,
+    centerId: salary.center_id ?? centerId,
+    amount: due,
+    expenseDate: tashkentToday(),
+    paymentMethod: method,
+    description: `Maosh: ${teacherName} — ${MONTH_NAMES[Number(salary.salary_month) - 1]} ${salary.salary_year}`,
+    createdByName,
+  });
+};
+
 const markPaid = async (payload: {
   teacherId: number;
   salaryYear: number;
@@ -76,8 +112,10 @@ const markPaid = async (payload: {
   centerId?: number;
   actingUser: any;
 }) => {
+  // The kassa has cash, card and bank only; a payout made some other way would not fit any till.
+  if (methodGroup(payload.paymentMethod || 'Cash') === 'other') return { error: 'invalid_method' as const };
   const identity = await resolveActingUserIdentity(payload.actingUser, payload.centerId);
-  return salaryRepository.upsertRecord({
+  const record = await salaryRepository.upsertRecord({
     teacherId: payload.teacherId,
     centerId: payload.centerId ?? null,
     salaryYear: payload.salaryYear,
@@ -88,6 +126,8 @@ const markPaid = async (payload: {
     paymentMethod: payload.paymentMethod ?? null,
     notes: payload.notes ?? null,
   });
+  await reconcileSalaryExpense(record, payload.centerId, identity.markedByName);
+  return record;
 };
 
 const updateSalaryRecord = async (payload: {
@@ -96,6 +136,9 @@ const updateSalaryRecord = async (payload: {
   centerId?: number;
   actingUser: any;
 }) => {
+  if (payload.patch.payment_method !== undefined && methodGroup(payload.patch.payment_method || 'Cash') === 'other') {
+    return { error: 'invalid_method' as const };
+  }
   const identity = await resolveActingUserIdentity(payload.actingUser, payload.centerId);
   const patch: any = { ...identity };
   if (payload.patch.amount !== undefined) patch.amount = payload.patch.amount;
@@ -105,7 +148,58 @@ const updateSalaryRecord = async (payload: {
   }
   if (payload.patch.payment_method !== undefined) patch.paymentMethod = payload.patch.payment_method;
   if (payload.patch.notes !== undefined) patch.notes = payload.patch.notes;
-  return salaryRepository.updateRecord(payload.id, patch, payload.centerId);
+  const record = await salaryRepository.updateRecord(payload.id, patch, payload.centerId);
+  await reconcileSalaryExpense(record, payload.centerId, identity.markedByName);
+  return record;
+};
+
+// An advance is money out of the kassa: it is saved with a matching expense, in the till it was paid from.
+const addAdvance = async (payload: {
+  teacherId: number;
+  salaryYear: number;
+  salaryMonth: number;
+  amount: number;
+  paymentMethod?: string;
+  notes?: string;
+  centerId?: number;
+  actingUser: any;
+}) => {
+  // The kassa has cash, card and bank only; an advance paid some other way would not fit any till.
+  const group = methodGroup(payload.paymentMethod || 'Cash');
+  if (group === 'other') return { error: 'invalid_method' as const };
+  const teacherName = await teacherDisplayName(payload.teacherId, payload.centerId);
+  const identity = await resolveActingUserIdentity(payload.actingUser, payload.centerId);
+  const advance = await salaryRepository.insertAdvance({
+    teacherId: payload.teacherId,
+    centerId: payload.centerId ?? null,
+    salaryYear: payload.salaryYear,
+    salaryMonth: payload.salaryMonth,
+    amount: payload.amount,
+    paymentMethod: EXPENSE_METHODS[group as 'cash' | 'card' | 'bank'],
+    notes: payload.notes ?? null,
+    givenById: identity.markedById,
+    givenByRole: identity.markedByRole,
+    givenByName: identity.markedByName,
+    expense: {
+      expenseDate: tashkentToday(),
+      paymentMethod: EXPENSE_METHODS[group as 'cash' | 'card' | 'bank'],
+      description: `Avans: ${teacherName} — ${MONTH_NAMES[payload.salaryMonth - 1]} ${payload.salaryYear}${payload.notes ? ` (${payload.notes})` : ''}`,
+    },
+  });
+  // A salary already paid out is paid out less by what was advanced after all.
+  await reconcileSalaryAfterAdvance(payload.teacherId, payload.salaryYear, payload.salaryMonth, payload.centerId, identity.markedByName);
+  return advance;
+};
+
+const reconcileSalaryAfterAdvance = async (teacherId: number, year: number, month: number, centerId: number | undefined, byName: string | null) => {
+  const salary = await salaryRepository.findRecord(teacherId, year, month, centerId);
+  if (salary?.is_paid) await reconcileSalaryExpense(salary, centerId, byName);
+};
+
+const removeAdvance = async ({ id, centerId }: { id: number; centerId?: number }) => {
+  const removed = await salaryRepository.deleteAdvance(id, centerId);
+  if (removed) await reconcileSalaryAfterAdvance(Number(removed.teacher_id), Number(removed.salary_year), Number(removed.salary_month), centerId, null);
+  return removed;
 };
 
 const getMonthlySummary = async ({ centerId, months = 6 }: { centerId?: number; months?: number }) => {
@@ -135,6 +229,8 @@ module.exports = {
   updateSalaryRecord,
   getMonthlySummary,
   getMyGroupPayments,
+  addAdvance,
+  removeAdvance,
 };
 
 export {};

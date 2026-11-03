@@ -112,4 +112,38 @@ describe('salary repository', () => {
     expect(chain.limit).toHaveBeenCalledWith(1);
     expect(record).toEqual({ salary_id: 42 });
   });
+
+  it('insertAdvance records the advance together with a kassa expense and links them', async () => {
+    const expenseChain = createInsertChain([{ expense_id: 55 }]);
+    const advanceChain = createInsertChain([{ advance_id: 1, teacher_id: 7, salary_year: 2026, salary_month: 10, amount: '200000' }]);
+    mockDb.insert.mockReturnValueOnce(expenseChain).mockReturnValueOnce(advanceChain);
+
+    await salaryRepository.insertAdvance({
+      teacherId: 7, centerId: 2, salaryYear: 2026, salaryMonth: 10, amount: 200000, givenByName: 'Jane',
+      expense: { expenseDate: '2026-10-26', paymentMethod: 'Cash', description: 'Avans: Ali Valiyev — October 2026' },
+    });
+
+    expect(expenseChain.values).toHaveBeenCalledWith(expect.objectContaining({
+      centerId: 2, expenseDate: '2026-10-26', amount: '200000', paymentMethod: 'Cash', createdByName: 'Jane',
+    }));
+    expect(advanceChain.values).toHaveBeenCalledWith(expect.objectContaining({ teacherId: 7, amount: '200000', expenseId: 55 }));
+    expect(advanceChain.onConflictDoUpdate).not.toHaveBeenCalled();
+  });
+
+  it('insertAdvance takes the expense back out when the advance row fails', async () => {
+    const expenseChain = createInsertChain([{ expense_id: 55 }]);
+    const failing = createInsertChain([]);
+    failing.returning = jest.fn(() => Promise.reject(new Error('boom')));
+    mockDb.insert.mockReturnValueOnce(expenseChain).mockReturnValueOnce(failing);
+    const where = jest.fn(() => Promise.resolve());
+    const set = jest.fn(() => ({ where }));
+    mockDb.update.mockReturnValue({ set });
+
+    await expect(salaryRepository.insertAdvance({
+      teacherId: 7, centerId: 2, salaryYear: 2026, salaryMonth: 10, amount: 200000,
+      expense: { expenseDate: '2026-10-26', paymentMethod: 'Cash', description: 'x' },
+    })).rejects.toThrow('boom');
+
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ deletedAt: expect.anything() }));
+  });
 });

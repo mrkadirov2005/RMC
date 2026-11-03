@@ -561,6 +561,12 @@ export const salaryAPI = {
     apiClient.patch(`/salaries/${id}`, data),
   getMonthlySummary: (params?: { months?: number; center_id?: number }) =>
     apiClient.get('/salaries/monthly-summary', { params }),
+  addAdvance: (data: { teacher_id: number; salary_year: number; salary_month: number; amount: number; payment_method?: string; notes?: string }) =>
+    apiClient.post('/salaries/advances', data),
+  removeAdvance: (id: number) => apiClient.delete(`/salaries/advances/${id}`),
+  /** An admin's view of one teacher's per-group payments for a month (YYYY-MM). */
+  getTeacherPayments: (teacherId: number, params: { month: string }) =>
+    apiClient.get(`/salaries/teacher/${teacherId}/payments`, { params }),
   getMine: (params?: { months?: number }) =>
     apiClient.get('/salaries/me', { params }),
   /** The signed-in teacher's per-group payments for a month (YYYY-MM; defaults to this month). */

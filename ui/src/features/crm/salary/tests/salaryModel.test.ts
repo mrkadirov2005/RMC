@@ -4,7 +4,9 @@ import {
   formatStudentPaidShare,
   monthInputValue,
   parseMonthInputValue,
+  remainingAfterAdvances,
   resolvePreviousMonth,
+  resolveSalaryStatus,
   teacherFullName,
 } from '../model/salaryModel';
 
@@ -50,5 +52,29 @@ describe('teacherFullName', () => {
 describe('formatStudentPaidShare', () => {
   it('renders paid/total with rounded percent', () => {
     expect(formatStudentPaidShare({ total_students: 20, paid_students: 15, paid_percent: 75 })).toBe('15/20 (75%)');
+  });
+});
+
+describe('resolveSalaryStatus', () => {
+  it('is paid once the salary is marked paid, advance or not', () => {
+    expect(resolveSalaryStatus({ is_paid: true }, 300000)).toBe('paid');
+  });
+
+  it('is pending when an advance was given and the salary is not paid out yet', () => {
+    expect(resolveSalaryStatus(null, 300000)).toBe('pending');
+    expect(resolveSalaryStatus({ is_paid: false }, '150000')).toBe('pending');
+  });
+
+  it('is unpaid with no advance and no payment', () => {
+    expect(resolveSalaryStatus(null, 0)).toBe('unpaid');
+    expect(resolveSalaryStatus({ is_paid: false }, undefined)).toBe('unpaid');
+  });
+});
+
+describe('remainingAfterAdvances', () => {
+  it('takes the advances off the salary and never goes below zero', () => {
+    expect(remainingAfterAdvances(1000000, 300000)).toBe(700000);
+    expect(remainingAfterAdvances('500000', '600000')).toBe(0);
+    expect(remainingAfterAdvances(null, 100)).toBe(0);
   });
 });

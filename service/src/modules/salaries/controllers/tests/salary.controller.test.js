@@ -5,6 +5,8 @@ jest.mock('../../services/salary.service', () => ({
   updateSalaryRecord: jest.fn(),
   getMonthlySummary: jest.fn(),
   getMyGroupPayments: jest.fn(),
+  addAdvance: jest.fn(),
+  removeAdvance: jest.fn(),
 }));
 
 jest.mock('../../../../shared/tenant', () => ({
@@ -45,6 +47,9 @@ describe('salaries controller', () => {
       ['markPaid', { body: {} }],
       ['updatePatch', { params: { id: '1' }, body: {} }],
       ['getMonthlySummary', { query: {} }],
+      ['addAdvance', { body: {} }],
+      ['removeAdvance', { params: { id: '1' } }],
+      ['getTeacherGroupPayments', { params: { teacherId: '5' }, query: {} }],
     ];
 
     it.each(handlers)('%s refuses a request with no center scope', async (handler, req) => {
@@ -392,6 +397,63 @@ describe('salaries controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Oylik maosh xulosasini yuklab bo'lmadi", details: 'summary failed' });
+    });
+  });
+
+  describe('advances', () => {
+    it('addAdvance saves the advance against the salary month and answers 201', async () => {
+      salaryService.addAdvance.mockResolvedValue({ advance_id: 9 });
+      const res = createResponse();
+
+      await salaryController.addAdvance(
+        { body: { teacher_id: '5', salary_year: '2026', salary_month: '10', amount: '300000', payment_method: 'Cash' }, user: { id: 1, role: 'admin' } },
+        res
+      );
+
+      expect(salaryService.addAdvance).toHaveBeenCalledWith(expect.objectContaining({
+        teacherId: 5, salaryYear: 2026, salaryMonth: 10, amount: 300000, paymentMethod: 'Cash', centerId: 4,
+      }));
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({ advance_id: 9 });
+    });
+
+    it('addAdvance answers 400 for a payment method the kassa cannot take', async () => {
+      salaryService.addAdvance.mockResolvedValue({ error: 'invalid_method' });
+      const res = createResponse();
+
+      await salaryController.addAdvance({ body: { teacher_id: '5', payment_method: 'Other' }, user: {} }, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('addAdvance refuses a teacher from another center', async () => {
+      teacherInCenter.mockResolvedValue(false);
+      const res = createResponse();
+
+      await salaryController.addAdvance({ body: { teacher_id: '5' }, user: {} }, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(salaryService.addAdvance).not.toHaveBeenCalled();
+    });
+
+    it('removeAdvance answers 404 when the advance is not in the center', async () => {
+      salaryService.removeAdvance.mockResolvedValue(null);
+      const res = createResponse();
+
+      await salaryController.removeAdvance({ params: { id: '9' }, user: {} }, res);
+
+      expect(salaryService.removeAdvance).toHaveBeenCalledWith({ id: 9, centerId: 4 });
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    it('getTeacherGroupPayments reads the teacher\'s groups for the asked month', async () => {
+      salaryService.getMyGroupPayments.mockResolvedValue({ month: '2026-09', groups: [] });
+      const res = createResponse();
+
+      await salaryController.getTeacherGroupPayments({ params: { teacherId: '5' }, query: { month: '2026-09' }, user: {} }, res);
+
+      expect(salaryService.getMyGroupPayments).toHaveBeenCalledWith({ teacherId: 5, centerId: 4, monthKey: '2026-09' });
+      expect(res.json).toHaveBeenCalledWith({ month: '2026-09', groups: [] });
     });
   });
 });

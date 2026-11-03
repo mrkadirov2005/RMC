@@ -103,12 +103,33 @@ const teacherSalaries = pgTable('teacher_salaries', {
   markedByName: varchar('marked_by_name', { length: 200 }),
   paymentMethod: varchar('payment_method', { length: 50 }),
   notes: text('notes'),
+  expenseId: integer('expense_id'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 }, (table) => [
     index('idx_teacher_salaries_teacher_id').on(table.teacherId),
     index('idx_teacher_salaries_center_id').on(table.centerId),
     index('idx_teacher_salaries_period').on(table.salaryYear, table.salaryMonth),
+]);
+
+const teacherSalaryAdvances = pgTable('teacher_salary_advances', {
+  advanceId: serial('advance_id').primaryKey(),
+  centerId: integer('center_id'),
+  teacherId: integer('teacher_id').notNull(),
+  salaryYear: integer('salary_year').notNull(),
+  salaryMonth: integer('salary_month').notNull(),
+  amount: numeric('amount').notNull(),
+  givenAt: timestamp('given_at'),
+  paymentMethod: varchar('payment_method', { length: 50 }),
+  notes: text('notes'),
+  givenById: integer('given_by_id'),
+  givenByRole: varchar('given_by_role', { length: 50 }),
+  givenByName: varchar('given_by_name', { length: 200 }),
+  expenseId: integer('expense_id'),
+  createdAt: timestamp('created_at'),
+}, (table) => [
+    index('idx_teacher_salary_advances_teacher_period').on(table.teacherId, table.salaryYear, table.salaryMonth),
+    index('idx_teacher_salary_advances_center_id').on(table.centerId),
 ]);
 
 const teacherKpis = pgTable('teacher_kpis', {
@@ -1202,6 +1223,7 @@ module.exports = {
   savedFilters,
   teacherTasks,
   teacherSalaries,
+  teacherSalaryAdvances,
   teacherKpis,
   notifications,
   teacherPaymentCredentials,

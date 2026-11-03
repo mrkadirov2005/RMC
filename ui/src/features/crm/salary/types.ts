@@ -19,6 +19,28 @@ export interface SalaryRecord {
   updated_at?: string;
 }
 
+export interface SalaryAdvance {
+  advance_id: number;
+  teacher_id: number;
+  salary_year: number;
+  salary_month: number;
+  amount: number | string;
+  given_at?: string | null;
+  payment_method?: string | null;
+  notes?: string | null;
+  given_by_name?: string | null;
+  given_by_role?: string | null;
+}
+
+export interface AddSalaryAdvancePayload {
+  teacher_id: number;
+  salary_year: number;
+  salary_month: number;
+  amount: number;
+  payment_method?: string;
+  notes?: string;
+}
+
 export interface SalaryStudentStats {
   total_students: number;
   paid_students: number;
@@ -34,6 +56,8 @@ export interface SalaryOverviewRow {
   last_name?: string;
   center_id?: number | null;
   salary: SalaryRecord | null;
+  /** Advances given against this month's salary. */
+  advance_total?: number;
   student_stats: SalaryStudentStats;
 }
 
@@ -41,6 +65,8 @@ export interface SalaryHistoryEntry {
   salary_year: number;
   salary_month: number;
   salary: SalaryRecord | null;
+  advances?: SalaryAdvance[];
+  advance_total?: number;
   student_stats: SalaryStudentStats;
 }
 

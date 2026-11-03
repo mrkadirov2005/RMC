@@ -17,7 +17,7 @@ import { formatMoney } from '@/utils/helpers';
 import { useSalaryOverview } from './hooks/useSalaryOverview';
 import { SalaryOverviewTab } from './components/SalaryOverviewTab';
 import { SalaryStudentsTab } from './components/SalaryStudentsTab';
-import { formatStudentPaidShare, monthInputValue, parseMonthInputValue, teacherFullName } from './model/salaryModel';
+import { formatStudentPaidShare, monthInputValue, parseMonthInputValue, resolveSalaryStatus, teacherFullName } from './model/salaryModel';
 import type { SalaryOverviewRow } from './types';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PERMISSION_CODES } from '@/types';
@@ -132,6 +132,7 @@ const SalaryPage = () => {
                     <TableRow>
                       <TableHead>{t('Teacher')}</TableHead>
                       <TableHead>{t('Last-Month Salary')}</TableHead>
+                      <TableHead>{t('Advance')}</TableHead>
                       <TableHead>{t('Paid?')}</TableHead>
                       <TableHead>{t('Marked By')}</TableHead>
                       <TableHead>{t('Students Paid')}</TableHead>
@@ -146,12 +147,14 @@ const SalaryPage = () => {
                       >
                         <TableCell className="font-medium">{teacherFullName(row)}</TableCell>
                         <TableCell>{row.salary ? formatMoney(row.salary.amount) : '—'}</TableCell>
+                        <TableCell>{row.advance_total ? formatMoney(row.advance_total) : '—'}</TableCell>
                         <TableCell>
-                          {row.salary?.is_paid ? (
-                            <Badge variant="success">{t('Paid')}</Badge>
-                          ) : (
-                            <Badge variant="warning">{t('Unpaid')}</Badge>
-                          )}
+                          {(() => {
+                            const status = resolveSalaryStatus(row.salary, row.advance_total);
+                            if (status === 'paid') return <Badge variant="success">{t('Paid')}</Badge>;
+                            if (status === 'pending') return <Badge variant="info">{t('Pending')}</Badge>;
+                            return <Badge variant="warning">{t('Unpaid')}</Badge>;
+                          })()}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {row.salary?.marked_by_name

@@ -6,6 +6,7 @@ import { salaryAPI } from '../shared/api/api';
 import { showToast } from '../utils/toast';
 import type { RootState } from '../store';
 import type {
+  AddSalaryAdvancePayload,
   MarkSalaryPaidPayload,
   SalaryMonthlySummaryEntry,
   SalaryOverviewRow,
@@ -23,6 +24,7 @@ interface SalariesState {
   teacherDetailLoading: boolean;
   teacherDetailError: string | null;
   markPaidLoading: boolean;
+  advanceLoading: boolean;
   monthlySummary: SalaryMonthlySummaryEntry[];
   monthlySummaryLoading: boolean;
   monthlySummaryError: string | null;
@@ -41,6 +43,7 @@ const initialState: SalariesState = {
   teacherDetailLoading: false,
   teacherDetailError: null,
   markPaidLoading: false,
+  advanceLoading: false,
   monthlySummary: [],
   monthlySummaryLoading: false,
   monthlySummaryError: null,
@@ -122,6 +125,44 @@ export const markSalaryPaid = createAsyncThunk(
       return data;
     } catch (err: any) {
       const msg = err?.response?.data?.error ?? 'Failed to mark salary as paid';
+      showToast.error(msg);
+      return rejectWithValue(msg);
+    }
+  }
+);
+
+const refreshAfterAdvance = (dispatch: any, getState: () => unknown, teacherId: number) => {
+  const { overviewYear, overviewMonth } = (getState() as RootState).salaries;
+  dispatch(fetchSalaryOverview({ year: overviewYear ?? undefined, month: overviewMonth ?? undefined }));
+  dispatch(fetchTeacherSalaryDetail({ teacherId }));
+};
+
+export const addSalaryAdvance = createAsyncThunk(
+  'salaries/addAdvance',
+  async (payload: AddSalaryAdvancePayload, { dispatch, getState, rejectWithValue }) => {
+    try {
+      const res = await salaryAPI.addAdvance(payload);
+      showToast.success('Advance saved');
+      refreshAfterAdvance(dispatch, getState, payload.teacher_id);
+      return (res as any).data ?? res;
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? 'Failed to save advance';
+      showToast.error(msg);
+      return rejectWithValue(msg);
+    }
+  }
+);
+
+export const removeSalaryAdvance = createAsyncThunk(
+  'salaries/removeAdvance',
+  async ({ id, teacherId }: { id: number; teacherId: number }, { dispatch, getState, rejectWithValue }) => {
+    try {
+      await salaryAPI.removeAdvance(id);
+      showToast.success('Advance removed');
+      refreshAfterAdvance(dispatch, getState, teacherId);
+      return id;
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? 'Failed to remove advance';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -225,6 +266,14 @@ const salariesSlice = createSlice({
       .addCase(markSalaryPaid.fulfilled, (state) => { state.markPaidLoading = false; });
 
     builder
+      .addCase(addSalaryAdvance.pending, (state) => { state.advanceLoading = true; })
+      .addCase(addSalaryAdvance.rejected, (state) => { state.advanceLoading = false; })
+      .addCase(addSalaryAdvance.fulfilled, (state) => { state.advanceLoading = false; })
+      .addCase(removeSalaryAdvance.pending, (state) => { state.advanceLoading = true; })
+      .addCase(removeSalaryAdvance.rejected, (state) => { state.advanceLoading = false; })
+      .addCase(removeSalaryAdvance.fulfilled, (state) => { state.advanceLoading = false; });
+
+    builder
       .addCase(updateSalaryRecord.pending, (state) => { state.markPaidLoading = true; })
       .addCase(updateSalaryRecord.rejected, (state) => { state.markPaidLoading = false; })
       .addCase(updateSalaryRecord.fulfilled, (state) => { state.markPaidLoading = false; });
@@ -243,6 +292,7 @@ export const selectSalaryOverviewPeriod = (state: RootState) => ({
 export const selectSalaryTeacherDetail = (state: RootState) => state.salaries.teacherDetail;
 export const selectSalaryTeacherDetailLoading = (state: RootState) => state.salaries.teacherDetailLoading;
 export const selectSalaryMarkPaidLoading = (state: RootState) => state.salaries.markPaidLoading;
+export const selectSalaryAdvanceLoading = (state: RootState) => state.salaries.advanceLoading;
 export const selectSalaryMonthlySummary = (state: RootState) => state.salaries.monthlySummary;
 export const selectSalaryMonthlySummaryLoading = (state: RootState) => state.salaries.monthlySummaryLoading;
 export const selectMySalaryDetail = (state: RootState) => state.salaries.myDetail;

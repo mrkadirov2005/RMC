@@ -96,6 +96,95 @@ const getMyGroupPayments = async (req: any, res: any) => {
   }
 };
 
+// An admin's view of one teacher's per-group payments for a month: which students paid, partly paid or not.
+const getTeacherGroupPayments = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
+    }
+    const teacherId = Number(req.params.teacherId);
+    if (!teacherId) {
+      return res.status(400).json({ error: "teacherId ko'rsatilishi shart." });
+    }
+    if (centerId) {
+      const ok = await teacherInCenter(teacherId, centerId);
+      if (!ok) return res.status(404).json({ error: "O'qituvchi bu markazda topilmadi." });
+    }
+    const requested = String(req.query.month || '');
+    const monthKey = /^\d{4}-(0[1-9]|1[0-2])$/.test(requested) ? requested : currentMonthKey();
+    const result = await salaryService.getMyGroupPayments({ teacherId, centerId: centerId ?? undefined, monthKey });
+    if (!result) {
+      return res.status(404).json({ error: "O'qituvchi topilmadi." });
+    }
+    res.json(result);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "To'lov statistikasini yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+const addAdvance = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
+    }
+    const teacherId = Number(req.body.teacher_id);
+    if (centerId) {
+      const ok = await teacherInCenter(teacherId, centerId);
+      if (!ok) return res.status(400).json({ error: "O'qituvchi bu markazga tegishli emas." });
+    }
+    const record = await salaryService.addAdvance({
+      teacherId,
+      salaryYear: Number(req.body.salary_year),
+      salaryMonth: Number(req.body.salary_month),
+      amount: Number(req.body.amount),
+      paymentMethod: req.body.payment_method,
+      notes: req.body.notes,
+      centerId: centerId ?? undefined,
+      actingUser: req.user,
+    });
+    if (record?.error === 'invalid_method') {
+      return res.status(400).json({ error: "Avans naqd, karta yoki bank orqali berilishi kerak." });
+    }
+    res.status(201).json(record);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Avansni saqlab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+const removeAdvance = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
+    }
+    const id = Number(req.params.id);
+    if (!id) {
+      return res.status(400).json({ error: "id ko'rsatilishi shart." });
+    }
+    const removed = await salaryService.removeAdvance({ id, centerId: centerId ?? undefined });
+    if (!removed) {
+      return res.status(404).json({ error: 'Avans topilmadi.' });
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Avansni o'chirib bo'lmadi", details: error.message || String(error) });
+  }
+};
+
 const markPaid = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -123,6 +212,9 @@ const markPaid = async (req: any, res: any) => {
       centerId: effectiveCenterId ?? undefined,
       actingUser: req.user,
     });
+    if (record?.error === 'invalid_method') {
+      return res.status(400).json({ error: "Maosh naqd, karta yoki bank orqali to'lanishi kerak." });
+    }
     res.status(201).json(record);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -155,6 +247,9 @@ const updatePatch = async (req: any, res: any) => {
       centerId: centerId ?? undefined,
       actingUser: req.user,
     });
+    if (record?.error === 'invalid_method') {
+      return res.status(400).json({ error: "Maosh naqd, karta yoki bank orqali to'lanishi kerak." });
+    }
     if (!record) {
       return res.status(404).json({ error: 'Maosh yozuvi topilmadi.' });
     }
@@ -189,6 +284,9 @@ module.exports = {
   getTeacherDetail,
   getMyDetail,
   getMyGroupPayments,
+  getTeacherGroupPayments,
+  addAdvance,
+  removeAdvance,
   markPaid,
   updatePatch,
   getMonthlySummary,

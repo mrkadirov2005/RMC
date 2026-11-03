@@ -46,3 +46,17 @@ export const teacherFullName = (row: { first_name?: string | null; last_name?: s
 export const formatStudentPaidShare = (stats: { total_students: number; paid_students: number; paid_percent: number }): string => {
   return `${stats.paid_students}/${stats.total_students} (${Math.round(stats.paid_percent)}%)`;
 };
+
+export type SalaryStatus = 'paid' | 'pending' | 'unpaid';
+
+/** Paid once marked so; pending when an advance was given but the salary is not paid out yet. */
+export const resolveSalaryStatus = (salary: { is_paid?: boolean } | null | undefined, advanceTotal?: number | string | null): SalaryStatus => {
+  if (salary?.is_paid) return 'paid';
+  return Number(advanceTotal) > 0 ? 'pending' : 'unpaid';
+};
+
+/** What is still owed after the advances; never negative. */
+export const remainingAfterAdvances = (amount: number | string | null | undefined, advanceTotal: number | string | null | undefined): number => {
+  const left = (Number(amount) || 0) - (Number(advanceTotal) || 0);
+  return Math.max(0, Math.round(left * 100) / 100);
+};

@@ -20,12 +20,13 @@ import {
 } from '@/components/ui/select';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { markSalaryPaid, selectSalaryMarkPaidLoading } from '@/slices/salariesSlice';
-import { formatSalaryPeriod } from '../model/salaryModel';
+import { formatSalaryPeriod, remainingAfterAdvances } from '../model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
 import type { SalaryStudentStats } from '../types';
 import { useLanguage } from '@/i18n/LanguageContext';
 
-const PAYMENT_METHODS = ['Cash', 'Bank Transfer', 'Card', 'Other'];
+// The kassa has cash, card and bank tills; a payout counts as an expense from one of them.
+const PAYMENT_METHODS = ['Cash', 'Bank Transfer', 'Card'];
 
 interface MarkSalaryPaidDialogProps {
   open: boolean;
@@ -38,6 +39,8 @@ interface MarkSalaryPaidDialogProps {
   existingAmount?: number | string | null;
   existingPaymentMethod?: string | null;
   existingNotes?: string | null;
+  /** Advances already given against this month; they come off what is still to be paid. */
+  advanceTotal?: number;
 }
 
 export const MarkSalaryPaidDialog = ({
@@ -51,6 +54,7 @@ export const MarkSalaryPaidDialog = ({
   existingAmount,
   existingPaymentMethod,
   existingNotes,
+  advanceTotal = 0,
 }: MarkSalaryPaidDialogProps) => {
   const { t } = useLanguage();
   const dispatch = useAppDispatch();
@@ -64,7 +68,7 @@ export const MarkSalaryPaidDialog = ({
     if (!open) return;
     const defaultAmount = existingAmount != null ? existingAmount : studentStats.collected_amount;
     setAmount(defaultAmount != null ? String(defaultAmount) : '');
-    setPaymentMethod(existingPaymentMethod || 'Cash');
+    setPaymentMethod(existingPaymentMethod && PAYMENT_METHODS.includes(existingPaymentMethod) ? existingPaymentMethod : 'Cash');
     setNotes(existingNotes || '');
   }, [open, existingAmount, existingPaymentMethod, existingNotes, studentStats.collected_amount]);
 
@@ -131,6 +135,14 @@ export const MarkSalaryPaidDialog = ({
             <p className="text-[0.6875rem] text-muted-foreground">
               {t('Pre-filled from the amount collected this month — edit to set the actual salary.')}
             </p>
+            {advanceTotal > 0 && (
+              <p className="text-xs font-semibold text-sky-700 dark:text-sky-400">
+                {t('Advance already given: {advance} — left to pay: {left}', {
+                  advance: formatMoney(advanceTotal),
+                  left: formatMoney(remainingAfterAdvances(amount, advanceTotal)),
+                })}
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label>{t('Payment Method')}</Label>
