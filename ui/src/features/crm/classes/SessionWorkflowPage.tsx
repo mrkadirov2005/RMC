@@ -451,7 +451,7 @@ export default function SessionWorkflowPage() {
   };
 
   // "Suratni yuklash": the class's attendance and lesson points for the lesson's month, including
-  // the lesson just saved, in order of points over all lessons with the top five in the teacher's colour.
+  // the lesson just saved, in order of this month's points with the top five in the teacher's colour.
   const downloadMonthlyAttendanceImage = async () => {
     const monthKey = (selectedDate || toDateKey(new Date())).slice(0, 7);
     try {

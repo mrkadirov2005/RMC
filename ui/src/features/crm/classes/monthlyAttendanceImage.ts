@@ -7,7 +7,7 @@ import { getCombinedLessonPoints, type LessonPointRecord } from './utils/points'
 
 export type AttendanceMark = 'present' | 'late' | 'excused' | 'absent';
 
-/** The student's place in the group over all its lessons (grades/class/:id/standings). */
+/** The student's place in the group over the month's lessons (grades/class/:id/standings?month=). */
 export interface ImageStanding {
   place: number;
   total_points: number;
@@ -65,7 +65,7 @@ export const buildMonthlyAttendanceGrid = ({
   standings,
 }: {
   students: WorkflowStudent[];
-  /** Places over all lessons; when given, rows go in that order (no lessons last), else A–Z. */
+  /** Places over the month's lessons; when given, rows go in that order (no lessons last), else A–Z. */
   standings?: Map<number, ImageStanding>;
   records: Array<{ student_id?: unknown; attendance_date?: unknown; status?: unknown }>;
   /** The month's lesson grades, each with its lesson date. */
@@ -168,7 +168,7 @@ export const drawMonthlyAttendanceImage = (
   const pad = 24;
   const numW = 30;
   const nameW = 200;
-  // With standings: the trend arrow and the points over all lessons, before the lesson columns.
+  // With standings: the trend arrow and the month's points, before the lesson columns.
   const trendW = grid.ranked ? 58 : 0;
   const allW = grid.ranked ? 72 : 0;
   const dateW = 38;
@@ -303,7 +303,7 @@ export const drawMonthlyAttendanceImage = (
     ctx.fillStyle = row.coins === null ? '#94a3b8' : '#334155';
     ctx.font = `600 12px ${FONT}`;
     ctx.fillText(row.coins === null ? '—' : String(row.coins), xLessons + lessonsW / 2, y + rowH / 2);
-    // Ranked: the last column is the student's place over all lessons, not the month's total.
+    // Ranked: the last column is the student's place in the month, not the month's total.
     const lastValue = grid.ranked ? (row.standing && row.standing.lessons > 0 ? String(row.standing.place) : '—') : (row.lessons ? String(row.total) : '—');
     ctx.fillStyle = lastValue === '—' ? '#94a3b8' : '#0f172a';
     ctx.font = `bold 13px ${FONT}`;

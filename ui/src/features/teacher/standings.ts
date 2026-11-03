@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { gradeAPI, teacherAPI } from './api';
 
-// A group's standings for the teacher's student table: points over all the group's lessons, the
-// place (equal points share one), and whether recent lessons go better or worse (server side:
+// A group's standings for the teacher's student table: points over this month's lessons in the
+// group (coins are separate), the place (equal points share one), and whether recent lessons go better or worse (server side:
 // grades/services/classStandings.service.ts).
 
 export type StandingTrend = { direction: 'up' | 'down' | 'flat'; recent_average: number; previous_average: number } | null;

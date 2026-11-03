@@ -448,7 +448,9 @@ export const gradeAPI = {
   getByStudent: (studentId: number) => apiClient.get(`/grades/student/${studentId}`),
   getBySession: (sessionId: number, params?: { center_id?: number }) => apiClient.get(`/grades/session/${sessionId}`, { params }),
   /** The group's students by points over all its lessons, with place and trend. */
-  getClassStandings: (classId: number) => apiClient.get(`/grades/class/${classId}/standings`),
+  /** Points and places over one month's lessons (YYYY-MM), this month by default. */
+  getClassStandings: (classId: number, month?: string) =>
+    apiClient.get(`/grades/class/${classId}/standings`, { params: month ? { month } : undefined }),
   create: (data: any) => apiClient.post('/grades', data),
   bulkCreate: (grades: any[]) => apiClient.post('/grades/bulk', { grades }),
   update: (id: number, data: any) => apiClient.put(`/grades/${id}`, data),
