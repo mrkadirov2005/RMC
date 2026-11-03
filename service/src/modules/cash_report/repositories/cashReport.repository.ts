@@ -9,6 +9,7 @@ const pool = require('../../../db/pool');
 const findPaymentsOn = async (date: string, centerId?: number) => {
   const result = await pool.query(
     `SELECT p.payment_id, p.amount, p.payment_method, p.received_by_name, p.created_at AS paid_at,
+            to_char(p.payment_date, 'YYYY-MM') AS for_month,
             p.student_id, s.first_name, s.last_name, c.class_name
      FROM payments p
      LEFT JOIN students s ON s.student_id = p.student_id
