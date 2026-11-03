@@ -1,0 +1,110 @@
+const request = require('supertest');
+
+// A month's salary is the teacher's pay rate of the money that came in for it. A payment for an
+// earlier month that came in late counts in the month it was entered (Tashkent time), never back
+// in the month it was for.
+describe('salary by pay rate with late payments', () => {
+  let pool;
+  let server;
+  let admin;
+  let teacherId;
+  let lateStudent;
+
+  beforeAll(async () => {
+    pool = require('../../../src/db/pool');
+    await pool.query('TRUNCATE TABLE edu_centers RESTART IDENTITY CASCADE');
+    const centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Rate Center', 'RT-C') RETURNING center_id`)).rows[0].center_id;
+    teacherId = (
+      await pool.query(
+        `INSERT INTO teachers (center_id, employee_id, first_name, last_name, salary_percentage) VALUES ($1, 'RT-T', 'Rano', 'T', 50) RETURNING teacher_id`,
+        [centerId]
+      )
+    ).rows[0].teacher_id;
+    const classId = (
+      await pool.query(
+        `INSERT INTO classes (center_id, class_name, class_code, teacher_id, payment_amount) VALUES ($1, 'RT-A1', 'RT-A1', $2, 500000) RETURNING class_id`,
+        [centerId, teacherId]
+      )
+    ).rows[0].class_id;
+    const student = async (code) =>
+      (
+        await pool.query(
+          `INSERT INTO students (center_id, enrollment_number, first_name, last_name, class_id, teacher_id, status, start_date)
+           VALUES ($1, $2, $2, 'S', $3, $4, 'Active', '2026-09-01') RETURNING student_id`,
+          [centerId, code, classId, teacherId]
+        )
+      ).rows[0].student_id;
+    const pay = (studentId, forDay, amount, enteredUtc) =>
+      pool.query(
+        `INSERT INTO payments (center_id, student_id, payment_date, amount, original_amount, final_amount, payment_status, is_complete, created_at)
+         VALUES ($1, $2, $3, $4, 500000, $4, 'Completed', true, $5)`,
+        [centerId, studentId, forDay, amount, enteredUtc]
+      );
+    const onTime = await student('Olim');
+    lateStudent = await student('Kamol');
+    const november = await student('Nodir');
+    const midnight = await student('Yarim');
+    await pay(onTime, '2026-10-05', 500000, '2026-10-05 08:00:00');
+    // October's fee, paid on 3 November.
+    await pay(lateStudent, '2026-10-01', 500000, '2026-11-03 09:00:00');
+    await pay(november, '2026-11-02', 500000, '2026-11-02 09:00:00');
+    // 31 October 20:00 UTC is already 1 November in Tashkent.
+    await pay(midnight, '2026-10-10', 300000, '2026-10-31 20:00:00');
+    // Before the salary start month: never part of a salary.
+    await pay(onTime, '2026-09-05', 500000, '2026-10-02 08:00:00');
+
+    const { generateToken } = require('../../../src/middleware/auth');
+    admin = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId, username: 'admin1' });
+    const { createApp } = require('../../../src/index');
+    const app = await createApp({ initializeDatabase: false, initializeMongo: false });
+    server = await new Promise((resolve) => {
+      const listener = app.listen(0, '127.0.0.1', () => resolve(listener));
+    });
+  });
+
+  afterAll(async () => {
+    if (server) {
+      server.closeAllConnections?.();
+      await new Promise((resolve) => server.close(resolve));
+    }
+    if (pool) await pool.end();
+  });
+
+  const row = async (month) =>
+    (await request(server).get(`/api/salaries?year=2026&month=${month}`).set({ Authorization: `Bearer ${admin}` })).body.teachers.find(
+      (item) => item.teacher_id === teacherId
+    );
+
+  test('October pays only for money that came in during October', async () => {
+    expect((await row(10)).earnings).toEqual({
+      rate: 50,
+      on_time_amount: 500000,
+      late_amount: 0,
+      base_amount: 500000,
+      due: 250000,
+      paying_students: 1,
+      late_count: 0,
+    });
+  });
+
+  test("November adds October's late payments to its own", async () => {
+    expect((await row(11)).earnings).toMatchObject({
+      on_time_amount: 500000,
+      late_amount: 800000,
+      base_amount: 1300000,
+      due: 650000,
+      late_count: 2,
+    });
+  });
+
+  test("the teacher's page lists the late payments with the month they were for", async () => {
+    const res = await request(server).get(`/api/salaries/teacher/${teacherId}/payments?month=2026-11`).set({ Authorization: `Bearer ${admin}` });
+    expect(res.status).toBe(200);
+    const late = res.body.earnings.late_payments;
+    expect(late.map((item) => [item.for_month, item.amount, item.teacher_share])).toEqual([
+      ['2026-10', 300000, 150000],
+      ['2026-10', 500000, 250000],
+    ]);
+    expect(late.find((item) => item.student_id === lateStudent).name).toBe('Kamol S');
+  });
+});

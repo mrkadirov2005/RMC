@@ -32,6 +32,35 @@ export interface GroupPayment extends GroupPaymentCounts {
   students: GroupPaymentStudent[];
 }
 
+/** A payment for an earlier month that came in late; it counts in the month it was entered. */
+export interface LatePayment {
+  payment_id: number;
+  student_id: number;
+  name: string;
+  class_id: number | null;
+  class_name: string | null;
+  /** YYYY-MM the payment was for. */
+  for_month: string | null;
+  entered_at: string | null;
+  amount: number;
+  teacher_share: number;
+}
+
+/** The month's salary by the teacher's pay rate: the rate of the money that came in. */
+export interface TeacherEarningsTotals {
+  rate: number;
+  on_time_amount: number;
+  late_amount: number;
+  base_amount: number;
+  /** What the center owes the teacher for the month. */
+  due: number;
+  paying_students: number;
+}
+
+export interface TeacherEarnings extends TeacherEarningsTotals {
+  late_payments: LatePayment[];
+}
+
 export interface TeacherGroupPayments {
   month: string;
   salary_percentage: number;
@@ -40,6 +69,9 @@ export interface TeacherGroupPayments {
     current_salary: number;
     potential_salary: number;
   };
-  salary_record: { amount: number | string; is_paid: boolean } | null;
+  salary_record: { amount: number | string; is_paid: boolean; paid_at?: string | null } | null;
   groups: GroupPayment[];
+  earnings?: TeacherEarnings;
+  advances?: Array<{ advance_id: number; amount: number | string; given_at?: string | null; payment_method?: string | null; notes?: string | null; given_by_name?: string | null }>;
+  advance_total?: number;
 }

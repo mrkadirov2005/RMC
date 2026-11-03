@@ -81,3 +81,34 @@ export const receivedSoFar = (salary: { is_paid?: boolean; amount?: number | str
   if (!salary?.is_paid) return Math.round(advances * 100) / 100;
   return Math.round(Math.max(Number(salary.amount) || 0, advances) * 100) / 100;
 };
+
+/** How much of the month's salary (by pay rate) the teacher has received, and what is left. */
+export const payoutProgress = (received: number, due: number): { percent: number; left: number; over: number } => {
+  const round = (value: number) => Math.round(value * 100) / 100;
+  return {
+    percent: due > 0 ? Math.min(100, Math.round((received / due) * 100)) : received > 0 ? 100 : 0,
+    left: round(Math.max(0, due - received)),
+    over: round(Math.max(0, received - due)),
+  };
+};
+
+/** "2026-10" as "October 2026". */
+export const formatMonthKey = (key?: string | null): string => {
+  const match = /^(\d{4})-(\d{2})$/.exec(String(key || ''));
+  return match ? formatSalaryPeriod(Number(match[1]), Number(match[2])) : '—';
+};
+
+/** A sum without the currency, for tight places: "1 250 000". */
+export const formatAmount = (amount: number | string | null | undefined): string =>
+  new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Number(amount) || 0);
+
+/** The advances, and the salary paid out on top of them (a paid salary's amount includes its advances). */
+export const payoutParts = (salary: { is_paid?: boolean; amount?: number | string } | null | undefined, advanceTotal?: number | string | null) => {
+  const advances = Number(advanceTotal) || 0;
+  const paidOut = salary?.is_paid ? Math.max(0, (Number(salary.amount) || 0) - advances) : 0;
+  return { advances, paidOut: Math.round(paidOut * 100) / 100 };
+};
+
+/** Received of the month's salary: all of it (green), part (blue) or nothing yet (red). */
+export const payoutStatus = (received: number, due: number): SalaryStatus =>
+  received > 0 && received + 0.01 >= due ? 'paid' : received > 0 ? 'pending' : 'unpaid';

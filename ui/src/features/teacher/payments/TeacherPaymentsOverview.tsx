@@ -10,6 +10,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { getCenterMonthKey } from '@/shared/billingPeriod';
 import { useMyGroupPayments } from './useMyGroupPayments';
 import { GroupPaidBadge, PaymentStateBadge } from './PaymentStateBadge';
+import { LatePaymentsSection } from './LatePaymentsSection';
 import type { GroupPayment } from './types';
 
 const progressTone = (percent: number) =>
@@ -46,7 +47,8 @@ const StatTile = ({
   </div>
 );
 
-const GroupCard = ({ group, sharePercent }: { group: GroupPayment; sharePercent: number }) => {
+/** One group's month: what came in of what is expected; opens to the students. */
+export const GroupCard = ({ group, sharePercent }: { group: GroupPayment; sharePercent: number }) => {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
@@ -193,10 +195,12 @@ export default function TeacherPaymentsOverview() {
             <StatTile
               icon={Percent}
               label={t('My salary so far')}
-              value={formatMoney(totals.current_salary)}
+              value={formatMoney(data.earnings?.due ?? totals.current_salary)}
               hint={
                 sharePercent > 0
-                  ? t('{percent}% of collected payments', { percent: String(sharePercent) })
+                  ? data.earnings?.late_amount
+                    ? t('{percent}% of payments, late ones included', { percent: String(sharePercent) })
+                    : t('{percent}% of collected payments', { percent: String(sharePercent) })
                   : t('No salary percentage set')
               }
               tone="bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
@@ -216,6 +220,8 @@ export default function TeacherPaymentsOverview() {
               tone="bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
             />
           </div>
+
+          {data.earnings && <LatePaymentsSection earnings={data.earnings} />}
 
           {data.groups.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">{t('No classes assigned yet')}</div>

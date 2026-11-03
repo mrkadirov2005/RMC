@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectedPercent,
+  payoutParts,
+  payoutProgress,
+  payoutStatus,
   progressTone,
   receivedSoFar,
   formatSalaryPeriod,
@@ -101,5 +104,25 @@ describe('salary list figures', () => {
     expect(receivedSoFar({ is_paid: false, amount: 1000000 }, 200000)).toBe(200000);
     expect(receivedSoFar({ is_paid: true, amount: 1000000 }, 200000)).toBe(1000000);
     expect(receivedSoFar({ is_paid: true, amount: '1000000' }, 0)).toBe(1000000);
+  });
+});
+
+describe('payout of the salary by pay rate', () => {
+  it('splits what was received into advances and the salary paid on top of them', () => {
+    expect(payoutParts(null, 300000)).toEqual({ advances: 300000, paidOut: 0 });
+    expect(payoutParts({ is_paid: true, amount: '1000000' }, 300000)).toEqual({ advances: 300000, paidOut: 700000 });
+  });
+
+  it('shows how much of the salary came and what is left', () => {
+    expect(payoutProgress(300000, 1000000)).toEqual({ percent: 30, left: 700000, over: 0 });
+    expect(payoutProgress(1200000, 1000000)).toEqual({ percent: 100, left: 0, over: 200000 });
+    expect(payoutProgress(0, 0)).toEqual({ percent: 0, left: 0, over: 0 });
+  });
+
+  it('is paid once all of it came, pending while part of it did', () => {
+    expect(payoutStatus(1000000, 1000000)).toBe('paid');
+    expect(payoutStatus(300000, 1000000)).toBe('pending');
+    expect(payoutStatus(0, 1000000)).toBe('unpaid');
+    expect(payoutStatus(0, 0)).toBe('unpaid');
   });
 });
