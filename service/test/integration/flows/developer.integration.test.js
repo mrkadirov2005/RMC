@@ -192,6 +192,30 @@ describe('developer role with PostgreSQL', () => {
     const developerView = (await api().get(`/api/audit-logs?entity_type=test&center_id=${centerId}`).set(auth(developer))).body.map((row) => row.action);
     expect(developerView).toEqual(expect.arrayContaining(['owner-action', 'dev-action']));
   });
+  test('locking and unlocking anyone, and resetting owner passwords, is the developer\'s alone', async () => {
+    const asOwner = (method, path, body) => api()[method](path).set(auth(owner)).send(body);
+    expect((await asOwner('post', '/api/developer/locks', { user_type: 'teacher', user_id: teacherId })).status).toBe(403);
+    expect((await asOwner('post', '/api/developer/locks', { user_type: 'owner', user_id: ownerId })).status).toBe(403);
+    expect((await asOwner('delete', `/api/developer/locks/owner/${ownerId}`)).status).toBe(403);
+    expect((await asOwner('put', '/api/developer/lockdown', { enabled: false })).status).toBe(403);
+    expect((await asOwner('post', `/api/developer/owners/${ownerId}/unlock`)).status).toBe(403);
+    expect((await asOwner('post', `/api/developer/owners/${ownerId}/password`, { password: 'owner-made-pass' })).status).toBe(403);
+    expect((await asOwner('post', '/api/developer/seal/accept')).status).toBe(403);
+    expect((await pool.query('SELECT COUNT(*)::int AS n FROM developer_locks')).rows[0].n).toBe(0);
+  });
+
+  test('the developer changes their own password and the seal stays intact', async () => {
+    const changed = await api().post(`/api/owners/${developerId}/change-password`).set(auth(developer)).send({ old_password: 'correct-horse-1', new_password: 'correct-horse-2' });
+    expect(changed.status).toBe(200);
+    expect((await api().get('/api/developer/seal').set(auth(developer))).body.intact).toBe(true);
+    expect((await api().get('/api/owners').set(auth(owner))).status).toBe(200);
+    const { verifyPassword } = require('../../../src/shared/password');
+    const hash = (await pool.query('SELECT password_hash FROM owners WHERE owner_id = $1', [developerId])).rows[0].password_hash;
+    expect(verifyPassword('correct-horse-2', hash).valid).toBe(true);
+    // Back to the password the other tests sign in with.
+    await api().post(`/api/owners/${developerId}/change-password`).set(auth(developer)).send({ old_password: 'correct-horse-2', new_password: 'correct-horse-1' });
+  });
+
   describe('changes made straight in the database', () => {
     const accessLock = () => require('../../../src/modules/developer/accessLock');
     const seal = () => require('../../../src/modules/developer/seal');
