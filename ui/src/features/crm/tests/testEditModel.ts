@@ -12,6 +12,8 @@ export interface EditableQuestion {
   explanation?: string;
   word_limit?: number;
   rubric?: string;
+  /** Kept as saved, so editing a test does not make its optional questions required. */
+  is_required?: boolean;
 }
 
 export interface EditablePassage {
@@ -45,6 +47,7 @@ export const toEditableQuestions = (questions: any[] = []): EditableQuestion[] =
       explanation: question.explanation ?? undefined,
       word_limit: question.word_limit ?? undefined,
       rubric: question.rubric ?? undefined,
+      is_required: question.is_required ?? undefined,
     }));
 
 export const toEditablePassages = (passages: any[] = []): EditablePassage[] =>
@@ -86,4 +89,24 @@ export const canEditTest = (test: any, user: { userType?: string; id?: number } 
   return user.userType === 'teacher'
     && String(test.created_by_type || 'teacher') === 'teacher'
     && Number(test.created_by) === Number(user.id);
+};
+
+/**
+ * What a question still needs before the test can be saved: its text, at least two filled options
+ * and a right answer for a choice, the right answer for true/false and written answers.
+ */
+export const questionProblems = (question: Pick<EditableQuestion, 'question_text' | 'question_type' | 'options' | 'correct_answer'>): string[] => {
+  const problems: string[] = [];
+  if (!String(question.question_text || '').trim()) problems.push('Write the question');
+  if (question.question_type === 'multiple_choice') {
+    const filled = (question.options || []).filter((option) => String(option || '').trim());
+    if (filled.length < 2) problems.push('Fill at least two options');
+    const index = question.correct_answer?.index;
+    if (index === undefined || index === null || !String(question.options?.[index] ?? '').trim()) problems.push('Mark the right option');
+  }
+  if (question.question_type === 'true_false' && typeof question.correct_answer?.value !== 'boolean') problems.push('Choose True or False');
+  if ((question.question_type === 'short_answer' || question.question_type === 'form_filling') && !(question.correct_answer?.answers || []).some((answer: string) => String(answer).trim())) {
+    problems.push('Write the right answer');
+  }
+  return problems;
 };

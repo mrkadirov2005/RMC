@@ -10,6 +10,8 @@ import {
   GripVertical,
   Loader2,
   Check,
+  Eye,
+  AlertTriangle,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,7 +30,9 @@ import { fetchCentersForce } from '../../../slices/centersSlice';
 import { fetchSubjects, fetchSubjectsForce } from '../../../slices/subjectsSlice';
 import { createTest, fetchTestsForce } from '../../../slices/testsSlice';
 import { testAPI } from './api';
-import { canEditTest, planSave, toEditablePassages, toEditableQuestions } from './testEditModel';
+import { canEditTest, planSave, questionProblems, toEditablePassages, toEditableQuestions } from './testEditModel';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QuestionAnswer } from './components/QuestionAnswer';
 import { selectCenterOptions, selectSubjectOptions } from '../../../store/selectors';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
@@ -50,6 +54,7 @@ interface Question {
   explanation?: string;
   word_limit?: number;
   rubric?: string;
+  is_required?: boolean;
 }
 
 interface Passage {
@@ -99,7 +104,13 @@ const CreateTestPage = () => {
   // Passages (for reading tests)
   const [passages, setPassages] = useState<Passage[]>([]);
 
-  const steps = ['Basic Info', 'Add Questions', 'Settings', 'Review'];
+  // The pass mark is set as a share of the marks; the marks are worked out when saving.
+  const [passPercent, setPassPercent] = useState(60);
+  const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
+  const [previewAnswer, setPreviewAnswer] = useState<any>(null);
+  const [showProblems, setShowProblems] = useState(false);
+
+  const steps = ['Details', 'Questions', 'Settings', 'Review'];
 
   // /tests/:testId/edit renders this same page. Before, it ignored the id, opened
   // an empty form, and saving created a second copy of the test.
@@ -120,7 +131,7 @@ const CreateTestPage = () => {
         const saved = response.data;
         if (cancelled) return;
         if (!canEditTest(saved, user)) {
-          setEditBlocked('Only the teacher who created this test can edit it.');
+          setEditBlocked(t('Only the teacher who created this test can edit it.'));
           return;
         }
         setTestData((current) => ({
@@ -146,10 +157,12 @@ const CreateTestPage = () => {
         const loadedPassages = toEditablePassages(saved.passages);
         setQuestions(loadedQuestions);
         setPassages(loadedPassages);
+        const savedTotal = Number(saved.total_marks ?? 0);
+        if (savedTotal > 0) setPassPercent(Math.round((Number(saved.passing_marks ?? 0) / savedTotal) * 100));
         setOriginalQuestionIds(loadedQuestions.map((q) => q.question_id as number));
         setOriginalPassageIds(loadedPassages.map((p) => p.passage_id as number));
       } catch {
-        if (!cancelled) setEditBlocked('This test could not be loaded. It may have been deleted.');
+        if (!cancelled) setEditBlocked(t('This test could not be loaded. It may have been deleted.'));
       } finally {
         if (!cancelled) setLoadingTest(false);
       }
@@ -181,7 +194,26 @@ const CreateTestPage = () => {
   }, [dispatch, user]);
 
 // Handles next.
+  const problemsByQuestion = questions
+    .map((question, index) => ({ number: index + 1, problems: questionProblems(question) }))
+    .filter((item) => item.problems.length > 0);
+
+  // A step with something missing says what, instead of saving a test students cannot answer.
+  const stepError = (step: number): string | null => {
+    if (step === 0 && !testData.test_name.trim()) return t('Give the test a name.');
+    if (step === 1 && questions.length === 0) return t('Add at least one question.');
+    if (step === 1 && problemsByQuestion.length > 0) return t('Some questions are not finished: {numbers}.', { numbers: problemsByQuestion.map((item) => item.number).join(', ') });
+    return null;
+  };
+
   const handleNext = () => {
+    const problem = stepError(activeStep);
+    if (problem) {
+      setError(problem);
+      setShowProblems(true);
+      return;
+    }
+    setError(null);
     if (activeStep === steps.length - 1) {
       handleSubmit();
     } else {
@@ -191,6 +223,7 @@ const CreateTestPage = () => {
 
 // Handles back.
   const handleBack = () => {
+    setError(null);
     setActiveStep((prev) => prev - 1);
   };
 
@@ -203,14 +236,25 @@ const CreateTestPage = () => {
         ? testData.test_type
         : 'multiple_choice',
       marks: 1,
-      options: testData.test_type === 'multiple_choice' || testData.test_type === 'true_false' ? ['', '', '', ''] : undefined,
+      options: testData.test_type === 'multiple_choice' ? ['', '', '', ''] : undefined,
     };
     setQuestions([...questions, newQuestion]);
   };
 
 // Updates question.
   const updateQuestion = (id: string, updates: Partial<Question>) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)));
+    setQuestions(
+      questions.map((q) => {
+        if (q.id !== id) return q;
+        const next = { ...q, ...updates };
+        // Changing the type starts its answer afresh: a choice gets four empty options.
+        if (updates.question_type && updates.question_type !== q.question_type) {
+          next.correct_answer = undefined;
+          next.options = updates.question_type === 'multiple_choice' ? (q.options?.length ? q.options : ['', '', '', '']) : undefined;
+        }
+        return next;
+      })
+    );
   };
 
 // Deletes question.
@@ -287,7 +331,7 @@ const CreateTestPage = () => {
         explanation: q.explanation,
         word_limit: q.word_limit,
         rubric: q.rubric,
-        is_required: true,
+        is_required: q.is_required ?? true,
       }));
 
       const formattedPassages = passages.map((p, index) => ({
@@ -300,7 +344,7 @@ const CreateTestPage = () => {
       const submitData = {
         ...testData,
         total_marks: calculateTotalMarks(),
-        passing_marks: testData.passing_marks || Math.ceil(calculateTotalMarks() * 0.6),
+        passing_marks: Math.ceil((calculateTotalMarks() * passPercent) / 100),
         created_by: user?.id,
         created_by_type: user?.userType || 'superuser',
         questions: formattedQuestions,
@@ -352,7 +396,7 @@ const CreateTestPage = () => {
       console.error(isEditMode ? 'Error saving test:' : 'Error creating test:', err);
       setError(
         err.response?.data?.error ||
-          (isEditMode ? 'Failed to save your changes. Please try again.' : 'Failed to create test. Please try again.')
+          (isEditMode ? t('Failed to save your changes. Please try again.') : t('Failed to create test. Please try again.'))
       );
     } finally {
       setLoading(false);
@@ -363,7 +407,7 @@ const CreateTestPage = () => {
   const renderBasicInfo = () => (
     <div className="grid grid-cols-1 gap-6">
       <div>
-        <Label htmlFor="test_name">Test Name *</Label>
+        <Label htmlFor="test_name">{t('Test name')} *</Label>
         <Input
           id="test_name"
           value={testData.test_name}
@@ -373,7 +417,7 @@ const CreateTestPage = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <Label htmlFor="test_type">Test Type</Label>
+          <Label htmlFor="test_type">{t('Main question type')}</Label>
           <select
             id="test_type"
             value={testData.test_type}
@@ -382,20 +426,20 @@ const CreateTestPage = () => {
           >
             {TEST_TYPES.map((type) => (
               <option key={type} value={type}>
-                {getQuestionTypeMeta(type).label}
+                {t(getQuestionTypeMeta(type).label)}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <Label htmlFor="subject_id">Subject</Label>
+          <Label htmlFor="subject_id">{t('Subject')}</Label>
           <select
             id="subject_id"
             value={testData.subject_id}
             onChange={(e) => setTestData({ ...testData, subject_id: e.target.value })}
             className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            <option value="">No Subject</option>
+            <option value="">{t('No subject')}</option>
             {subjectOptions.map((subject) => (
               <option key={subject.id || subject.value} value={subject.value}>
                 {subject.label}
@@ -405,7 +449,7 @@ const CreateTestPage = () => {
         </div>
       </div>
       <div>
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t('Description')}</Label>
         <Textarea
           id="description"
           value={testData.description}
@@ -415,19 +459,19 @@ const CreateTestPage = () => {
         />
       </div>
       <div>
-        <Label htmlFor="instructions">Instructions</Label>
+        <Label htmlFor="instructions">{t('Instructions')}</Label>
         <Textarea
           id="instructions"
           value={testData.instructions}
           onChange={(e) => setTestData({ ...testData, instructions: e.target.value })}
           rows={3}
-          placeholder="Enter instructions for students taking this test..."
+          placeholder={t('What students should know before they start...')}
           className="mt-1"
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <Label htmlFor="duration">Duration (minutes)</Label>
+          <Label htmlFor="duration">{t('Time (minutes)')}</Label>
           <Input
             id="duration"
             type="number"
@@ -437,17 +481,34 @@ const CreateTestPage = () => {
           />
         </div>
         <div>
-          <Label htmlFor="passing_marks">Passing Marks</Label>
-          <Input
-            id="passing_marks"
-            type="number"
-            value={testData.passing_marks}
-            onChange={(e) => setTestData({ ...testData, passing_marks: parseInt(e.target.value) || 0 })}
-            className="mt-1"
-          />
+          <Label htmlFor="pass_percent">{t('Pass mark (%)')}</Label>
+          <div className="mt-1 flex gap-1.5">
+            <Input
+              id="pass_percent"
+              type="number"
+              min={1}
+              max={100}
+              value={passPercent}
+              onChange={(e) => setPassPercent(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+              className="w-24"
+            />
+            {[50, 60, 70, 80].map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setPassPercent(value)}
+                className={cn('rounded-md border px-2 text-xs font-semibold', passPercent === value ? 'border-primary bg-primary/10 text-primary' : 'hover:bg-muted')}
+              >
+                {value}%
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('{marks} of {total} marks with the questions so far', { marks: Math.ceil((calculateTotalMarks() * passPercent) / 100), total: calculateTotalMarks() })}
+          </p>
         </div>
         <div>
-          <Label htmlFor="center_id">Center</Label>
+          <Label htmlFor="center_id">{t('Center')}</Label>
           <select
             id="center_id"
             value={testData.center_id}
@@ -472,16 +533,16 @@ const CreateTestPage = () => {
       {testData.test_type === 'reading_passage' && (
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Reading Passages</h3>
+            <h3 className="text-lg font-semibold">{t('Reading texts')}</h3>
             <Button variant="outline" onClick={addPassage}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Passage
+              {t('Add a text')}
             </Button>
           </div>
           {passages.map((passage, index) => (
             <div key={passage.id} className="border rounded-lg p-4 mb-3 bg-background">
               <div className="flex justify-between mb-3">
-                <h4 className="font-semibold">Passage {index + 1}</h4>
+                <h4 className="font-semibold">{t('Text {number}', { number: index + 1 })}</h4>
                 <button
                   className="p-1 text-red-500 hover:bg-red-50 rounded"
                   onClick={() => deletePassage(passage.id)}
@@ -491,7 +552,7 @@ const CreateTestPage = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 <div className="md:col-span-8">
-                  <Label>Title</Label>
+                  <Label>{t('Title')}</Label>
                   <Input
                     value={passage.title}
                     onChange={(e) => updatePassage(passage.id, { title: e.target.value })}
@@ -499,19 +560,19 @@ const CreateTestPage = () => {
                   />
                 </div>
                 <div className="md:col-span-4">
-                  <Label>Difficulty</Label>
+                  <Label>{t('Difficulty')}</Label>
                   <select
                     value={passage.difficulty_level}
                     onChange={(e) => updatePassage(passage.id, { difficulty_level: e.target.value })}
                     className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
+                    <option value="easy">{t('Easy')}</option>
+                    <option value="medium">{t('Medium')}</option>
+                    <option value="hard">{t('Hard')}</option>
                   </select>
                 </div>
                 <div className="md:col-span-12">
-                  <Label>Passage Content</Label>
+                  <Label>{t('Text')}</Label>
                   <Textarea
                     value={passage.content}
                     onChange={(e) => updatePassage(passage.id, { content: e.target.value })}
@@ -529,43 +590,71 @@ const CreateTestPage = () => {
       {/* Questions Section */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h3 className="text-lg font-semibold">Questions</h3>
-          <p className="text-sm text-muted-foreground">Total Marks: {calculateTotalMarks()}</p>
+          <h3 className="text-lg font-semibold">{t('Questions')}</h3>
+          <p className="text-sm text-muted-foreground">
+            {t('{count} questions · {marks} marks', { count: questions.length, marks: calculateTotalMarks() })}
+            {problemsByQuestion.length > 0 && (
+              <span className="ml-2 font-semibold text-amber-600">· {t('{count} not finished', { count: problemsByQuestion.length })}</span>
+            )}
+          </p>
         </div>
         <Button onClick={addQuestion}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Question
+          {t('Add a question')}
         </Button>
       </div>
 
       {questions.length === 0 ? (
         <div className="text-center py-12 bg-muted/40 rounded-lg border-2 border-dashed border">
-          <p className="text-muted-foreground mb-4">No questions added yet</p>
+          <p className="text-muted-foreground mb-4">{t('No questions added yet')}</p>
           <Button variant="outline" onClick={addQuestion}>
             <Plus className="h-4 w-4 mr-2" />
-            Add First Question
+            {t('Add the first question')}
           </Button>
         </div>
       ) : (
-        questions.map((question, index) => (
-          <div key={question.id} className="border rounded-lg p-4 mb-3 bg-background">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center gap-2">
+        questions.map((question, index) => {
+          const problems = questionProblems(question);
+          return (
+          <div key={question.id} className={cn('border rounded-lg p-4 mb-3 bg-background', showProblems && problems.length > 0 && 'border-amber-400 ring-1 ring-amber-300')}>
+            <div className="flex justify-between items-start mb-3 gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                <Badge>Q{index + 1}</Badge>
-                <Badge variant="outline">{question.marks} marks</Badge>
+                <Badge>{index + 1}</Badge>
+                <Badge variant="outline">{t('{count} marks', { count: question.marks })}</Badge>
+                {problems.length > 0 && (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    {problems.map((problem) => t(problem)).join(' · ')}
+                  </span>
+                )}
               </div>
-              <button
-                className="p-1 text-red-500 hover:bg-red-50 rounded"
-                onClick={() => deleteQuestion(question.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-muted-foreground hover:bg-muted"
+                  onClick={() => {
+                    setPreviewAnswer(null);
+                    setPreviewQuestion(question);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                  {t('Preview')}
+                </button>
+                <button
+                  type="button"
+                  aria-label={t('Delete')}
+                  className="p-1 text-red-500 hover:bg-red-50 rounded"
+                  onClick={() => deleteQuestion(question.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <Label>Question Text</Label>
+                <Label>{t('Question')}</Label>
                 <Textarea
                   value={question.question_text}
                   onChange={(e) => updateQuestion(question.id, { question_text: e.target.value })}
@@ -576,7 +665,7 @@ const CreateTestPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Question Type</Label>
+                  <Label>{t('Question type')}</Label>
                   <select
                     value={question.question_type}
                     onChange={(e) => updateQuestion(question.id, { question_type: e.target.value })}
@@ -584,13 +673,13 @@ const CreateTestPage = () => {
                   >
                     {authorableQuestionTypes.map((type) => (
                       <option key={type} value={type}>
-                        {getQuestionTypeMeta(type).label}
+                        {t(getQuestionTypeMeta(type).label)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <Label>Marks</Label>
+                  <Label>{t('Marks')}</Label>
                   <Input
                     type="number"
                     value={question.marks}
@@ -600,55 +689,59 @@ const CreateTestPage = () => {
                 </div>
               </div>
 
-              {/* Options for MCQ */}
-              {(question.question_type === 'multiple_choice' || question.question_type === 'true_false') && (
+              {/* The answers: options with the right one marked, or True / False */}
+              {question.question_type === 'true_false' && (
                 <div>
-                  <Label className="mb-2 block">Options</Label>
-                  {question.question_type === 'true_false' ? (
-                    <select
-                      value={question.correct_answer?.value ?? ''}
-                      onChange={(e) => updateQuestion(question.id, { correct_answer: { value: e.target.value === 'true' } })}
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Select correct answer</option>
-                      <option value="true">True</option>
-                      <option value="false">False</option>
-                    </select>
-                  ) : (
-                    <>
-                      {question.options?.map((option, optIndex) => (
-                        <div key={optIndex} className="flex gap-2 mb-2 items-center">
-                          <Input
-                            placeholder={`Option ${optIndex + 1}`}
-                            value={option}
-                            onChange={(e) => updateOption(question.id, optIndex, e.target.value)}
-                          />
-                          <button
-                            className={cn(
-                              'p-2 rounded-md border',
-                              question.correct_answer?.index === optIndex
-                                ? 'bg-green-100 text-green-700 border-green-300'
-                                : 'hover:bg-muted'
-                            )}
-                            onClick={() => updateQuestion(question.id, { correct_answer: { index: optIndex } })}
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                          {question.options && question.options.length > 2 && (
-                            <button
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-md"
-                              onClick={() => deleteOption(question.id, optIndex)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                  <Label className="mb-2 block">{t('Right answer')}</Label>
+                  <div className="grid grid-cols-2 gap-2 sm:w-80">
+                    {[true, false].map((value) => (
+                      <button
+                        key={String(value)}
+                        type="button"
+                        onClick={() => updateQuestion(question.id, { correct_answer: { value } })}
+                        className={cn(
+                          'rounded-md border-2 px-3 py-2 text-sm font-semibold',
+                          question.correct_answer?.value === value ? 'border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200' : 'hover:bg-muted'
+                        )}
+                      >
+                        {value ? t('True') : t('False')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {question.question_type === 'multiple_choice' && (
+                <div>
+                  <Label className="mb-2 block">{t('Options — mark the right one')}</Label>
+                  {(question.options || []).map((option, optIndex) => {
+                    const isRight = question.correct_answer?.index === optIndex;
+                    return (
+                      <div key={optIndex} className={cn('mb-2 flex items-center gap-2 rounded-md p-1', isRight && 'bg-emerald-50 dark:bg-emerald-950/40')}>
+                        <span className="w-6 text-center text-sm font-bold text-muted-foreground">{String.fromCharCode(65 + optIndex)}</span>
+                        <Input placeholder={t('Option {letter}', { letter: String.fromCharCode(65 + optIndex) })} value={option} onChange={(e) => updateOption(question.id, optIndex, e.target.value)} />
+                        <button
+                          type="button"
+                          className={cn(
+                            'inline-flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-2 text-xs font-semibold',
+                            isRight ? 'border-emerald-500 bg-emerald-500 text-white' : 'text-muted-foreground hover:bg-muted'
                           )}
-                        </div>
-                      ))}
-                      <Button variant="ghost" size="sm" onClick={() => addOption(question.id)}>
-                        Add Option
-                      </Button>
-                    </>
-                  )}
+                          onClick={() => updateQuestion(question.id, { correct_answer: { index: optIndex } })}
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          {t('Right')}
+                        </button>
+                        {question.options && question.options.length > 2 && (
+                          <button type="button" aria-label={t('Delete')} className="rounded-md p-2 text-red-500 hover:bg-red-50" onClick={() => deleteOption(question.id, optIndex)}>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <Button variant="ghost" size="sm" onClick={() => addOption(question.id)}>
+                    <Plus className="mr-1 h-4 w-4" />
+                    {t('Add an option')}
+                  </Button>
                 </div>
               )}
 
@@ -656,7 +749,7 @@ const CreateTestPage = () => {
               {getQuestionTypeMeta(question.question_type).supportsWordLimit && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label>Word Limit (optional)</Label>
+                    <Label>{t('Word limit (optional)')}</Label>
                     <Input
                       type="number"
                       value={question.word_limit || ''}
@@ -665,12 +758,12 @@ const CreateTestPage = () => {
                     />
                   </div>
                   <div>
-                    <Label>Grading Rubric (optional)</Label>
+                    <Label>{t('How to grade (optional)')}</Label>
                     <Textarea
                       value={question.rubric || ''}
                       onChange={(e) => updateQuestion(question.id, { rubric: e.target.value })}
                       rows={3}
-                      placeholder="Notes for the grader..."
+                      placeholder={t('Notes for the teacher who grades it...')}
                       className="mt-1"
                     />
                   </div>
@@ -680,7 +773,7 @@ const CreateTestPage = () => {
               {/* Correct answer for short answer/form filling */}
               {(question.question_type === 'short_answer' || question.question_type === 'form_filling') && (
                 <div>
-                  <Label>Correct Answer(s) - comma separated for multiple accepted answers</Label>
+                  <Label>{t('Right answer — separate several accepted answers with commas')}</Label>
                   <Input
                     value={question.correct_answer?.answers?.join(', ') || ''}
                     onChange={(e) => updateQuestion(question.id, {
@@ -692,7 +785,7 @@ const CreateTestPage = () => {
               )}
 
               <div>
-                <Label>Explanation (shown after submission)</Label>
+                <Label>{t('Explanation (students see it after handing in)')}</Label>
                 <Input
                   value={question.explanation || ''}
                   onChange={(e) => updateQuestion(question.id, { explanation: e.target.value })}
@@ -701,7 +794,8 @@ const CreateTestPage = () => {
               </div>
             </div>
           </div>
-        ))
+          );
+        })
       )}
     </div>
   );
@@ -711,7 +805,7 @@ const CreateTestPage = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card>
         <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">Test Settings</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('Test settings')}</h3>
           <div className="flex flex-col gap-4">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -720,7 +814,7 @@ const CreateTestPage = () => {
                 onChange={(e) => setTestData({ ...testData, is_timed: e.target.checked })}
                 className="h-4 w-4 rounded border-input"
               />
-              <span className="text-sm">Timed Test</span>
+              <span className="text-sm">{t('Timed test')}</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -729,7 +823,7 @@ const CreateTestPage = () => {
                 onChange={(e) => setTestData({ ...testData, shuffle_questions: e.target.checked })}
                 className="h-4 w-4 rounded border-input"
               />
-              <span className="text-sm">Shuffle Questions</span>
+              <span className="text-sm">{t('Shuffle the questions')}</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -738,7 +832,7 @@ const CreateTestPage = () => {
                 onChange={(e) => setTestData({ ...testData, show_results_immediately: e.target.checked })}
                 className="h-4 w-4 rounded border-input"
               />
-              <span className="text-sm">Show Results Immediately</span>
+              <span className="text-sm">{t('Show the score straight after handing in')}</span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer">
               <input
@@ -748,9 +842,9 @@ const CreateTestPage = () => {
                 className="mt-1 h-4 w-4 rounded border-input"
               />
               <span className="text-sm">
-                Private test
+                {t('Private test')}
                 <span className="block text-xs text-muted-foreground mt-1">
-                  Private tests are visible only to the creator and, when created by a teacher, that teacher&apos;s students.
+                  {t("Only its creator sees it, and, when a teacher made it, that teacher's students.")}
                 </span>
               </span>
             </label>
@@ -761,11 +855,11 @@ const CreateTestPage = () => {
                 onChange={(e) => setTestData({ ...testData, allow_retake: e.target.checked })}
                 className="h-4 w-4 rounded border-input"
               />
-              <span className="text-sm">Allow Retakes</span>
+              <span className="text-sm">{t('Allow retakes')}</span>
             </label>
             {testData.allow_retake && (
               <div className="ml-7 w-36">
-                <Label>Maximum Retakes</Label>
+                <Label>{t('Up to (times)')}</Label>
                 <Input
                   type="number"
                   value={testData.max_retakes}
@@ -779,23 +873,23 @@ const CreateTestPage = () => {
       </Card>
       <Card>
         <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">Assignment</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('Who takes it')}</h3>
           <div>
-            <Label htmlFor="assignment_type">Assign To</Label>
+            <Label htmlFor="assignment_type">{t('Who can take it')}</Label>
             <select
               id="assignment_type"
               value={testData.assignment_type}
               onChange={(e) => setTestData({ ...testData, assignment_type: e.target.value })}
               className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="all_students">All Students</option>
-              <option value="specific_students">Specific Students</option>
-              <option value="specific_class">Specific Class</option>
-              <option value="specific_teacher">Specific Teacher's Students</option>
+              <option value="all_students">{t('All students')}</option>
+              <option value="specific_students">{t('Chosen students')}</option>
+              <option value="specific_class">{t('A group')}</option>
+              <option value="specific_teacher">{t("A teacher's students")}</option>
             </select>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
-            You can assign this test to specific students after creation.
+            {t('You can assign the test to students and groups once it is saved.')}
           </p>
         </CardContent>
       </Card>
@@ -803,42 +897,34 @@ const CreateTestPage = () => {
   );
 
 // Renders review.
-  const renderReview = () => (
-    <div>
-      <Alert className="mb-6">
-        <AlertDescription>Review your test details before creating.</AlertDescription>
-      </Alert>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-3">Test Information</h3>
-            <div className="flex flex-col gap-2 text-sm">
-              <p><strong>Name:</strong> {testData.test_name}</p>
-              <p><strong>Type:</strong> {formatTestType(testData.test_type)}</p>
-              <p><strong>Duration:</strong> {testData.duration_minutes} minutes</p>
-              <p><strong>Total Marks:</strong> {calculateTotalMarks()}</p>
-              <p><strong>Passing Marks:</strong> {testData.passing_marks || Math.ceil(calculateTotalMarks() * 0.6)}</p>
-              <p><strong>Visibility:</strong> {testData.is_private ? 'Private' : 'Public'}</p>
+  const renderReview = () => {
+    const total = calculateTotalMarks();
+    const rows: Array<[string, string | number]> = [
+      ['Test name', testData.test_name],
+      ['Main question type', t(formatTestType(testData.test_type))],
+      ['Questions', questions.length],
+      ['Marks', total],
+      ['Pass mark', `${passPercent}% · ${t('{marks} of {total} marks', { marks: Math.ceil((total * passPercent) / 100), total })}`],
+      ['Time', testData.is_timed ? t('{minutes} min', { minutes: testData.duration_minutes }) : t('No limit')],
+      ['Retakes', testData.allow_retake ? t('Yes, up to {count}', { count: testData.max_retakes }) : t('No')],
+      ['Show results', testData.show_results_immediately ? t('Straight away') : t('After grading')],
+      ['Visibility', testData.is_private ? t('Private') : t('Public')],
+    ];
+    if (testData.test_type === 'reading_passage') rows.splice(3, 0, ['Reading texts', passages.length]);
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">{t('Check everything once more, then save.')}</p>
+        <dl className="divide-y rounded-lg border">
+          {rows.map(([label, value]) => (
+            <div key={label} className="flex justify-between gap-4 px-4 py-2.5 text-sm">
+              <dt className="text-muted-foreground">{t(label)}</dt>
+              <dd className="text-right font-semibold">{value}</dd>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-3">Content Summary</h3>
-            <div className="flex flex-col gap-2 text-sm">
-              <p><strong>Questions:</strong> {questions.length}</p>
-              {testData.test_type === 'reading_passage' && (
-                <p><strong>Passages:</strong> {passages.length}</p>
-              )}
-              <p><strong>Timed:</strong> {testData.is_timed ? 'Yes' : 'No'}</p>
-              <p><strong>Retakes Allowed:</strong> {testData.allow_retake ? `Yes (${testData.max_retakes})` : 'No'}</p>
-            </div>
-          </CardContent>
-        </Card>
+          ))}
+        </dl>
       </div>
-    </div>
-  );
+    );
+  };
 
 // Returns step content.
   const getStepContent = (step: number) => {
@@ -871,7 +957,7 @@ const CreateTestPage = () => {
       <div className="space-y-5 p-6">
         <Button variant="ghost" size="sm" className="gap-2" onClick={testsHome.goHome}>
           <ArrowLeft className="h-4 w-4" />
-          {testsHome.label}
+          {t(testsHome.label)}
         </Button>
         <Alert variant="destructive">
           <AlertDescription>{editBlocked}</AlertDescription>
@@ -884,7 +970,7 @@ const CreateTestPage = () => {
     <div className="space-y-5 p-6">
       <Button variant="ghost" size="sm" className="gap-2" onClick={testsHome.goHome}>
         <ArrowLeft className="h-4 w-4" />
-        {testsHome.label}
+        {t(testsHome.label)}
       </Button>
 
       <PageHeader
@@ -927,7 +1013,7 @@ const CreateTestPage = () => {
                   index <= activeStep ? 'text-foreground' : 'text-muted-foreground'
                 )}
               >
-                {label}
+                {t(label)}
               </span>
             </div>
             {index < steps.length - 1 && (
@@ -956,7 +1042,7 @@ const CreateTestPage = () => {
           disabled={activeStep === 0}
           onClick={handleBack}
         >
-          Back
+          {t('Back')}
         </Button>
         <Button
           onClick={handleNext}
@@ -965,15 +1051,34 @@ const CreateTestPage = () => {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {isEditMode ? 'Saving...' : 'Creating...'}
+              {isEditMode ? t('Saving...') : t('Creating...')}
             </>
           ) : activeStep === steps.length - 1 ? (
-            isEditMode ? 'Save changes' : 'Create Test'
+            isEditMode ? t('Save changes') : t('Create test')
           ) : (
-            'Next'
+            t('Next')
           )}
         </Button>
       </div>
+
+      {/* A question as students will see it */}
+      <Dialog open={Boolean(previewQuestion)} onOpenChange={(open) => !open && setPreviewQuestion(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('How students see it')}</DialogTitle>
+          </DialogHeader>
+          {previewQuestion && (
+            <div className="space-y-4">
+              <p className="whitespace-pre-wrap text-lg font-semibold">{previewQuestion.question_text || t('(no question text yet)')}</p>
+              <QuestionAnswer
+                question={{ ...previewQuestion, options: (previewQuestion.options || []).filter((option) => option.trim()) }}
+                value={previewAnswer}
+                onChange={setPreviewAnswer}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
