@@ -12,6 +12,8 @@ export interface TeacherStudent {
   enrollment_number?: string;
   first_name?: string;
   last_name?: string;
+  /** 'Transferred' on the row a student leaves behind in a group they moved out of. */
+  status?: string | null;
 }
 
 export const getTeacherInitials = (firstName: string, lastName: string) =>

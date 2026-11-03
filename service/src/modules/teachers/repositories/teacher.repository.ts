@@ -45,23 +45,21 @@ const teacherSelection = {
   updated_at: teachers.updatedAt,
 };
 
+// A teacher's students: the ones in their groups now, as the teacher's own profile counts them.
+// Not by the teacher written on the student record (it stays behind when a student changes
+// group), and not the rows a transferred-out student leaves in the old group.
 const teacherStudentCount = sql`
   COALESCE((
     SELECT COUNT(DISTINCT counted_students.student_id)::int
     FROM students AS counted_students
+    JOIN classes AS assigned_class
+      ON assigned_class.class_id = counted_students.class_id
+     AND assigned_class.center_id = teachers.center_id
+     AND assigned_class.teacher_id = teachers.teacher_id
+     AND assigned_class.deleted_at IS NULL
     WHERE counted_students.deleted_at IS NULL
       AND counted_students.center_id = teachers.center_id
-      AND (
-        counted_students.teacher_id = teachers.teacher_id
-        OR EXISTS (
-          SELECT 1
-          FROM classes AS assigned_class
-          WHERE assigned_class.class_id = counted_students.class_id
-            AND assigned_class.center_id = teachers.center_id
-            AND assigned_class.teacher_id = teachers.teacher_id
-            AND assigned_class.deleted_at IS NULL
-        )
-      )
+      AND (counted_students.status IS NULL OR counted_students.status::text <> 'Transferred')
   ), 0)::int
 `;
 

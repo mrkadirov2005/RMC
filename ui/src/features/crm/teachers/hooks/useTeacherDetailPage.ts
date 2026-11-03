@@ -114,11 +114,12 @@ export const useTeacherDetailPage = () => {
   }, [allClasses]);
   const teacherStudents = useMemo(
     () =>
-      studentsSource.filter((student) =>
-        Number(student.teacher_id) === teacherIdNum ||
-        (student.class_id != null && teacherClassIds.has(Number(student.class_id)))
+      // The students in this teacher's groups now — the same count as the teacher's own profile.
+      studentsSource.filter(
+        (student) =>
+          student.class_id != null && teacherClassIds.has(Number(student.class_id)) && String(student.status || '') !== 'Transferred'
       ),
-    [studentsSource, teacherClassIds, teacherIdNum]
+    [studentsSource, teacherClassIds]
   );
   const classStudentsByClassId = useMemo(() => {
     const map = new Map<number, TeacherStudent[]>();
