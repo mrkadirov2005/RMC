@@ -58,4 +58,12 @@ export const developerLabels: Record<string, string> = {
   'Accept the change': "O'zgarishni tasdiqlash",
   'Your last state is back': 'Oxirgi holatingiz tiklandi',
   'The change is accepted': "O'zgarish tasdiqlandi",
+  // "My password" for owners and the developer
+  'My password': 'Mening parolim',
+  'Repeat new password': 'Yangi parolni takrorlang',
+  'Change password': "Parolni o'zgartirish",
+  'Your password has been changed': "Parolingiz o'zgartirildi",
+  'The new passwords do not match': 'Yangi parollar bir xil emas',
+  'The new password is the same as the current one': 'Yangi parol joriy parol bilan bir xil',
+  'At least {count} characters': 'Kamida {count} ta belgi',
 };

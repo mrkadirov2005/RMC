@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { DEFAULT_TEXT_SIZES, normalizeTextSizes, TEXT_SIZE_OPTIONS, TEXT_SIZE_ROLES, type TextSizeRole, type TextSizes } from './textSize';
 import { BotContentSettings } from '../telegramBot/BotContentSettings';
 import { SectionPanel } from '@/components/common/SectionPanel';
+import { ChangeOwnPasswordCard } from '../../owner/components/ChangeOwnPasswordCard';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import { cn } from '@/lib/utils';
 import {
@@ -237,6 +238,9 @@ const SettingsPage = () => {
           </div>
         }
       />
+
+      {/* Owner accounts only (the card hides itself for everyone else). */}
+      <ChangeOwnPasswordCard />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionPanel

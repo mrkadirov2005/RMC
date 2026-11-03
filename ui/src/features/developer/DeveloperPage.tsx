@@ -17,6 +17,7 @@ import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAppSelector } from '../crm/hooks';
 import { useUrlTab } from '@/shared/hooks/useUrlTab';
+import { ChangeOwnPasswordCard } from '../owner/components/ChangeOwnPasswordCard';
 import { developerAPI, type DeveloperAccount, type DeveloperLock, type DeveloperOwner, type LockUserType, type Lockdown, type SealStatus } from './api';
 
 const EngineeringPage = lazy(() => import('../crm/server/EngineeringPage'));
@@ -396,6 +397,9 @@ const DeveloperPanel = () => {
           ))}
         </div>
       </section>
+
+      {/* Your own password (the seal is signed again on the server) */}
+      <ChangeOwnPasswordCard />
 
       {/* Lock one account */}
       <Dialog open={Boolean(pendingLock)} onOpenChange={(open) => !open && setPendingLock(null)}>
