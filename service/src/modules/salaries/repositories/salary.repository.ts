@@ -255,12 +255,20 @@ const listTeacherOverview = async ({
   }));
 };
 
+// The center started paying salaries through RMC in October 2026; months before that have no
+// records and must not show as unpaid. SALARY_START_MONTH (YYYY-MM) moves the start.
+const salaryStartIndex = () => {
+  const match = String(process.env.SALARY_START_MONTH || '2026-10').match(/^(\d{4})-(\d{2})$/);
+  return match ? Number(match[1]) * 12 + Number(match[2]) - 1 : 0;
+};
+const isOnOrAfterSalaryStart = (date: Date) => date.getFullYear() * 12 + date.getMonth() >= salaryStartIndex();
+
 const listHistoryForTeacher = async (teacherId: number, centerId: number | undefined, months: number) => {
   const now = new Date();
   const periods: Array<{ year: number; month: number }> = [];
   for (let i = 0; i < months; i += 1) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    periods.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
+    if (isOnOrAfterSalaryStart(d)) periods.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
   }
 
   const salaryConditions = [eq(teacherSalaries.teacherId, teacherId)];
@@ -364,7 +372,7 @@ const monthlySummary = async ({ centerId, months }: { centerId?: number; months:
   const periods: Array<{ year: number; month: number }> = [];
   for (let i = months - 1; i >= 0; i -= 1) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    periods.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
+    if (isOnOrAfterSalaryStart(d)) periods.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
   }
   const earliestYear = periods[0]?.year ?? now.getFullYear();
 
