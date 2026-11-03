@@ -46,3 +46,38 @@ export const teacherFullName = (row: { first_name?: string | null; last_name?: s
 export const formatStudentPaidShare = (stats: { total_students: number; paid_students: number; paid_percent: number }): string => {
   return `${stats.paid_students}/${stats.total_students} (${Math.round(stats.paid_percent)}%)`;
 };
+
+export type SalaryStatus = 'paid' | 'pending' | 'unpaid';
+
+/** Paid once marked so; pending when an advance was given but the salary is not paid out yet. */
+export const resolveSalaryStatus = (salary: { is_paid?: boolean } | null | undefined, advanceTotal?: number | string | null): SalaryStatus => {
+  if (salary?.is_paid) return 'paid';
+  return Number(advanceTotal) > 0 ? 'pending' : 'unpaid';
+};
+
+/** What is still owed after the advances; never negative. */
+export const remainingAfterAdvances = (amount: number | string | null | undefined, advanceTotal: number | string | null | undefined): number => {
+  const left = (Number(amount) || 0) - (Number(advanceTotal) || 0);
+  return Math.max(0, Math.round(left * 100) / 100);
+};
+
+/** Share of the expected student payments that came in, 0-100 (over 100 counts as 100). */
+export const collectedPercent = (progress?: { expected: number; collected: number } | null): number => {
+  if (!progress || !(progress.expected > 0)) return 0;
+  return Math.min(100, Math.round((progress.collected / progress.expected) * 100));
+};
+
+/** Colour of the student payment line: green from 90%, amber from 50%, red below. */
+export const progressTone = (percent: number): { bar: string; text: string } =>
+  percent >= 90
+    ? { bar: '#10b981', text: 'text-emerald-600' }
+    : percent >= 50
+      ? { bar: '#f59e0b', text: 'text-amber-600' }
+      : { bar: '#f43f5e', text: 'text-rose-600' };
+
+/** What the teacher has actually received for the month: advances, plus the rest once the salary is paid. */
+export const receivedSoFar = (salary: { is_paid?: boolean; amount?: number | string } | null | undefined, advanceTotal?: number | string | null): number => {
+  const advances = Number(advanceTotal) || 0;
+  if (!salary?.is_paid) return Math.round(advances * 100) / 100;
+  return Math.round(Math.max(Number(salary.amount) || 0, advances) * 100) / 100;
+};

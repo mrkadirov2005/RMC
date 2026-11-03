@@ -1,6 +1,6 @@
 const { and, asc, eq, inArray, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { classes, payments, students, teachers, teacherSalaries } = require('../../../db/schema');
+const { classes, expenses, payments, students, teachers, teacherSalaries, teacherSalaryAdvances } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -19,8 +19,23 @@ const salarySelection = {
   marked_by_name: teacherSalaries.markedByName,
   payment_method: teacherSalaries.paymentMethod,
   notes: teacherSalaries.notes,
+  expense_id: teacherSalaries.expenseId,
   created_at: teacherSalaries.createdAt,
   updated_at: teacherSalaries.updatedAt,
+};
+
+const advanceSelection = {
+  advance_id: teacherSalaryAdvances.advanceId,
+  center_id: teacherSalaryAdvances.centerId,
+  teacher_id: teacherSalaryAdvances.teacherId,
+  salary_year: teacherSalaryAdvances.salaryYear,
+  salary_month: teacherSalaryAdvances.salaryMonth,
+  amount: teacherSalaryAdvances.amount,
+  given_at: teacherSalaryAdvances.givenAt,
+  payment_method: teacherSalaryAdvances.paymentMethod,
+  notes: teacherSalaryAdvances.notes,
+  given_by_name: teacherSalaryAdvances.givenByName,
+  given_by_role: teacherSalaryAdvances.givenByRole,
 };
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
@@ -140,6 +155,139 @@ const updateRecord = async (
   return rows[0] || null;
 };
 
+// An advance is money out of the kassa, so it lands in `expenses` too; the advance keeps the link.
+const insertAdvance = async (data: {
+  teacherId: number;
+  centerId?: number | null;
+  salaryYear: number;
+  salaryMonth: number;
+  amount: number;
+  paymentMethod?: string | null;
+  notes?: string | null;
+  givenById?: number | null;
+  givenByRole?: string | null;
+  givenByName?: string | null;
+  expense: { expenseDate: string; paymentMethod: string; description: string };
+}) => {
+  const [expense] = await db
+    .insert(expenses)
+    .values({
+      centerId: Number(data.centerId),
+      expenseDate: data.expense.expenseDate,
+      amount: String(data.amount),
+      paymentMethod: data.expense.paymentMethod,
+      description: data.expense.description,
+      createdByName: data.givenByName ?? null,
+      createdAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .returning({ expense_id: expenses.expenseId });
+  try {
+    return await insertAdvanceRow(data, expense.expense_id);
+  } catch (error) {
+    // No advance without its expense, and no expense without its advance.
+    await db.update(expenses).set({ deletedAt: sql`CURRENT_TIMESTAMP` }).where(eq(expenses.expenseId, expense.expense_id));
+    throw error;
+  }
+};
+
+const insertAdvanceRow = async (data: any, expenseId: number) => {
+  const rows = await db
+    .insert(teacherSalaryAdvances)
+    .values({
+      centerId: data.centerId ?? null,
+      teacherId: data.teacherId,
+      salaryYear: data.salaryYear,
+      salaryMonth: data.salaryMonth,
+      amount: String(data.amount),
+      givenAt: sql`CURRENT_TIMESTAMP`,
+      paymentMethod: data.paymentMethod ?? null,
+      notes: data.notes ?? null,
+      givenById: data.givenById ?? null,
+      givenByRole: data.givenByRole ?? null,
+      givenByName: data.givenByName ?? null,
+      expenseId,
+      createdAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .returning(advanceSelection);
+  return rows[0];
+};
+
+const deleteAdvance = async (id: number, centerId?: number) => {
+  const conditions = [eq(teacherSalaryAdvances.advanceId, id)];
+  if (centerId) conditions.push(eq(teacherSalaryAdvances.centerId, centerId));
+  const rows = await db
+    .delete(teacherSalaryAdvances)
+    .where(and(...conditions))
+    .returning({ ...advanceSelection, expense_id: teacherSalaryAdvances.expenseId });
+  const removed = rows[0] || null;
+  // The money goes back into the kassa.
+  if (removed?.expense_id) {
+    await db.update(expenses).set({ deletedAt: sql`CURRENT_TIMESTAMP` }).where(eq(expenses.expenseId, removed.expense_id));
+  }
+  return removed;
+};
+
+// A teacher's advances, newest first; one salary month when `year`/`month` are given.
+const listAdvances = (teacherIds: number[], centerId?: number, period?: { year: number; month: number }) => {
+  if (!teacherIds.length) return Promise.resolve([]);
+  const conditions: any[] = [inArray(teacherSalaryAdvances.teacherId, teacherIds)];
+  if (centerId) conditions.push(eq(teacherSalaryAdvances.centerId, centerId));
+  if (period) {
+    conditions.push(eq(teacherSalaryAdvances.salaryYear, period.year));
+    conditions.push(eq(teacherSalaryAdvances.salaryMonth, period.month));
+  }
+  return db
+    .select(advanceSelection)
+    .from(teacherSalaryAdvances)
+    .where(and(...conditions))
+    .orderBy(sql`${teacherSalaryAdvances.givenAt} DESC`, sql`${teacherSalaryAdvances.advanceId} DESC`);
+};
+
+const sumAdvances = (rows: Array<{ amount?: unknown }>) =>
+  Math.round(rows.reduce((total, row) => total + (Number(row.amount) || 0), 0) * 100) / 100;
+
+// Keeps the kassa expense behind a paid salary in step with it: created on the first payout, updated
+// when the amount or method changes, and taken back out (amount 0) when the salary is un-marked.
+const syncSalaryExpense = async (data: {
+  salaryId: number;
+  expenseId?: number | null;
+  centerId?: number | null;
+  amount: number;
+  expenseDate: string;
+  paymentMethod: string;
+  description: string;
+  createdByName?: string | null;
+}) => {
+  if (data.amount <= 0) {
+    if (data.expenseId) {
+      await db.update(expenses).set({ deletedAt: sql`CURRENT_TIMESTAMP` }).where(eq(expenses.expenseId, data.expenseId));
+      await db.update(teacherSalaries).set({ expenseId: null }).where(eq(teacherSalaries.salaryId, data.salaryId));
+    }
+    return null;
+  }
+  if (data.expenseId) {
+    await db
+      .update(expenses)
+      .set({ amount: String(data.amount), paymentMethod: data.paymentMethod, description: data.description, deletedAt: null })
+      .where(eq(expenses.expenseId, data.expenseId));
+    return data.expenseId;
+  }
+  const [expense] = await db
+    .insert(expenses)
+    .values({
+      centerId: Number(data.centerId),
+      expenseDate: data.expenseDate,
+      amount: String(data.amount),
+      paymentMethod: data.paymentMethod,
+      description: data.description,
+      createdByName: data.createdByName ?? null,
+      createdAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .returning({ expense_id: expenses.expenseId });
+  await db.update(teacherSalaries).set({ expenseId: expense.expense_id }).where(eq(teacherSalaries.salaryId, data.salaryId));
+  return expense.expense_id;
+};
+
 const listTeachers = (centerId?: number) => {
   const conditions = [isNull(teachers.deletedAt)];
   if (centerId) conditions.push(eq(teachers.centerId, centerId));
@@ -245,7 +393,15 @@ const listTeacherOverview = async ({
     statRows.filter((row) => row.teacher_id != null).map((row) => [Number(row.teacher_id), row])
   );
 
+  const advanceRows = await listAdvances(teacherIds, centerId, { year, month });
+  const advancesByTeacher = new Map<number, any[]>();
+  advanceRows.forEach((row: any) => {
+    const key = Number(row.teacher_id);
+    advancesByTeacher.set(key, [...(advancesByTeacher.get(key) || []), row]);
+  });
+
   return teacherRows.map((teacher: any) => ({
+    advance_total: sumAdvances(advancesByTeacher.get(Number(teacher.teacher_id)) || []),
     teacher_id: teacher.teacher_id,
     first_name: teacher.first_name,
     last_name: teacher.last_name,
@@ -276,12 +432,22 @@ const listHistoryForTeacher = async (teacherId: number, centerId: number | undef
   const salaryRows = await db.select(salarySelection).from(teacherSalaries).where(and(...salaryConditions));
   const salaryByPeriod = new Map(salaryRows.map((row: any) => [`${row.salary_year}-${row.salary_month}`, row]));
 
+  const advanceRows = await listAdvances([teacherId], centerId);
+  const advancesByPeriod = new Map<string, any[]>();
+  advanceRows.forEach((row: any) => {
+    const key = `${row.salary_year}-${row.salary_month}`;
+    advancesByPeriod.set(key, [...(advancesByPeriod.get(key) || []), row]);
+  });
+
   const history: any[] = [];
   for (const period of periods) {
     const statRows = await studentStatsByTeacher({ centerId, teacherId, year: period.year, month: period.month });
+    const advances = advancesByPeriod.get(`${period.year}-${period.month}`) || [];
     history.push({
       salary_year: period.year,
       salary_month: period.month,
+      advances,
+      advance_total: sumAdvances(advances),
       salary: salaryByPeriod.get(`${period.year}-${period.month}`) || null,
       student_stats: toStudentStats(statRows[0]),
     });
@@ -412,6 +578,11 @@ module.exports = {
   listHistoryForTeacher,
   monthlySummary,
   findTeacherGroupPaymentRows,
+  insertAdvance,
+  deleteAdvance,
+  listAdvances,
+  sumAdvances,
+  syncSalaryExpense,
 };
 
 export {};

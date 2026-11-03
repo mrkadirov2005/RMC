@@ -93,5 +93,5 @@ const createExpense = async (body: any, centerId: number, createdByName: string 
 
 const deleteExpense = async (expenseId: number, centerId?: number) => cashReportRepository.softDeleteExpense(expenseId, centerId);
 
-module.exports = { getDailyReport, listExpenses, createExpense, deleteExpense, methodGroup };
+module.exports = { getDailyReport, listExpenses, createExpense, deleteExpense, methodGroup, EXPENSE_METHODS };
 export {};

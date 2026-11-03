@@ -323,11 +323,26 @@ const findStudentPaymentSummary = async (filters: {
               COUNT(*) FILTER (WHERE state = 'partial')::int AS partial_students,
               COUNT(*) FILTER (WHERE state = 'unpaid')::int AS unpaid_students,
               COALESCE(SUM(paid_amount), 0)::numeric AS collected,
+              COALESCE(SUM(expected), 0)::numeric AS expected,
               COALESCE(SUM(GREATEST(expected - paid_amount, 0)), 0)::numeric AS remaining
        FROM scored
      ),
+     -- The same totals per teacher (the salary list's student payment line).
+     by_teacher AS (
+       SELECT teacher_id,
+              COUNT(*)::int AS students,
+              COUNT(*) FILTER (WHERE state = 'paid')::int AS paid_students,
+              COUNT(*) FILTER (WHERE state = 'partial')::int AS partial_students,
+              COUNT(*) FILTER (WHERE state = 'unpaid')::int AS unpaid_students,
+              COALESCE(SUM(paid_amount), 0)::numeric AS collected,
+              COALESCE(SUM(expected), 0)::numeric AS expected,
+              COALESCE(SUM(GREATEST(expected - paid_amount, 0)), 0)::numeric AS remaining
+       FROM scored
+       GROUP BY teacher_id
+     ),
      filtered AS (SELECT * FROM scored ${statusFilter})
      SELECT (SELECT row_to_json(totals) FROM totals) AS totals,
+            COALESCE((SELECT json_agg(by_teacher) FROM by_teacher), '[]'::json) AS by_teacher,
             (SELECT COUNT(*)::int FROM filtered) AS total,
             COALESCE((SELECT json_agg(page) FROM (
               SELECT * FROM filtered ORDER BY last_name NULLS LAST, first_name, student_id LIMIT ${limit} OFFSET ${offset}

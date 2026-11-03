@@ -1,25 +1,11 @@
-import { Loader2, Search } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
-import { SectionPanel } from '@/components/common/SectionPanel';
-import { PaginationBar } from '@/components/common/PaginationBar';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { formatMoney } from '@/utils/helpers';
 import { useSalaryOverview } from './hooks/useSalaryOverview';
 import { SalaryOverviewTab } from './components/SalaryOverviewTab';
 import { SalaryStudentsTab } from './components/SalaryStudentsTab';
-import { formatStudentPaidShare, monthInputValue, parseMonthInputValue, teacherFullName } from './model/salaryModel';
-import type { SalaryOverviewRow } from './types';
-import { useLanguage } from '@/i18n/LanguageContext';
+import { SalaryListTab } from './components/SalaryListTab';
+import { monthInputValue, parseMonthInputValue } from './model/salaryModel';
 import { PERMISSION_CODES } from '@/types';
 import { useRBAC } from '../hooks/useRBAC';
 import { resolveSubPageView } from '../rbac/adminPageAccess';
@@ -31,8 +17,6 @@ const isSalaryTab = (value: string | null): value is SalaryTab => value === 'tot
 const normalizeView = (value: string | null) => (value === 'monthly' ? 'total' : value);
 
 const SalaryPage = () => {
-  const { t } = useLanguage();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { canAccessSubPage } = useRBAC();
   // Only the salary views this admin was given; a hidden one falls back to an allowed view.
@@ -46,6 +30,7 @@ const SalaryPage = () => {
     setSearch,
     loading,
     rows,
+    allRows,
     totalRows,
     currentPage,
     totalPages,
@@ -82,104 +67,18 @@ const SalaryPage = () => {
       {/* Which students of each teacher paid this month (what teachers see in their own account). */}
       {activeTab === 'students' && <SalaryStudentsTab year={year} month={month} />}
 
+      {/* Every teacher: students' payments, salary, advances and what they received; a click opens the teacher. */}
       {activeTab === 'list' && (
-        <>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-            <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-              <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Teachers')}</p>
-              <p className="text-base font-black text-primary">{summary.teacherCount}</p>
-            </div>
-            <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-              <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Paid')}</p>
-              <p className="text-base font-black text-emerald-600">{summary.paidCount}</p>
-            </div>
-            <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-              <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Unpaid')}</p>
-              <p className="text-base font-black text-rose-600">{summary.unpaidCount}</p>
-            </div>
-            <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-              <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Avg. Students Paid')}</p>
-              <p className="text-base font-black text-cyan-600">{summary.avgPaidPercent}%</p>
-            </div>
-          </div>
-
-          <SectionPanel contentClassName="p-0">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
-              <h3 className="text-sm font-bold">{t('All teachers ({count})', { count: totalRows })}</h3>
-              <div className="relative w-full max-w-xs">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t('Search teachers...')}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="py-10 text-center text-sm text-muted-foreground">
-                {search ? t('No teachers match your search') : t('No teachers found')}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('Teacher')}</TableHead>
-                      <TableHead>{t('Last-Month Salary')}</TableHead>
-                      <TableHead>{t('Paid?')}</TableHead>
-                      <TableHead>{t('Marked By')}</TableHead>
-                      <TableHead>{t('Students Paid')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((row: SalaryOverviewRow) => (
-                      <TableRow
-                        key={row.teacher_id}
-                        className="cursor-pointer hover:bg-muted/40"
-                        onClick={() => navigate(`/salary/${row.teacher_id}`)}
-                      >
-                        <TableCell className="font-medium">{teacherFullName(row)}</TableCell>
-                        <TableCell>{row.salary ? formatMoney(row.salary.amount) : '—'}</TableCell>
-                        <TableCell>
-                          {row.salary?.is_paid ? (
-                            <Badge variant="success">{t('Paid')}</Badge>
-                          ) : (
-                            <Badge variant="warning">{t('Unpaid')}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {row.salary?.marked_by_name
-                            ? `${row.salary.marked_by_name} (${row.salary.marked_by_role || 'admin'})`
-                            : '—'}
-                        </TableCell>
-                        <TableCell>{formatStudentPaidShare(row.student_stats)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            <div className="p-4">
-              <PaginationBar
-                total={totalRows}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                start={start}
-                end={end}
-                pageSize={pageSize}
-                onPageChange={setPage}
-                onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-              />
-            </div>
-          </SectionPanel>
-        </>
+        <SalaryListTab
+          year={year}
+          month={month}
+          allRows={allRows}
+          rows={rows}
+          loading={loading}
+          search={search}
+          onSearch={setSearch}
+          pagination={{ total: totalRows, currentPage, totalPages, start, end, pageSize, setPage, setPageSize }}
+        />
       )}
     </div>
   );
