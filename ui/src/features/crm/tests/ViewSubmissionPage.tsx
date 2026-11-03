@@ -185,7 +185,7 @@ const ViewSubmissionPage = () => {
               {isStaff && studentName ? `${studentName} · ` : ''}
               {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString('en-GB') : ''}
               {submission.time_taken_seconds ? ` · ${formatDuration(submission.time_taken_seconds)}` : ''}
-              {submission.attempt_number > 1 ? ` · ${t('attempt {number}', { number: submission.attempt_number })}` : ''}
+              {Number(submission.attempt_number) > 1 ? ` · ${t('attempt {number}', { number: Number(submission.attempt_number) })}` : ''}
             </p>
           </div>
           {isStaff && submission.status === 'submitted' && (
