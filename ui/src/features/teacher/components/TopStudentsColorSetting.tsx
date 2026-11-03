@@ -37,7 +37,7 @@ export default function TopStudentsColorSetting() {
         <Palette className="h-4 w-4 text-amber-500" />
         {t('Top students colour')}
       </h3>
-      <p className="mb-3 text-xs text-muted-foreground">{t('The top {count} students of each group, by points over all lessons, are shown in this colour.', { count: TOP_PLACES })}</p>
+      <p className="mb-3 text-xs text-muted-foreground">{t('The top {count} students of each group, by points this month, are shown in this colour.', { count: TOP_PLACES })}</p>
       <div className="flex flex-wrap items-center gap-2">
         {PRESETS.map((preset) => (
           <button

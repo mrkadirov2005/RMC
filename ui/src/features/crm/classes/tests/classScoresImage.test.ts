@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const api = vi.hoisted(() => ({ attendance: vi.fn(), scores: vi.fn(), standings: vi.fn(), draw: vi.fn(), download: vi.fn() }));
-vi.mock('@/shared/api/api', () => ({ gradeAPI: { getClassStandings: (id: number) => api.standings(id) } }));
+vi.mock('@/shared/api/api', () => ({ gradeAPI: { getClassStandings: (id: number, month?: string) => api.standings(id, month) } }));
 vi.mock('../api/sessionWorkflowApi', () => ({
   sessionWorkflowApi: { loadClassAttendance: (id: number) => api.attendance(id), loadClassMonthScores: (id: number, month: string) => api.scores(id, month) },
 }));
@@ -23,9 +23,10 @@ describe('class scores image', () => {
     api.download.mockResolvedValue(undefined);
   });
 
-  it('orders by the group standings and uses the teacher colour', async () => {
+  it("orders by the group's standings for that month and uses the teacher colour", async () => {
     api.standings.mockResolvedValue({ data: [{ student_id: 2, place: 1, total_points: 300, lessons: 3, trend: { direction: 'down' } }] });
     await downloadClassScoresImage({ classId: 7, className: 'IELTS 1', teacherName: 'Odiljon', monthKey: '2026-10', students, topColor: '#38BDF8' });
+    expect(api.standings).toHaveBeenCalledWith(7, '2026-10');
     const [grid, options] = api.draw.mock.calls[0];
     expect(grid.ranked).toBe(true);
     expect(grid.rows.map((row: any) => row.id)).toEqual([2, 1]);

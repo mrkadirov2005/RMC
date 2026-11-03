@@ -1,8 +1,9 @@
 const classStandingsRepository = require('../repositories/classStandings.repository');
 const { combineLessonScore } = require('./lessonScore');
 
-// A group's standings: each student's points over all their lessons in the group, their place,
-// and whether their recent lessons are going better or worse than the ones before.
+// A group's standings for one month: each student's points over their lessons in the group that
+// month, their place, and whether their recent lessons are going better or worse than the ones
+// before. Coins are separate and unaffected.
 
 /**
  * Lessons compared on each side of the trend: the last TREND_LESSONS against the ones before. A
@@ -32,8 +33,8 @@ const lessonTrend = (scores: number[]): Trend => {
   return { direction, recent_average: round1(recent), previous_average: round1(previous) };
 };
 
-const classStandings = async (classId: number, centerId?: number, teacherId?: number) => {
-  const rows = await classStandingsRepository.findClassLessonScores({ classId, centerId, teacherId });
+const classStandings = async (classId: number, centerId?: number, teacherId?: number, month?: string) => {
+  const rows = await classStandingsRepository.findClassLessonScores({ classId, centerId, teacherId, month });
   const byStudent = new Map<number, number[]>();
   rows.forEach((row: any) => {
     const studentId = Number(row.student_id);

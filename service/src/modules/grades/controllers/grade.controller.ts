@@ -182,6 +182,11 @@ const getGradesBySession = async (req: any, res: any) => {
 };
 
 // A group's students by points over all its lessons, with each one's place and trend.
+const MONTH_KEY = /^\d{4}-(0[1-9]|1[0-2])$/;
+// Centers work by Tashkent time, so "this month" is the Tashkent month.
+const currentMonthKey = () =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit' }).format(new Date());
+
 const getClassStandings = async (req: any, res: any) => {
   try {
     if (req.user?.userType === 'student') return res.status(403).json({ error: 'Kirish rad etildi.' });
@@ -190,7 +195,9 @@ const getClassStandings = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
-    res.json(await classStandingsService.classStandings(Number(req.params.classId), centerId ?? undefined, teacherId));
+    // One month's lessons (?month=YYYY-MM), this Tashkent month by default.
+    const month = MONTH_KEY.test(String(req.query?.month || '')) ? String(req.query.month) : currentMonthKey();
+    res.json(await classStandingsService.classStandings(Number(req.params.classId), centerId ?? undefined, teacherId, month));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Guruh reytingini yuklab bo'lmadi", details: error.message || String(error) });

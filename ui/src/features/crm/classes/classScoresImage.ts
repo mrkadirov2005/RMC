@@ -1,5 +1,5 @@
 // The class's scores image ("Suratni yuklash" after a lesson, "Ballarni yuklash" in the teacher's
-// attendance tab): the month's attendance and points, with each student's place over all lessons,
+// attendance tab): the month's attendance and points, with each student's place that month,
 // the top five in the teacher's colour and the trend arrow.
 
 import { gradeAPI } from '@/shared/api/api';
@@ -27,7 +27,7 @@ export const downloadClassScoresImage = async ({
     sessionWorkflowApi.loadClassAttendance(classId),
     sessionWorkflowApi.loadClassMonthScores(classId, monthKey),
     // Without standings the image is still made, in A–Z order as before.
-    gradeAPI.getClassStandings(classId).then((response) => unwrapApiRows<ImageStanding & { student_id: number }>(response)).catch(() => null),
+    gradeAPI.getClassStandings(classId, monthKey).then((response) => unwrapApiRows<ImageStanding & { student_id: number }>(response)).catch(() => null),
   ]);
   const standings = standingRows ? new Map(standingRows.map((row) => [Number(row.student_id), row])) : undefined;
   const grid = buildMonthlyAttendanceGrid({ students, records, scores, monthKey, standings });

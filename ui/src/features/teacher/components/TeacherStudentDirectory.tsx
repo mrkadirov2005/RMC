@@ -143,7 +143,7 @@ function PlaceBadge({ standing, color }: { standing?: Standing; color: string })
     <span
       className="inline-flex h-5 shrink-0 items-center rounded-full px-1.5 text-[0.625rem] font-black leading-none text-slate-900"
       style={{ backgroundColor: color }}
-      title={t('Place {place} over all lessons', { place: standing.place })}
+      title={t('Place {place} this month', { place: standing.place })}
     >
       {t('{place}-place', { place: standing.place })}
     </span>
@@ -465,7 +465,7 @@ export default function TeacherStudentDirectory({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all_time">{t('By points (all lessons)')}</SelectItem>
+              <SelectItem value="all_time">{t('By points (this month)')}</SelectItem>
               {canSortByLastLesson && <SelectItem value="last_lesson">{t('By last lesson')}</SelectItem>}
               <SelectItem value="name">{t('By name (A–Z)')}</SelectItem>
             </SelectContent>
@@ -521,7 +521,7 @@ export default function TeacherStudentDirectory({
                     {showStandings && (
                       <>
                         <TableHead className="h-9 w-10 px-1 text-center text-[0.6875rem] font-bold uppercase tracking-wide" title={t('Last lessons against the ones before')}>{t('Trend')}</TableHead>
-                        <TableHead className="h-9 min-w-[64px] px-1 text-center text-[0.6875rem] font-bold uppercase tracking-wide" title={t('Points over all lessons in this group')}>{t('All lessons')}</TableHead>
+                        <TableHead className="h-9 min-w-[64px] px-1 text-center text-[0.6875rem] font-bold uppercase tracking-wide" title={t('Points this month in this group')}>{t('This month')}</TableHead>
                       </>
                     )}
                     {monthlyLessonDates.map((d) => {
@@ -548,7 +548,7 @@ export default function TeacherStudentDirectory({
                       const studentId = Number(student.student_id || student.id || 0);
                       let studentTotalPoints = 0;
                       let studentAttendanceCount = 0;
-                      // With the group's standings the top five (all lessons) get the teacher's colour;
+                      // With the group's standings the top five (this month) get the teacher's colour;
                       // otherwise this month's places and red list as before.
                       const standing = standings.get(studentId);
                       const rank = showStandings ? undefined : monthlyRanks.get(studentId);
@@ -637,7 +637,7 @@ export default function TeacherStudentDirectory({
                     {showStandings && (
                       <>
                         <TableHead className="w-12 text-center" title={t('Last lessons against the ones before')}>{t('Trend')}</TableHead>
-                        <TableHead className="text-center" title={t('Points over all lessons in this group')}>{t('All lessons')}</TableHead>
+                        <TableHead className="text-center" title={t('Points this month in this group')}>{t('This month')}</TableHead>
                       </>
                     )}
                   {isViewDetails && <TableHead>{t('Payment')}</TableHead>}
