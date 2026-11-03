@@ -150,8 +150,12 @@ apiClient.interceptors.response.use(
       }
     };
 
+    // Locked by the developer (one account, or everyone): signed out like an expired session.
+    const lockCode = error.response?.status === 423 ? error.response?.data?.code : null;
+    const lockedOut = lockCode === 'ACCOUNT_LOCKED' || lockCode === 'SYSTEM_LOCKED';
+
     // Handle 401 (unauthorized) - token expired or invalid
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || lockedOut) {
       const url = error.config?.url || '';
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
@@ -669,14 +673,6 @@ export const superuserAPI = {
 export const ownerAPI = {
   login: (credentials: { username: string; password: string }) =>
     apiClient.post('/owners/auth/login', credentials),
-  register: (data: {
-    username: string;
-    email: string;
-    password: string;
-    first_name: string;
-    last_name: string;
-    invite_key: string;
-  }) => apiClient.post('/owners/auth/register', data),
   getAll: () => apiClient.get('/owners'),
   getById: (id: number) => apiClient.get(`/owners/${id}`),
   create: (data: any) => apiClient.post('/owners', data),
@@ -811,14 +807,6 @@ export const authAPI = {
     superuserAPI.login(credentials),
   loginOwner: (credentials: { username: string; password: string }) =>
     ownerAPI.login(credentials),
-  registerOwner: (data: {
-    username: string;
-    email: string;
-    password: string;
-    first_name: string;
-    last_name: string;
-    invite_key: string;
-  }) => ownerAPI.register(data),
   loginTeacher: (credentials: { username: string; password: string }) =>
     apiClient.post('/teachers/auth/login', credentials),
   loginTeacherPayment: (credentials: { username: string; password: string }) =>

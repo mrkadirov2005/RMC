@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const accessLock = require('../../developer/accessLock');
 const { generateTokenWithExpiry } = require('../../../middleware/auth');
 const studentService = require('../../students/services/student.service');
 const parentService = require('../../parents/services/parent.service');
@@ -84,6 +85,8 @@ const login = async (body: any) => {
   const found = await resolveAccount(body.username, body.password, body.role);
   if (found.kind !== 'ok') return found;
   const { role, account } = found;
+  const lock = await accessLock.lockStateFor(role, accountId(role, account));
+  if (lock.locked) return { kind: 'locked' as const, error: lock.error, code: lock.code };
   return sessionRepository.withTransaction(async (tx: any) => {
     const session = await sessionRepository.createSession(tx, {
       userType: role,
@@ -102,6 +105,7 @@ const login = async (body: any) => {
 // The account as it is now, so a refresh never extends access for a deleted, inactive or
 // newly frozen account with stale claims.
 const loadAccount = async (role: Role, userId: number) => {
+  if ((await accessLock.lockStateFor(role, userId)).locked) return null;
   if (role === 'student') {
     const student = await studentService.getStudent(userId);
     return student && student.status === 'Active' ? student : null;

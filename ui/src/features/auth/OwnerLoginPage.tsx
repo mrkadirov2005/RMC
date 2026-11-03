@@ -67,13 +67,15 @@ export const OwnerLoginPage = () => {
             role: 'owner',
             userType: 'superuser',
             center_id: 0,
+            ...(owner.is_developer ? { is_developer: true } : {}),
           },
           token,
         })
       );
 
       showToast.success('Owner login successful! Accessing manager panel...');
-      navigate('/owner/manage');
+      // The developer lands on the technical section.
+      navigate(owner.is_developer ? '/developer' : '/owner/manage');
     } catch (err: any) {
       const errorMsg = handleApiError(err);
       dispatch(loginFailure(errorMsg));
@@ -128,14 +130,6 @@ export const OwnerLoginPage = () => {
             <img src={logoSrc} alt="Temurbek School" className="mb-7 h-14 w-auto object-contain" />
             <h1 className="text-2xl font-bold tracking-tight text-slate-950">{t('Owner sign in')}</h1>
           </div>
-
-          <button
-            type="button"
-            onClick={() => navigate('/owner/register')}
-            className="mb-5 text-xs font-medium text-slate-500 hover:text-slate-950"
-          >
-            {t('Create owner account with keyword')}
-          </button>
 
           {error && (
             <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">

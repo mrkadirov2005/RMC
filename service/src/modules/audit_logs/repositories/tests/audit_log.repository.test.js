@@ -71,10 +71,26 @@ describe('audit log repository', () => {
     expect(rendered).toContain('audit_logs.entity_type');
   });
 
+  it("hides the developer's rows unless asked to include them", () => {
+    const chain = {};
+    chain.from = jest.fn(() => chain);
+    chain.orderBy = jest.fn(() => chain);
+    chain.where = jest.fn(() => chain);
+    mockDb.select.mockReturnValue(chain);
+
+    auditLogRepository.findFiltered({});
+    expect(renderCondition(chain.where.mock.calls[0][0])).toContain('by_developer');
+
+    chain.where.mockClear();
+    auditLogRepository.findFiltered({ includeDeveloper: true });
+    expect(chain.where).not.toHaveBeenCalled();
+  });
+
   it('applies limit and offset when provided', () => {
     const chain = {};
     chain.from = jest.fn(() => chain);
     chain.orderBy = jest.fn(() => chain);
+    chain.where = jest.fn(() => chain);
     chain.limit = jest.fn(() => chain);
     chain.offset = jest.fn(() => chain);
     mockDb.select.mockReturnValue(chain);

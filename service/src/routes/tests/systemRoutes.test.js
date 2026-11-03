@@ -18,7 +18,7 @@ jest.mock('../../modules/system', () => ({
   resetPayments: jest.fn(),
 }));
 
-const { requireAuth, requireOwner } = require('../../middleware/auth');
+const { requireAuth, requireDeveloper } = require('../../middleware/auth');
 const systemRoutes = require('../systemRoutes');
 
 // RMC-052: the system router ("studio" surface with arbitrary table read/write) must never expose
@@ -69,7 +69,7 @@ describe('system router auth-guard inventory (RMC-052)', () => {
       const routeStack = layer.route.stack || [];
       const ownGuard = routeStack.some((routeLayer) => {
         const fn = routeLayer.handle;
-        return fn === requireAuth || fn === requireOwner || looksLikeRequireRoleMiddleware(fn);
+        return fn === requireAuth || fn === requireDeveloper || looksLikeRequireRoleMiddleware(fn);
       });
 
       expect(coveredByBaseline || ownGuard).toBe(true);
@@ -79,13 +79,10 @@ describe('system router auth-guard inventory (RMC-052)', () => {
     });
   });
 
-  it('still keeps the owner-only database "studio" routes behind requireOwner specifically', () => {
-    const ownerOnlyPaths = ['/database/tables', '/redeploy', '/dev/reset-students'];
-    ownerOnlyPaths.forEach((expectedPath) => {
-      const layer = stack.find((l) => l.route && l.route.path === expectedPath);
-      expect(layer).toBeDefined();
-      const routeStack = layer.route.stack || [];
-      expect(routeStack.some((routeLayer) => routeLayer.handle === requireOwner)).toBe(true);
-    });
+  it('keeps every route behind requireDeveloper: the technical section is the developer account\'s alone', () => {
+    const developerIndex = stack.findIndex((layer) => !layer.route && layer.handle === requireDeveloper);
+    expect(developerIndex).toBeGreaterThan(stack.findIndex(isRequireAuthLayer));
+    const firstRouteIndex = stack.findIndex((layer) => !!layer.route);
+    expect(firstRouteIndex).toBeGreaterThan(developerIndex);
   });
 });

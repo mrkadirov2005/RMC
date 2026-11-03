@@ -341,15 +341,6 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </div>
           </div>
 
-          {userType === 'superuser' && (
-            <button
-              type="button"
-              onClick={() => navigate('/owner/register')}
-              className="mt-5 text-xs font-medium text-slate-500 hover:text-slate-950"
-            >
-              {t('Create owner account with keyword')}
-            </button>
-          )}
         </div>
       </section>
     </main>

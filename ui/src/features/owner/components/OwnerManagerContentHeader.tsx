@@ -19,6 +19,8 @@ interface OwnerManagerContentHeaderProps {
   needsCenterScope: boolean;
   isScopedAndMissingCenter: boolean;
   onAdd: () => void;
+  /** False hides Add (owner accounts are added by the developer only). */
+  canAdd?: boolean;
   onTabChange: (value: OwnerManagerTabType) => void;
   loading: boolean;
 }
@@ -35,6 +37,7 @@ export const OwnerManagerContentHeader = ({
   needsCenterScope: _needsCenterScope,
   isScopedAndMissingCenter,
   onAdd,
+  canAdd = true,
   onTabChange,
   loading,
 }: OwnerManagerContentHeaderProps) => {
@@ -63,7 +66,7 @@ export const OwnerManagerContentHeader = ({
               return <button key={tab.value} type="button" onClick={() => onTabChange(tab.value)} className={cn('flex items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold', isActive ? 'bg-white text-slate-950 shadow-sm dark:bg-background dark:text-white' : 'text-muted-foreground hover:text-foreground')}><Icon className="h-4 w-4" />{t(tab.label)}</button>;
             })}
           </div>
-          {activeTab !== 'statistics' && activeTab !== 'finance' && (
+          {canAdd && activeTab !== 'statistics' && activeTab !== 'finance' && (
             <Button
               onClick={onAdd}
               disabled={loading || isScopedAndMissingCenter}

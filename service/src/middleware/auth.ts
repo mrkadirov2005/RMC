@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 const { and, eq, isNull } = require('drizzle-orm');
 const pool = require('../db/pool');
 const { students } = require('../db/schema');
+const accessLock = require('../modules/developer/accessLock');
+const { runWithUser } = require('../shared/requestContext');
 
 const db = pool.db;
 
@@ -39,6 +41,7 @@ interface JwtPayload {
   payment_access?: boolean;
   is_frozen?: boolean;
   can_hard_delete?: boolean;
+  is_developer?: boolean;
 }
 
 /**
@@ -98,8 +101,14 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
         return;
       }
     }
+    // Locked by the developer: refused at once, even with a token issued before the lock.
+    const lock = await accessLock.lockStateForUser(decoded);
+    if (lock.locked) {
+      res.status(423).json({ error: lock.error, code: lock.code });
+      return;
+    }
     req.user = decoded;
-    next();
+    runWithUser(decoded, next);
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {
       res.status(401).json({ error: 'Sessiya muddati tugadi. Iltimos, qaytadan tizimga kiring.' });
@@ -199,6 +208,17 @@ function requireSelfOrAdmin(paramName: string, userIdField: string = 'id') {
   };
 }
 
+/**
+ * Middleware: the developer account only (an owner flagged is_developer). Must be used AFTER requireAuth.
+ */
+function requireDeveloper(req: any, res: any, next: any): void {
+  if (req.user?.userType === 'superuser' && req.user?.is_developer === true) {
+    next();
+    return;
+  }
+  res.status(403).json({ error: "Kirish rad etildi. Bu amalni bajarishga ruxsatingiz yo'q." });
+}
+
 module.exports = {
   generateToken,
   generateTokenWithExpiry,
@@ -208,6 +228,7 @@ module.exports = {
   requireRole,
   requireMuzaffarHardDelete,
   requireSelfOrAdmin,
+  requireDeveloper,
   requireOwner: (req: any, res: any, next: any) => {
     if (!req.user) {
       res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });

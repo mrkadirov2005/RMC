@@ -275,6 +275,17 @@ describe('response interceptor', () => {
     expect(window.location.hash).toBe('#/login/superuser');
   });
 
+  it('signs out an account the developer locked, but not a frozen student', async () => {
+    localStorage.setItem('token', 'jwt');
+    localStorage.setItem('user', JSON.stringify({ userType: 'student' }));
+
+    await expect(onResponseError()({ response: { status: 423, data: { code: 'STUDENT_ACCOUNT_FROZEN' } }, config: { url: '/grades' } })).rejects.toBeDefined();
+    expect(localStorage.getItem('token')).toBe('jwt');
+
+    await expect(onResponseError()({ response: { status: 423, data: { code: 'ACCOUNT_LOCKED' } }, config: { url: '/grades' } })).rejects.toBeDefined();
+    expect(localStorage.getItem('token')).toBeNull();
+  });
+
   it('sends an owner back to the owner login page', async () => {
     localStorage.setItem('user', JSON.stringify({ userType: 'superuser', role: 'owner' }));
     window.location.hash = '#/dashboard';

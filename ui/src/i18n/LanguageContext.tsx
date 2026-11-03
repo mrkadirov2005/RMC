@@ -1843,7 +1843,6 @@ const translations: Record<string, string> = {
   'Creating': 'Yaratilmoqda',
   'Back to admin login': 'Admin kirishiga qaytish',
   'Back to owner login': 'Ega kirishiga qaytish',
-  'Create owner account with keyword': "Kalit so'z bilan ega akkauntini yaratish",
   'Auto-generated if empty': "Bo'sh qoldirilsa avtomatik yaratiladi",
 
   // ── More toast messages ─────────────────────────────────────

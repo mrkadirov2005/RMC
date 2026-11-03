@@ -167,6 +167,7 @@ function requestLogger(req: any, res: any, next: any): void {
         username,
         userType,
         role,
+        developer: Boolean(req.user?.is_developer === true || res.locals?.developerRequest),
         failureReason: success ? null : failure.failureReason || null,
         failureDetails: success ? null : failure.failureDetails || null,
       };

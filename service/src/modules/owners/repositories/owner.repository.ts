@@ -1,4 +1,4 @@
-const { desc, eq, sql } = require('drizzle-orm');
+const { and, desc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { owners } = require('../../../db/schema');
 
@@ -16,11 +16,28 @@ const safeSelection = {
   updated_at: owners.updatedAt,
 };
 
-const findAllSafe = () => db.select(safeSelection).from(owners).orderBy(desc(owners.ownerId));
+// Developer accounts are left out unless the caller is a developer: owners never see them.
+const notDeveloper = sql`COALESCE(${owners.isDeveloper}, FALSE) = FALSE`;
 
-const findById = async (id: number) => {
-  const rows = await db.select(safeSelection).from(owners).where(eq(owners.ownerId, id)).limit(1);
+const findAllSafe = (includeDevelopers = false) =>
+  db
+    .select({ ...safeSelection, is_developer: owners.isDeveloper, is_locked: owners.isLocked })
+    .from(owners)
+    .where(includeDevelopers ? sql`TRUE` : notDeveloper)
+    .orderBy(desc(owners.ownerId));
+
+const findById = async (id: number, includeDevelopers = false) => {
+  const rows = await db
+    .select(safeSelection)
+    .from(owners)
+    .where(includeDevelopers ? eq(owners.ownerId, id) : and(eq(owners.ownerId, id), notDeveloper))
+    .limit(1);
   return rows[0] || null;
+};
+
+const isDeveloper = async (id: number) => {
+  const rows = await db.select({ is_developer: owners.isDeveloper }).from(owners).where(eq(owners.ownerId, id)).limit(1);
+  return Boolean(rows[0]?.is_developer);
 };
 
 const countByUsername = async (username: string) => {
@@ -95,7 +112,9 @@ const findByUsernameForLogin = async (username: string) => {
       password_hash: owners.passwordHash,
       status: owners.status,
       is_locked: owners.isLocked,
+      locked_at: owners.lockedAt,
       can_hard_delete: owners.canHardDelete,
+      is_developer: owners.isDeveloper,
     })
     .from(owners)
     .where(eq(owners.username, username))
@@ -111,8 +130,12 @@ const incrementLoginAttempts = (id: number) =>
     .set({
       loginAttempts: sql`COALESCE(${owners.loginAttempts}, 0) + 1`,
       isLocked: sql`CASE WHEN COALESCE(${owners.loginAttempts}, 0) + 1 >= ${LOGIN_ATTEMPTS_LOCK_THRESHOLD} THEN TRUE ELSE ${owners.isLocked} END`,
+      lockedAt: sql`CASE WHEN COALESCE(${owners.loginAttempts}, 0) + 1 >= ${LOGIN_ATTEMPTS_LOCK_THRESHOLD} THEN CURRENT_TIMESTAMP ELSE ${owners.lockedAt} END`,
     })
     .where(eq(owners.ownerId, id));
+
+const unlock = (id: number) =>
+  db.update(owners).set({ isLocked: false, loginAttempts: 0, lockedAt: null }).where(eq(owners.ownerId, id));
 
 const resetLoginSuccess = (id: number) =>
   db.update(owners).set({ loginAttempts: 0, lastLogin: sql`CURRENT_TIMESTAMP` }).where(eq(owners.ownerId, id));
@@ -128,12 +151,14 @@ const updatePasswordHash = (id: number, password_hash: string) =>
 module.exports = {
   findAllSafe,
   findById,
+  isDeveloper,
   countByUsername,
   insert,
   update,
   remove,
   findByUsernameForLogin,
   incrementLoginAttempts,
+  unlock,
   resetLoginSuccess,
   findPasswordHash,
   updatePasswordHash,

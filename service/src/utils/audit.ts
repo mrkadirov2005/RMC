@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const { auditLogs } = require('../db/schema');
+const { currentUser } = require('../shared/requestContext');
 
 const db = pool.db;
 
@@ -38,6 +39,8 @@ exports.logAudit = async (payload: AuditPayload) => {
       details: {
         ...(details || {}),
         center_id: resolvedCenterId,
+        // Hidden from owners' audit view (see audit_log.repository).
+        ...(currentUser()?.is_developer === true ? { by_developer: true } : {}),
       },
       ipAddress: ip_address || null,
     });

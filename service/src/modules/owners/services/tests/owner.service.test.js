@@ -4,7 +4,7 @@ jest.mock('../../../../shared/password', () => ({
 }));
 jest.mock('../../repositories/owner.repository', () => ({
   findAllSafe: jest.fn(), findById: jest.fn(), countByUsername: jest.fn(), insert: jest.fn(), update: jest.fn(),
-  remove: jest.fn(), findByUsernameForLogin: jest.fn(), incrementLoginAttempts: jest.fn(),
+  remove: jest.fn(), findByUsernameForLogin: jest.fn(), incrementLoginAttempts: jest.fn(), unlock: jest.fn(),
   resetLoginSuccess: jest.fn(), findPasswordHash: jest.fn(), updatePasswordHash: jest.fn(),
 }));
 
@@ -24,7 +24,7 @@ describe('owner service', () => {
 
   test.each([
     [null, 'pw', 'invalid'],
-    [{ is_locked: true }, 'pw', 'locked'],
+    [{ is_locked: true, locked_at: new Date().toISOString() }, 'pw', 'locked'],
     [{ is_locked: false, status: 'Inactive' }, 'pw', 'inactive'],
     [{ owner_id: 1, status: 'Active', password_hash: 'hash:right' }, 'wrong', 'invalid'],
   ])('returns the expected authentication result %#', async (owner, password, kind) => {
@@ -39,6 +39,13 @@ describe('owner service', () => {
     repository.findByUsernameForLogin.mockResolvedValueOnce({ owner_id: 1, status: 'Active', password_hash: 'hash:right' });
     await expect(service.authenticate('owner', 'right')).resolves.toMatchObject({ kind: 'ok' });
     expect(repository.resetLoginSuccess).toHaveBeenCalledWith(1);
+  });
+
+  test('a password lockout lifts by itself after 15 minutes', async () => {
+    const lockedAt = new Date(Date.now() - 16 * 60 * 1000).toISOString();
+    repository.findByUsernameForLogin.mockResolvedValueOnce({ owner_id: 1, status: 'Active', password_hash: 'hash:right', is_locked: true, locked_at: lockedAt });
+    await expect(service.authenticate('owner', 'right')).resolves.toMatchObject({ kind: 'ok' });
+    expect(repository.unlock).toHaveBeenCalledWith(1);
   });
 
   test('validates old password before changing it', async () => {

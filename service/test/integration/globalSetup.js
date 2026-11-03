@@ -38,6 +38,8 @@ module.exports = async () => {
       DB_USER: connection.user,
       DB_PASSWORD: connection.password,
       DB_NAME: database,
+      // The developer seal migration signs with this; it must match the app's (test.env.js).
+      JWT_SECRET: process.env.TEST_JWT_SECRET || 'crm-integration-test-secret',
     },
   });
 };

@@ -21,7 +21,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const rateLimit = require('express-rate-limit');
   const swaggerUI = require('swagger-ui-express');
   const swaggerDocs = require('./swagger/swagger');
-  const { requireAuth, requireRole, requireOwner } = require('./middleware/auth');
+  const { requireAuth, requireRole, requireOwner, requireDeveloper } = require('./middleware/auth');
   const { validateBody } = require('./middleware/validation');
   const { CredentialsDto } = require('./dtos/request.dto');
   const { initMongo, closeMongo } = require('./db/mongo');
@@ -68,6 +68,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const roomSlotsRoutes = require('./routes/roomSlotsRoutes');
   const calendarRoutes = require('./routes/calendarRoutes');
   const requestLogRoutes = require('./routes/requestLogRoutes');
+  const developerRoutes = require('./routes/developerRoutes');
   const translationRoutes = require('./routes/translationRoutes');
   const systemRoutes = require('./routes/systemRoutes');
   const settingsRoutes = require('./routes/settingsRoutes');
@@ -160,7 +161,6 @@ async function createApp(options: CreateAppOptions = {}) {
   app.post('/api/teachers/auth/payment-login', authRateLimiter, validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherPaymentLogin);
   app.post('/api/superusers/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/superusers/controllers/superuser.controller').login);
   app.post('/api/owners/auth/login', authRateLimiter, require('./modules/owners/controllers/owner.controller').login);
-  app.post('/api/owners/auth/register', authRateLimiter, require('./modules/owners/controllers/owner.controller').register);
   app.post('/api/parents/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/parents').parentLogin);
 
   // @MOB-020 Mobile app API: public version check and sign-in/refresh/sign-out. The refresh
@@ -213,6 +213,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/subjects', requireAuth, requireRole('superuser', 'teacher'), subjectRoutes);
   app.use('/api/superusers', requireAuth, requireRole('superuser'), superuserRoutes);
   app.use('/api/owners', requireAuth, requireOwner, ownerRoutes);
+  app.use('/api/developer', requireAuth, requireDeveloper, developerRoutes);
   app.use('/api/tests', requireAuth, testRoutes);
   app.use('/api/settings', requireAuth, settingsRoutes);
 
@@ -233,7 +234,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/room-slots', requireAuth, requireRole('superuser', 'teacher'), roomSlotsRoutes);
   app.use('/api/calendar', requireAuth, requireRole('superuser', 'teacher', 'student'), calendarRoutes);
   // Request logs (MongoDB): only superuser.
-  app.use('/api/request-logs', requireAuth, requireRole('superuser'), requestLogRoutes);
+  // Request logs are part of the technical section: the developer account only.
+  app.use('/api/request-logs', requireAuth, requireDeveloper, requestLogRoutes);
   app.use('/api/system', systemRoutes);
   app.use('/api/archive', requireAuth, requireRole('superuser'), archiveRoutes);
   app.use('/api/telegram-registrations', requireAuth, requireRole('superuser'), telegramRegistrationRoutes);

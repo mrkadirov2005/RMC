@@ -2,13 +2,16 @@ const { hashPassword, verifyPassword } = require('../../../shared/password');
 const ownerRepository = require('../repositories/owner.repository');
 import type {
   CreateOwnerDto,
-  RegisterOwnerDto,
   UpdateOwnerDto,
 } from '../dtos/owner.dto';
 
-const listOwners = () => ownerRepository.findAllSafe();
+const listOwners = (includeDevelopers = false) => ownerRepository.findAllSafe(includeDevelopers);
 
-const getOwner = (id: number) => ownerRepository.findById(id);
+const getOwner = (id: number, includeDevelopers = false) => ownerRepository.findById(id, includeDevelopers);
+
+// A password lockout lifts by itself after this long (older locks without a time count as expired).
+const LOCKOUT_MS = 15 * 60 * 1000;
+const lockoutExpired = (owner: any) => !owner.locked_at || Date.now() - new Date(owner.locked_at).getTime() >= LOCKOUT_MS;
 
 const createOwner = async (body: CreateOwnerDto) => {
   const { username, email, password, first_name, last_name, status } = body;
@@ -27,23 +30,6 @@ const createOwner = async (body: CreateOwnerDto) => {
   return { row };
 };
 
-const registerOwner = async (body: RegisterOwnerDto) => {
-  const { username, email, password, first_name, last_name } = body;
-  const taken = await ownerRepository.countByUsername(username);
-  if (taken > 0) return { error: 'username_taken' as const };
-
-  const row = await ownerRepository.insert([
-    username,
-    email,
-    hashPassword(password),
-    first_name,
-    last_name,
-    'Active',
-  ]);
-
-  return { row };
-};
-
 const updateOwner = async (id: number, body: UpdateOwnerDto) => {
   const { email, first_name, last_name, status, password } = body;
   const passwordHash = password ? hashPassword(password) : null;
@@ -55,14 +41,18 @@ const deleteOwner = (id: number) => ownerRepository.remove(id);
 const authenticate = async (username: string, password: string) => {
   const owner = await ownerRepository.findByUsernameForLogin(username);
   if (!owner) return { kind: 'invalid' as const };
-  if (owner.is_locked) return { kind: 'locked' as const };
-  if (owner.status !== 'Active') return { kind: 'inactive' as const };
+  if (owner.is_locked) {
+    if (!lockoutExpired(owner)) return { kind: 'locked' as const, owner };
+    await ownerRepository.unlock(owner.owner_id);
+  }
+  if (owner.status !== 'Active') return { kind: 'inactive' as const, owner };
   const verification = verifyPassword(password, owner.password_hash);
   if (!verification.valid) {
     await ownerRepository.incrementLoginAttempts(owner.owner_id);
-    return { kind: 'invalid' as const };
+    return { kind: 'invalid' as const, owner };
   }
-  if (verification.legacy) {
+  // A developer's password hash is sealed, so it is never rewritten here.
+  if (verification.legacy && !owner.is_developer) {
     await ownerRepository.updatePasswordHash(owner.owner_id, hashPassword(password));
   }
   await ownerRepository.resetLoginSuccess(owner.owner_id);
@@ -81,7 +71,6 @@ module.exports = {
   listOwners,
   getOwner,
   createOwner,
-  registerOwner,
   updateOwner,
   deleteOwner,
   authenticate,
