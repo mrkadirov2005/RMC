@@ -1,4 +1,5 @@
 const { logAudit } = require('../../../utils/audit');
+const testAnalysisService = require('../services/testAnalysis.service');
 const testService = require('../services/test.service');
 const { requireTestCenterScope } = require('./testScope');
 const { studentBelongsToTeacher, testInCenter } = require('../../../shared/tenantDb');
@@ -494,6 +495,22 @@ const getTestResults = async (req: any, res: any) => {
   }
 };
 
+const getTestAnalysis = async (req: any, res: any) => {
+  try {
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
+    const testId = Number(req.params.testId);
+    if (centerId) {
+      const ok = await testInCenter(testId, centerId);
+      if (!ok) return res.status(404).json({ error: 'Test topilmadi' });
+    }
+    res.json(await testAnalysisService.testAnalysis(testId));
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Test tahlilini yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
 const getStudentResults = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
@@ -573,6 +590,7 @@ module.exports = {
   deletePassage,
   startTest,
   submitTest,
+  getTestAnalysis,
   gradeSubmission,
   getSubmissionsByTest,
   getSubmissionDetails,

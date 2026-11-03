@@ -1,349 +1,312 @@
-// Page component for the tests screen in the crm feature.
+// One attempt at a test, for the student who took it and for staff: the score card, how each
+// section went, and every question with the answer given next to the right one and why, filterable
+// to the wrong or unanswered ones.
 
-import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  FileText,
-  Check,
-  X,
-  Pencil,
-  Loader2,
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Check, CheckCircle2, Clock, Loader2, Minus, Pencil, X, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTestsHome } from './useTestsHome';
-import { PageHeader } from '@/components/common/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getErrorMessage } from '@/utils/errorMessage';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { clearSubmissionDetailsError, fetchSubmissionDetails } from '../../../slices/testsSlice';
-import {
-  selectSubmissionDetailsError,
-  selectSubmissionDetailsItem,
-  selectSubmissionDetailsLoading,
-} from '../../../store/selectors';
+import { selectSubmissionDetailsError, selectSubmissionDetailsItem, selectSubmissionDetailsLoading } from '../../../store/selectors';
 import type { TestSubmission } from '@/types';
+import { useTestsHome } from './useTestsHome';
+import { testAPI } from './api';
 import { formatCorrectAnswer, formatStudentAnswer } from './answerFormat';
-import { formatTestType } from './testVisuals';
+import { buildSections } from './takeTestModel';
+import { getQuestionTypeMeta } from './questionTypes';
 
-// Renders the view submission page screen.
+type Outcome = 'right' | 'wrong' | 'blank' | 'pending';
+type Filter = 'all' | 'wrong' | 'blank' | 'right';
+
+const isBlank = (value: any) =>
+  value === null || value === undefined || value === '' || (typeof value === 'object' && !('index' in value) && !('value' in value) && !String(value.text ?? '').trim() && !value.matches);
+
+const outcomeOf = (answer: any): Outcome => {
+  if (isBlank(answer.student_answer)) return 'blank';
+  if (answer.is_correct === true) return 'right';
+  if (answer.is_correct === false) return 'wrong';
+  return 'pending';
+};
+
+const OUTCOME_STYLE: Record<Outcome, { border: string; icon: typeof Check; iconClass: string; label: string }> = {
+  right: { border: 'border-l-emerald-500', icon: Check, iconClass: 'bg-emerald-500 text-white', label: 'Right' },
+  wrong: { border: 'border-l-rose-500', icon: X, iconClass: 'bg-rose-500 text-white', label: 'Wrong' },
+  blank: { border: 'border-l-slate-300', icon: Minus, iconClass: 'bg-slate-300 text-slate-700', label: 'Not answered' },
+  pending: { border: 'border-l-amber-400', icon: Clock, iconClass: 'bg-amber-400 text-white', label: 'Waiting for grading' },
+};
+
+const formatDuration = (seconds?: number | null) => {
+  if (!seconds) return '—';
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+};
+
 const ViewSubmissionPage = () => {
   const { t } = useLanguage();
   const { submissionId } = useParams();
   const navigate = useNavigate();
   const testsHome = useTestsHome();
   const dispatch = useAppDispatch();
-  const submission = useAppSelector(selectSubmissionDetailsItem) as TestSubmission | null;
+  const submission = useAppSelector(selectSubmissionDetailsItem) as (TestSubmission & Record<string, any>) | null;
   const loading = useAppSelector(selectSubmissionDetailsLoading);
   const error = useAppSelector(selectSubmissionDetailsError);
+  const user = useAppSelector((state) => state.auth.user);
+  const [test, setTest] = useState<any>(null);
+  const [filter, setFilter] = useState<Filter>('all');
 
-// Runs side effects for this component.
   useEffect(() => {
-    if (!submissionId) {
-      return;
-    }
-    dispatch(fetchSubmissionDetails(Number(submissionId)));
+    if (submissionId) dispatch(fetchSubmissionDetails(Number(submissionId)));
   }, [dispatch, submissionId]);
 
-// Returns status badge class.
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'submitted':
-        return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
-      case 'graded':
-        return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      default:
-        return 'bg-muted text-foreground hover:bg-muted';
-    }
-  };
+  // The test itself, for its sections (best effort: the page works without it).
+  useEffect(() => {
+    if (!submission?.test_id) return;
+    testAPI
+      .getById(Number(submission.test_id))
+      .then((response) => setTest(response.data))
+      .catch(() => setTest(null));
+  }, [submission?.test_id]);
 
-  if (loading) {
+  const answers = useMemo(() => (submission?.answers || []) as any[], [submission]);
+  const counts = useMemo(() => {
+    const result: Record<Outcome, number> = { right: 0, wrong: 0, blank: 0, pending: 0 };
+    answers.forEach((answer) => {
+      result[outcomeOf(answer)] += 1;
+    });
+    return result;
+  }, [answers]);
+
+  // Each section's right answers, when the test's questions line up with the answers.
+  const sectionScores = useMemo(() => {
+    const questions = test?.questions || [];
+    if (!questions.length) return [];
+    const sections = buildSections(test, questions).filter((section) => section.title);
+    const byId = new Map(answers.map((answer) => [Number(answer.question_id), answer]));
+    return sections.map((section) => {
+      const own = section.indexes.map((index) => byId.get(Number(questions[index]?.question_id))).filter(Boolean);
+      return { title: section.title, right: own.filter((answer) => outcomeOf(answer) === 'right').length, total: section.indexes.length };
+    });
+  }, [test, answers]);
+
+  if (loading && !submission) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!submission) {
     return (
-      <div className="p-6">
+      <div className="space-y-4 p-6">
         <Alert variant="destructive">
-          <AlertDescription>Submission not found</AlertDescription>
+          <AlertDescription>{error ? getErrorMessage(error) : t('Submission not found')}</AlertDescription>
         </Alert>
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mt-4">
+        <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Go Back
+          {t('Go Back')}
         </Button>
       </div>
     );
   }
 
-// Handles is passing.
-  const isPassing = (submission.score || 0) >= (submission.passing_marks || 0);
-  const pendingManualCount = Number(submission.pending_manual_count ?? 0);
+  const graded = submission.status === 'graded';
+  const total = Number(submission.total_marks) || 0;
+  const score = Number(submission.obtained_marks ?? submission.score) || 0;
+  const percent = submission.percentage != null ? Math.round(Number(submission.percentage)) : total > 0 ? Math.round((score / total) * 100) : 0;
+  const passed = submission.is_passed != null ? Boolean(submission.is_passed) : score >= Number(submission.passing_marks || 0);
+  const isStaff = user?.userType === 'superuser' || user?.userType === 'teacher';
+  const studentName = [submission.first_name, submission.last_name].filter(Boolean).join(' ');
+  const level = test?.test_data?.level_test?.level;
+  const visible = answers.map((answer, index) => ({ answer, index })).filter(({ answer }) => filter === 'all' || outcomeOf(answer) === filter);
+
+  const filters: { id: Filter; label: string; count: number }[] = [
+    { id: 'all', label: 'All', count: answers.length },
+    { id: 'wrong', label: 'Wrong', count: counts.wrong },
+    { id: 'blank', label: 'Not answered', count: counts.blank },
+    { id: 'right', label: 'Right', count: counts.right },
+  ];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-4 gap-2"
-        onClick={() => testsHome.goToTest(submission.test_id)}
-      >
+    <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-6">
+      <Button variant="ghost" size="sm" className="gap-2" onClick={() => testsHome.goToTest(submission.test_id)}>
         <ArrowLeft className="h-4 w-4" />
-        {testsHome.testLabel}
+        {t(testsHome.testLabel)}
       </Button>
 
-      <div className="mb-5">
-        <PageHeader
-          title={t('Submission')}
-          icon={FileText}
-          description={submission.test_name}
-          primaryAction={
-            submission.status === 'submitted' ? (
-              <Button onClick={() => navigate(`/tests/submissions/${submissionId}/grade`)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Grade submission
-              </Button>
-            ) : undefined
-          }
-        />
-      </div>
-
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
-          <button
-            onClick={() => dispatch(clearSubmissionDetailsError())}
-            className="absolute top-2 right-2 text-muted-foreground hover:text-muted-foreground"
-          >
-            ×
-          </button>
+        <Alert variant="destructive">
+          <AlertDescription className="flex items-center justify-between">
+            {getErrorMessage(error)}
+            <button type="button" aria-label={t('Close')} onClick={() => dispatch(clearSubmissionDetailsError())}>
+              ×
+            </button>
+          </AlertDescription>
         </Alert>
       )}
 
-      {/* Student & Score Summary */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <p className="mb-1 text-sm font-medium text-muted-foreground">Student</p>
-              <h3 className="text-lg font-semibold">
-                {submission.first_name} {submission.last_name}
-              </h3>
-              {submission.enrollment_number && (
-                <p className="text-sm text-muted-foreground">{submission.enrollment_number}</p>
-              )}
-            </div>
-            <div>
-              <p className="mb-1 text-sm font-medium text-muted-foreground">Score</p>
-              <div className="flex items-baseline gap-1">
-                <span
-                  className={cn(
-                    'text-2xl font-semibold tabular-nums',
-                    submission.status === 'graded'
-                      ? isPassing
-                        ? 'text-emerald-600 dark:text-emerald-500'
-                        : 'text-destructive'
-                      : 'text-foreground'
-                  )}
-                >
-                  {submission.score ?? '-'}
-                </span>
-                <span className="text-lg text-muted-foreground">/ {submission.total_marks}</span>
-              </div>
-              {pendingManualCount > 0 ? (
-                <Badge className="mt-1 bg-amber-100 text-amber-800 hover:bg-amber-100">
-                  Pending grading ({pendingManualCount})
-                </Badge>
-              ) : submission.status === 'graded' ? (
-                <Badge
-                  className={cn(
-                    'mt-1',
-                    isPassing
-                      ? 'bg-green-100 text-green-800 hover:bg-green-100'
-                      : 'bg-red-100 text-red-800 hover:bg-red-100'
-                  )}
-                >
-                  {isPassing ? 'Passed' : 'Failed'}
-                </Badge>
-              ) : null}
-            </div>
-            <div>
-              <p className="mb-1 text-sm font-medium text-muted-foreground">Status</p>
-              <Badge className={getStatusBadgeClass(submission.status)}>
-                {submission.status.replace(/_/g, ' ')}
-              </Badge>
-              {submission.attempt_number && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Attempt #{submission.attempt_number}
-                </p>
-              )}
-            </div>
-            <div>
-              <p className="mb-1 text-sm font-medium text-muted-foreground">Timestamps</p>
-              <p className="text-sm">
-                Started: {submission.started_at ? new Date(submission.started_at).toLocaleString() : 'N/A'}
-              </p>
-              <p className="text-sm">
-                Submitted: {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString() : 'N/A'}
-              </p>
-              {submission.graded_at && (
-                <p className="text-sm">
-                  Graded: {new Date(submission.graded_at).toLocaleString()}
-                </p>
-              )}
-            </div>
+      {/* The score card */}
+      <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div
+            className={cn(
+              'flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-full border-4',
+              !graded ? 'border-amber-300 text-amber-600' : passed ? 'border-emerald-500 text-emerald-600' : 'border-rose-500 text-rose-600'
+            )}
+          >
+            <span className="text-2xl font-black tabular-nums">{graded ? `${percent}%` : '…'}</span>
+            <span className="text-[0.6875rem] font-semibold tabular-nums">
+              {score}/{total}
+            </span>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Answers Summary Table */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <h2 className="text-lg font-semibold mb-4">Answers Summary</h2>
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead>Question</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-center">Correct</TableHead>
-                  <TableHead className="text-right">Marks</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {submission.answers?.map((answer, index) => (
-                  <TableRow key={answer.question_id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell className="max-w-[300px] truncate">
-                      {answer.question_text}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {formatTestType(answer.question_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {answer.is_correct === true ? (
-                        <Check className="h-5 w-5 text-green-600 mx-auto" />
-                      ) : answer.is_correct === false ? (
-                        <X className="h-5 w-5 text-red-600 mx-auto" />
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {answer.marks_obtained ?? '-'} / {answer.marks}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-muted-foreground">{submission.test_name}</p>
+            <h1 className="flex flex-wrap items-center gap-2 text-xl font-black">
+              {graded ? (
+                passed ? (
+                  <>
+                    <CheckCircle2 className="h-6 w-6 text-emerald-600" /> {t('Passed!')}
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-6 w-6 text-rose-600" /> {t('Not passed')}
+                  </>
+                )
+              ) : (
+                t('Waiting for grading')
+              )}
+              {level && graded && <span className="text-sm font-semibold text-muted-foreground">· {t('Level {level}', { level })}</span>}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isStaff && studentName ? `${studentName} · ` : ''}
+              {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString('en-GB') : ''}
+              {submission.time_taken_seconds ? ` · ${formatDuration(submission.time_taken_seconds)}` : ''}
+              {submission.attempt_number > 1 ? ` · ${t('attempt {number}', { number: submission.attempt_number })}` : ''}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          {isStaff && submission.status === 'submitted' && (
+            <Button onClick={() => navigate(`/tests/submissions/${submissionId}/grade`)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              {t('Grade')}
+            </Button>
+          )}
+        </div>
 
-      {/* Detailed Answers */}
-      <h2 className="text-lg font-semibold mb-4 mt-8">Detailed Answers</h2>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-950/40">
+            <div className="text-lg font-black text-emerald-600">{counts.right}</div>
+            <div className="text-xs">{t('Right')}</div>
+          </div>
+          <div className="rounded-lg bg-rose-50 p-2 dark:bg-rose-950/40">
+            <div className="text-lg font-black text-rose-600">{counts.wrong}</div>
+            <div className="text-xs">{t('Wrong')}</div>
+          </div>
+          <div className="rounded-lg bg-slate-100 p-2 dark:bg-slate-800">
+            <div className="text-lg font-black text-slate-600 dark:text-slate-300">{counts.blank}</div>
+            <div className="text-xs">{t('Not answered')}</div>
+          </div>
+        </div>
 
-      {submission.answers?.length === 0 ? (
-        <Card>
-          <CardContent className="flex items-center justify-center py-10">
-            <p className="text-muted-foreground">No answers recorded</p>
-          </CardContent>
-        </Card>
-      ) : (
-        submission.answers?.map((answer, index) => (
-          <Card key={answer.question_id} className="mb-4">
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm text-muted-foreground">Question {index + 1}</span>
-                    <Badge variant="outline">
-                      {formatTestType(answer.question_type)}
-                    </Badge>
-                    {answer.is_correct === true && (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                        Correct
-                      </Badge>
-                    )}
-                    {answer.is_correct === false && (
-                      <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-                        Incorrect
-                      </Badge>
-                    )}
+        {sectionScores.length > 1 && (
+          <div className="mt-4 space-y-2">
+            {sectionScores.map((section) => {
+              const share = section.total ? Math.round((section.right / section.total) * 100) : 0;
+              return (
+                <div key={section.title} className="grid grid-cols-[100px_1fr_48px] items-center gap-3 text-sm">
+                  <span className="font-semibold">{t(section.title)}</span>
+                  <div data-keep-bg className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: 'rgba(148, 163, 184, 0.25)' }}>
+                    <div data-keep-bg className="h-full rounded-full" style={{ width: `${share}%`, backgroundColor: share >= 70 ? '#10b981' : share >= 40 ? '#f59e0b' : '#f43f5e' }} />
                   </div>
-                  <h3 className="text-lg font-semibold">{answer.question_text}</h3>
-                </div>
-                <div className="text-right">
-                  <span
-                    className={cn(
-                      'text-2xl font-bold',
-                      answer.marks_obtained === answer.marks
-                        ? 'text-green-600'
-                        : 'text-foreground'
-                    )}
-                  >
-                    {answer.marks_obtained ?? '-'}
+                  <span className="text-right tabular-nums text-muted-foreground">
+                    {section.right}/{section.total}
                   </span>
-                  <p className="text-sm text-muted-foreground">/ {answer.marks} marks</p>
                 </div>
-              </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-              <hr className="my-4" />
+      {/* The answers */}
+      <div className="flex flex-wrap gap-1.5" role="tablist">
+        {filters.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={filter === item.id}
+            onClick={() => setFilter(item.id)}
+            className={cn('rounded-full border px-3 py-1.5 text-sm font-semibold', filter === item.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:bg-muted')}
+          >
+            {t(item.label)} <span className="tabular-nums opacity-75">{item.count}</span>
+          </button>
+        ))}
+      </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Student's Answer</p>
-                  <div className="p-4 bg-muted rounded-lg min-h-[60px] whitespace-pre-wrap">
-                    {formatStudentAnswer(answer, answer.student_answer)}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Correct Answer</p>
-                  <div className="p-4 bg-green-50 rounded-lg min-h-[60px] whitespace-pre-wrap">
-                    {formatCorrectAnswer(answer)}
-                  </div>
-                </div>
-
-                {answer.feedback && (
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Feedback</p>
-                    <div className="p-4 bg-orange-50 rounded-lg">
-                      {answer.feedback}
+      {visible.length === 0 ? (
+        <p className="rounded-lg border bg-card py-10 text-center text-sm text-muted-foreground">{t('Nothing here.')}</p>
+      ) : (
+        <div className="space-y-2">
+          {visible.map(({ answer, index }) => {
+            const outcome = outcomeOf(answer);
+            const style = OUTCOME_STYLE[outcome];
+            const Icon = style.icon;
+            const shape = getQuestionTypeMeta(answer.question_type).answerShape;
+            const showCorrect = outcome !== 'right' && getQuestionTypeMeta(answer.question_type).correctAnswerShape !== 'none';
+            const given =
+              outcome === 'blank'
+                ? t('No answer')
+                : shape === 'value'
+                  ? answer.student_answer?.value
+                    ? t('True')
+                    : t('False')
+                  : formatStudentAnswer(answer, answer.student_answer);
+            return (
+              <article key={answer.question_id} className={cn('rounded-lg border border-l-4 bg-card p-4', style.border)}>
+                <div className="flex items-start gap-3">
+                  <span className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-full', style.iconClass)} title={t(style.label)}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-semibold">
+                        <span className="mr-1.5 text-muted-foreground">{index + 1}.</span>
+                        {answer.question_text}
+                      </p>
+                      <span className="shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
+                        {Number(answer.marks_obtained) || 0}/{Number(answer.marks) || 0}
+                      </span>
                     </div>
+                    <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                      <div className={cn('rounded-md px-3 py-2', outcome === 'right' ? 'bg-emerald-50 dark:bg-emerald-950/40' : outcome === 'wrong' ? 'bg-rose-50 dark:bg-rose-950/40' : 'bg-muted')}>
+                        <span className="block text-[0.6875rem] font-semibold uppercase text-muted-foreground">{t('Answer given')}</span>
+                        <span className="whitespace-pre-wrap">{given}</span>
+                      </div>
+                      {showCorrect && (
+                        <div className="rounded-md bg-emerald-50 px-3 py-2 dark:bg-emerald-950/40">
+                          <span className="block text-[0.6875rem] font-semibold uppercase text-muted-foreground">{t('Right answer')}</span>
+                          <span className="whitespace-pre-wrap">
+                            {shape === 'value'
+                              ? (typeof answer.correct_answer === 'object' ? answer.correct_answer?.value : answer.correct_answer)
+                                ? t('True')
+                                : t('False')
+                              : formatCorrectAnswer(answer)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {answer.explanation && <p className="mt-2 text-xs text-muted-foreground">💡 {answer.explanation}</p>}
+                    {answer.feedback && <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/40">{answer.feedback}</p>}
                   </div>
-                )}
-
-                {answer.explanation && (
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Explanation</p>
-                    <p className="text-sm text-muted-foreground">{answer.explanation}</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))
+                </div>
+              </article>
+            );
+          })}
+        </div>
       )}
     </div>
   );

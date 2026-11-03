@@ -1,60 +1,22 @@
-// Page component for the tests screen in the crm feature.
+// Taking a test: one question at a time, made for a phone first. On top the test, its sections and
+// the clock; the reading text beside its questions (folded above them on a phone); big answer
+// buttons; back and next at the bottom; a map of every question to jump around and flag. When the
+// test is handed in, the score shows straight away if the test allows it.
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Send,
-  Clock,
-  Flag,
-  FlagOff,
-  Loader2,
-} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, ChevronDown, Clock, Flag, LayoutGrid, Loader2, Send, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTestsHome } from './useTestsHome';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getErrorMessage } from '@/utils/errorMessage';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/utils/errorMessage';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useTestsHome } from './useTestsHome';
 import { testAPI } from './api';
 import { countWords } from './answerFormat';
-import { formatTestType } from './testVisuals';
-
-const isAnswered = (value: any) => {
-  if (value === null || value === undefined) return false;
-  if (typeof value.text === 'string') return value.text.trim() !== '';
-  if (value.matches) return Object.keys(value.matches).length > 0;
-  return value.index !== undefined || value.value !== undefined;
-};
-
-const hasInputRenderer = (question: any) => {
-  switch (question.question_type) {
-    case 'multiple_choice':
-    case 'true_false':
-    case 'short_answer':
-    case 'form_filling':
-    case 'essay':
-    case 'writing':
-      return true;
-    case 'matching':
-      return Boolean(question.matching_pairs);
-    case 'reading_passage':
-      return Boolean(question.passage);
-    default:
-      return false;
-  }
-};
+import { buildSections, clockTone, formatClock, isAnswered, passageFor, sectionOf } from './takeTestModel';
+import { QuestionAnswer } from './components/QuestionAnswer';
 
 // How the screen reaches the server. It defaults to the authenticated API, and a
 // share-link student passes the public transport instead — same paper, same
@@ -72,8 +34,22 @@ interface TakeTestPageProps {
   submissionId?: number;
 }
 
-// Renders the take test page screen.
+interface FinishedResult {
+  status?: string;
+  obtained_marks?: number | string | null;
+  total_score?: number | string | null;
+  percentage?: number | string | null;
+  is_passed?: boolean | null;
+}
+
+const CLOCK_STYLE = {
+  calm: 'border-slate-200 bg-slate-50 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100',
+  warning: 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200',
+  danger: 'animate-pulse border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200',
+};
+
 const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPageProps = {}) => {
+  const { t } = useLanguage();
   const params = useParams();
   const submissionId = submissionIdProp != null ? String(submissionIdProp) : params.submissionId;
   const navigate = useNavigate();
@@ -82,604 +58,481 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<{ [key: number]: any }>({});
+  const [answers, setAnswers] = useState<Record<number, any>>({});
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [startedAt, setStartedAt] = useState<string | null>(null);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [timeUpDialogOpen, setTimeUpDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [timeUpOpen, setTimeUpOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [passageOpen, setPassageOpen] = useState(true);
+  const [finished, setFinished] = useState<FinishedResult | null>(null);
 
-// Runs side effects for this component.
-  useEffect(() => {
-    if (submissionId) {
-      loadSubmission();
+  const loadSubmission = useCallback(async () => {
+    try {
+      setLoading(true);
+      let loadedTest: any;
+      let loadedStartedAt: string | null = null;
+      if (transport) {
+        const loaded = await transport.load(Number(submissionId));
+        loadedTest = loaded.test;
+        loadedStartedAt = loaded.startedAt;
+      } else {
+        // The submission says which test and when it really started.
+        let testId = localStorage.getItem(`submission_${submissionId}_test`);
+        try {
+          const submissionRes = await testAPI.getSubmissionDetails(Number(submissionId));
+          testId = String(submissionRes.data.test_id);
+          loadedStartedAt = submissionRes.data.started_at || null;
+        } catch (subErr) {
+          console.error('Could not fetch submission details:', subErr);
+          if (!testId) throw new Error(t('Test information not found. Please go back and start the test again.'));
+        }
+        loadedTest = (await testAPI.getById(Number(testId))).data;
+      }
+      setStartedAt(loadedStartedAt);
+      setTest(loadedTest);
+      const testQuestions = [...(loadedTest.questions || [])];
+      if (loadedTest.shuffle_questions) testQuestions.sort(() => Math.random() - 0.5);
+      setQuestions(testQuestions);
+      if (testQuestions.length === 0) setError(t('This test has no questions. Please contact the administrator.'));
+      if (loadedTest.is_timed) {
+        const durationSeconds = Number(loadedTest.duration_minutes || 0) * 60;
+        const elapsed = loadedStartedAt ? Math.floor((Date.now() - new Date(loadedStartedAt).getTime()) / 1000) : 0;
+        setTimeRemaining(Math.max(0, durationSeconds - Math.max(0, elapsed)));
+      }
+    } catch (err: any) {
+      console.error('Error loading submission:', err);
+      setError(err.message || t('Failed to load test'));
+    } finally {
+      setLoading(false);
     }
-  }, [submissionId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissionId, transport]);
 
-  // Timer effect
   useEffect(() => {
-    if (!test?.is_timed || timeRemaining === null || timeRemaining <= 0) return;
+    if (submissionId) void loadSubmission();
+  }, [submissionId, loadSubmission]);
 
+  // The clock: when it runs out, the test is handed in.
+  useEffect(() => {
+    if (!test?.is_timed || timeRemaining === null || timeRemaining <= 0 || finished) return;
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(timer);
-          setTimeUpDialogOpen(true);
+          setTimeUpOpen(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
-  }, [test?.is_timed, timeRemaining]);
+  }, [test?.is_timed, timeRemaining, finished]);
 
-// Loads submission.
-  const loadSubmission = async () => {
-    try {
-      setLoading(true);
+  const sections = useMemo(() => buildSections(test, questions), [test, questions]);
+  const currentQuestion = questions[currentIndex];
+  const currentSection = sectionOf(sections, currentIndex);
+  const passage = passageFor(test, currentQuestion);
+  const answeredCount = questions.filter((question) => isAnswered(answers[question.question_id])).length;
+  const unanswered = questions.map((question, index) => (isAnswered(answers[question.question_id]) ? -1 : index)).filter((index) => index >= 0);
+  const overLimit = questions.filter((question) => question.word_limit > 0 && countWords(answers[question.question_id]?.text) > question.word_limit);
+  const missingRequired = questions.filter((question) => question.is_required && !isAnswered(answers[question.question_id]));
 
-      let loadedTest: any;
-      let loadedStartedAt: string | null = null;
-
-      if (transport) {
-        const loaded = await transport.load(Number(submissionId));
-        loadedTest = loaded.test;
-        loadedStartedAt = loaded.startedAt;
-        setStartedAt(loadedStartedAt);
-      } else {
-        // Fetch submission details for the test id and the real start time
-        let testId = localStorage.getItem(`submission_${submissionId}_test`);
-        let submissionStartedAt: string | null = null;
-
-        try {
-          const submissionRes = await testAPI.getSubmissionDetails(Number(submissionId));
-          testId = String(submissionRes.data.test_id);
-          submissionStartedAt = submissionRes.data.started_at || null;
-          loadedStartedAt = submissionStartedAt;
-          setStartedAt(submissionStartedAt);
-        } catch (subErr) {
-          console.error('Could not fetch submission details:', subErr);
-          if (!testId) {
-            throw new Error('Test information not found. Please go back and start the test again.');
-          }
-        }
-
-        const testRes = await testAPI.getById(Number(testId));
-        loadedTest = testRes.data;
-      }
-
-      setTest(loadedTest);
-
-      const testQuestions = loadedTest.questions || [];
-      // Shuffle questions if enabled
-      if (loadedTest.shuffle_questions) {
-        testQuestions.sort(() => Math.random() - 0.5);
-      }
-      setQuestions(testQuestions);
-
-      if (testQuestions.length === 0) {
-        setError('This test has no questions. Please contact the administrator.');
-      }
-
-      // Calculate remaining time from when the submission actually started
-      if (loadedTest.is_timed) {
-        const durationSeconds = Number(loadedTest.duration_minutes || 0) * 60;
-        const elapsed = loadedStartedAt
-          ? Math.floor((Date.now() - new Date(loadedStartedAt).getTime()) / 1000)
-          : 0;
-        setTimeRemaining(Math.max(0, durationSeconds - Math.max(0, elapsed)));
-      }
-    } catch (err: any) {
-      console.error('Error loading submission:', err);
-      setError(err.message || 'Failed to load test');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-// Memoizes the handle answer change callback.
-  const handleAnswerChange = useCallback((questionId: number, value: any) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
-  }, []);
-
-// Toggles flag.
-  const toggleFlag = (questionId: number) => {
+  const setAnswer = (questionId: number, value: any) => setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  const toggleFlag = (questionId: number) =>
     setFlagged((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(questionId)) {
-        newSet.delete(questionId);
-      } else {
-        newSet.add(questionId);
-      }
-      return newSet;
+      const next = new Set(prev);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
     });
+  const goTo = (index: number) => {
+    setCurrentIndex(Math.min(Math.max(index, 0), questions.length - 1));
+    setMapOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const overLimitQuestions = questions.filter(
-    (q) => q.word_limit > 0 && countWords(answers[q.question_id]?.text) > q.word_limit
-  );
-
-  const missingRequiredQuestions = questions.filter(
-    (q) => q.is_required && !isAnswered(answers[q.question_id])
-  );
-
-// Handles submit.
-  const handleSubmit = async (force: boolean = false) => {
-    if (overLimitQuestions.length > 0) {
-      setConfirmDialogOpen(false);
-      setError(
-        `Question ${questions.indexOf(overLimitQuestions[0]) + 1} exceeds its word limit of ${overLimitQuestions[0].word_limit} words.`
-      );
+  const handleSubmit = async (force = false) => {
+    if (overLimit.length > 0) {
+      setConfirmOpen(false);
+      setError(t('Question {number} is over its limit of {limit} words.', { number: questions.indexOf(overLimit[0]) + 1, limit: overLimit[0].word_limit }));
+      goTo(questions.indexOf(overLimit[0]));
       return;
     }
-
-    if (missingRequiredQuestions.length > 0) {
-      setConfirmDialogOpen(false);
-      setError(
-        `Question ${questions.indexOf(missingRequiredQuestions[0]) + 1} is required and has no answer.`
-      );
+    // Running out of time hands in what there is, even with required questions left.
+    if (!force && missingRequired.length > 0) {
+      setConfirmOpen(false);
+      setError(t('Question {number} must be answered.', { number: questions.indexOf(missingRequired[0]) + 1 }));
+      goTo(questions.indexOf(missingRequired[0]));
       return;
     }
-
     if (!force) {
-      setConfirmDialogOpen(true);
+      setConfirmOpen(true);
       return;
     }
-
     try {
       setSubmitting(true);
-      setConfirmDialogOpen(false);
-      setTimeUpDialogOpen(false);
-
-      // Format answers as object with question_id as keys (backend expects this format)
-      const formattedAnswers: { [key: number]: any } = {};
-      questions.forEach((q) => {
-        formattedAnswers[q.question_id] = answers[q.question_id] || null;
+      setConfirmOpen(false);
+      setTimeUpOpen(false);
+      const formatted: Record<number, any> = {};
+      questions.forEach((question) => {
+        formatted[question.question_id] = answers[question.question_id] || null;
       });
-
-      const timeTakenSeconds = startedAt
-        ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000))
-        : null;
-
+      const timeTaken = startedAt ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)) : null;
       if (transport) {
-        await transport.submit(Number(submissionId), formattedAnswers, timeTakenSeconds);
+        await transport.submit(Number(submissionId), formatted, timeTaken);
         transport.onFinished();
         return;
       }
-
-      await testAPI.submitTest(Number(submissionId), formattedAnswers, timeTakenSeconds);
-
-      // Navigate to results or confirmation
-      navigate(testsHome.path, {
-        state: { message: 'Test submitted successfully!' },
-      });
+      const response = await testAPI.submitTest(Number(submissionId), formatted, timeTaken);
+      setFinished(response.data?.submission || response.data || {});
+      window.scrollTo({ top: 0 });
     } catch (err: any) {
       console.error('Error submitting test:', err);
-      setError(err.response?.data?.error || 'Failed to submit test');
+      setError(err.response?.data?.error || t('Failed to submit test'));
+    } finally {
       setSubmitting(false);
     }
   };
 
-// Formats time.
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-// Returns time color class.
-  const getTimeColorClass = () => {
-    if (timeRemaining === null) return 'bg-indigo-100 text-indigo-800 border-indigo-300';
-    if (timeRemaining < 60) return 'bg-red-100 text-red-800 border-red-300 animate-pulse';
-    if (timeRemaining < 300) return 'bg-amber-100 text-amber-800 border-amber-300';
-    return 'bg-indigo-100 text-indigo-800 border-indigo-300';
-  };
-
-  const currentQuestion = questions[currentIndex];
-  const answeredCount = Object.keys(answers).length;
-  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
-  const currentWordCount = currentQuestion ? countWords(answers[currentQuestion.question_id]?.text) : 0;
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error && !test) {
     return (
-      <div className="p-6">
+      <div className="mx-auto max-w-xl space-y-4 p-6">
         <Alert variant="destructive">
           <AlertDescription>{getErrorMessage(error)}</AlertDescription>
         </Alert>
-        <Button variant="ghost" onClick={testsHome.goHome} className="mt-4">
+        <Button variant="ghost" onClick={testsHome.goHome}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Tests
+          {t(testsHome.label)}
         </Button>
       </div>
     );
   }
 
+  if (finished) {
+    return <TestFinished test={test} result={finished} questions={questions.length} answered={answeredCount} onReview={() => navigate(`/tests/submissions/${submissionId}`)} onHome={testsHome.goHome} homeLabel={t(testsHome.label)} />;
+  }
+
+  const tone = clockTone(timeRemaining);
+  const progress = questions.length ? Math.round((answeredCount / questions.length) * 100) : 0;
+  const isLast = currentIndex === questions.length - 1;
+
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="bg-white rounded-lg border p-4 mb-6 sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h2 className="text-lg font-bold">{test?.test_name}</h2>
-            <p className="text-sm text-muted-foreground">
-              Question {currentIndex + 1} of {questions.length}
+    <div className="mx-auto max-w-6xl px-3 pb-28 pt-3 sm:px-6">
+      {/* The test, where you are, and the clock */}
+      <div className="sticky top-0 z-20 -mx-3 mb-4 border-b bg-background/95 px-3 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-bold sm:text-lg">{test?.test_name}</h1>
+            <p className="text-xs text-muted-foreground">
+              {t('Question {current} of {total}', { current: currentIndex + 1, total: questions.length })}
+              {currentSection?.title ? ` · ${t(currentSection.title)}` : ''}
             </p>
           </div>
-
-          {test?.is_timed && timeRemaining !== null && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-2 px-4 py-2 rounded-full border text-lg font-semibold',
-                getTimeColorClass()
-              )}
-            >
-              <Clock className="h-5 w-5" />
-              {formatTime(timeRemaining)}
-            </span>
-          )}
-
-          <div className="flex gap-3">
-            <span className="text-sm text-muted-foreground">
-              {answeredCount}/{questions.length} answered
-            </span>
-            <span className="text-sm text-amber-600">
-              {flagged.size} flagged
-            </span>
+          <div className="flex shrink-0 items-center gap-2">
+            {test?.is_timed && timeRemaining !== null && (
+              <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold tabular-nums', CLOCK_STYLE[tone])}>
+                <Clock className="h-4 w-4" />
+                {formatClock(timeRemaining)}
+              </span>
+            )}
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setMapOpen(true)}>
+              <LayoutGrid className="h-4 w-4" />
+              <span className="tabular-nums">
+                {answeredCount}/{questions.length}
+              </span>
+            </Button>
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="mt-3 h-1.5 w-full bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+        {sections.length > 1 && (
+          <div className="mt-2 flex gap-1">
+            {sections.map((section) => {
+              const done = section.indexes.filter((index) => isAnswered(answers[questions[index]?.question_id])).length;
+              const active = section === currentSection;
+              return (
+                <button
+                  key={section.title}
+                  type="button"
+                  onClick={() => goTo(section.indexes[0])}
+                  className={cn('min-w-0 flex-1 rounded-md px-2 py-1 text-left text-[0.6875rem] font-semibold', active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}
+                >
+                  <span className="block truncate">{t(section.title)}</span>
+                  <span className="tabular-nums opacity-70">
+                    {done}/{section.indexes.length}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
-          <button
-            onClick={() => setError(null)}
-            className="absolute top-2 right-2 text-muted-foreground hover:text-muted-foreground"
-          >
-            ×
-          </button>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription className="flex items-start justify-between gap-3">
+            {getErrorMessage(error)}
+            <button type="button" aria-label={t('Close')} onClick={() => setError(null)}>
+              ×
+            </button>
+          </AlertDescription>
         </Alert>
       )}
 
-      {/* Question Navigator */}
-      <div className="bg-white rounded-lg border p-4 mb-6">
-        <p className="text-sm font-semibold mb-2">Question Navigator</p>
-        <div className="flex flex-wrap gap-1.5">
-          {questions.map((q, index) => (
-            <button
-              key={q.question_id}
-              onClick={() => setCurrentIndex(index)}
-              className={cn(
-                'min-w-[40px] h-10 rounded-md text-sm font-medium border transition-colors',
-                index === currentIndex
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : flagged.has(q.question_id)
-                    ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200'
-                    : answers[q.question_id]
-                      ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200'
-                      : 'bg-white text-foreground border-input hover:bg-muted/40'
-              )}
-            >
-              {index + 1}
+      <div className={cn('grid gap-4', passage && 'lg:grid-cols-2')}>
+        {/* The reading text: beside the question on a wide screen, folded above it on a phone. */}
+        {passage && (
+          <section className="rounded-xl border bg-card lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto">
+            <button type="button" className="flex w-full items-center justify-between gap-2 p-4 text-left lg:pointer-events-none" onClick={() => setPassageOpen((open) => !open)}>
+              <span className="flex items-center gap-2 font-bold">
+                <BookOpen className="h-4 w-4 text-primary" />
+                {passage.title || t('Reading text')}
+              </span>
+              <ChevronDown className={cn('h-4 w-4 transition-transform lg:hidden', passageOpen && 'rotate-180')} />
             </button>
-          ))}
-        </div>
-      </div>
+            {/* On a phone the text scrolls in its own box, so the question stays in view. */}
+            <div className={cn('max-h-[38vh] overflow-y-auto px-4 pb-4 text-[0.95rem] leading-relaxed lg:max-h-none lg:overflow-visible', !passageOpen && 'hidden lg:block')}>
+              <p className="whitespace-pre-wrap">{passage.content}</p>
+            </div>
+          </section>
+        )}
 
-      {/* Current Question */}
-      {currentQuestion && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary">{currentQuestion.marks} marks</Badge>
-                  <Badge variant="outline">
-                    {formatTestType(currentQuestion.question_type)}
-                  </Badge>
-                </div>
-                <h3 className="text-lg font-semibold">{currentQuestion.question_text}</h3>
+        {currentQuestion && (
+          <section className="rounded-xl border bg-card p-4 sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-primary px-2 text-sm font-black text-primary-foreground">{currentIndex + 1}</span>
+                {t('{count} marks', { count: Number(currentQuestion.marks) || 0 })}
               </div>
               <button
+                type="button"
                 onClick={() => toggleFlag(currentQuestion.question_id)}
                 className={cn(
-                  'p-2 rounded-md transition-colors',
-                  flagged.has(currentQuestion.question_id)
-                    ? 'text-amber-500 hover:bg-amber-50'
-                    : 'text-muted-foreground hover:bg-muted'
+                  'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold',
+                  flagged.has(currentQuestion.question_id) ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200' : 'text-muted-foreground hover:bg-muted'
                 )}
               >
-                {flagged.has(currentQuestion.question_id) ? (
-                  <Flag className="h-5 w-5" />
-                ) : (
-                  <FlagOff className="h-5 w-5" />
-                )}
+                <Flag className="h-3.5 w-3.5" />
+                {flagged.has(currentQuestion.question_id) ? t('Flagged') : t('Flag')}
               </button>
             </div>
+            <h2 className="mb-5 whitespace-pre-wrap text-lg font-semibold leading-snug sm:text-xl">{currentQuestion.question_text}</h2>
+            <QuestionAnswer question={currentQuestion} value={answers[currentQuestion.question_id]} onChange={(value) => setAnswer(currentQuestion.question_id, value)} />
+          </section>
+        )}
+      </div>
 
-            <hr className="my-4" />
-
-            {/* Answer Input based on question type */}
-            {currentQuestion.question_type === 'multiple_choice' && (
-              <div className="space-y-2">
-                {currentQuestion.options?.map((option: string, index: number) => (
-                  <label
-                    key={index}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border',
-                      answers[currentQuestion.question_id]?.index === index
-                        ? 'bg-indigo-50 border-indigo-300'
-                        : 'hover:bg-muted/40 border-transparent'
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name={`q_${currentQuestion.question_id}`}
-                      value={index}
-                      checked={answers[currentQuestion.question_id]?.index === index}
-                      onChange={() =>
-                        handleAnswerChange(currentQuestion.question_id, { index })
-                      }
-                      className="h-4 w-4 text-indigo-600 border-input focus:ring-indigo-500"
-                    />
-                    <span>
-                      {String.fromCharCode(65 + index)}. {option}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {currentQuestion.question_type === 'true_false' && (
-              <div className="space-y-2">
-                {[
-                  { value: true, label: 'True' },
-                  { value: false, label: 'False' },
-                ].map((opt) => (
-                  <label
-                    key={String(opt.value)}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border',
-                      answers[currentQuestion.question_id]?.value === opt.value
-                        ? 'bg-indigo-50 border-indigo-300'
-                        : 'hover:bg-muted/40 border-transparent'
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name={`q_${currentQuestion.question_id}`}
-                      value={String(opt.value)}
-                      checked={answers[currentQuestion.question_id]?.value === opt.value}
-                      onChange={() =>
-                        handleAnswerChange(currentQuestion.question_id, { value: opt.value })
-                      }
-                      className="h-4 w-4 text-indigo-600 border-input focus:ring-indigo-500"
-                    />
-                    <span>{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {(currentQuestion.question_type === 'short_answer' ||
-              currentQuestion.question_type === 'form_filling') && (
-              currentQuestion.question_type === 'form_filling' ? (
-                <Textarea
-                  placeholder="Type your answer here..."
-                  value={answers[currentQuestion.question_id]?.text || ''}
-                  onChange={(e) =>
-                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
-                  }
-                  rows={3}
-                />
-              ) : (
-                <Input
-                  placeholder="Type your answer here..."
-                  value={answers[currentQuestion.question_id]?.text || ''}
-                  onChange={(e) =>
-                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
-                  }
-                />
-              )
-            )}
-
-            {(currentQuestion.question_type === 'essay' ||
-              currentQuestion.question_type === 'writing') && (
-              <div>
-                <Textarea
-                  placeholder="Write your answer here..."
-                  value={answers[currentQuestion.question_id]?.text || ''}
-                  onChange={(e) =>
-                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
-                  }
-                  rows={10}
-                />
-                <p
-                  className={cn(
-                    'text-sm mt-1',
-                    currentQuestion.word_limit > 0 && currentWordCount > currentQuestion.word_limit
-                      ? 'text-red-600'
-                      : currentQuestion.word_limit > 0 && currentWordCount >= currentQuestion.word_limit * 0.9
-                        ? 'text-amber-600'
-                        : 'text-muted-foreground'
-                  )}
-                >
-                  {currentQuestion.word_limit > 0
-                    ? `${currentWordCount} / ${currentQuestion.word_limit} words`
-                    : `${currentWordCount} words`}
-                </p>
-              </div>
-            )}
-
-            {currentQuestion.question_type === 'matching' && currentQuestion.matching_pairs && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Match the items on the left with the correct items on the right
-                </p>
-                {currentQuestion.matching_pairs.map((pair: any, index: number) => (
-                  <div key={index} className="flex items-center gap-3 mb-3">
-                    <div className="flex-1 p-3 bg-muted rounded-lg">
-                      <span>{pair.left}</span>
-                    </div>
-                    <select
-                      value={answers[currentQuestion.question_id]?.matches?.[index] ?? ''}
-                      onChange={(e) => {
-                        const currentMatches =
-                          answers[currentQuestion.question_id]?.matches || {};
-                        handleAnswerChange(currentQuestion.question_id, {
-                          matches: { ...currentMatches, [index]: e.target.value },
-                        });
-                      }}
-                      className="min-w-[200px] rounded-md border border-input bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="">Select match...</option>
-                      {currentQuestion.matching_pairs.map((p: any, i: number) => (
-                        <option key={i} value={p.right}>
-                          {p.right}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Reading Passage */}
-            {currentQuestion.question_type === 'reading_passage' && currentQuestion.passage && (
-              <div className="mb-4">
-                <div className="p-4 bg-muted/40 rounded-lg max-h-[300px] overflow-auto mb-3 border">
-                  <h4 className="font-semibold mb-2">{currentQuestion.passage.title}</h4>
-                  <p className="text-sm whitespace-pre-wrap">{currentQuestion.passage.content}</p>
-                </div>
-                <Textarea
-                  placeholder="Answer based on the reading passage..."
-                  value={answers[currentQuestion.question_id]?.text || ''}
-                  onChange={(e) =>
-                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
-                  }
-                  rows={4}
-                />
-              </div>
-            )}
-
-            {!hasInputRenderer(currentQuestion) && (
-              <Textarea
-                placeholder="Type your answer here..."
-                value={answers[currentQuestion.question_id]?.text || ''}
-                onChange={(e) =>
-                  handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
-                }
-                rows={6}
-              />
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Navigation */}
-      <div className="flex justify-between gap-3">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-          disabled={currentIndex === 0}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Previous
-        </Button>
-
-        <div className="flex gap-3">
-          {/* Always show Submit button */}
-          <Button
-            variant="default"
-            className="bg-green-600 hover:bg-green-700"
-            onClick={() => handleSubmit(false)}
-            disabled={submitting || overLimitQuestions.length > 0}
-          >
-            Submit Test
-            <Send className="ml-2 h-4 w-4" />
+      {/* Back and next, always at hand */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-3 sm:px-6">
+          <Button variant="outline" size="lg" onClick={() => goTo(currentIndex - 1)} disabled={currentIndex === 0}>
+            <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t('Previous')}</span>
           </Button>
-
-          {currentIndex < questions.length - 1 && (
-            <Button
-              onClick={() =>
-                setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))
-              }
-            >
-              Next
+          {!isLast && (
+            <Button variant="ghost" size="lg" className="hidden text-emerald-700 sm:inline-flex" onClick={() => void handleSubmit(false)} disabled={submitting}>
+              {t('Finish the test')}
+            </Button>
+          )}
+          {isLast ? (
+            <Button size="lg" className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 sm:flex-none" onClick={() => void handleSubmit(false)} disabled={submitting}>
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {t('Finish the test')}
+            </Button>
+          ) : (
+            <Button size="lg" className="flex-1 sm:flex-none" onClick={() => goTo(currentIndex + 1)}>
+              {t('Next')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
         </div>
       </div>
 
-      {/* Confirm Submit Dialog */}
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent>
+      {/* Every question at a glance */}
+      <Dialog open={mapOpen} onOpenChange={setMapOpen}>
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Submit Test?</DialogTitle>
+            <DialogTitle>{t('All questions')}</DialogTitle>
           </DialogHeader>
-          <div>
-            <p className="mb-3">Are you sure you want to submit your test?</p>
-            <div className="space-y-1 text-sm">
-              <p>• Answered: {answeredCount} of {questions.length} questions</p>
-              <p>• Unanswered: {questions.length - answeredCount}</p>
-              <p className="text-amber-600">• Flagged for review: {flagged.size}</p>
-            </div>
-            {questions.length - answeredCount > 0 && (
-              <Alert variant="destructive" className="mt-3">
-                <AlertDescription>
-                  You have {questions.length - answeredCount} unanswered question(s).
-                </AlertDescription>
-              </Alert>
-            )}
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-primary" /> {t('Answered')}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded border" /> {t('Not answered')}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-amber-400" /> {t('Flagged')}
+            </span>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
-              Review Answers
+          {sections.map((section) => (
+            <div key={section.title} className="space-y-2">
+              {section.title && <p className="text-sm font-bold">{t(section.title)}</p>}
+              <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+                {section.indexes.map((index) => {
+                  const question = questions[index];
+                  const answered = isAnswered(answers[question?.question_id]);
+                  const isFlagged = flagged.has(question?.question_id);
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => goTo(index)}
+                      className={cn(
+                        'relative h-10 rounded-md border text-sm font-bold tabular-nums',
+                        answered ? 'border-primary bg-primary text-primary-foreground' : 'bg-card',
+                        index === currentIndex && 'ring-2 ring-primary ring-offset-2'
+                      )}
+                    >
+                      {index + 1}
+                      {isFlagged && <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-amber-400" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </DialogContent>
+      </Dialog>
+
+      {/* Handing in */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('Finish the test?')}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-lg bg-emerald-50 p-3 dark:bg-emerald-950/40">
+              <div className="text-xl font-black text-emerald-600">{answeredCount}</div>
+              <div className="text-xs">{t('Answered')}</div>
+            </div>
+            <div className="rounded-lg bg-rose-50 p-3 dark:bg-rose-950/40">
+              <div className="text-xl font-black text-rose-600">{unanswered.length}</div>
+              <div className="text-xs">{t('Not answered')}</div>
+            </div>
+            <div className="rounded-lg bg-amber-50 p-3 dark:bg-amber-950/40">
+              <div className="text-xl font-black text-amber-600">{flagged.size}</div>
+              <div className="text-xs">{t('Flagged')}</div>
+            </div>
+          </div>
+          {unanswered.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">{t('Not answered yet — tap to go back:')}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {unanswered.slice(0, 30).map((index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className="h-8 min-w-8 rounded-md border px-2 text-xs font-bold tabular-nums hover:bg-muted"
+                    onClick={() => {
+                      setConfirmOpen(false);
+                      goTo(index);
+                    }}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              {t('Keep working')}
             </Button>
-            <Button onClick={() => handleSubmit(true)} disabled={submitting}>
-              Submit
+            <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => void handleSubmit(true)} disabled={submitting}>
+              {t('Hand in')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Time Up Dialog */}
-      <Dialog open={timeUpDialogOpen} onOpenChange={() => {}}>
-        <DialogContent className="[&>button]:hidden">
+      <Dialog open={timeUpOpen} onOpenChange={() => {}}>
+        <DialogContent className="max-w-sm [&>button]:hidden">
           <DialogHeader>
-            <DialogTitle>Time's Up!</DialogTitle>
+            <DialogTitle>{t("Time's up!")}</DialogTitle>
           </DialogHeader>
-          <p>Your time has expired. Your test will be submitted automatically.</p>
+          <p className="text-sm">{t('Your answers are handed in as they are.')}</p>
           <DialogFooter>
-            <Button onClick={() => handleSubmit(true)} disabled={submitting}>
-              Submit Now
+            <Button onClick={() => void handleSubmit(true)} disabled={submitting}>
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {t('Hand in')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+/** After handing in: the score straight away when the test allows it, else "waiting for the teacher". */
+const TestFinished = ({
+  test,
+  result,
+  questions,
+  answered,
+  onReview,
+  onHome,
+  homeLabel,
+}: {
+  test: any;
+  result: FinishedResult;
+  questions: number;
+  answered: number;
+  onReview: () => void;
+  onHome: () => void;
+  homeLabel: string;
+}) => {
+  const { t } = useLanguage();
+  const graded = result.status === 'graded' && test?.show_results_immediately !== false;
+  const percent = Math.round(Number(result.percentage) || 0);
+  const passed = Boolean(result.is_passed);
+  const level = test?.test_data?.level_test?.level;
+  return (
+    <div className="mx-auto max-w-lg px-4 py-10 text-center">
+      {graded ? (
+        <>
+          <div className={cn('mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full', passed ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950' : 'bg-rose-100 text-rose-600 dark:bg-rose-950')}>
+            {passed ? <CheckCircle2 className="h-10 w-10" /> : <XCircle className="h-10 w-10" />}
+          </div>
+          <h1 className="text-2xl font-black">{passed ? t('Passed!') : t('Not passed this time')}</h1>
+          {level && <p className="mt-1 text-sm text-muted-foreground">{passed ? t('Level {level} confirmed by the test.', { level }) : t('Level {level} needs 70% to pass.', { level })}</p>}
+          <div className="my-6 rounded-2xl border bg-card p-6">
+            <div className={cn('text-5xl font-black tabular-nums', passed ? 'text-emerald-600' : 'text-rose-600')}>{percent}%</div>
+            <div className="mt-1 text-sm text-muted-foreground">
+              {t('{obtained} of {total} marks', { obtained: Number(result.obtained_marks) || 0, total: Number(result.total_score) || Number(test?.total_marks) || 0 })}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Send className="h-9 w-9" />
+          </div>
+          <h1 className="text-2xl font-black">{t('Test handed in')}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t('Your teacher will check it; the result will appear in your tests.')}</p>
+          <p className="my-6 text-sm">{t('{answered} of {total} questions answered', { answered, total: questions })}</p>
+        </>
+      )}
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+        {graded && <Button onClick={onReview}>{t('See my answers')}</Button>}
+        <Button variant="outline" onClick={onHome}>
+          {homeLabel}
+        </Button>
+      </div>
     </div>
   );
 };

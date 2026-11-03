@@ -317,18 +317,32 @@ const findAll = async (filters: Record<string, any> = {}) => {
   }
   if (filters.public_only) conditions.push(sql`COALESCE(${tests.isPrivate}, false) = false`);
   // The list cards show how big each test is and how much it has been used, so the
-  // counts come back with the rows rather than as a request per card.
+  // counts come back with the rows rather than as a request per card. The outer table is named
+  // in full: inside a subquery a bare test_id would be the subquery's own column, and every card
+  // would count the whole center.
   const query = db
     .select({
       ...testSelection,
-      question_count: sql<number>`(SELECT COUNT(*)::int FROM test_questions q WHERE q.test_id = ${tests.testId})`,
+      question_count: sql<number>`(SELECT COUNT(*)::int FROM test_questions q WHERE q.test_id = "tests"."test_id")`,
       submission_count: sql<number>`(
         SELECT COUNT(*)::int FROM test_submissions ts
-        WHERE ts.test_id = ${tests.testId} AND ts.status IN ('submitted', 'graded')
+        WHERE ts.test_id = "tests"."test_id" AND ts.status IN ('submitted', 'graded')
       )`,
       awaiting_grading_count: sql<number>`(
         SELECT COUNT(*)::int FROM test_submissions ts
-        WHERE ts.test_id = ${tests.testId} AND ts.status = 'submitted'
+        WHERE ts.test_id = "tests"."test_id" AND ts.status = 'submitted'
+      )`,
+      // How the test went: graded attempts, how many passed, the average score (%).
+      graded_count: sql<number>`(
+        SELECT COUNT(*)::int FROM test_submissions ts WHERE ts.test_id = "tests"."test_id" AND ts.status = 'graded'
+      )`,
+      passed_count: sql<number>`(
+        SELECT COUNT(*)::int FROM test_submissions ts
+        WHERE ts.test_id = "tests"."test_id" AND ts.status = 'graded' AND COALESCE(ts.is_passed, false)
+      )`,
+      average_percentage: sql<number | null>`(
+        SELECT ROUND(AVG(ts.percentage)::numeric, 1)::float FROM test_submissions ts
+        WHERE ts.test_id = "tests"."test_id" AND ts.status = 'graded'
       )`,
     })
     .from(tests);
@@ -530,7 +544,18 @@ const findSubmissionById = async (id: number, centerId?: number) => {
 const findSubmissionsByTest = async (testId: number, centerId?: number) => {
   const conditions = [eq(testSubmissions.testId, Number(testId))];
   if (centerId) conditions.push(eq(testSubmissions.centerId, Number(centerId)));
-  return db.select(submissionSelection).from(testSubmissions).where(and(...conditions)).orderBy(desc(testSubmissions.createdAt));
+  // With who took it, for the test's results list.
+  return db
+    .select({
+      ...submissionSelection,
+      first_name: students.firstName,
+      last_name: students.lastName,
+      enrollment_number: students.enrollmentNumber,
+    })
+    .from(testSubmissions)
+    .leftJoin(students, eq(students.studentId, testSubmissions.studentId))
+    .where(and(...conditions))
+    .orderBy(desc(testSubmissions.createdAt));
 };
 
 const findSubmissionsByStudent = async (studentId: number, centerId?: number) => {

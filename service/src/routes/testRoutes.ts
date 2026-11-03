@@ -3,6 +3,7 @@ export {};
 const express_test = require('express');
 const router_test = express_test.Router();
 const testController = require('../modules/tests/controllers/test.controller');
+const levelTestsController = require('../modules/tests/levelTests/levelTests.controller');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const {
@@ -100,6 +101,9 @@ router_test.get('/', requireAuth, testController.getAllTests);
  */
 // Keep the literal /statistics route before `/:id`, or Express matches "statistics" as a test id.
 router_test.get('/statistics', requireAuth, requireRole('superuser', 'teacher'), testController.getStatistics);
+// The built-in English level tests (Beginner–C1): which this center has, and adding the rest (owners and admins).
+router_test.get('/library/english-levels', requireAuth, requireRole('superuser', 'teacher'), levelTestsController.listEnglishLevelTests);
+router_test.post('/library/english-levels/install', requireAuth, requireRole('superuser'), levelTestsController.installEnglishLevelTests);
 
 router_test.get('/:id', requireAuth, testController.getTestById);
 
@@ -412,6 +416,8 @@ router_test.get('/student/:studentId/submissions', requireAuth, testController.g
  *         description: Test results and statistics
  */
 router_test.get('/:testId/results', requireAuth, requireRole('superuser', 'teacher'), testController.getTestResults);
+// How the test went: totals, score spread and the questions got wrong most (staff).
+router_test.get('/:testId/analysis', requireAuth, requireRole('superuser', 'teacher'), testController.getTestAnalysis);
 
 /**
  * @swagger

@@ -1,0 +1,141 @@
+// English level tests, Beginner to A2: grammar, vocabulary and a reading text, all auto-graded.
+// Original questions written for this school (see englishLevels.ts for the format).
+import type { LevelTest } from './levelTestTypes';
+const { mc, tf } = require('./levelTestTypes');
+
+const BEGINNER: LevelTest = {
+  key: 'english-beginner',
+  level: 'Beginner',
+  title: 'English level test — Beginner',
+  durationMinutes: 25,
+  passage: {
+    title: 'My family',
+    content:
+      'Hello! My name is Aziz. I am ten years old and I live in Tashkent. There are five people in my family: my mother, my father, my two sisters and me. My father is a doctor. My mother is a teacher. My sisters are Malika and Dilnoza. Malika is twelve and Dilnoza is six. We have a cat. Its name is Momo. It is white and very small. On Sundays we go to the park together. I love my family!',
+  },
+  questions: [
+    // Grammar
+    mc('grammar', 'My name ___ Aziz.', ['am', 'is', 'are', 'be'], 1, 'With "my name" (he/she/it) we use "is".'),
+    mc('grammar', 'They ___ students.', ['is', 'am', 'are', 'be'], 2, '"They" takes "are".'),
+    mc('grammar', 'I have ___ apple.', ['a', 'an', 'two', 'many'], 1, '"Apple" starts with a vowel sound, so we use "an".'),
+    mc('grammar', 'Choose the correct plural: one box — two ___', ['boxs', 'boxes', 'boxies', 'box'], 1, 'Nouns ending in -x add -es.'),
+    mc('grammar', '___ are my books.', ['This', 'That', 'These', 'It'], 2, '"These" is for plural things near you.'),
+    mc('grammar', 'She ___ a brother and a sister.', ['have', 'has', 'is', 'are'], 1, 'He/she/it takes "has".'),
+    mc('grammar', '___ is a pen on the table.', ['There', 'Their', 'They', 'It are'], 0, '"There is" says something exists.'),
+    mc('grammar', 'This is Malika. ___ is my sister.', ['He', 'She', 'It', 'They'], 1, 'Malika is a girl, so "she".'),
+    mc('grammar', 'This is ___ bag. (the bag of me)', ['I', 'me', 'my', 'mine is'], 2, '"My" goes before a noun.'),
+    mc('grammar', 'I ___ swim. I learned last summer.', ['can', 'cans', 'am can', 'can to'], 0, '"Can" + verb, with no "s" and no "to".'),
+    mc('grammar', 'The cat is ___ the box. (inside)', ['on', 'under', 'in', 'at'], 2, '"In" means inside.'),
+    mc('grammar', '___ is your name?', ['Who', 'What', 'Where', 'How old'], 1, 'We ask "What is your name?"'),
+    // Vocabulary
+    mc('vocabulary', 'Which number is 15?', ['fifty', 'fiveteen', 'fifteen', 'five'], 2, '15 = fifteen.'),
+    mc('vocabulary', 'The sky on a sunny day is ___.', ['blue', 'black', 'pink', 'brown'], 0),
+    mc('vocabulary', 'My mother\'s mother is my ___.', ['aunt', 'grandmother', 'sister', 'daughter'], 1),
+    mc('vocabulary', 'Which day comes after Monday?', ['Sunday', 'Wednesday', 'Tuesday', 'Friday'], 2),
+    mc('vocabulary', 'You drink ___.', ['bread', 'water', 'rice', 'an egg'], 1),
+    mc('vocabulary', 'You see with your ___.', ['ears', 'hands', 'eyes', 'feet'], 2),
+    mc('vocabulary', 'You write with a ___.', ['pen', 'chair', 'door', 'window'], 0),
+    mc('vocabulary', 'The opposite of "big" is ___.', ['tall', 'small', 'long', 'old'], 1),
+    mc('vocabulary', 'It is 7:00. It is seven ___.', ["o'clock", 'hours', 'minutes', 'times'], 0),
+    mc('vocabulary', 'A ___ says "moo" and gives us milk.', ['dog', 'cat', 'cow', 'bird'], 2),
+    // Reading
+    mc('reading', 'How old is Aziz?', ['Six', 'Ten', 'Twelve', 'Five'], 1),
+    mc('reading', 'Where does Aziz live?', ['In Samarkand', 'In a park', 'In Tashkent', 'In Bukhara'], 2),
+    mc('reading', 'What is his father\'s job?', ['Teacher', 'Doctor', 'Driver', 'Student'], 1),
+    mc('reading', 'How many people are in his family?', ['Three', 'Four', 'Five', 'Six'], 2),
+    mc('reading', 'What colour is the cat?', ['Black', 'White', 'Grey', 'Orange'], 1),
+    tf('reading', 'Dilnoza is older than Malika.', false, 'Malika is twelve and Dilnoza is six.'),
+    tf('reading', 'Aziz\'s mother is a teacher.', true),
+    tf('reading', 'The family goes to the park on Saturdays.', false, 'They go on Sundays.'),
+  ],
+};
+
+const A1: LevelTest = {
+  key: 'english-a1',
+  level: 'A1',
+  title: 'English level test — A1',
+  durationMinutes: 25,
+  passage: {
+    title: 'A message from Nodira',
+    content:
+      'Hi Sara,\n\nThanks for your message! I am in Samarkand with my aunt this week. Yesterday we visited the Registan. It was beautiful, but it was very hot, so we drank a lot of water. Today it is cloudy and a bit cold. In the morning I usually help my aunt in her small shop. She sells bread and sweets. In the afternoon I walk around the old city and take photos. I can\'t send them now because my phone is slow here. I come back to Tashkent on Friday by train. Can we meet on Saturday at the café near your house?\n\nLove,\nNodira',
+  },
+  questions: [
+    mc('grammar', 'My brother ___ football every Sunday.', ['play', 'plays', 'playing', 'is play'], 1, 'Present simple, he/she/it adds -s.'),
+    mc('grammar', 'Look! The children ___ in the garden.', ['play', 'plays', 'are playing', 'played'], 2, '"Look!" shows the action is happening now: present continuous.'),
+    mc('grammar', 'I ___ at home yesterday evening.', ['am', 'was', 'were', 'be'], 1, 'Past of "be" with "I" is "was".'),
+    mc('grammar', 'We ___ a film last night.', ['watch', 'watches', 'watched', 'are watching'], 2, '"Last night" needs the past simple.'),
+    mc('grammar', 'She ___ to school by bus yesterday.', ['go', 'went', 'goes', 'goed'], 1, '"Go" is irregular: went.'),
+    mc('grammar', 'Is there ___ milk in the fridge?', ['some', 'any', 'a', 'many'], 1, 'Questions usually take "any".'),
+    mc('grammar', 'How ___ apples do you want?', ['much', 'many', 'lot', 'more'], 1, 'Apples are countable: "how many".'),
+    mc('grammar', 'My bag is ___ than your bag.', ['heavy', 'more heavy', 'heavier', 'heaviest'], 2, 'Short adjective ending in -y: heavier.'),
+    mc('grammar', 'I ___ drink coffee. I don\'t like it.', ['always', 'usually', 'often', 'never'], 3, '"I don\'t like it" — so never.'),
+    mc('grammar', 'This is my friend. I like ___ very much.', ['he', 'him', 'his', 'she'], 1, 'After a verb we use the object pronoun "him".'),
+    mc('grammar', 'This is ___ car.', ['my father', "my father's", 'my fathers', "my fathers'"], 1, 'One father: father\'s.'),
+    mc('grammar', '___ the window, please. It\'s cold.', ['Closing', 'Close', 'To close', 'Closes'], 1, 'Instructions use the bare verb (imperative).'),
+    mc('vocabulary', 'A person who works in a hospital and helps doctors is a ___.', ['nurse', 'pilot', 'farmer', 'waiter'], 0),
+    mc('vocabulary', 'Take an umbrella. It\'s ___.', ['sunny', 'raining', 'hot', 'dry'], 1),
+    mc('vocabulary', 'You can fly from Tashkent to Moscow by ___.', ['train', 'plane', 'bike', 'boat'], 1),
+    mc('vocabulary', 'In winter I wear a warm ___.', ['T-shirt', 'coat', 'shorts', 'sandals'], 1),
+    mc('vocabulary', 'I ___ up at 7 o\'clock every day.', ['get', 'go', 'make', 'do'], 0),
+    mc('vocabulary', 'You buy medicine at a ___.', ['bakery', 'pharmacy', 'library', 'bank'], 1),
+    mc('vocabulary', 'The month after March is ___.', ['February', 'May', 'April', 'June'], 2),
+    mc('vocabulary', 'We cook in the ___.', ['bedroom', 'bathroom', 'kitchen', 'garden'], 2),
+    mc('vocabulary', 'My hobby is ___. I have 200 stamps.', ['cooking', 'collecting stamps', 'swimming', 'singing'], 1),
+    mc('vocabulary', 'My birthday is ___ 5 May.', ['in', 'at', 'on', 'by'], 2, 'Dates take "on".'),
+    mc('reading', 'Where is Nodira this week?', ['In Tashkent', 'In Samarkand', 'At Sara\'s house', 'On a train'], 1),
+    mc('reading', 'What was the weather like yesterday?', ['Cold', 'Cloudy', 'Very hot', 'Rainy'], 2),
+    mc('reading', 'What does Nodira\'s aunt sell?', ['Photos', 'Bread and sweets', 'Phones', 'Water'], 1),
+    mc('reading', 'Why can\'t Nodira send photos now?', ['Her phone is slow', 'She has no camera', 'Sara doesn\'t want them', 'The shop is busy'], 0),
+    mc('reading', 'How does Nodira travel back to Tashkent?', ['By plane', 'By bus', 'By car', 'By train'], 3),
+    tf('reading', 'Nodira helps her aunt in the afternoon.', false, 'She helps in the morning.'),
+    tf('reading', 'It is cloudy today.', true),
+    tf('reading', 'Nodira wants to meet Sara on Saturday.', true),
+  ],
+};
+
+const A2: LevelTest = {
+  key: 'english-a2',
+  level: 'A2',
+  title: 'English level test — A2',
+  durationMinutes: 30,
+  passage: {
+    title: 'A weekend in the mountains',
+    content:
+      'Last month my classmates and I went to Chimgan for the weekend. We left early on Saturday morning because the bus journey takes about two hours. When we arrived, it was snowing, and the mountains looked amazing. In the afternoon we tried skiing for the first time. I fell down many times, but our instructor was very patient, and by the evening I could ski slowly without falling.\n\nOn Sunday the weather was better. We walked to a small lake and had a picnic. My friend Jasur forgot his gloves, so his hands were very cold. We shared ours with him. In the evening we were tired, but nobody wanted to go home. Next winter we are going to stay for a whole week.',
+  },
+  questions: [
+    mc('grammar', 'I ___ TV when my phone rang.', ['watched', 'was watching', 'am watching', 'watch'], 1, 'A longer action in progress (past continuous) interrupted by a short one.'),
+    mc('grammar', 'Look at those clouds! It ___ rain.', ['is going to', 'will to', 'goes to', 'is raining to'], 0, 'A prediction based on what we can see: "be going to".'),
+    mc('grammar', '"The phone is ringing." "I ___ answer it."', ["'ll", "'m going", 'answer', "'m answering to"], 0, 'A quick decision at the moment of speaking: "will".'),
+    mc('grammar', 'Have you ever ___ to London?', ['go', 'went', 'been', 'going'], 2, 'Present perfect for experience: "have been".'),
+    mc('grammar', 'This is the ___ film I have ever seen.', ['good', 'better', 'best', 'most good'], 2, 'Superlative of "good" is "best".'),
+    mc('grammar', 'You ___ wear a seatbelt in a car. It\'s the law.', ['must', 'can', 'might', "don't have to"], 0, 'Rules and laws: "must".'),
+    mc('grammar', 'You look tired. You ___ go to bed early.', ['should', 'shouldn\'t', 'mustn\'t', 'can\'t'], 0, 'Advice: "should".'),
+    mc('grammar', 'I can\'t buy it. I don\'t have ___ money.', ['too', 'enough', 'very', 'so'], 1, '"Enough" goes before a noun.'),
+    mc('grammar', 'If it ___ tomorrow, we will stay at home.', ['rains', 'will rain', 'rained', 'raining'], 0, 'First conditional: if + present, will + verb.'),
+    mc('grammar', 'When I was a child, I ___ play in the street every day.', ['use to', 'used to', 'was used to', 'using to'], 1, 'Past habits: "used to".'),
+    mc('grammar', 'My sister enjoys ___ books.', ['read', 'to read', 'reading', 'reads'], 2, '"Enjoy" is followed by -ing.'),
+    mc('grammar', 'The man ___ lives next door is a pilot.', ['which', 'who', 'where', 'what'], 1, '"Who" is for people.'),
+    mc('vocabulary', 'Before a flight you have to ___ in at the airport.', ['check', 'look', 'take', 'get'], 0),
+    mc('vocabulary', 'I have a terrible ___. I need a dentist.', ['headache', 'toothache', 'cold', 'cough'], 1),
+    mc('vocabulary', 'Can you ___ me a favour?', ['make', 'do', 'give', 'take'], 1, 'We say "do someone a favour".'),
+    mc('vocabulary', 'I\'m ___ my keys. Have you seen them?', ['looking', 'looking for', 'searching', 'finding'], 1, '"Look for" = try to find.'),
+    mc('vocabulary', 'The lesson was very long and ___. Everyone wanted to sleep.', ['bored', 'boring', 'interested', 'excited'], 1, '-ing adjectives describe the thing; -ed adjectives describe how people feel.'),
+    mc('vocabulary', 'How much does this jacket ___?', ['pay', 'cost', 'spend', 'buy'], 1),
+    mc('vocabulary', 'The shop assistant gave me my ___: 2,000 so\'m.', ['change', 'price', 'bill', 'cost'], 0),
+    mc('vocabulary', 'We ___ a lot of photos on holiday.', ['made', 'did', 'took', 'got'], 2),
+    mc('vocabulary', 'The opposite of "cheap" is ___.', ['expensive', 'poor', 'free', 'rich'], 0),
+    mc('vocabulary', 'I\'m ___ of spiders. I hate them!', ['afraid', 'angry', 'bored', 'tired'], 0),
+    mc('reading', 'How long is the bus journey to Chimgan?', ['One hour', 'About two hours', 'A whole day', 'A week'], 1),
+    mc('reading', 'What was the weather like when they arrived?', ['Sunny', 'Rainy', 'Snowy', 'Windy'], 2),
+    mc('reading', 'How did the writer ski by Saturday evening?', ['Very fast', 'Slowly without falling', 'Not at all', 'With Jasur'], 1),
+    mc('reading', 'Why were Jasur\'s hands cold?', ['He fell in the lake', 'He forgot his gloves', 'He was skiing', 'It was snowing on Sunday'], 1),
+    mc('reading', 'What are they planning for next winter?', ['To go skiing for one day', 'To stay for a week', 'To visit a lake', 'To stay at home'], 1),
+    tf('reading', 'It was the writer\'s first time skiing.', true),
+    tf('reading', 'The instructor was angry with the students.', false, 'The instructor was very patient.'),
+    tf('reading', 'On Sunday they had a picnic by a lake.', true),
+  ],
+};
+
+module.exports = { BASIC_LEVEL_TESTS: [BEGINNER, A1, A2] };
