@@ -83,7 +83,7 @@ describe('English level tests with PostgreSQL', () => {
     const list = (await api().get('/api/tests').set(auth(admin))).body;
     const rows = Array.isArray(list) ? list : list.data || list.items || [];
     const byLevel = new Map(rows.map((row) => [row.test_data?.level_test?.level, row]));
-    expect(byLevel.get('B1')).toMatchObject({ question_count: 30, submission_count: 1 });
+    expect(byLevel.get('B1')).toMatchObject({ question_count: 30, submission_count: 1, graded_count: 1, passed_count: 1, average_percentage: 100 });
     expect(byLevel.get('A1')).toMatchObject({ question_count: 30, submission_count: 0 });
   });
 

@@ -5,6 +5,7 @@
 // here, so the table and the rule can never drift apart.
 
 import { Trophy } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import type { TeacherTestStats } from '../api/testStatisticsApi';
 
 const formatPercent = (value: number | null) => (value == null ? '—' : `${value}%`);
@@ -22,10 +23,11 @@ export const TeacherTestLeaderboard = ({
   minimumGradedSubmissions,
   scope,
 }: TeacherTestLeaderboardProps) => {
+  const { t } = useLanguage();
   if (teachers.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        No teacher has created a test yet.
+        {t('No teacher has created a test yet.')}
       </p>
     );
   }
@@ -39,19 +41,19 @@ export const TeacherTestLeaderboard = ({
           <thead>
             <tr className="border-b">
               <th className="px-0 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Teacher
+                {t('Teacher')}
               </th>
               <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Tests
+                {t('Tests')}
               </th>
               <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Submissions
+                {t('Submissions')}
               </th>
               <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Avg score
+                {t('Avg score')}
               </th>
               <th className="px-0 py-2 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Pass rate
+                {t('Pass rate')}
               </th>
             </tr>
           </thead>
@@ -66,7 +68,7 @@ export const TeacherTestLeaderboard = ({
                   {teacher.teacher_id === bestId && (
                     <span className="ml-2 inline-flex items-center gap-1 align-middle text-xs font-medium text-primary">
                       <Trophy className="h-3 w-3" aria-hidden="true" />
-                      Best
+                      {t('Best')}
                     </span>
                   )}
                 </td>
@@ -85,17 +87,10 @@ export const TeacherTestLeaderboard = ({
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        Ranked on pass rate, counting a teacher once they have {minimumGradedSubmissions} graded submissions.
-        A dash means not enough work has been graded to rank them yet.
-        {centerMedian.ranked_teachers > 0 && (
-          <>
-            {' '}
-            Centre median across {centerMedian.ranked_teachers} ranked{' '}
-            {centerMedian.ranked_teachers === 1 ? 'teacher' : 'teachers'}: {formatPercent(centerMedian.pass_rate)} pass
-            rate, {centerMedian.average_score == null ? '—' : `${centerMedian.average_score}%`} average score.
-          </>
-        )}
-        {scope === 'self' && ' You see your own row; colleagues appear only in the centre median.'}
+        {t('Ranked by pass rate once a teacher has {count} graded submissions; a dash means not enough yet.', { count: minimumGradedSubmissions })}
+        {centerMedian.ranked_teachers > 0 &&
+          ` ${t('Center median: {rate} pass rate.', { rate: formatPercent(centerMedian.pass_rate) })}`}
+        {scope === 'self' && ` ${t('You see your own row; colleagues appear only in the center median.')}`}
       </p>
     </div>
   );

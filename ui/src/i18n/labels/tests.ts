@@ -1,0 +1,52 @@
+export const testsLabels: Record<string, string> = {
+  // Question types
+  'Multiple Choice': 'Test (variantli)',
+  'Form Filling': "Bo'sh joyni to'ldirish",
+  Essay: 'Insho',
+  'Short Answer': 'Qisqa javob',
+  'True/False': "To'g'ri / Noto'g'ri",
+  'Reading Passage': 'Matn o\'qish',
+  Writing: 'Yozma ish',
+  // Tests list
+  'Any status': 'Har qanday holat',
+  'All question types': 'Barcha savol turlari',
+  'Level tests': 'Daraja testlari',
+  'Own tests': "O'z testlarimiz",
+  Size: 'Hajmi',
+  'Level {level}': 'Daraja {level}',
+  '{count} questions': '{count} ta savol',
+  '{minutes} min': '{minutes} daq',
+  '{count} to grade': '{count} ta baholash kerak',
+  'View results': "Natijalarni ko'rish",
+  'Delete "{name}"? This cannot be undone.': "\"{name}\" o'chirilsinmi? Buni qaytarib bo'lmaydi.",
+  // English level tests
+  '{count} level tests added': "{count} ta daraja testi qo'shildi",
+  'English level tests': 'Ingliz tili daraja testlari',
+  'Grammar, vocabulary and reading; graded at once, pass mark 70%.': "Grammatika, lug'at va o'qish; darhol baholanadi, o'tish bali 70%.",
+  'Add level tests ({count})': "Daraja testlarini qo'shish ({count})",
+  'An administrator can add the missing level tests.': "Yetishmayotgan daraja testlarini administrator qo'sha oladi.",
+  '{questions} questions · {minutes} min': '{questions} ta savol · {minutes} daq',
+  'Not added': "Qo'shilmagan",
+  'Not taken yet': 'Hali topshirilmagan',
+  // Results line
+  '{rate}% passed': "{rate}% o'tdi",
+  'Waiting for grading': 'Baholanishi kutilmoqda',
+  'Nobody has taken it yet': 'Hali hech kim topshirmagan',
+  'avg {score}%': "o'rtacha {score}%",
+  '{passed} of {graded} passed': "{graded} tadan {passed} tasi o'tdi",
+  'Average score: {score}%': "O'rtacha ball: {score}%",
+  '{count} waiting for grading': '{count} ta baholanishi kutilmoqda',
+  // Overview figures and the teachers' ranking
+  'No teacher has created a test yet.': "Hali hech bir o'qituvchi test yaratmagan.",
+  'Avg score': "O'rtacha ball",
+  'Ranked by pass rate once a teacher has {count} graded submissions; a dash means not enough yet.':
+    "O'qituvchida {count} ta baholangan topshiriq bo'lgach o'tish foizi bo'yicha saralanadi; chiziqcha hali yetarli emasligini bildiradi.",
+  'Center median: {rate} pass rate.': "Markaz bo'yicha median: {rate} o'tish foizi.",
+  'You see your own row; colleagues appear only in the center median.':
+    "Siz faqat o'z qatoringizni ko'rasiz; hamkasblar faqat markaz medianida hisoblanadi.",
+  '{count} active': '{count} ta faol',
+  '{count} awaiting grading': '{count} ta baholanishi kutilmoqda',
+  'nothing awaiting grading': 'baholanishi kutilayotgan yo\'q',
+  'across graded submissions': "baholangan topshiriqlar bo'yicha",
+  "against each test's pass mark": "har bir testning o'tish baliga nisbatan",
+};

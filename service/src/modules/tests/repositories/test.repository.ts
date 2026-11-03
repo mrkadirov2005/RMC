@@ -332,6 +332,18 @@ const findAll = async (filters: Record<string, any> = {}) => {
         SELECT COUNT(*)::int FROM test_submissions ts
         WHERE ts.test_id = "tests"."test_id" AND ts.status = 'submitted'
       )`,
+      // How the test went: graded attempts, how many passed, the average score (%).
+      graded_count: sql<number>`(
+        SELECT COUNT(*)::int FROM test_submissions ts WHERE ts.test_id = "tests"."test_id" AND ts.status = 'graded'
+      )`,
+      passed_count: sql<number>`(
+        SELECT COUNT(*)::int FROM test_submissions ts
+        WHERE ts.test_id = "tests"."test_id" AND ts.status = 'graded' AND COALESCE(ts.is_passed, false)
+      )`,
+      average_percentage: sql<number | null>`(
+        SELECT ROUND(AVG(ts.percentage)::numeric, 1)::float FROM test_submissions ts
+        WHERE ts.test_id = "tests"."test_id" AND ts.status = 'graded'
+      )`,
     })
     .from(tests);
   return (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(tests.createdAt));

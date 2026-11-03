@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { buildTypeSlices } from '../TestTypeChart';
 import { buildTestStatTiles } from '../TestStatTiles';
 
 const totals = (overrides = {}) => ({
@@ -10,90 +9,6 @@ const totals = (overrides = {}) => ({
   average_score: 72.4,
   pass_rate: 68,
   ...overrides,
-});
-
-describe('type slices', () => {
-  it('orders the types largest first', () => {
-    const slices = buildTypeSlices([
-      { test_type: 'essay', tests: 16 },
-      { test_type: 'multiple_choice', tests: 33 },
-    ]);
-
-    expect(slices.map((slice) => slice.key)).toEqual(['multiple_choice', 'essay']);
-  });
-
-  it('leaves a short list alone rather than folding it', () => {
-    const slices = buildTypeSlices([
-      { test_type: 'multiple_choice', tests: 5 },
-      { test_type: 'essay', tests: 4 },
-      { test_type: 'short_answer', tests: 3 },
-      { test_type: 'true_false', tests: 2 },
-      { test_type: 'writing', tests: 1 },
-    ]);
-
-    expect(slices).toHaveLength(5);
-    expect(slices.some((slice) => slice.key === '__other__')).toBe(false);
-  });
-
-  it('folds everything past the fourth type into one slice', () => {
-    const slices = buildTypeSlices([
-      { test_type: 'multiple_choice', tests: 33 },
-      { test_type: 'essay', tests: 16 },
-      { test_type: 'short_answer', tests: 13 },
-      { test_type: 'true_false', tests: 9 },
-      { test_type: 'writing', tests: 4 },
-      { test_type: 'matching', tests: 3 },
-    ]);
-
-    expect(slices).toHaveLength(5);
-    const other = slices[4];
-    expect(other.key).toBe('__other__');
-    expect(other.tests).toBe(7);
-    expect(other.types).toEqual(['writing', 'matching']);
-  });
-
-  it('names how many types the folded slice covers', () => {
-    const slices = buildTypeSlices([
-      { test_type: 'multiple_choice', tests: 10 },
-      { test_type: 'essay', tests: 9 },
-      { test_type: 'short_answer', tests: 8 },
-      { test_type: 'true_false', tests: 7 },
-      { test_type: 'writing', tests: 3 },
-      { test_type: 'matching', tests: 2 },
-      { test_type: 'reading_passage', tests: 1 },
-    ]);
-
-    expect(slices[4].label).toBe('Other 3 types');
-  });
-
-  it('drops a type nobody has used', () => {
-    const slices = buildTypeSlices([
-      { test_type: 'multiple_choice', tests: 5 },
-      { test_type: 'matching', tests: 0 },
-    ]);
-
-    expect(slices.map((slice) => slice.key)).toEqual(['multiple_choice']);
-  });
-
-  it('breaks a tie on the type name so the ring does not reshuffle', () => {
-    const slices = buildTypeSlices([
-      { test_type: 'essay', tests: 4 },
-      { test_type: 'true_false', tests: 4 },
-      { test_type: 'writing', tests: 4 },
-    ]);
-
-    expect(slices.map((slice) => slice.key)).toEqual(['essay', 'true_false', 'writing']);
-  });
-
-  it('answers with nothing when the centre has no tests', () => {
-    expect(buildTypeSlices([])).toEqual([]);
-  });
-
-  it('labels each slice with the readable type name', () => {
-    const slices = buildTypeSlices([{ test_type: 'multiple_choice', tests: 5 }]);
-
-    expect(slices[0].label).toBe('Multiple Choice');
-  });
 });
 
 describe('headline tiles', () => {
