@@ -9,11 +9,14 @@ describe('salary by pay rate with late payments', () => {
   let admin;
   let teacherId;
   let lateStudent;
+  let centerId;
 
   beforeAll(async () => {
     pool = require('../../../src/db/pool');
     await pool.query('TRUNCATE TABLE edu_centers RESTART IDENTITY CASCADE');
-    const centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Rate Center', 'RT-C') RETURNING center_id`)).rows[0].center_id;
+    // Kassa expenses are not tied to the center rows; clear what other test files left.
+    await pool.query('TRUNCATE TABLE expenses RESTART IDENTITY CASCADE');
+    centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Rate Center', 'RT-C') RETURNING center_id`)).rows[0].center_id;
     teacherId = (
       await pool.query(
         `INSERT INTO teachers (center_id, employee_id, first_name, last_name, salary_percentage) VALUES ($1, 'RT-T', 'Rano', 'T', 50) RETURNING teacher_id`,
@@ -106,5 +109,45 @@ describe('salary by pay rate with late payments', () => {
       ['2026-10', 500000, 250000],
     ]);
     expect(late.find((item) => item.student_id === lateStudent).name).toBe('Kamol S');
+  });
+
+  describe('giving the salary in parts', () => {
+    const auth = () => ({ Authorization: `Bearer ${admin}` });
+    const give = (kind, amount) =>
+      request(server).post('/api/salaries/advances').set(auth()).send({ teacher_id: teacherId, salary_year: 2026, salary_month: 10, amount, payment_method: 'Cash', kind });
+    const spent = async () => (await pool.query('SELECT amount, description FROM expenses WHERE deleted_at IS NULL AND center_id = $1 ORDER BY expense_id', [centerId])).rows;
+
+    test('an advance, then the salary in parts, never more than what is left of the salary by rate', async () => {
+      // October: 50% of 500 000 = 250 000.
+      expect((await give('advance', 100000)).status).toBe(201);
+      const over = await give('salary', 200000);
+      expect(over.status).toBe(400);
+      expect(over.body.left).toBe(150000);
+
+      expect((await give('salary', 100000)).status).toBe(201);
+      let october = await row(10);
+      expect(october).toMatchObject({ advance_total: 100000, salary_paid_total: 100000 });
+      expect(october.salary).toMatchObject({ is_paid: false, from_payouts: true });
+      expect(Number(october.salary.amount)).toBe(200000);
+
+      expect((await give('salary', 50000)).status).toBe(201);
+      october = await row(10);
+      expect(october.salary.is_paid).toBe(true);
+      expect((await give('salary', 1)).status).toBe(400);
+
+      // Every part is its own kassa expense, and nothing is paid out twice.
+      const out = await spent();
+      expect(out.map((item) => Number(item.amount))).toEqual([100000, 100000, 50000]);
+      expect(out.map((item) => item.description.split(':')[0])).toEqual(['Avans', 'Maosh', 'Maosh']);
+    });
+
+    test('taking a part back gives the money back and the month is not paid in full any more', async () => {
+      const last = (await pool.query(`SELECT advance_id FROM teacher_salary_advances WHERE kind = 'salary' ORDER BY advance_id DESC LIMIT 1`)).rows[0].advance_id;
+      expect((await request(server).delete(`/api/salaries/advances/${last}`).set(auth())).status).toBe(200);
+      const october = await row(10);
+      expect(october).toMatchObject({ advance_total: 100000, salary_paid_total: 100000 });
+      expect(october.salary.is_paid).toBe(false);
+      expect((await spent()).map((item) => Number(item.amount))).toEqual([100000, 100000]);
+    });
   });
 });

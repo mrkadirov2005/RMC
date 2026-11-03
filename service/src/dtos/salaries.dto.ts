@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 class MarkSalaryPaidDto {
   @Type(() => Number)
@@ -61,6 +61,11 @@ class AddSalaryAdvanceDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  /** An advance (default) or a part of the salary itself. */
+  @IsOptional()
+  @IsIn(['advance', 'salary'])
+  kind?: 'advance' | 'salary';
 }
 
 class UpdateSalaryDto {

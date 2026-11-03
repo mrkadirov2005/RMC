@@ -22,12 +22,31 @@ interface SalaryAdvanceDialogProps {
   teacherName: string;
   salaryYear: number;
   salaryMonth: number;
-  /** Advances already given for this month, newest first. */
+  /** Money already given for this month, newest first (only the entries of `kind` are listed). */
   advances: SalaryAdvance[];
+  /** An advance (before the salary is due), or a part of the salary itself. */
+  kind?: 'advance' | 'salary';
+  /** For the salary: what is left of it by the teacher's pay rate; more cannot be given. */
+  limit?: number;
 }
 
-/** Gives a teacher an advance (avans) against one month's salary, and lists the ones already given. */
-export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName, salaryYear, salaryMonth, advances }: SalaryAdvanceDialogProps) => {
+/**
+ * Gives a teacher money against one month's salary, and lists what was already given: an advance
+ * (avans), or the salary itself, in one go or in parts, up to what is left of it.
+ */
+export const SalaryAdvanceDialog = ({
+  open,
+  onOpenChange,
+  teacherId,
+  teacherName,
+  salaryYear,
+  salaryMonth,
+  advances: allEntries,
+  kind = 'advance',
+  limit,
+}: SalaryAdvanceDialogProps) => {
+  const isSalary = kind === 'salary';
+  const advances = allEntries.filter((entry) => (entry.kind === 'salary') === isSalary);
   const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const submitting = useAppSelector(selectSalaryAdvanceLoading);
@@ -38,13 +57,15 @@ export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName
 
   useEffect(() => {
     if (!open) return;
-    setAmount('');
+    // The salary is offered in full: whatever is left of it.
+    setAmount(isSalary && limit && limit > 0 ? String(limit) : '');
     setPaymentMethod('Cash');
     setNotes('');
-  }, [open]);
+  }, [open, isSalary, limit]);
 
   const parsedAmount = Number(amount);
-  const isValid = amount.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount > 0;
+  const overLimit = isSalary && limit !== undefined && parsedAmount > limit + 0.01;
+  const isValid = amount.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount > 0 && !overLimit;
   const total = advances.reduce((sum, advance) => sum + (Number(advance.amount) || 0), 0);
 
   const handleSubmit = async () => {
@@ -57,9 +78,12 @@ export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName
         amount: parsedAmount,
         payment_method: paymentMethod || undefined,
         notes: notes.trim() || undefined,
+        kind,
       })
     );
     if ((result as any).meta?.requestStatus === 'fulfilled') {
+      // What is left of the salary changed: the page reloads it once the window closes.
+      if (isSalary) return onOpenChange(false);
       setAmount('');
       setNotes('');
     }
@@ -69,7 +93,7 @@ export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('Give Advance')}</DialogTitle>
+          <DialogTitle>{isSalary ? t('Give salary') : t('Give Advance')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
@@ -78,7 +102,9 @@ export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName
 
           {advances.length > 0 && (
             <div className="rounded-md border bg-muted/30 p-2.5 text-xs">
-              <p className="mb-1.5 font-semibold">{t('Advances given: {total}', { total: formatMoney(total) })}</p>
+              <p className="mb-1.5 font-semibold">
+                {isSalary ? t('Salary given: {total}', { total: formatMoney(total) }) : t('Advances given: {total}', { total: formatMoney(total) })}
+              </p>
               <ul className="space-y-1">
                 {advances.map((advance) => (
                   <li key={advance.advance_id} className="flex items-center justify-between gap-2">
@@ -94,7 +120,7 @@ export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-rose-600"
-                      aria-label={t('Remove advance')}
+                      aria-label={isSalary ? t('Take back this payment') : t('Remove advance')}
                       disabled={submitting}
                       onClick={() => dispatch(removeSalaryAdvance({ id: advance.advance_id, teacherId }))}
                     >
@@ -107,8 +133,25 @@ export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName
           )}
 
           <div className="space-y-1">
-            <Label>{t('Advance Amount')}</Label>
-            <Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 300000" />
+            <Label>{isSalary ? t('Amount given now') : t('Advance Amount')}</Label>
+            <Input
+              type="number"
+              min="0"
+              max={isSalary && limit !== undefined ? limit : undefined}
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="e.g. 300000"
+            />
+            {isSalary && limit !== undefined && (
+              <p className={overLimit ? 'text-xs font-semibold text-rose-600' : 'text-xs text-muted-foreground'}>
+                {overLimit
+                  ? t('More than what is left of the salary ({left}).', { left: formatMoney(limit) })
+                  : limit > 0
+                    ? t('Left of the salary: {left}. A smaller amount leaves the rest for later.', { left: formatMoney(limit) })
+                    : t('Nothing is left of the salary by pay rate.')}
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label>{t('Payment Method')}</Label>
@@ -131,7 +174,7 @@ export const SalaryAdvanceDialog = ({ open, onOpenChange, teacherId, teacherName
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t('Close')}</Button>
           <Button onClick={handleSubmit} disabled={submitting || !isValid} className="gap-2">
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Give Advance')}
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isSalary ? t('Give salary') : t('Give Advance')}
           </Button>
         </DialogFooter>
       </DialogContent>

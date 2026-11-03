@@ -113,6 +113,11 @@ describe('payout of the salary by pay rate', () => {
     expect(payoutParts({ is_paid: true, amount: '1000000' }, 300000)).toEqual({ advances: 300000, paidOut: 700000 });
   });
 
+  it('counts the salary given in parts, without counting it twice in the record that follows it', () => {
+    expect(payoutParts({ is_paid: false, amount: '500000' }, 300000, 200000)).toEqual({ advances: 300000, paidOut: 200000 });
+    expect(payoutParts({ is_paid: true, amount: '775000' }, 300000, 475000)).toEqual({ advances: 300000, paidOut: 475000 });
+  });
+
   it('shows how much of the salary came and what is left', () => {
     expect(payoutProgress(300000, 1000000)).toEqual({ percent: 30, left: 700000, over: 0 });
     expect(payoutProgress(1200000, 1000000)).toEqual({ percent: 100, left: 0, over: 200000 });

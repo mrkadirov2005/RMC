@@ -12,6 +12,8 @@ describe('salary list with PostgreSQL', () => {
   beforeAll(async () => {
     pool = require('../../../src/db/pool');
     await pool.query('TRUNCATE TABLE edu_centers RESTART IDENTITY CASCADE');
+    // Kassa expenses are not tied to the center rows; clear what other test files left.
+    await pool.query('TRUNCATE TABLE expenses RESTART IDENTITY CASCADE');
     const centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Sal Center', 'SL-C') RETURNING center_id`)).rows[0].center_id;
     const teacher = async (code) =>
       (await pool.query(`INSERT INTO teachers (center_id, employee_id, first_name, last_name) VALUES ($1, $2, $2, 'T') RETURNING teacher_id`, [centerId, code])).rows[0].teacher_id;

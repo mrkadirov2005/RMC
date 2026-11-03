@@ -142,7 +142,7 @@ export const addSalaryAdvance = createAsyncThunk(
   async (payload: AddSalaryAdvancePayload, { dispatch, getState, rejectWithValue }) => {
     try {
       const res = await salaryAPI.addAdvance(payload);
-      showToast.success('Advance saved');
+      showToast.success(payload.kind === 'salary' ? 'Salary payment saved' : 'Advance saved');
       refreshAfterAdvance(dispatch, getState, payload.teacher_id);
       return (res as any).data ?? res;
     } catch (err: any) {

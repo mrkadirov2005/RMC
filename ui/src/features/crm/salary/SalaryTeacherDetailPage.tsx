@@ -15,7 +15,6 @@ import { GroupCard } from '@/features/teacher/payments/TeacherPaymentsOverview';
 import { LatePaymentsSection } from '@/features/teacher/payments/LatePaymentsSection';
 import type { TeacherGroupPayments } from '@/features/teacher/payments/types';
 import { useSalaryTeacherDetail } from './hooks/useSalaryTeacherDetail';
-import { MarkSalaryPaidDialog } from './components/MarkSalaryPaidDialog';
 import { SalaryAdvanceDialog } from './components/SalaryAdvanceDialog';
 import { PayoutLine, STATUS_STYLE } from './components/SalaryPaymentLine';
 import {
@@ -30,9 +29,7 @@ import {
   resolveSalaryStatus,
   teacherFullName,
 } from './model/salaryModel';
-import type { SalaryAdvance, SalaryRecord, SalaryStudentStats } from './types';
-
-const EMPTY_STATS: SalaryStudentStats = { total_students: 0, paid_students: 0, unpaid_students: 0, paid_percent: 0, unpaid_percent: 0, collected_amount: 0 };
+import type { SalaryAdvance, SalaryRecord } from './types';
 
 const formatDay = (value?: string | null) => (value ? `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)}` : '—');
 
@@ -84,8 +81,8 @@ const SalaryTeacherDetailPage = () => {
   const [reloadKey, setReloadKey] = useState(0);
   const { detail, loading: historyLoading, refresh } = useSalaryTeacherDetail(teacherId, 12);
   const { data, loading, failed } = useTeacherMonth(teacherId, monthKey, reloadKey);
-  const [markOpen, setMarkOpen] = useState(false);
-  const [advanceOpen, setAdvanceOpen] = useState(false);
+  // Which kind of money is being given: an advance, or the salary itself.
+  const [giving, setGiving] = useState<'advance' | 'salary' | null>(null);
 
   const reload = () => {
     setReloadKey((value) => value + 1);
@@ -95,11 +92,13 @@ const SalaryTeacherDetailPage = () => {
   const history = detail?.teacher?.teacher_id === teacherId ? detail.history : [];
   const name = detail?.teacher?.teacher_id === teacherId ? teacherFullName(detail.teacher) : '';
   const salary = (data?.salary_record as SalaryRecord | null) ?? null;
-  const advances = (data?.advances ?? []) as SalaryAdvance[];
+  const entries = (data?.advances ?? []) as SalaryAdvance[];
+  const advanceCount = entries.filter((entry) => entry.kind !== 'salary').length;
   const advanceTotal = Number(data?.advance_total) || 0;
+  const salaryPaidTotal = Number(data?.salary_paid_total) || 0;
   const earnings = data?.earnings;
   const due = Number(earnings?.due) || 0;
-  const { paidOut } = payoutParts(salary, advanceTotal);
+  const { paidOut } = payoutParts(salary, advanceTotal, salaryPaidTotal);
   const received = advanceTotal + paidOut;
   const { left } = payoutProgress(received, due);
   const status = payoutStatus(received, due);
@@ -139,11 +138,11 @@ const SalaryTeacherDetailPage = () => {
             <Input type="month" value={monthKey} onChange={(event) => setMonth(event.target.value)} className="w-[170px] pl-9" aria-label={t('Month')} />
             <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Button size="sm" variant="outline" onClick={() => setAdvanceOpen(true)} disabled={!data}>
+          <Button size="sm" variant="outline" onClick={() => setGiving('advance')} disabled={!data}>
             {t('Give Advance')}
           </Button>
-          <Button size="sm" onClick={() => setMarkOpen(true)} disabled={!data}>
-            {salary?.is_paid ? t('Edit salary') : t('Mark as paid')}
+          <Button size="sm" onClick={() => setGiving('salary')} disabled={!data}>
+            {t('Give salary')}
           </Button>
         </div>
       </div>
@@ -175,10 +174,10 @@ const SalaryTeacherDetailPage = () => {
                 unpaid: totals.unpaid_students,
               })}
             />
-            <Stat icon={HandCoins} label={t('Advance')} value={advanceTotal > 0 ? formatMoney(advanceTotal) : '—'} detail={t('{count} times', { count: advances.length })} tone="text-sky-600" />
+            <Stat icon={HandCoins} label={t('Advance')} value={advanceTotal > 0 ? formatMoney(advanceTotal) : '—'} detail={t('{count} times', { count: advanceCount })} tone="text-sky-600" />
             <Stat
               icon={Banknote}
-              label={t('Received')}
+              label={t('Received by teacher')}
               value={formatMoney(received)}
               detail={salary?.is_paid ? `${t('Salary paid')} ${formatDay(salary.paid_at)}` : t('Not paid yet')}
               tone="text-emerald-600"
@@ -214,21 +213,31 @@ const SalaryTeacherDetailPage = () => {
 
           <LatePaymentsSection earnings={earnings} />
 
-          {/* Advances this month */}
+          {/* Money given this month: advances and the salary, each on the day it was given */}
           <section className="space-y-2 rounded-xl border bg-card p-4 shadow-sm">
             <h3 className="flex items-center gap-2 text-sm font-bold">
               <HandCoins className="h-4 w-4 text-sky-600" />
-              {t('Advances this month')}
+              {t('Money given this month')}
             </h3>
-            {advances.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{t('No advances this month.')}</p>
+            {entries.length === 0 ? (
+              <p className="text-xs text-muted-foreground">{t('Nothing given this month yet.')}</p>
             ) : (
               <div className="divide-y text-sm">
-                {advances.map((advance) => (
-                  <div key={advance.advance_id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
-                    <span className="tabular-nums text-muted-foreground">{formatDay(advance.given_at)}</span>
-                    <span className="text-xs text-muted-foreground">{[advance.payment_method, advance.given_by_name, advance.notes].filter(Boolean).join(' · ')}</span>
-                    <span className="font-bold tabular-nums text-sky-600">{formatMoney(advance.amount)}</span>
+                {entries.map((entry) => (
+                  <div key={entry.advance_id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                    <span className="flex items-center gap-2">
+                      <span className="tabular-nums text-muted-foreground">{formatDay(entry.given_at)}</span>
+                      <span
+                        className={cn(
+                          'rounded-full px-2 py-0.5 text-[0.6875rem] font-bold',
+                          entry.kind === 'salary' ? STATUS_STYLE.paid.className : STATUS_STYLE.pending.className
+                        )}
+                      >
+                        {entry.kind === 'salary' ? t('Salary') : t('Advance')}
+                      </span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">{[entry.payment_method, entry.given_by_name, entry.notes].filter(Boolean).join(' · ')}</span>
+                    <span className={cn('font-bold tabular-nums', entry.kind === 'salary' ? 'text-emerald-600' : 'text-sky-600')}>{formatMoney(entry.amount)}</span>
                   </div>
                 ))}
               </div>
@@ -275,7 +284,11 @@ const SalaryTeacherDetailPage = () => {
                 >
                   <span>{formatSalaryPeriod(entry.salary_year, entry.salary_month)}</span>
                   <span className="text-xs text-muted-foreground">
-                    {Number(entry.advance_total) > 0 ? t('Advances: {amount}', { amount: formatMoney(entry.advance_total) }) : ''}
+                    {(() => {
+                      const given = payoutParts(entry.salary, entry.advance_total, entry.salary_paid_total);
+                      const total = given.advances + given.paidOut;
+                      return total > 0 ? `${t('Received by teacher')}: ${formatMoney(total)}` : '';
+                    })()}
                   </span>
                   <span className="tabular-nums">{entry.salary ? formatMoney(entry.salary.amount) : '—'}</span>
                   <span className={cn('w-fit rounded-full px-2 py-0.5 text-xs font-bold', STATUS_STYLE[entryStatus].className)}>{t(STATUS_STYLE[entryStatus].label)}</span>
@@ -286,40 +299,22 @@ const SalaryTeacherDetailPage = () => {
         )}
       </section>
 
-      {markOpen && (
-        <MarkSalaryPaidDialog
-          open
-          onOpenChange={(open) => {
-            if (open) return;
-            setMarkOpen(false);
-            reload();
-          }}
-          teacherId={teacherId}
-          teacherName={name || `#${teacherId}`}
-          salaryYear={period.year}
-          salaryMonth={period.month}
-          studentStats={monthEntry?.student_stats || EMPTY_STATS}
-          existingAmount={salary?.amount}
-          existingPaymentMethod={salary?.payment_method}
-          existingNotes={salary?.notes}
-          advanceTotal={advanceTotal}
-          suggestedAmount={due}
-        />
-      )}
-      {advanceOpen && (
+      {giving && (
         <SalaryAdvanceDialog
           open
           onOpenChange={(open) => {
             if (open) return;
-            setAdvanceOpen(false);
+            setGiving(null);
             reload();
           }}
+          kind={giving}
+          limit={giving === 'salary' ? left : undefined}
           teacherId={teacherId}
           teacherName={name || `#${teacherId}`}
           salaryYear={period.year}
           salaryMonth={period.month}
           // The shared teacher detail is refreshed as advances are added or removed in the dialog.
-          advances={monthEntry?.advances ?? advances}
+          advances={monthEntry?.advances ?? entries}
         />
       )}
     </div>

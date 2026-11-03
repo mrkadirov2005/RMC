@@ -72,6 +72,7 @@ export interface TeacherGroupPayments {
   salary_record: { amount: number | string; is_paid: boolean; paid_at?: string | null } | null;
   groups: GroupPayment[];
   earnings?: TeacherEarnings;
-  advances?: Array<{ advance_id: number; amount: number | string; given_at?: string | null; payment_method?: string | null; notes?: string | null; given_by_name?: string | null }>;
+  advances?: Array<{ advance_id: number; amount: number | string; given_at?: string | null; payment_method?: string | null; notes?: string | null; given_by_name?: string | null; kind?: 'advance' | 'salary' | null }>;
   advance_total?: number;
+  salary_paid_total?: number;
 }

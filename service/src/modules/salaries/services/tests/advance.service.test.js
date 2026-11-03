@@ -7,6 +7,8 @@ jest.mock('../../repositories/salary.repository', () => ({
   listAdvances: jest.fn(),
   sumAdvances: jest.fn((rows) => rows.reduce((total, row) => total + Number(row.amount), 0)),
   syncSalaryExpense: jest.fn(),
+  findTeacherRate: jest.fn(),
+  findEarningPayments: jest.fn(),
 }));
 jest.mock('../../../teachers/services/teacher.service', () => ({ getTeacher: jest.fn() }));
 jest.mock('../../../owners/services/owner.service', () => ({ getOwner: jest.fn() }));
@@ -25,6 +27,9 @@ describe('salary advances and the kassa', () => {
     salaryRepository.insertAdvance.mockResolvedValue({ advance_id: 1 });
     salaryRepository.findRecord.mockResolvedValue(null);
     salaryRepository.listAdvances.mockResolvedValue([]);
+    salaryRepository.findTeacherRate.mockResolvedValue('50');
+    // 2 000 000 came in: the salary by rate is 1 000 000.
+    salaryRepository.findEarningPayments.mockResolvedValue([{ payment_id: 1, student_id: 1, amount: '2000000', late: false }]);
   });
 
   const advance = (overrides = {}) => salaryService.addAdvance({

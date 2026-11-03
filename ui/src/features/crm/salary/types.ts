@@ -32,6 +32,8 @@ export interface SalaryAdvance {
   notes?: string | null;
   given_by_name?: string | null;
   given_by_role?: string | null;
+  /** An advance, or a part of the salary itself. */
+  kind?: 'advance' | 'salary' | null;
 }
 
 export interface AddSalaryAdvancePayload {
@@ -41,6 +43,7 @@ export interface AddSalaryAdvancePayload {
   amount: number;
   payment_method?: string;
   notes?: string;
+  kind?: 'advance' | 'salary';
 }
 
 export interface SalaryStudentStats {
@@ -76,6 +79,8 @@ export interface SalaryOverviewRow {
   salary: SalaryRecord | null;
   /** Advances given against this month's salary. */
   advance_total?: number;
+  /** The salary paid out in parts this month. */
+  salary_paid_total?: number;
   student_stats: SalaryStudentStats;
   payment_progress?: SalaryPaymentProgress | null;
   /** The teacher's pay rate, % of the money their students paid. */
@@ -89,6 +94,7 @@ export interface SalaryHistoryEntry {
   salary: SalaryRecord | null;
   advances?: SalaryAdvance[];
   advance_total?: number;
+  salary_paid_total?: number;
   student_stats: SalaryStudentStats;
 }
 
