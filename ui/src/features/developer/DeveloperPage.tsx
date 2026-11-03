@@ -1,8 +1,9 @@
-// The developer account's page: lock any account (owners included), lock everyone at once, and look
-// after owner accounts. Owners never see this page or the developer account itself.
+// The technical section, the developer account's alone: access control (lock any account, owners
+// included, or everyone at once; owner accounts), the engineering tools and the request logs.
+// Everyone else is sent away by DeveloperRoute (App.tsx) and refused by the server.
 
-import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, KeyRound, Loader2, Lock, LockOpen, Plus, Power, Search, ShieldAlert } from 'lucide-react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { Activity, AlertTriangle, KeyRound, Loader2, Lock, LockOpen, Plus, Power, ScrollText, Search, Server, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +16,19 @@ import { getApiPayload } from '@/shared/api/response';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAppSelector } from '../crm/hooks';
+import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { developerAPI, type DeveloperAccount, type DeveloperLock, type DeveloperOwner, type LockUserType, type Lockdown, type SealStatus } from './api';
+
+const EngineeringPage = lazy(() => import('../crm/server/EngineeringPage'));
+const RequestLogsPage = lazy(() => import('../crm/logs/RequestLogsPage'));
+
+const SECTIONS = ['access', 'engineering', 'logs'] as const;
+type Section = (typeof SECTIONS)[number];
+const SECTION_TABS: { id: Section; label: string; icon: typeof Lock }[] = [
+  { id: 'access', label: 'Access control', icon: Lock },
+  { id: 'engineering', label: 'Server and database', icon: Server },
+  { id: 'logs', label: 'Journals', icon: ScrollText },
+];
 
 const TYPES: { id: LockUserType; label: string }[] = [
   { id: 'owner', label: 'Owners' },
@@ -161,8 +174,6 @@ const DeveloperPanel = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('Developer')} description={t('Lock any account, close the whole system, and manage owner accounts. Only you see this page.')} />
-
       {/* Changed outside the app: the system stays closed for everyone else until this is dealt with */}
       {sealStatus && !sealStatus.intact && (
         <section className="space-y-3 rounded-lg border-2 border-rose-500 bg-rose-50 p-4 text-rose-950 shadow-sm dark:bg-rose-950/40 dark:text-rose-100">
@@ -497,14 +508,57 @@ const DeveloperPanel = () => {
   );
 };
 
-// Anyone but the developer gets an empty page and no requests (the server refuses them anyway).
-const DeveloperPage = () => {
+const TechnicalSection = () => {
   const { t } = useLanguage();
+  const [section, setSection] = useUrlTab<Section>('access', SECTIONS, 'section');
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title={t('Technical section')}
+        description={t('Access control, server and database tools, and request logs. Only you see this section.')}
+      />
+      <div className="inline-flex flex-wrap rounded-lg border bg-muted/40 p-1" role="tablist">
+        {SECTION_TABS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={section === item.id}
+              onClick={() => setSection(item.id)}
+              className={cn(
+                'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold',
+                section === item.id ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {t(item.label)}
+            </button>
+          );
+        })}
+      </div>
+      <Suspense
+        fallback={
+          <div className="flex justify-center py-16">
+            <Activity className="h-6 w-6 animate-pulse text-primary" />
+          </div>
+        }
+      >
+        {section === 'access' && <DeveloperPanel />}
+        {section === 'engineering' && <EngineeringPage />}
+        {section === 'logs' && <RequestLogsPage />}
+      </Suspense>
+    </div>
+  );
+};
+
+// A second guard behind DeveloperRoute: anyone but the developer gets nothing and sends no requests.
+const DeveloperPage = () => {
   const user = useAppSelector((state) => state.auth.user);
-  if (!user?.is_developer) {
-    return <p className="py-16 text-center text-sm text-muted-foreground">{t('Page not found')}</p>;
-  }
-  return <DeveloperPanel />;
+  if (!user?.is_developer) return null;
+  return <TechnicalSection />;
 };
 
 export default DeveloperPage;

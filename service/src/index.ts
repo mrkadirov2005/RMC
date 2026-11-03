@@ -234,7 +234,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/room-slots', requireAuth, requireRole('superuser', 'teacher'), roomSlotsRoutes);
   app.use('/api/calendar', requireAuth, requireRole('superuser', 'teacher', 'student'), calendarRoutes);
   // Request logs (MongoDB): only superuser.
-  app.use('/api/request-logs', requireAuth, requireRole('superuser'), requestLogRoutes);
+  // Request logs are part of the technical section: the developer account only.
+  app.use('/api/request-logs', requireAuth, requireDeveloper, requestLogRoutes);
   app.use('/api/system', systemRoutes);
   app.use('/api/archive', requireAuth, requireRole('superuser'), archiveRoutes);
   app.use('/api/telegram-registrations', requireAuth, requireRole('superuser'), telegramRegistrationRoutes);

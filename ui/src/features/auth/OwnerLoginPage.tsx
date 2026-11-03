@@ -74,7 +74,8 @@ export const OwnerLoginPage = () => {
       );
 
       showToast.success('Owner login successful! Accessing manager panel...');
-      navigate('/owner/manage');
+      // The developer lands on the technical section.
+      navigate(owner.is_developer ? '/developer' : '/owner/manage');
     } catch (err: any) {
       const errorMsg = handleApiError(err);
       dispatch(loginFailure(errorMsg));

@@ -140,11 +140,18 @@ describe('API mount points in index.ts', () => {
     expect(unguarded.sort()).toEqual(publicMounts.sort());
   });
 
-  it('keeps the request log API restricted to superusers', () => {
+  it('keeps the request log API restricted to the developer account', () => {
     const line = mountLines.find((entry) => entry.includes('requestLogRoutes'));
 
     expect(line).toContain('requireAuth');
-    expect(line).toContain("requireRole('superuser')");
+    expect(line).toContain('requireDeveloper');
+  });
+
+  it('keeps the developer API behind the developer guard', () => {
+    const line = mountLines.find((entry) => entry.includes('developerRoutes'));
+
+    expect(line).toContain('requireAuth');
+    expect(line).toContain('requireDeveloper');
   });
 
   it('keeps the student portal restricted to the student role', () => {

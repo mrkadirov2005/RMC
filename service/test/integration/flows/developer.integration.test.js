@@ -93,6 +93,12 @@ describe('developer role with PostgreSQL', () => {
     expect((await api().delete(`/api/owners/${developerId}`).set(auth(owner))).status).toBe(403);
     expect((await api().post(`/api/owners/${developerId}/change-password`).set(auth(owner)).send({ old_password: 'x', new_password: 'hijacked-pass-1' })).status).toBe(403);
     expect((await api().get('/api/developer/locks').set(auth(owner))).status).toBe(403);
+    // The technical section (server, database, backups, resets, request logs) too.
+    for (const path of ['/api/system/stats', '/api/system/database/tables', '/api/system/backup/stats', '/api/request-logs']) {
+      expect((await api().get(path).set(auth(owner))).status).toBe(403);
+    }
+    expect((await api().post('/api/system/dev/reset-students').set(auth(owner)).send({ confirmation: 'x' })).status).toBe(403);
+    expect((await api().get('/api/system/stats').set(auth(developer))).status).toBe(200);
     // Still signs in with the original password.
     expect((await login('/api/owners/auth/login', 'dev_root', 'correct-horse-1')).status).toBe(200);
     // The developer sees every owner, itself included.

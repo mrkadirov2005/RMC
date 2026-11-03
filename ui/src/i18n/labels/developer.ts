@@ -1,5 +1,11 @@
 export const developerLabels: Record<string, string> = {
   Developer: 'Dasturchi',
+  'Technical section': "Texnik bo'lim",
+  'Access control, server and database tools, and request logs. Only you see this section.':
+    "Kirish nazorati, server va baza vositalari hamda so'rovlar jurnali. Bu bo'limni faqat siz ko'rasiz.",
+  'Access control': 'Kirish nazorati',
+  'Server and database': 'Server va baza',
+  Journals: 'Jurnallar',
   'Lock any account, close the whole system, and manage owner accounts. Only you see this page.':
     "Istalgan hisobni bloklash, butun tizimni yopish va ega hisoblarini boshqarish. Bu sahifani faqat siz ko'rasiz.",
   'The system is closed for everyone': 'Tizim hamma uchun yopiq',

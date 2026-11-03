@@ -1,7 +1,7 @@
 // Application router and top-level shell.
 
 import { applyRememberedTextSize, applyTextSize, getTextSizeRole, normalizeTextSizes } from './features/crm/settings/textSize';
-import { useEffect, lazy, Suspense, useState } from 'react';
+import { useEffect, lazy, Suspense, useState, type ReactNode } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -70,8 +70,6 @@ const ViewSubmissionPage = lazy(() => import('./features/crm/tests/ViewSubmissio
 const TeacherPortal = lazy(() => import('./features/teacher/TeacherPortal'));
 const StudentPortal = lazy(() => import('./features/student/StudentPortal'));
 const SettingsPage = lazy(() => import('./features/crm/settings/SettingsPage'));
-const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage.tsx'));
-const EngineeringPage = lazy(() => import('./features/crm/server/EngineeringPage'));
 import { Loader2 } from 'lucide-react';
 import { ServiceStatusGuard } from './features/system/components/ServiceStatusGuard';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/authStorage';
@@ -184,6 +182,15 @@ const UnauthorizedContent = () => {
   );
 };
 
+// The technical section: the developer account only. Everyone else (owners, admins, teachers,
+// students) is sent to their own home page before anything of it loads.
+const DeveloperRoute = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated, user, isInitialized } = useAppSelector((state: any) => state.auth);
+  if (!isInitialized) return <LoadingSpinner />;
+  if (!isAuthenticated || !user?.is_developer) return <RoleBasedRedirect />;
+  return <>{children}</>;
+};
+
 // Role-based redirect for default/catch-all routes
 const RoleBasedRedirect = () => {
   const { isAuthenticated, user, isInitialized } = useAppSelector((state: any) => state.auth);
@@ -202,6 +209,10 @@ const RoleBasedRedirect = () => {
     case 'teacher':
       return <Navigate to="/teacher-portal" replace />;
     case 'superuser':
+      // The developer lands on the technical section.
+      if (user.is_developer) {
+        return <Navigate to="/developer" replace />;
+      }
       if ((user.role || '').toLowerCase() === 'owner') {
         return <Navigate to="/owner/manage" replace />;
       }
@@ -405,11 +416,11 @@ function AppContent() {
         <Route
           path="/developer"
           element={
-            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+            <DeveloperRoute>
               <Layout>
                 <DeveloperPage />
               </Layout>
-            </ProtectedRoute>
+            </DeveloperRoute>
           }
         />
         {/* @MOB-160 Mobile app content, owner only for now. */}
@@ -849,36 +860,10 @@ function AppContent() {
           }
         />
 
-        <Route
-          path="/logs"
-          element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
-              <Layout>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <RequestLogsPage />
-                </Suspense>
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/server"
-          element={<Navigate to="/engineering" replace />}
-        />
-
-        <Route
-          path="/engineering"
-          element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
-              <Layout>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <EngineeringPage />
-                </Suspense>
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        {/* Request logs and engineering tools live in the technical section (developer only). */}
+        <Route path="/logs" element={<DeveloperRoute><Navigate to="/developer?section=logs" replace /></DeveloperRoute>} />
+        <Route path="/server" element={<DeveloperRoute><Navigate to="/developer?section=engineering" replace /></DeveloperRoute>} />
+        <Route path="/engineering" element={<DeveloperRoute><Navigate to="/developer?section=engineering" replace /></DeveloperRoute>} />
 
         <Route
           path="/calendar"
