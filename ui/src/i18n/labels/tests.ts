@@ -114,4 +114,13 @@ export const testsLabels: Record<string, string> = {
   'About the test': 'Test haqida',
   'Shuffle questions': 'Savollarni aralashtirish',
   'Show results': "Natijalarni ko'rsatish",
+  // An attempt's answers
+  'Go Back': 'Orqaga',
+  Right: "To'g'ri",
+  Wrong: "Noto'g'ri",
+  'Nothing here.': "Bu yerda hech narsa yo'q.",
+  'No answer': "Javob yo'q",
+  'Answer given': 'Berilgan javob',
+  'Right answer': "To'g'ri javob",
+  'Back to test': 'Testga qaytish',
 };
