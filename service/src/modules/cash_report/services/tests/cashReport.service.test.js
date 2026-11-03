@@ -36,6 +36,20 @@ describe('cash report service', () => {
     expect(report.remaining).toEqual({ cash: 1500000, card: 500000, bank: 1000000, other: 0, total: 3000000 });
   });
 
+  it('tells each payment which month it was for; one without a month counts for the day\'s month', async () => {
+    repository.findPaymentsOn.mockResolvedValue([
+      { payment_id: 1, amount: '500000', payment_method: 'Cash', for_month: '2026-11' },
+      { payment_id: 2, amount: '500000', payment_method: 'Cash', for_month: '2026-10' },
+      { payment_id: 3, amount: '500000', payment_method: 'Card', for_month: null },
+    ]);
+    repository.findExpenses.mockResolvedValue([]);
+
+    const report = await service.getDailyReport('2026-11-04', 4);
+
+    expect(report.month).toBe('2026-11');
+    expect(report.payments.map((row) => row.for_month)).toEqual(['2026-11', '2026-10', '2026-11']);
+  });
+
   it('rejects a bad date without touching the database', async () => {
     expect(await service.getDailyReport('09.10.2026')).toEqual({ error: 'invalid_date' });
     expect(repository.findPaymentsOn).not.toHaveBeenCalled();

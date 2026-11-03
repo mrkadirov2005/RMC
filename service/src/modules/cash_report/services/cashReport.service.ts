@@ -23,6 +23,8 @@ const emptyTotals = () => Object.fromEntries(METHOD_ORDER.map((group) => [group,
 /**
  * One day's till: every payment (cash first, then card, then bank, then other, each in time
  * order), the day's expenses, and per method what came in, what went out and what is left.
+ * Each payment carries the month it was paid for (YYYY-MM), so the report can set apart money for
+ * the day's own month from money for other months.
  */
 const getDailyReport = async (date: string, centerId?: number) => {
   if (!isDate(date)) return { error: 'invalid_date' as const };
@@ -41,6 +43,7 @@ const getDailyReport = async (date: string, centerId?: number) => {
     amount: money(row.amount),
     payment_method: row.payment_method || 'Cash',
     method_group: methodGroup(row.payment_method),
+    for_month: row.for_month || date.slice(0, 7),
     received_by_name: row.received_by_name || null,
     paid_at: row.paid_at,
   }));
@@ -60,6 +63,7 @@ const getDailyReport = async (date: string, centerId?: number) => {
 
   return {
     date,
+    month: date.slice(0, 7),
     payments: rows,
     expenses: expenseRows,
     income: { ...income, total: sum(income) },

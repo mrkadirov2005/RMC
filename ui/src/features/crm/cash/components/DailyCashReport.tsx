@@ -1,11 +1,21 @@
 // The day's till for the CEO: per method what came in, what was spent and what is left, then
-// every payment (cash first, then card, then bank account) and the day's expenses.
+// every payment — first the ones for the day's own month, then the ones for other months, month by
+// month; each part cash first, then card, then bank account — and the day's expenses.
 import { Fragment } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { METHOD_GROUPS, METHOD_LABELS, formatTime, type DailyCashReport as Report, type MethodGroup } from '../cashFormat';
+import {
+  METHOD_GROUPS,
+  METHOD_LABELS,
+  formatTime,
+  monthNameParts,
+  paymentsByMonth,
+  type DailyCashReport as Report,
+  type MethodGroup,
+  type MonthSection,
+} from '../cashFormat';
 
 const TONES: Record<MethodGroup, string> = {
   cash: 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/30',
@@ -18,6 +28,47 @@ export function DailyCashReport({ report }: { report: Report }) {
   const { t } = useLanguage();
   // "Other" (cheques and old values) only shows up when that day had some.
   const groups = METHOD_GROUPS.filter((group) => group !== 'other' || report.income.other || report.expenses_total.other);
+  const sections = paymentsByMonth(report.payments, report.month || report.date.slice(0, 7));
+  const current = sections.find((section) => section.current);
+  const others = sections.filter((section) => !section.current);
+  const othersTotal = others.reduce((sum, section) => sum + section.total, 0);
+  const monthLabel = (month: string) => {
+    const { name, year } = monthNameParts(month);
+    return `${t(name)} ${year}`;
+  };
+
+  /** One month's payments, method by method, each with its total. */
+  const monthRows = (section: MonthSection) =>
+    section.methods.map((method) => (
+      <Fragment key={`${section.month}-${method.group}`}>
+        <TableRow className="bg-muted/50 hover:bg-muted/50">
+          <TableCell colSpan={5} className="py-1.5 pl-6 text-xs font-black uppercase">{t(METHOD_LABELS[method.group])}</TableCell>
+        </TableRow>
+        {method.rows.map((row) => (
+          <TableRow key={row.payment_id}>
+            <TableCell className="tabular-nums">{formatTime(row.paid_at)}</TableCell>
+            <TableCell className="font-semibold">{row.student_name || '—'}</TableCell>
+            <TableCell>{row.class_name || '—'}</TableCell>
+            <TableCell className="text-right font-semibold tabular-nums">{formatMoney(row.amount)}</TableCell>
+            <TableCell>{row.received_by_name || '—'}</TableCell>
+          </TableRow>
+        ))}
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={3} className="text-right text-xs font-bold">{t('Total ({method})', { method: t(METHOD_LABELS[method.group]) })}</TableCell>
+          <TableCell className="text-right font-black tabular-nums">{formatMoney(method.total)}</TableCell>
+          <TableCell />
+        </TableRow>
+      </Fragment>
+    ));
+
+  /** A heading row across the table: what the rows below are for, and their total. */
+  const headingRow = (key: string, label: string, total: number, background: string) => (
+    <TableRow key={key} className="hover:bg-transparent" data-keep-bg style={{ backgroundColor: background }}>
+      <TableCell colSpan={3} className="py-2 text-sm font-black">{label}</TableCell>
+      <TableCell className="py-2 text-right text-sm font-black tabular-nums">{formatMoney(total)}</TableCell>
+      <TableCell />
+    </TableRow>
+  );
 
   return (
     <div className="space-y-4">
@@ -43,7 +94,19 @@ export function DailyCashReport({ report }: { report: Report }) {
       </div>
 
       <section className="rounded-xl border bg-card shadow-sm">
-        <h2 className="border-b px-3 py-2 text-sm font-bold">{t('Payments received ({count})', { count: report.payments.length })}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
+          <h2 className="text-sm font-bold">{t('Payments received ({count})', { count: report.payments.length })}</h2>
+          {others.length > 0 && (
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                {t('This month: {amount}', { amount: formatMoney(current?.total || 0) })}
+              </span>
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                {t('Other months: {amount}', { amount: formatMoney(othersTotal) })}
+              </span>
+            </div>
+          )}
+        </div>
         {report.payments.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">{t('No payments on this day.')}</p>
         ) : (
@@ -59,31 +122,15 @@ export function DailyCashReport({ report }: { report: Report }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {groups.map((group) => {
-                  const rows = report.payments.filter((row) => row.method_group === group);
-                  if (rows.length === 0) return null;
-                  return (
-                    <Fragment key={group}>
-                      <TableRow className="bg-muted/50 hover:bg-muted/50">
-                        <TableCell colSpan={5} className="py-1.5 text-xs font-black uppercase">{t(METHOD_LABELS[group])}</TableCell>
-                      </TableRow>
-                      {rows.map((row) => (
-                        <TableRow key={row.payment_id}>
-                          <TableCell className="tabular-nums">{formatTime(row.paid_at)}</TableCell>
-                          <TableCell className="font-semibold">{row.student_name || '—'}</TableCell>
-                          <TableCell>{row.class_name || '—'}</TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums">{formatMoney(row.amount)}</TableCell>
-                          <TableCell>{row.received_by_name || '—'}</TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow className="hover:bg-transparent">
-                        <TableCell colSpan={3} className="text-right text-xs font-bold">{t('Total ({method})', { method: t(METHOD_LABELS[group]) })}</TableCell>
-                        <TableCell className="text-right font-black tabular-nums">{formatMoney(report.income[group])}</TableCell>
-                        <TableCell />
-                      </TableRow>
-                    </Fragment>
-                  );
-                })}
+                {current && headingRow('current', t('For this month — {month}', { month: monthLabel(current.month) }), current.total, 'rgba(16, 185, 129, 0.14)')}
+                {current && monthRows(current)}
+                {others.length > 0 && headingRow('others', t('For other months'), othersTotal, 'rgba(245, 158, 11, 0.2)')}
+                {others.map((section) => (
+                  <Fragment key={section.month}>
+                    {headingRow(`month-${section.month}`, t('For {month}', { month: monthLabel(section.month) }), section.total, 'rgba(245, 158, 11, 0.08)')}
+                    {monthRows(section)}
+                  </Fragment>
+                ))}
               </TableBody>
             </Table>
           </div>

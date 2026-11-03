@@ -11,6 +11,8 @@ export type CashPayment = {
   amount: number;
   payment_method: string;
   method_group: MethodGroup;
+  /** The month the payment was for, YYYY-MM. */
+  for_month?: string | null;
   received_by_name: string | null;
   paid_at: string | null;
 };
@@ -27,6 +29,8 @@ export type CashExpense = {
 
 export type DailyCashReport = {
   date: string;
+  /** The day's own month, YYYY-MM. */
+  month?: string;
   payments: CashPayment[];
   expenses: CashExpense[];
   income: MethodTotals;
@@ -75,3 +79,39 @@ export const formatTime = (value: string | null) => {
 };
 
 export const formatDay = (value: string) => `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)}`;
+
+export type MonthSection = {
+  month: string;
+  /** Paid for the day's own month. */
+  current: boolean;
+  total: number;
+  methods: Array<{ group: MethodGroup; rows: CashPayment[]; total: number }>;
+};
+
+const sumAmounts = (rows: CashPayment[]) => Math.round(rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0) * 100) / 100;
+
+/**
+ * The day's payments by the month they were for: the day's own month first, then the other months
+ * (newest first); inside each, cash, card, bank, other, as the till counts them.
+ */
+export const paymentsByMonth = (payments: CashPayment[], dayMonth: string): MonthSection[] => {
+  const months = Array.from(new Set(payments.map((row) => row.for_month || dayMonth)));
+  months.sort((a, b) => (a === dayMonth ? -1 : b === dayMonth ? 1 : b.localeCompare(a)));
+  return months.map((month) => {
+    const rows = payments.filter((row) => (row.for_month || dayMonth) === month);
+    return {
+      month,
+      current: month === dayMonth,
+      total: sumAmounts(rows),
+      methods: METHOD_GROUPS.map((group) => {
+        const groupRows = rows.filter((row) => row.method_group === group);
+        return { group, rows: groupRows, total: sumAmounts(groupRows) };
+      }).filter((method) => method.rows.length > 0),
+    };
+  });
+};
+
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** "2026-10" as its English month name (for t()) and year. */
+export const monthNameParts = (month: string) => ({ name: MONTH_NAMES[Number(month.slice(5, 7)) - 1] || month, year: month.slice(0, 4) });

@@ -33,4 +33,9 @@ export const cashLabels: Record<string, string> = {
   'No expenses this month.': "Bu oy xarajat yo'q.",
   'Delete expense': "Xarajatni o'chirish",
   'Left over': 'Qoldiq',
+  'This month: {amount}': 'Shu oy uchun: {amount}',
+  'Other months: {amount}': 'Boshqa oylar uchun: {amount}',
+  'For this month — {month}': 'Shu oy uchun — {month}',
+  'For other months': 'Boshqa oylar uchun',
+  'For {month}': '{month} uchun',
 };
