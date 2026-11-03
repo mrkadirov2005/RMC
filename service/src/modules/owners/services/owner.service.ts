@@ -2,7 +2,6 @@ const { hashPassword, verifyPassword } = require('../../../shared/password');
 const ownerRepository = require('../repositories/owner.repository');
 import type {
   CreateOwnerDto,
-  RegisterOwnerDto,
   UpdateOwnerDto,
 } from '../dtos/owner.dto';
 
@@ -31,23 +30,6 @@ const createOwner = async (body: CreateOwnerDto) => {
   return { row };
 };
 
-const registerOwner = async (body: RegisterOwnerDto) => {
-  const { username, email, password, first_name, last_name } = body;
-  const taken = await ownerRepository.countByUsername(username);
-  if (taken > 0) return { error: 'username_taken' as const };
-
-  const row = await ownerRepository.insert([
-    username,
-    email,
-    hashPassword(password),
-    first_name,
-    last_name,
-    'Active',
-  ]);
-
-  return { row };
-};
-
 const updateOwner = async (id: number, body: UpdateOwnerDto) => {
   const { email, first_name, last_name, status, password } = body;
   const passwordHash = password ? hashPassword(password) : null;
@@ -69,7 +51,8 @@ const authenticate = async (username: string, password: string) => {
     await ownerRepository.incrementLoginAttempts(owner.owner_id);
     return { kind: 'invalid' as const, owner };
   }
-  if (verification.legacy) {
+  // A developer's password hash is sealed, so it is never rewritten here.
+  if (verification.legacy && !owner.is_developer) {
     await ownerRepository.updatePasswordHash(owner.owner_id, hashPassword(password));
   }
   await ownerRepository.resetLoginSuccess(owner.owner_id);
@@ -88,7 +71,6 @@ module.exports = {
   listOwners,
   getOwner,
   createOwner,
-  registerOwner,
   updateOwner,
   deleteOwner,
   authenticate,

@@ -15,7 +15,6 @@ import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { RouteErrorBoundary } from './components/common/RouteErrorBoundary';
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then((module) => ({ default: module.OwnerLoginPage })));
-const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
 const ConsolidatePublicPage = lazy(() => import('./features/public/ConsolidatePublicPage'));
 const SharedTestPage = lazy(() => import('./features/public/SharedTestPage'));
 const AppDownloadPage = lazy(() => import('./features/public/AppDownloadPage'));
@@ -361,7 +360,6 @@ function AppContent() {
       <Routes>
         {/* Auth Routes */}
         <Route path="/login/owner" element={<OwnerLoginPage />} />
-        <Route path="/owner/register" element={<OwnerRegisterPage />} />
         <Route path="/consolidate/:shareToken" element={<ConsolidatePublicPage />} />
         <Route path="/share/tests/:shareToken" element={<SharedTestPage />} />
         {/* @MOB-172 Public download page of the mobile app. */}

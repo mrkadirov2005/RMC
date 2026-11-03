@@ -23,6 +23,7 @@ describe('developer role with PostgreSQL', () => {
     pool = require('../../../src/db/pool');
     const { hashPassword } = require('../../../src/shared/password');
     await pool.query('TRUNCATE TABLE edu_centers, developer_locks RESTART IDENTITY CASCADE');
+    await pool.query('UPDATE owners SET is_developer = FALSE');
     await pool.query(`DELETE FROM owners WHERE username IN ('dev_root', 'boss_owner', 'self_signup')`);
     await pool.query(`DELETE FROM audit_logs WHERE entity_type = 'test'`);
     centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Dev Center', 'DEV-C') RETURNING center_id`)).rows[0].center_id;
@@ -51,6 +52,9 @@ describe('developer role with PostgreSQL', () => {
        VALUES ($1, 'DEV-S1b', 'Sara', 'Student', 'Active', $2) RETURNING student_id`,
       [centerId, mainStudentId]
     )).rows[0].student_id;
+
+    // The fixtures above were written straight to the database: sign them, as the server command does.
+    await require('../../../src/modules/developer/seal').reseal();
 
     const { createApp } = require('../../../src/index');
     const app = await createApp({ initializeDatabase: false, initializeMongo: false });
@@ -96,9 +100,10 @@ describe('developer role with PostgreSQL', () => {
     expect(all).toEqual(expect.arrayContaining(['dev_root', 'boss_owner']));
   });
 
-  test('nobody can sign up as an owner without the invite key', async () => {
-    const res = await api().post('/api/owners/auth/register').send({ username: 'self_signup', password: 'some-password-1', email: 'a@b.uz', first_name: 'A', last_name: 'B', invite_key: 'guessed-key' });
-    expect(res.status).toBe(403);
+  test('owner sign-up is gone', async () => {
+    const res = await api().post('/api/owners/auth/register').send({ username: 'self_signup', password: 'some-password-1', email: 'a@b.uz', first_name: 'A', last_name: 'B', invite_key: 'owner-create-2026' });
+    // No such route any more (the owners routes around it need a signed-in owner).
+    expect([401, 404]).toContain(res.status);
     expect((await pool.query(`SELECT 1 FROM owners WHERE username = 'self_signup'`)).rowCount).toBe(0);
   });
 
@@ -180,5 +185,70 @@ describe('developer role with PostgreSQL', () => {
     expect(ownerView).toEqual(['owner-action']);
     const developerView = (await api().get(`/api/audit-logs?entity_type=test&center_id=${centerId}`).set(auth(developer))).body.map((row) => row.action);
     expect(developerView).toEqual(expect.arrayContaining(['owner-action', 'dev-action']));
+  });
+  describe('changes made straight in the database', () => {
+    const accessLock = () => require('../../../src/modules/developer/accessLock');
+    const seal = () => require('../../../src/modules/developer/seal');
+    const fresh = () => accessLock().clearCache();
+
+    test('a lock deleted in the database closes the system for everyone but the developer, who restores it', async () => {
+      await api().post('/api/developer/locks').set(auth(developer)).send({ user_type: 'teacher', user_id: teacherId, reason: 'unpaid' });
+      await pool.query(`DELETE FROM developer_locks WHERE user_type = 'teacher'`);
+      fresh();
+
+      const blocked = await api().get('/api/owners').set(auth(owner));
+      expect(blocked.status).toBe(423);
+      expect(blocked.body.code).toBe('SYSTEM_LOCKED');
+      expect((await login('/api/teachers/auth/login', 'dev_teacher', 'correct-horse-1')).status).toBe(423);
+
+      const status = (await api().get('/api/developer/seal').set(auth(developer))).body;
+      expect(status).toMatchObject({ intact: false, authentic: true, locks_removed: [`teacher:${teacherId}`] });
+      // No new changes until the developer has dealt with it.
+      expect((await api().post('/api/developer/locks').set(auth(developer)).send({ user_type: 'owner', user_id: ownerId })).body.code).toBe('SEAL_BROKEN');
+
+      expect((await api().post('/api/developer/seal/restore').set(auth(developer))).status).toBe(200);
+      expect((await pool.query(`SELECT 1 FROM developer_locks WHERE user_type = 'teacher' AND user_id = $1`, [teacherId])).rowCount).toBe(1);
+      expect((await api().get('/api/owners').set(auth(owner))).status).toBe(200);
+      await api().delete(`/api/developer/locks/teacher/${teacherId}`).set(auth(developer));
+    });
+
+    test('an owner made developer in the database gets nothing; restoring takes it back', async () => {
+      await pool.query('UPDATE owners SET is_developer = TRUE WHERE owner_id = $1', [ownerId]);
+      fresh();
+      // Refused at sign-in, and the session already open stops too.
+      const signIn = await login('/api/owners/auth/login', 'boss_owner', 'brand-new-pass');
+      expect(signIn.status).toBe(423);
+      expect((await api().get('/api/owners').set(auth(owner))).status).toBe(423);
+      expect((await api().get('/api/developer/seal').set(auth(developer))).body.developers_added).toEqual([ownerId]);
+
+      await api().post('/api/developer/seal/restore').set(auth(developer));
+      expect((await pool.query('SELECT is_developer FROM owners WHERE owner_id = $1', [ownerId])).rows[0].is_developer).toBe(false);
+      expect((await api().get('/api/owners').set(auth(owner))).status).toBe(200);
+    });
+
+    test("the developer's password replaced in the database is put back by restoring", async () => {
+      const { hashPassword, verifyPassword } = require('../../../src/shared/password');
+      await pool.query('UPDATE owners SET password_hash = $2 WHERE owner_id = $1', [developerId, hashPassword('stolen-pass-1')]);
+      fresh();
+      expect((await api().get('/api/developer/seal').set(auth(developer))).body.developers_changed).toEqual([developerId]);
+      await api().post('/api/developer/seal/restore').set(auth(developer));
+      const hash = (await pool.query('SELECT password_hash FROM owners WHERE owner_id = $1', [developerId])).rows[0].password_hash;
+      expect(verifyPassword('correct-horse-1', hash).valid).toBe(true);
+    });
+
+    test('a forged seal locks everyone, the developer too, until the server command signs again', async () => {
+      await pool.query(`UPDATE developer_seal SET payload = '{"v":1,"locks":[],"developers":[]}'`);
+      fresh();
+      expect((await api().get('/api/owners').set(auth(developer))).status).toBe(423);
+      expect((await api().get('/api/owners').set(auth(owner))).status).toBe(423);
+      await seal().reseal();
+      fresh();
+      expect((await api().get('/api/owners').set(auth(developer))).status).toBe(200);
+    });
+
+    test('a developer account cannot be edited or removed through the owner screens', async () => {
+      expect((await api().put(`/api/owners/${developerId}`).set(auth(developer)).send({ first_name: 'X' })).body.code).toBe('DEVELOPER_ACCOUNT');
+      expect((await api().delete(`/api/owners/${developerId}`).set(auth(developer))).body.code).toBe('DEVELOPER_ACCOUNT');
+    });
   });
 });

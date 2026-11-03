@@ -3,6 +3,7 @@
 const pool = require('../../db/pool');
 const { hashPassword } = require('../../shared/password');
 const accessLock = require('./accessLock');
+const seal = require('./seal');
 import type { LockUserType } from './accessLock';
 
 // One query shape per account kind: id, display name, username, center and status.
@@ -18,6 +19,80 @@ const ACCOUNT_SOURCES: Record<LockUserType, string> = {
 };
 
 const isLockType = (value: unknown): value is LockUserType => accessLock.LOCK_USER_TYPES.includes(value);
+
+// After every change the developer makes: sign the new state and drop the cached locks.
+const sealed = async () => {
+  await seal.reseal();
+  accessLock.clearCache();
+};
+
+// What changed outside the app since the last seal, for the developer to restore or accept.
+const sealStatus = async () => {
+  const result = await seal.check();
+  const keyOfLock = ([type, id]: [string, number]) => `${type}:${id}`;
+  const trustedLocks = new Set((result.trusted?.locks || []).map(keyOfLock));
+  const currentLocks = new Set(result.current.locks.map(keyOfLock));
+  const trustedDevelopers = new Map((result.trusted?.developers || []).map((row: any) => [row[0], row]));
+  const currentDevelopers = new Map(result.current.developers.map((row: any) => [row[0], row]));
+  return {
+    intact: result.intact,
+    authentic: result.authentic,
+    locks_removed: [...trustedLocks].filter((key) => !currentLocks.has(key)),
+    locks_added: [...currentLocks].filter((key) => !trustedLocks.has(key)),
+    developers_added: [...currentDevelopers.keys()].filter((id) => !trustedDevelopers.has(id)),
+    developers_removed: [...trustedDevelopers.keys()].filter((id) => !currentDevelopers.has(id)),
+    developers_changed: [...currentDevelopers.keys()].filter(
+      (id) => trustedDevelopers.has(id) && JSON.stringify(trustedDevelopers.get(id)) !== JSON.stringify(currentDevelopers.get(id))
+    ),
+  };
+};
+
+// Puts back the locks and developer accounts of the signed copy.
+const restoreSeal = async () => {
+  const result = await seal.check();
+  if (!result.authentic || !result.trusted) return { error: 'not_authentic' as const };
+  const { locks, developers } = result.trusted;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const lockKeys = locks.map(([type, id]: [string, number]) => `${type}:${id}`);
+    await client.query(`DELETE FROM developer_locks WHERE NOT ((user_type || ':' || user_id) = ANY($1::text[]))`, [lockKeys]);
+    for (const [type, id] of locks) {
+      await client.query(
+        `INSERT INTO developer_locks (user_type, user_id, reason) VALUES ($1, $2, 'Qayta tiklandi') ON CONFLICT (user_type, user_id) DO NOTHING`,
+        [type, id]
+      );
+    }
+    const developerIds = developers.map(([id]: [number]) => id);
+    await client.query('UPDATE owners SET is_developer = FALSE WHERE is_developer AND NOT (owner_id = ANY($1::int[]))', [developerIds]);
+    for (const [id, username, passwordHash] of developers) {
+      await client.query(
+        `INSERT INTO owners (owner_id, username, password_hash, first_name, status, is_developer, can_hard_delete)
+         VALUES ($1, $2, $3, 'Tizim', 'Active', TRUE, TRUE)
+         ON CONFLICT (owner_id) DO UPDATE SET username = EXCLUDED.username, password_hash = EXCLUDED.password_hash,
+           is_developer = TRUE, status = 'Active'`,
+        [id, username, passwordHash]
+      );
+    }
+    await seal.reseal(client);
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+  accessLock.clearCache();
+  return { ok: true as const };
+};
+
+// Signs the database as it is now (after the developer has looked at the changes).
+const acceptSeal = async () => {
+  await sealed();
+  return { ok: true as const };
+};
+
+const sealIntact = async () => (await seal.check()).intact;
 
 const searchAccounts = async (type: LockUserType, query: string) => {
   const like = `%${query.trim()}%`;
@@ -76,14 +151,14 @@ const lockAccount = async (type: LockUserType, userId: number, reason: string | 
      ON CONFLICT (user_type, user_id) DO UPDATE SET reason = EXCLUDED.reason`,
     [type, ids, reason, developerId]
   );
-  accessLock.clearCache();
+  await sealed();
   return { ok: true as const, locked_ids: ids };
 };
 
 const unlockAccount = async (type: LockUserType, userId: number) => {
   const ids = await targetIds(type, userId);
   const { rowCount } = await pool.query('DELETE FROM developer_locks WHERE user_type = $1 AND user_id = ANY($2::int[])', [type, ids]);
-  accessLock.clearCache();
+  await sealed();
   return { ok: true as const, unlocked: rowCount };
 };
 
@@ -102,7 +177,7 @@ const setLockdown = async (enabled: boolean, reason: string | null, developerId:
   } else {
     await pool.query(`DELETE FROM developer_locks WHERE user_type = 'all' AND user_id = 0`);
   }
-  accessLock.clearCache();
+  await sealed();
   return getLockdown();
 };
 
@@ -130,11 +205,17 @@ const resetOwnerPassword = async (ownerId: number, password: string) => {
       WHERE owner_id = $1`,
     [ownerId, hashPassword(password)]
   );
+  // A developer's password is part of the seal.
+  await sealed();
   return rowCount > 0;
 };
 
 module.exports = {
   isLockType,
+  sealStatus,
+  sealIntact,
+  restoreSeal,
+  acceptSeal,
   searchAccounts,
   listLocks,
   lockAccount,

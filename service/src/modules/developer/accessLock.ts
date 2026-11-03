@@ -1,26 +1,44 @@
 // Developer locks: accounts only the developer can lock and unlock, checked on every login and
 // every request (so a session already open stops too). ('all', 0) locks everyone but the developer.
-const pool = require('../../db/pool');
+const seal = require('./seal');
 
 export type LockUserType = 'owner' | 'superuser' | 'teacher' | 'student' | 'parent';
 const LOCK_USER_TYPES: LockUserType[] = ['owner', 'superuser', 'teacher', 'student', 'parent'];
 
 const CACHE_MS = 10_000;
-let cache: { at: number; keys: Set<string> } | null = null;
+const ERROR_CACHE_MS = 2_000;
+
+interface LockSnapshot {
+  keys: Set<string>;
+  /** Developer accounts in the signed copy: the only ones let through when the seal is broken. */
+  developerIds: Set<number>;
+  /** The database matches the signed copy; otherwise everyone else is locked out. */
+  intact: boolean;
+}
+
+let cache: { at: number; ttl: number; snapshot: LockSnapshot } | null = null;
 
 const keyOf = (userType: string, userId: number) => `${userType}:${Number(userId)}`;
 
-const loadLocks = async (): Promise<Set<string>> => {
-  if (cache && Date.now() - cache.at < CACHE_MS) return cache.keys;
+const loadLocks = async (): Promise<LockSnapshot> => {
+  if (cache && Date.now() - cache.at < cache.ttl) return cache.snapshot;
   try {
-    const { rows } = await pool.query('SELECT user_type, user_id FROM developer_locks');
-    cache = { at: Date.now(), keys: new Set(rows.map((row: any) => keyOf(row.user_type, row.user_id))) };
+    const result = await seal.check();
+    const snapshot: LockSnapshot = {
+      keys: new Set(result.current.locks.map(([type, id]: [string, number]) => keyOf(type, id))),
+      developerIds: new Set((result.trusted?.developers || []).map(([id]: [number]) => Number(id))),
+      intact: result.intact,
+    };
+    if (!snapshot.intact) console.error('Developer seal broken: the locks or developer accounts were changed outside the app.');
+    cache = { at: Date.now(), ttl: CACHE_MS, snapshot };
   } catch (error) {
-    // Before the migration has run there is nothing to enforce; keep serving.
+    // Unreadable lock data: closed in production (a dropped table must not open the system),
+    // open elsewhere so tests and local runs without these tables keep working.
     console.error('Developer lock check failed:', error);
-    cache = { at: Date.now(), keys: cache?.keys || new Set() };
+    const closed = process.env.NODE_ENV === 'production';
+    cache = { at: Date.now(), ttl: ERROR_CACHE_MS, snapshot: { keys: new Set(), developerIds: new Set(), intact: !closed } };
   }
-  return cache.keys;
+  return cache.snapshot;
 };
 
 const clearCache = () => {
@@ -41,12 +59,15 @@ type LockState = { locked: false } | { locked: true; code: 'ACCOUNT_LOCKED' | 'S
 const ACCOUNT_LOCKED: LockState = { locked: true, code: 'ACCOUNT_LOCKED', error: 'Hisobingiz bloklangan. Iltimos, ma\'muriyatga murojaat qiling.' };
 const SYSTEM_LOCKED: LockState = { locked: true, code: 'SYSTEM_LOCKED', error: 'Tizim vaqtincha yopilgan.' };
 
-// The developer is never locked out, neither one by one nor by the lock on everyone.
+// The developer is never locked out, neither one by one nor by the lock on everyone, as long as
+// the account is a developer in the signed copy (a developer flag set in the database is not enough).
 const lockStateFor = async (userType: LockUserType | null, userId: number, developer = false): Promise<LockState> => {
-  if (developer || !userType) return { locked: false };
-  const keys = await loadLocks();
-  if (keys.has(keyOf(userType, userId))) return ACCOUNT_LOCKED;
-  if (keys.has(keyOf('all', 0))) return SYSTEM_LOCKED;
+  if (!userType) return { locked: false };
+  const snapshot = await loadLocks();
+  if (developer && userType === 'owner' && snapshot.developerIds.has(Number(userId))) return { locked: false };
+  if (!snapshot.intact) return SYSTEM_LOCKED;
+  if (snapshot.keys.has(keyOf(userType, userId))) return ACCOUNT_LOCKED;
+  if (snapshot.keys.has(keyOf('all', 0))) return SYSTEM_LOCKED;
   return { locked: false };
 };
 

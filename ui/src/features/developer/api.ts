@@ -44,6 +44,17 @@ export interface DeveloperOwner {
   is_developer: boolean;
 }
 
+/** What was changed straight in the database since the developer's last change. */
+export interface SealStatus {
+  intact: boolean;
+  authentic: boolean;
+  locks_removed: string[];
+  locks_added: string[];
+  developers_added: number[];
+  developers_removed: number[];
+  developers_changed: number[];
+}
+
 // The developer account only; the server refuses everyone else.
 export const developerAPI = {
   accounts: (type: LockUserType, q: string) => apiClient.get('/developer/accounts', { params: { type, q } }),
@@ -54,5 +65,8 @@ export const developerAPI = {
   owners: () => apiClient.get('/developer/owners'),
   unlockOwner: (ownerId: number) => apiClient.post(`/developer/owners/${ownerId}/unlock`),
   resetOwnerPassword: (ownerId: number, password: string) => apiClient.post(`/developer/owners/${ownerId}/password`, { password }),
+  seal: () => apiClient.get('/developer/seal'),
+  restoreSeal: () => apiClient.post('/developer/seal/restore'),
+  acceptSeal: () => apiClient.post('/developer/seal/accept'),
   createOwner: (data: { username: string; password: string; first_name: string; last_name: string; email: string }) => ownerAPI.create(data),
 };

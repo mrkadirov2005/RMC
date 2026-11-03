@@ -130,14 +130,6 @@ export const OwnerLoginPage = () => {
             <h1 className="text-2xl font-bold tracking-tight text-slate-950">{t('Owner sign in')}</h1>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate('/owner/register')}
-            className="mb-5 text-xs font-medium text-slate-500 hover:text-slate-950"
-          >
-            {t('Create owner account with keyword')}
-          </button>
-
           {error && (
             <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
               <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>

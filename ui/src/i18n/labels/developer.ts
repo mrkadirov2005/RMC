@@ -39,4 +39,17 @@ export const developerLabels: Record<string, string> = {
   'The system is open': 'Tizim ochildi',
   'Owner added': "Ega qo'shildi",
   'Page not found': 'Sahifa topilmadi',
+  'Someone changed the locks or the developer account straight in the database':
+    "Kimdir bloklarni yoki dasturchi hisobini to'g'ridan-to'g'ri bazada o'zgartirgan",
+  'The system is closed for everyone but you until you restore your last state or accept the change.':
+    "Oxirgi holatingizni tiklamaguningizcha yoki o'zgarishni tasdiqlamaguningizcha tizim sizdan boshqa hamma uchun yopiq.",
+  'Locks removed': 'Olib tashlangan bloklar',
+  'Locks added': "Qo'shilgan bloklar",
+  'Owners made developer': 'Dasturchi qilingan egalar',
+  'Developer accounts removed': "O'chirilgan dasturchi hisoblari",
+  'Developer login or password changed': "Dasturchi logini yoki paroli o'zgartirilgan",
+  'Restore my last state': 'Oxirgi holatimni tiklash',
+  'Accept the change': "O'zgarishni tasdiqlash",
+  'Your last state is back': 'Oxirgi holatingiz tiklandi',
+  'The change is accepted': "O'zgarish tasdiqlandi",
 };

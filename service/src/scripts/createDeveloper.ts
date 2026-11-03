@@ -1,9 +1,12 @@
-// Creates the developer account, or makes an existing owner the developer. Run on the server:
+// Creates the developer account, or makes an existing owner the developer, then signs the locks and
+// developer accounts as they are (see modules/developer/seal.ts). Run on the server:
 //   docker exec -it crm_backend node dist/scripts/createDeveloper.js <username>
-// The password is asked for without echoing it, so it never lands in shell history.
+// The password is asked for without echoing it, so it never lands in shell history. This is also
+// the way back in when the seal itself was damaged: it shows what it is about to sign.
 const readline = require('node:readline');
 const pool = require('../db/pool');
 const { hashPassword } = require('../shared/password');
+const seal = require('../modules/developer/seal');
 
 const askHidden = (question: string): Promise<string> =>
   new Promise((resolve) => {
@@ -54,6 +57,9 @@ const main = async () => {
     );
     console.log(`Developer account "${username}" created. Sign in on the owner login page.`);
   }
+  const state = (await seal.check()).current;
+  console.log(`Signing: ${state.locks.length} lock(s)${state.locks.some(([type]: [string]) => type === 'all') ? ', the system closed for everyone' : ''}; developer accounts: ${state.developers.map(([, name]: [number, string]) => name).join(', ')}.`);
+  await seal.reseal();
   await pool.end?.();
 };
 

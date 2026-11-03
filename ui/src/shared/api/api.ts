@@ -673,14 +673,6 @@ export const superuserAPI = {
 export const ownerAPI = {
   login: (credentials: { username: string; password: string }) =>
     apiClient.post('/owners/auth/login', credentials),
-  register: (data: {
-    username: string;
-    email: string;
-    password: string;
-    first_name: string;
-    last_name: string;
-    invite_key: string;
-  }) => apiClient.post('/owners/auth/register', data),
   getAll: () => apiClient.get('/owners'),
   getById: (id: number) => apiClient.get(`/owners/${id}`),
   create: (data: any) => apiClient.post('/owners', data),
@@ -815,14 +807,6 @@ export const authAPI = {
     superuserAPI.login(credentials),
   loginOwner: (credentials: { username: string; password: string }) =>
     ownerAPI.login(credentials),
-  registerOwner: (data: {
-    username: string;
-    email: string;
-    password: string;
-    first_name: string;
-    last_name: string;
-    invite_key: string;
-  }) => ownerAPI.register(data),
   loginTeacher: (credentials: { username: string; password: string }) =>
     apiClient.post('/teachers/auth/login', credentials),
   loginTeacherPayment: (credentials: { username: string; password: string }) =>

@@ -2,7 +2,6 @@ jest.mock('../../services/owner.service', () => ({
   listOwners: jest.fn(),
   getOwner: jest.fn(),
   createOwner: jest.fn(),
-  registerOwner: jest.fn(),
   updateOwner: jest.fn(),
   deleteOwner: jest.fn(),
   authenticate: jest.fn(),
@@ -13,9 +12,18 @@ jest.mock('../../../../middleware/auth', () => ({
   generateToken: jest.fn(),
 }));
 
+jest.mock('../../repositories/owner.repository', () => ({
+  isDeveloper: jest.fn(async () => false),
+}));
+
+jest.mock('../../../developer/seal', () => ({
+  reseal: jest.fn(async () => undefined),
+}));
+
 const controller = require('../owner.controller');
 const ownerService = require('../../services/owner.service');
 const { generateToken } = require('../../../../middleware/auth');
+const ownerRepository = require('../../repositories/owner.repository');
 
 const createResponse = () => {
   const res = {};
@@ -152,62 +160,6 @@ describe('owners controller handlers', () => {
     });
   });
 
-  describe('register', () => {
-    const validBody = (overrides = {}) => ({
-      username: 'ada',
-      password: 'Str0ngPassword!',
-      email: 'ada@example.com',
-      first_name: 'Ada',
-      last_name: 'Lovelace',
-      invite_key: 'owner-create-2026',
-      ...overrides,
-    });
-
-    it('refuses a body that fails validation', async () => {
-      const res = createResponse();
-
-      await controller.register({ body: {} }, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(ownerService.registerOwner).not.toHaveBeenCalled();
-    });
-
-    it('refuses a username that is already taken', async () => {
-      const res = createResponse();
-      ownerService.registerOwner.mockResolvedValue({ error: 'username_taken' });
-
-      await controller.register({ body: validBody() }, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
-    });
-
-    it('signs the new owner in and returns no password fields', async () => {
-      const res = createResponse();
-      ownerService.registerOwner.mockResolvedValue({ row: ownerRow() });
-      generateToken.mockReturnValue('signed-token');
-
-      await controller.register({ body: validBody() }, res);
-
-      expect(generateToken).toHaveBeenCalledWith(expect.objectContaining({ role: 'owner', can_hard_delete: false }));
-      const body = res.json.mock.calls[0][0];
-      expect(body.token).toBe('signed-token');
-      expect(body.owner).not.toHaveProperty('password_hash');
-      expect(body.owner.can_hard_delete).toBe(false);
-      expect(res.status).toHaveBeenCalledWith(201);
-    });
-
-    it('reports a service failure as a 500', async () => {
-      const res = createResponse();
-      ownerService.registerOwner.mockRejectedValue(new Error('insert failed'));
-
-      await controller.register({ body: validBody() }, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: "Egani yaratib bo'lmadi", details: 'insert failed' });
-    });
-  });
-
   describe('updateOwner', () => {
     it('refuses a body that fails validation', async () => {
       const res = createResponse();
@@ -246,6 +198,22 @@ describe('owners controller handlers', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Egani yangilab bo'lmadi", details: 'conflict' });
+    });
+  });
+
+  describe('the developer account', () => {
+    it('cannot be edited or removed here', async () => {
+      ownerRepository.isDeveloper.mockResolvedValue(true);
+      const res = createResponse();
+
+      await controller.updateOwner({ params: { id: '9' }, body: { first_name: 'X' } }, res);
+      await controller.deleteOwner({ params: { id: '9' } }, res);
+
+      expect(res.status).toHaveBeenNthCalledWith(1, 409);
+      expect(res.status).toHaveBeenNthCalledWith(2, 409);
+      expect(ownerService.updateOwner).not.toHaveBeenCalled();
+      expect(ownerService.deleteOwner).not.toHaveBeenCalled();
+      ownerRepository.isDeveloper.mockResolvedValue(false);
     });
   });
 

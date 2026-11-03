@@ -86,6 +86,58 @@ const resetOwnerPassword = async (req: any, res: any) => {
   }
 };
 
-module.exports = { searchAccounts, listLocks, lockAccount, unlockAccount, setLockdown, listOwners, unlockOwnerPassword, resetOwnerPassword };
+// Changes are refused while the seal is broken: signing them would also sign what was changed
+// outside the app. The developer restores or accepts first.
+const requireIntactSeal = async (_req: any, res: any, next: any) => {
+  try {
+    if (await developerService.sealIntact()) return next();
+    res.status(409).json({ error: "Bloklar ilovadan tashqarida o'zgartirilgan. Avval tiklang yoki tasdiqlang.", code: 'SEAL_BROKEN' });
+  } catch (error) {
+    fail(res, error, "Muhrni tekshirib bo'lmadi");
+  }
+};
+
+const sealStatus = async (_req: any, res: any) => {
+  try {
+    res.json(await developerService.sealStatus());
+  } catch (error) {
+    fail(res, error, "Muhrni tekshirib bo'lmadi");
+  }
+};
+
+const restoreSeal = async (_req: any, res: any) => {
+  try {
+    const out = await developerService.restoreSeal();
+    if (out.error) {
+      return res.status(409).json({ error: "Muhr nusxasi buzilgan: serverda createDeveloper buyrug'ini ishga tushiring.", code: 'SEAL_NOT_AUTHENTIC' });
+    }
+    res.json(out);
+  } catch (error) {
+    fail(res, error, "Tiklab bo'lmadi");
+  }
+};
+
+const acceptSeal = async (_req: any, res: any) => {
+  try {
+    res.json(await developerService.acceptSeal());
+  } catch (error) {
+    fail(res, error, "Tasdiqlab bo'lmadi");
+  }
+};
+
+module.exports = {
+  searchAccounts,
+  listLocks,
+  lockAccount,
+  unlockAccount,
+  setLockdown,
+  listOwners,
+  unlockOwnerPassword,
+  resetOwnerPassword,
+  requireIntactSeal,
+  sealStatus,
+  restoreSeal,
+  acceptSeal,
+};
 
 export {};

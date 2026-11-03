@@ -2,7 +2,7 @@
 // after owner accounts. Owners never see this page or the developer account itself.
 
 import { useCallback, useEffect, useState } from 'react';
-import { KeyRound, Loader2, Lock, LockOpen, Plus, Power, Search, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, KeyRound, Loader2, Lock, LockOpen, Plus, Power, Search, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +15,7 @@ import { getApiPayload } from '@/shared/api/response';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAppSelector } from '../crm/hooks';
-import { developerAPI, type DeveloperAccount, type DeveloperLock, type DeveloperOwner, type LockUserType, type Lockdown } from './api';
+import { developerAPI, type DeveloperAccount, type DeveloperLock, type DeveloperOwner, type LockUserType, type Lockdown, type SealStatus } from './api';
 
 const TYPES: { id: LockUserType; label: string }[] = [
   { id: 'owner', label: 'Owners' },
@@ -63,6 +63,15 @@ const DeveloperPanel = () => {
   const [newPassword, setNewPassword] = useState('');
   const [addingOwner, setAddingOwner] = useState(false);
   const [ownerForm, setOwnerForm] = useState({ username: '', password: '', first_name: '', last_name: '', email: '' });
+  const [sealStatus, setSealStatus] = useState<SealStatus | null>(null);
+
+  const loadSeal = useCallback(async () => {
+    try {
+      setSealStatus(getApiPayload<SealStatus>(await developerAPI.seal()));
+    } catch {
+      // Shown by the API client.
+    }
+  }, []);
 
   const loadLocks = useCallback(async () => {
     try {
@@ -96,7 +105,8 @@ const DeveloperPanel = () => {
   useEffect(() => {
     void loadLocks();
     void loadOwners();
-  }, [loadLocks, loadOwners]);
+    void loadSeal();
+  }, [loadLocks, loadOwners, loadSeal]);
 
   // Search as you type, after a short pause.
   useEffect(() => {
@@ -104,7 +114,7 @@ const DeveloperPanel = () => {
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  const refresh = () => Promise.all([loadLocks(), loadOwners(), search()]);
+  const refresh = () => Promise.all([loadLocks(), loadOwners(), loadSeal(), search()]);
 
   const run = async (action: () => Promise<unknown>, done: string) => {
     setBusy(true);
@@ -152,6 +162,34 @@ const DeveloperPanel = () => {
   return (
     <div className="space-y-4">
       <PageHeader title={t('Developer')} description={t('Lock any account, close the whole system, and manage owner accounts. Only you see this page.')} />
+
+      {/* Changed outside the app: the system stays closed for everyone else until this is dealt with */}
+      {sealStatus && !sealStatus.intact && (
+        <section className="space-y-3 rounded-lg border-2 border-rose-500 bg-rose-50 p-4 text-rose-950 shadow-sm dark:bg-rose-950/40 dark:text-rose-100">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+            <div className="space-y-1">
+              <div className="font-bold">{t('Someone changed the locks or the developer account straight in the database')}</div>
+              <div className="text-sm">{t('The system is closed for everyone but you until you restore your last state or accept the change.')}</div>
+              <ul className="list-disc pl-5 text-sm">
+                {sealStatus.locks_removed.length > 0 && <li>{t('Locks removed')}: {sealStatus.locks_removed.join(', ')}</li>}
+                {sealStatus.locks_added.length > 0 && <li>{t('Locks added')}: {sealStatus.locks_added.join(', ')}</li>}
+                {sealStatus.developers_added.length > 0 && <li>{t('Owners made developer')}: ID {sealStatus.developers_added.join(', ')}</li>}
+                {sealStatus.developers_removed.length > 0 && <li>{t('Developer accounts removed')}: ID {sealStatus.developers_removed.join(', ')}</li>}
+                {sealStatus.developers_changed.length > 0 && <li>{t('Developer login or password changed')}: ID {sealStatus.developers_changed.join(', ')}</li>}
+              </ul>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button className="bg-rose-600 text-white hover:bg-rose-700" disabled={busy} onClick={() => void run(() => developerAPI.restoreSeal(), t('Your last state is back'))}>
+              {t('Restore my last state')}
+            </Button>
+            <Button variant="outline" disabled={busy} onClick={() => void run(() => developerAPI.acceptSeal(), t('The change is accepted'))}>
+              {t('Accept the change')}
+            </Button>
+          </div>
+        </section>
+      )}
 
       {/* Lock on everyone */}
       <section

@@ -161,7 +161,6 @@ async function createApp(options: CreateAppOptions = {}) {
   app.post('/api/teachers/auth/payment-login', authRateLimiter, validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherPaymentLogin);
   app.post('/api/superusers/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/superusers/controllers/superuser.controller').login);
   app.post('/api/owners/auth/login', authRateLimiter, require('./modules/owners/controllers/owner.controller').login);
-  app.post('/api/owners/auth/register', authRateLimiter, require('./modules/owners/controllers/owner.controller').register);
   app.post('/api/parents/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/parents').parentLogin);
 
   // @MOB-020 Mobile app API: public version check and sign-in/refresh/sign-out. The refresh
