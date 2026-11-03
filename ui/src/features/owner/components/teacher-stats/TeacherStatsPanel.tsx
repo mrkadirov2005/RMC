@@ -159,8 +159,11 @@ const buildTeacherAnalytics = (data: any[], collections: OwnerManagerStatisticsC
     if (classId && teacherId) classTeacherMap.set(classId, teacherId);
   });
   const teacherStudentMap = new Map<number, number>();
+  // By the teacher of the student's group, as the teacher's own profile counts them (the teacher
+  // written on a student record stays behind when the student changes group).
   collections.students.forEach((student) => {
-    const teacherId = Number(student?.teacher_id || classTeacherMap.get(Number(student?.class_id || 0)) || 0);
+    if (String(student?.status || '') === 'Transferred') return;
+    const teacherId = Number(classTeacherMap.get(Number(student?.class_id || 0)) || 0);
     if (teacherId) teacherStudentMap.set(teacherId, (teacherStudentMap.get(teacherId) || 0) + 1);
   });
 
