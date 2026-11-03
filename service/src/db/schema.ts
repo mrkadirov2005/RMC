@@ -104,6 +104,7 @@ const teacherSalaries = pgTable('teacher_salaries', {
   paymentMethod: varchar('payment_method', { length: 50 }),
   notes: text('notes'),
   expenseId: integer('expense_id'),
+  fromPayouts: boolean('from_payouts').default(false).notNull(),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 }, (table) => [
@@ -126,6 +127,7 @@ const teacherSalaryAdvances = pgTable('teacher_salary_advances', {
   givenByRole: varchar('given_by_role', { length: 50 }),
   givenByName: varchar('given_by_name', { length: 200 }),
   expenseId: integer('expense_id'),
+  kind: varchar('kind', { length: 16 }).default('advance').notNull(),
   createdAt: timestamp('created_at'),
 }, (table) => [
     index('idx_teacher_salary_advances_teacher_period').on(table.teacherId, table.salaryYear, table.salaryMonth),

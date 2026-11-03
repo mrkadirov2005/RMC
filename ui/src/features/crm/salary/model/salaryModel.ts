@@ -102,11 +102,19 @@ export const formatMonthKey = (key?: string | null): string => {
 export const formatAmount = (amount: number | string | null | undefined): string =>
   new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Number(amount) || 0);
 
-/** The advances, and the salary paid out on top of them (a paid salary's amount includes its advances). */
-export const payoutParts = (salary: { is_paid?: boolean; amount?: number | string } | null | undefined, advanceTotal?: number | string | null) => {
+/**
+ * The advances, and the salary paid out on top of them: the parts given with "Give salary", plus the
+ * rest of a salary typed in by hand (whose amount includes everything given).
+ */
+export const payoutParts = (
+  salary: { is_paid?: boolean; amount?: number | string } | null | undefined,
+  advanceTotal?: number | string | null,
+  salaryPaidTotal?: number | string | null
+) => {
   const advances = Number(advanceTotal) || 0;
-  const paidOut = salary?.is_paid ? Math.max(0, (Number(salary.amount) || 0) - advances) : 0;
-  return { advances, paidOut: Math.round(paidOut * 100) / 100 };
+  const parts = Number(salaryPaidTotal) || 0;
+  const rest = salary?.is_paid ? Math.max(0, (Number(salary.amount) || 0) - advances - parts) : 0;
+  return { advances, paidOut: Math.round((parts + rest) * 100) / 100 };
 };
 
 /** Received of the month's salary: all of it (green), part (blue) or nothing yet (red). */

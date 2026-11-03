@@ -20,6 +20,7 @@ const salarySelection = {
   payment_method: teacherSalaries.paymentMethod,
   notes: teacherSalaries.notes,
   expense_id: teacherSalaries.expenseId,
+  from_payouts: teacherSalaries.fromPayouts,
   created_at: teacherSalaries.createdAt,
   updated_at: teacherSalaries.updatedAt,
 };
@@ -36,6 +37,7 @@ const advanceSelection = {
   notes: teacherSalaryAdvances.notes,
   given_by_name: teacherSalaryAdvances.givenByName,
   given_by_role: teacherSalaryAdvances.givenByRole,
+  kind: teacherSalaryAdvances.kind,
 };
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
@@ -78,6 +80,8 @@ const upsertRecord = async (data: {
   markedByName?: string | null;
   paymentMethod?: string | null;
   notes?: string | null;
+  /** Kept in step with the month's payouts rather than typed in by hand. */
+  fromPayouts?: boolean;
 }) => {
   const rows = await db
     .insert(teacherSalaries)
@@ -95,6 +99,7 @@ const upsertRecord = async (data: {
       markedByName: data.markedByName ?? null,
       paymentMethod: data.paymentMethod ?? null,
       notes: data.notes ?? null,
+      fromPayouts: data.fromPayouts ?? false,
       createdAt: sql`CURRENT_TIMESTAMP`,
       updatedAt: sql`CURRENT_TIMESTAMP`,
     })
@@ -111,6 +116,7 @@ const upsertRecord = async (data: {
         markedByName: data.markedByName ?? null,
         paymentMethod: data.paymentMethod ?? null,
         notes: data.notes ?? null,
+        fromPayouts: data.fromPayouts ?? false,
         updatedAt: sql`CURRENT_TIMESTAMP`,
       },
     })
@@ -130,6 +136,7 @@ const updateRecord = async (
     markedByName?: string | null;
     paymentMethod?: string | null;
     notes?: string | null;
+    fromPayouts?: boolean;
   },
   centerId?: number
 ) => {
@@ -146,6 +153,7 @@ const updateRecord = async (
   if (patch.markedByName !== undefined) setValues.markedByName = patch.markedByName;
   if (patch.paymentMethod !== undefined) setValues.paymentMethod = patch.paymentMethod;
   if (patch.notes !== undefined) setValues.notes = patch.notes;
+  if (patch.fromPayouts !== undefined) setValues.fromPayouts = patch.fromPayouts;
 
   const rows = await db
     .update(teacherSalaries)
@@ -167,6 +175,7 @@ const insertAdvance = async (data: {
   givenById?: number | null;
   givenByRole?: string | null;
   givenByName?: string | null;
+  kind?: 'advance' | 'salary';
   expense: { expenseDate: string; paymentMethod: string; description: string };
 }) => {
   const [expense] = await db
@@ -206,6 +215,7 @@ const insertAdvanceRow = async (data: any, expenseId: number) => {
       givenByRole: data.givenByRole ?? null,
       givenByName: data.givenByName ?? null,
       expenseId,
+      kind: data.kind ?? 'advance',
       createdAt: sql`CURRENT_TIMESTAMP`,
     })
     .returning(advanceSelection);
@@ -245,6 +255,12 @@ const listAdvances = (teacherIds: number[], centerId?: number, period?: { year: 
 
 const sumAdvances = (rows: Array<{ amount?: unknown }>) =>
   Math.round(rows.reduce((total, row) => total + (Number(row.amount) || 0), 0) * 100) / 100;
+
+// The advances alone, and the salary paid out in parts, of a month's entries.
+const splitPayouts = (rows: Array<{ amount?: unknown; kind?: string | null }>) => ({
+  advance_total: sumAdvances(rows.filter((row) => (row.kind || 'advance') !== 'salary')),
+  salary_paid_total: sumAdvances(rows.filter((row) => row.kind === 'salary')),
+});
 
 // Keeps the kassa expense behind a paid salary in step with it: created on the first payout, updated
 // when the amount or method changes, and taken back out (amount 0) when the salary is un-marked.
@@ -402,7 +418,7 @@ const listTeacherOverview = async ({
   });
 
   return teacherRows.map((teacher: any) => ({
-    advance_total: sumAdvances(advancesByTeacher.get(Number(teacher.teacher_id)) || []),
+    ...splitPayouts(advancesByTeacher.get(Number(teacher.teacher_id)) || []),
     teacher_id: teacher.teacher_id,
     first_name: teacher.first_name,
     last_name: teacher.last_name,
@@ -449,7 +465,7 @@ const listHistoryForTeacher = async (teacherId: number, centerId: number | undef
       salary_year: period.year,
       salary_month: period.month,
       advances,
-      advance_total: sumAdvances(advances),
+      ...splitPayouts(advances),
       salary: salaryByPeriod.get(`${period.year}-${period.month}`) || null,
       student_stats: toStudentStats(statRows[0]),
     });
@@ -498,6 +514,13 @@ const findEarningPayments = async ({ centerId, teacherId, year, month }: { cente
     params
   );
   return result.rows;
+};
+
+const findTeacherRate = async (teacherId: number, centerId?: number) => {
+  const conditions = [eq(teachers.teacherId, teacherId)];
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
+  const [row] = await db.select({ salary_percentage: teachers.salaryPercentage }).from(teachers).where(and(...conditions)).limit(1);
+  return row ? row.salary_percentage : null;
 };
 
 // Raw rows behind a teacher's own per-group payment view for one month: their classes, the
@@ -624,10 +647,12 @@ module.exports = {
   monthlySummary,
   findTeacherGroupPaymentRows,
   findEarningPayments,
+  findTeacherRate,
   insertAdvance,
   deleteAdvance,
   listAdvances,
   sumAdvances,
+  splitPayouts,
   syncSalaryExpense,
 };
 

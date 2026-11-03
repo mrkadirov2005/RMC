@@ -56,7 +56,7 @@ interface SalaryListTabProps {
 }
 
 const rowFigures = (row: SalaryOverviewRow) => {
-  const { advances, paidOut } = payoutParts(row.salary, row.advance_total);
+  const { advances, paidOut } = payoutParts(row.salary, row.advance_total, row.salary_paid_total);
   const due = Number(row.earnings?.due) || 0;
   return { advances, paidOut, received: advances + paidOut, due };
 };

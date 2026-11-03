@@ -150,9 +150,14 @@ const addAdvance = async (req: any, res: any) => {
       notes: req.body.notes,
       centerId: centerId ?? undefined,
       actingUser: req.user,
+      kind: req.body.kind === 'salary' ? 'salary' : 'advance',
     });
     if (record?.error === 'invalid_method') {
       return res.status(400).json({ error: "Avans naqd, karta yoki bank orqali berilishi kerak." });
+    }
+    if (record?.error === 'over_limit') {
+      const left = Math.round(Number(record.left) || 0).toLocaleString('ru-RU');
+      return res.status(400).json({ error: `Maoshdan qolgan summa ${left} so'm; undan ko'p berib bo'lmaydi.`, left: record.left });
     }
     res.status(201).json(record);
   } catch (error: any) {
