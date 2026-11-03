@@ -93,4 +93,20 @@ describe('English level tests with PostgreSQL', () => {
     expect(result.is_passed).toBe(false);
     expect(Number(result.obtained_marks)).toBeLessThan(21);
   });
+
+  test('the analysis: totals, score spread and per-question right answers', async () => {
+    const testId = (await pool.query(`SELECT test_id FROM tests WHERE center_id = $1 AND test_data->'level_test'->>'level' = 'B1'`, [centerId])).rows[0].test_id;
+    const res = await api().get(`/api/tests/${testId}/analysis`).set(auth(teacher));
+    expect(res.status).toBe(200);
+    const { totals, distribution, questions } = res.body;
+    expect(totals).toMatchObject({ attempts: 2, students: 1, passed: 1, pass_rate: 50, waiting: 0 });
+    expect(distribution.reduce((sum, band) => sum + band.count, 0)).toBe(2);
+    expect(distribution[distribution.length - 1].count).toBe(1);
+    expect(questions).toHaveLength(30);
+    // Every question was right in the all-correct attempt; no question can be right more often than attempted.
+    questions.forEach((question) => {
+      expect(question.correct).toBeGreaterThanOrEqual(1);
+      expect(question.correct).toBeLessThanOrEqual(2);
+    });
+  });
 });

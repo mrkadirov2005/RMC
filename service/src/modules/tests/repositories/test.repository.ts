@@ -544,7 +544,18 @@ const findSubmissionById = async (id: number, centerId?: number) => {
 const findSubmissionsByTest = async (testId: number, centerId?: number) => {
   const conditions = [eq(testSubmissions.testId, Number(testId))];
   if (centerId) conditions.push(eq(testSubmissions.centerId, Number(centerId)));
-  return db.select(submissionSelection).from(testSubmissions).where(and(...conditions)).orderBy(desc(testSubmissions.createdAt));
+  // With who took it, for the test's results list.
+  return db
+    .select({
+      ...submissionSelection,
+      first_name: students.firstName,
+      last_name: students.lastName,
+      enrollment_number: students.enrollmentNumber,
+    })
+    .from(testSubmissions)
+    .leftJoin(students, eq(students.studentId, testSubmissions.studentId))
+    .where(and(...conditions))
+    .orderBy(desc(testSubmissions.createdAt));
 };
 
 const findSubmissionsByStudent = async (studentId: number, centerId?: number) => {

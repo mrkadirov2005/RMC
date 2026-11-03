@@ -339,7 +339,7 @@ const TestsPage = () => {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/tests/${test.test_id}/results`)}>
+                        <DropdownMenuItem onClick={() => navigate(`/tests/${test.test_id}?view=results`)}>
                           <BarChart3 className="mr-2 h-4 w-4" />
                           {t('View results')}
                         </DropdownMenuItem>

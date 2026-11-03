@@ -416,6 +416,8 @@ router_test.get('/student/:studentId/submissions', requireAuth, testController.g
  *         description: Test results and statistics
  */
 router_test.get('/:testId/results', requireAuth, requireRole('superuser', 'teacher'), testController.getTestResults);
+// How the test went: totals, score spread and the questions got wrong most (staff).
+router_test.get('/:testId/analysis', requireAuth, requireRole('superuser', 'teacher'), testController.getTestAnalysis);
 
 /**
  * @swagger
