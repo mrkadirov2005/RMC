@@ -18,6 +18,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Wallet,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +58,7 @@ import TeacherTestsView from './tests/TeacherTestsView';
 import CalendarPage from '../crm/calendar/CalendarPage';
 import OverallStatisticsTab from './components/OverallStatisticsTab';
 import TeacherProfileTab from './components/TeacherProfileTab';
+import TeacherPaymentsOverview from './payments/TeacherPaymentsOverview';
 import TeacherStatisticsTab from './statistics/TeacherStatisticsTab';
 import ConsolidationsOverviewPage from '../crm/consolidations/ConsolidationsOverviewPage';
 import { useThemeMode } from '../../theme/ThemeContext';
@@ -158,12 +160,13 @@ const TeacherPortal = () => {
     { value: 'overall', label: t('Overall'), icon: <ClipboardCopy className = " h-4 w-4" /> },
     { value: 'statistics', label: t('Statistics'), icon: <Star className="h-4 w-4" /> },
     { value: 'consolidations', label: t('Consolidations'), icon: <ClipboardCheck className="h-4 w-4" /> },
-    { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
-    { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
+    { value: 'classes', label: t('Classes'), icon: <GraduationCap className="h-4 w-4" /> },
+    { value: 'tests', label: t('Tests'), icon: <FileQuestion className="h-4 w-4" /> },
     { value: 'calendar', label: t('Calendar'), icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'attendance', label: t('Attendance'), icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'assignments', label: t('Assignments'), icon: <ClipboardList className="h-4 w-4" /> },
     { value: 'tasks', label: t('Tasks'), icon: <ClipboardCheck className="h-4 w-4" /> },
+    { value: 'payments', label: t('Payments'), icon: <Wallet className="h-4 w-4" /> },
     { value: 'profile', label: t('Profile'), icon: <UserRound className="h-4 w-4" /> },
      ];
 
@@ -341,6 +344,9 @@ const TeacherPortal = () => {
             </TabsContent>
             <TabsContent value="tasks">
               <TeacherTasksTab teacherId={user?.id} />
+            </TabsContent>
+            <TabsContent value="payments">
+              <TeacherPaymentsOverview />
             </TabsContent>
             <TabsContent value="profile">
               <TeacherProfileTab teacherId={user?.id} />

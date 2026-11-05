@@ -1709,7 +1709,7 @@ const translations: Record<string, string> = {
   'Apply coins from the final score.': "Yakuniy balldan coinlarni qo'llang.",
 
   // ── Tasks ───────────────────────────────────────────────────
-  'Tasks': 'Vazifalar',
+  'Tasks': 'Topshiriqlar',
   'Tasks from owner': 'Ega vazifalari',
   'Personal Tasks': 'Shaxsiy vazifalar',
   'Individual Tasks': 'Individual vazifalar',

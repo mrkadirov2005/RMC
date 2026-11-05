@@ -3,7 +3,7 @@ import { selectTeacherPortalUi } from '../../store/selectors';
 import { setTeacherPortalTabValue } from '../../slices/pagesUiSlice';
 import { useUrlTab } from '@/shared/hooks/useUrlTab';
 
-export const TEACHER_PORTAL_TABS = ['overall', 'statistics', 'consolidations', 'classes', 'tests', 'calendar', 'attendance', 'assignments', 'tasks', 'profile'] as const;
+export const TEACHER_PORTAL_TABS = ['overall', 'statistics', 'consolidations', 'classes', 'tests', 'calendar', 'attendance', 'assignments', 'tasks', 'payments', 'profile'] as const;
 type TeacherPortalTab = (typeof TEACHER_PORTAL_TABS)[number];
 
 /**
