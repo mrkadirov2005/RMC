@@ -97,4 +97,9 @@ export const salaryLabels: Record<string, string> = {
   'Nothing is left of the salary by pay rate.': "Stavka bo'yicha maoshdan hech narsa qolmagan.",
   'Salary payment saved': 'Maosh berildi',
   'Received by teacher': "O'qituvchi olgan",
+  'Pay rate': 'Stavka',
+  '{rate} rate': 'Stavka {rate}',
+  'Teacher earns': "O'qituvchi oladi",
+  'Center keeps': 'Markazga qoladi',
+  'Teacher share ({percent}%)': "O'qituvchi ulushi ({percent}%)",
 };

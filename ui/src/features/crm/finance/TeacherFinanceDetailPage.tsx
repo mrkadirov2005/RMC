@@ -1,298 +1,151 @@
-// Page component for the finance screen in the crm feature.
+// Hisobotlar → Moliya → one teacher: a month of their groups' money with the teacher's own pay rate.
+// What the students should pay and paid, the teacher's earnings at their rate (each teacher's differs),
+// and what stays with the center. The figures come from the same calculation as the salary page.
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Building2, Calendar, DollarSign, Loader2, Percent, PiggyBank, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAppDispatch } from '../hooks/useAppDispatch';
-import { useAppSelector } from '../hooks/useAppSelector';
-import { fetchClasses as fetchClassesThunk } from '@/slices/classesSlice';
-import { fetchStudents as fetchStudentsThunk } from '@/slices/studentsSlice';
-import { fetchPayments as fetchPaymentsThunk } from '@/slices/paymentsSlice';
-import { fetchTeachers as fetchTeachersThunk } from '@/slices/teachersSlice';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { salaryAPI } from '@/shared/api/api';
+import { getCenterMonthKey } from '@/shared/billingPeriod';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { fetchTeachers } from '@/slices/teachersSlice';
+import { GroupCard } from '@/features/teacher/payments/TeacherPaymentsOverview';
+import { LatePaymentsSection } from '@/features/teacher/payments/LatePaymentsSection';
+import type { TeacherGroupPayments } from '@/features/teacher/payments/types';
 
-interface Class {
-  class_id?: number;
-  id?: number;
-  class_name: string;
-  payment_amount: number;
-  teacher_id: number;
-}
+const Tile = ({ icon: Icon, label, value, hint, tone }: { icon: typeof DollarSign; label: string; value: string; hint?: string; tone: string }) => (
+  <div className="rounded-xl border bg-card p-3 shadow-sm">
+    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+      <span className={cn('flex h-7 w-7 items-center justify-center rounded-md', tone)}>
+        <Icon className="h-3.5 w-3.5" />
+      </span>
+      {label}
+    </div>
+    <div className="mt-2 text-lg font-black tabular-nums">{value}</div>
+    {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
+  </div>
+);
 
-interface Student {
-  student_id?: number;
-  id?: number;
-  first_name: string;
-  last_name: string;
-  enrollment_number: string;
-  class_id: number;
-  start_date?: string | null;
-  end_date?: string | null;
-}
-
-interface Payment {
-  payment_id?: number;
-  id?: number;
-  student_id: number;
-  center_id?: number;
-  amount: number;
-  payment_date: string;
-  payment_status?: string;
-  currency?: string;
-  payment_method?: string;
-  transaction_reference?: string;
-  receipt_number?: string;
-  payment_type?: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Renders the teacher finance detail page screen.
 const TeacherFinanceDetailPage: React.FC = () => {
   const { t } = useLanguage();
-  const { teacherId } = useParams();
   const navigate = useNavigate();
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
-
   const dispatch = useAppDispatch();
-  const teachers = useAppSelector((state) => state.teachers.items) as Array<{
-    teacher_id?: number;
-    id?: number;
-    first_name?: string;
-    last_name?: string;
-  }>;
-  const isLoadingTeachers = useAppSelector((state) => state.teachers.loading);
-  const classes = useAppSelector((state) => state.classes.items) as Class[];
-  const isLoadingClasses = useAppSelector((state) => state.classes.loading);
-  const students = useAppSelector((state) => state.students.items) as Student[];
-  const isLoadingStudents = useAppSelector((state) => state.students.loading);
-  const payments = useAppSelector((state) => state.payments.items) as Payment[];
-  const isLoadingPayments = useAppSelector((state) => state.payments.loading);
+  const teacherId = Number(useParams().teacherId);
+  const [month, setMonth] = useState(() => getCenterMonthKey());
+  const [state, setState] = useState<{ key: string; data: TeacherGroupPayments | null; failed: boolean } | null>(null);
+  const teachers = useAppSelector((root) => root.teachers.items) as Array<{ teacher_id?: number; id?: number; first_name?: string; last_name?: string }>;
+  const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === teacherId);
 
-// Memoizes the teacher derived value.
-  const teacher = useMemo(
-    () => teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId)) || null,
-    [teacherId, teachers]
-  );
-
-// Runs side effects for this component.
   useEffect(() => {
-    if (teacherId) {
-      dispatch(fetchTeachersThunk());
-      dispatch(fetchClassesThunk());
-      dispatch(fetchStudentsThunk());
-      dispatch(fetchPaymentsThunk());
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teacherId]);
+    if (!teachers.length) dispatch(fetchTeachers());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
-  // Filter classes taught by this teacher
-  const teacherClasses = useMemo(() => {
-    return classes.filter((c: Class) => c.teacher_id === Number(teacherId));
-  }, [classes, teacherId]);
-
-  // Calculate payment data
-  const paymentData = useMemo(() => {
-    const [year, month] = selectedMonth.split('-');
-    const monthNum = parseInt(month);
-    const yearNum = parseInt(year);
-
-    const classPayments: Record<string, any> = {};
-    let totalEarnings = 0;
-
-    teacherClasses.forEach((cls: Class) => {
-      const classId = cls.class_id || cls.id || 0;
-      const classStudents = students.filter((s: Student) => s.class_id === classId);
-      
-      const studentPayments: any[] = [];
-      let classEarnings = 0;
-
-      classStudents.forEach((student: Student) => {
-        const studentId = student.student_id || student.id;
-        const studentPaymentRecords = payments.filter((p: Payment) => {
-          const pId = p.student_id === studentId;
-          if (!pId) return false;
-          
-          // Parse payment_date to extract month and year
-          if (p.payment_date) {
-            const paymentDate = new Date(p.payment_date);
-            const paymentMonth = paymentDate.getMonth() + 1; // getMonth returns 0-11
-            const paymentYear = paymentDate.getFullYear();
-            return paymentMonth === monthNum && paymentYear === yearNum;
-          }
-          return false;
-        });
-
-        const isPaid = studentPaymentRecords.length > 0;
-        const paidAmount = studentPaymentRecords.reduce((sum: number, p: Payment) => sum + (p.amount || 0), 0);
-
-        if (isPaid) {
-          classEarnings += paidAmount;
-          totalEarnings += paidAmount;
-        }
-
-        studentPayments.push({
-          student,
-          isPaid,
-          paidAmount,
-          expectedAmount: getExpectedAmountForMonth(student, cls.payment_amount, selectedMonth),
-          records: studentPaymentRecords,
-        });
+  const key = `${teacherId}:${month}`;
+  useEffect(() => {
+    if (!teacherId) return;
+    let cancelled = false;
+    salaryAPI
+      .getTeacherPayments(teacherId, { month })
+      .then((response) => {
+        if (!cancelled) setState({ key, data: response?.data ?? null, failed: false });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ key, data: null, failed: true });
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [teacherId, month, key]);
 
-      classPayments[classId] = {
-        class: cls,
-        students: studentPayments,
-        classEarnings,
-        totalStudents: classStudents.length,
-        paidCount: studentPayments.filter((sp) => sp.isPaid).length,
-        outstanding: studentPayments.filter((sp) => !sp.isPaid).reduce((sum, sp) => sum + sp.expectedAmount, 0),
-      };
-    });
-
-    return { classPayments, totalEarnings };
-  }, [selectedMonth, teacherClasses, students, payments]);
-
-  if (isLoadingTeachers || isLoadingClasses || isLoadingStudents || isLoadingPayments) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const current = state?.key === key ? state : null;
+  const data = current?.data ?? null;
+  const totals = data?.totals;
+  const earnings = data?.earnings;
+  const rate = earnings?.rate ?? data?.salary_percentage ?? 0;
+  const teacherEarns = earnings?.due ?? totals?.current_salary ?? 0;
+  const centerKeeps = Math.max(0, (earnings?.base_amount ?? totals?.collected ?? 0) - teacherEarns);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/finance')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <DollarSign className="h-8 w-8 text-green-600" />
-          {teacher?.first_name} {teacher?.last_name} {t('- Finance')}
-        </h1>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/finance')} aria-label={t('Back')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-bold">
+              <DollarSign className="h-7 w-7 text-green-600" />
+              {teacher ? `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() : t('Teacher')} {t('- Finance')}
+            </h1>
+            {data && (
+              <p className="text-sm text-muted-foreground">{rate > 0 ? t('{rate}% rate', { rate }) : t('No pay rate set')}</p>
+            )}
+          </div>
+        </div>
+        <div className="relative">
+          <Input type="month" value={month} onChange={(event) => event.target.value && setMonth(event.target.value)} className="w-[180px] pl-9" aria-label={t('Month')} />
+          <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        </div>
       </div>
 
-      {/* Month Selector */}
-      <div className="flex gap-4">
-        <input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-4 py-2 border rounded-lg bg-white dark:bg-slate-950 text-black dark:text-white border-gray-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
+      {!current ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : current.failed || !data || !totals ? (
+        <div className="py-12 text-center text-sm text-muted-foreground">{t('Could not load payment statistics.')}</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Tile
+              icon={TrendingUp}
+              label={t('Collected')}
+              value={formatMoney(totals.collected)}
+              hint={`${totals.collected_percent}% · ${formatMoney(totals.collected)} / ${formatMoney(totals.expected)}`}
+              tone="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+            />
+            <Tile
+              icon={Percent}
+              label={t('Teacher earns')}
+              value={formatMoney(teacherEarns)}
+              hint={rate > 0 ? t('{rate}% of {amount}', { rate, amount: formatMoney(earnings?.base_amount ?? totals.collected) }) : t('No pay rate set')}
+              tone="bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+            />
+            <Tile
+              icon={Building2}
+              label={t('Center keeps')}
+              value={formatMoney(centerKeeps)}
+              hint={t('{rate}% of {amount}', { rate: Math.max(0, 100 - rate), amount: formatMoney(earnings?.base_amount ?? totals.collected) })}
+              tone="bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+            />
+            <Tile
+              icon={PiggyBank}
+              label={t('Outstanding')}
+              value={formatMoney(totals.remaining)}
+              hint={t('{count} students have not paid in full', { count: String(totals.partial_students + totals.unpaid_students) })}
+              tone="bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
+            />
+          </div>
 
-      {/* Total Earnings Card */}
-      <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-        <CardHeader>
-          <CardTitle className="text-green-700 dark:text-green-400">{t('Total Earnings This Month')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold text-green-600 dark:text-green-400">
-            {/* {Number(paymentData.totalEarnings.split(".")[0])} */}
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            {t('Across {count} classes', { count: Object.keys(paymentData.classPayments).length })}
-          </p>
-        </CardContent>
-      </Card>
+          {earnings && earnings.late_payments.length > 0 && <LatePaymentsSection earnings={earnings} />}
 
-      {/* Classes and Payments */}
-      <Tabs defaultValue={Object.keys(paymentData.classPayments)[0]} className="w-full">
-        <TabsList className="w-full justify-start">
-          {Object.entries(paymentData.classPayments).map(([classId, data]) => (
-            <TabsTrigger key={classId} value={classId}>
-              {data.class.class_name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {Object.entries(paymentData.classPayments).map(([classId, classData]) => (
-          <TabsContent key={classId} value={classId} className="space-y-4">
-            {/* Class Summary */}
-            <div className="grid grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">{t('Class Earnings')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {formatMoney(classData.classEarnings)}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">{t('Paid Students')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {classData.paidCount}/{classData.totalStudents}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">{t('Outstanding')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {formatMoney(classData.outstanding)}
-                  </p>
-                </CardContent>
-              </Card>
+          {data.groups.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('No classes assigned yet')}</div>
+          ) : (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {data.groups.map((group) => (
+                <GroupCard key={group.class_id} group={group} sharePercent={rate} ownView={false} />
+              ))}
             </div>
-
-            {/* Students List */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="dark:text-white">{t('Student Payments')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {classData.students.map((studentPayment: any) => (
-                    <div
-                      key={studentPayment.student.student_id || studentPayment.student.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 border-gray-200 dark:border-slate-700"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium text-black dark:text-white">
-                          {studentPayment.student.first_name} {studentPayment.student.last_name}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {studentPayment.student.enrollment_number}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatMoney(studentPayment.expectedAmount)}</p>
-                        {studentPayment.isPaid ? (
-                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm">
-                            <CheckCircle className="h-4 w-4" />
-                            {t('Paid:')} {formatMoney(studentPayment.paidAmount)}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-sm">
-                            <XCircle className="h-4 w-4" />
-                            {t('Not Paid')}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
+          )}
+        </>
+      )}
     </div>
   );
 };

@@ -21,7 +21,15 @@ interface Teacher {
   email?: string;
   phone?: string;
   username?: string;
+  /** The teacher's pay rate: their % of what their students pay. Set per teacher by the owner. */
+  salary_percentage?: number | string | null;
 }
+
+/** "50%", or nothing when the owner has not set a rate. */
+const rateOf = (teacher: Teacher) => {
+  const rate = Number(teacher.salary_percentage);
+  return teacher.salary_percentage != null && Number.isFinite(rate) && rate > 0 ? `${rate}%` : null;
+};
 
 // Renders the finance page screen.
 const FinancePage: React.FC = () => {
@@ -98,6 +106,7 @@ const FinancePage: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>{t('Teacher')}</TableHead>
+                <TableHead>{t('Pay rate')}</TableHead>
                 <TableHead className="text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -105,6 +114,9 @@ const FinancePage: React.FC = () => {
               {paginatedTeachers.items.map((teacher: Teacher) => (
                 <TableRow key={teacher.teacher_id || teacher.id}>
                   <TableCell className="font-medium">{teacher.first_name} {teacher.last_name}</TableCell>
+                  <TableCell className="tabular-nums">
+                    {rateOf(teacher) ? <span className="font-bold">{rateOf(teacher)}</span> : <span className="text-xs text-muted-foreground">{t('No pay rate set')}</span>}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}>
                       {t('View Finance Details')}
@@ -124,6 +136,7 @@ const FinancePage: React.FC = () => {
                   <Folder className="h-8 w-8 shrink-0 text-green-600" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
+                    <p className="text-xs text-muted-foreground">{rateOf(teacher) ? t('{rate} rate', { rate: rateOf(teacher) || '' }) : t('No pay rate set')}</p>
                     <p className="sr-only">{teacher.email || teacher.phone || 'Finance details'}</p>
                   </div>
                 </div>
@@ -144,6 +157,7 @@ const FinancePage: React.FC = () => {
                   <h3 className="text-lg font-semibold dark:text-white">
                     {teacher.first_name} {teacher.last_name}
                   </h3>
+                  <p className="text-sm text-muted-foreground">{rateOf(teacher) ? t('{rate} rate', { rate: rateOf(teacher) || '' }) : t('No pay rate set')}</p>
                 </div>
                 <Button
                   onClick={(e) => {

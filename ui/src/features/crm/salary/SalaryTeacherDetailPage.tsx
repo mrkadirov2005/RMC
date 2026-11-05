@@ -255,7 +255,7 @@ const SalaryTeacherDetailPage = () => {
             ) : (
               <div className="grid gap-3 lg:grid-cols-2">
                 {data.groups.map((group) => (
-                  <GroupCard key={group.class_id} group={group} sharePercent={earnings.rate} />
+                  <GroupCard key={group.class_id} group={group} sharePercent={earnings.rate} ownView={false} />
                 ))}
               </div>
             )}

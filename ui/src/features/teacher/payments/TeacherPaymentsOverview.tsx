@@ -48,7 +48,16 @@ const StatTile = ({
 );
 
 /** One group's month: what came in of what is expected; opens to the students. */
-export const GroupCard = ({ group, sharePercent }: { group: GroupPayment; sharePercent: number }) => {
+export const GroupCard = ({
+  group,
+  sharePercent,
+  ownView = true,
+}: {
+  group: GroupPayment;
+  sharePercent: number;
+  /** The teacher looking at their own groups ("My share"); false on the center's pages ("Teacher share"). */
+  ownView?: boolean;
+}) => {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
@@ -86,7 +95,9 @@ export const GroupCard = ({ group, sharePercent }: { group: GroupPayment; shareP
             <div className="font-bold text-rose-600 dark:text-rose-400">{formatMoney(group.remaining)}</div>
           </div>
           <div>
-            <div className="text-muted-foreground">{t('My share ({percent}%)', { percent: String(sharePercent) })}</div>
+            <div className="text-muted-foreground">
+              {ownView ? t('My share ({percent}%)', { percent: String(sharePercent) }) : t('Teacher share ({percent}%)', { percent: String(sharePercent) })}
+            </div>
             <div className="font-bold">{formatMoney(group.teacher_share)}</div>
           </div>
         </div>
