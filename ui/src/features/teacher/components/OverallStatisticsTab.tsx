@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, TrendingUp, Users } from 'lucide-react';
+import { AlertTriangle, BarChart3, BookOpen, CalendarCheck2, CheckCircle2, CircleDollarSign, TrendingUp, Users } from 'lucide-react';
 import { PieChart } from '@/shared/components/PieChart';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,9 @@ import { TelegramInboxPanel } from '../../crm/telegramBot/TelegramInboxPanel';
 import TeacherWarningsTab from './TeacherWarningsTab';
 import { TeacherGradingPanel } from '../../crm/lessonControl/components/TeacherGradingPanel';
 
-type SectionKey = 'students' | 'warnings' | 'attendance' | 'points' | 'payments';
+// 'lessons' opens first: students can see the teacher's screen, so no totals until a stats tab is picked.
+type SectionKey = 'lessons' | 'students' | 'warnings' | 'attendance' | 'points' | 'payments';
+type StatKey = Exclude<SectionKey, 'lessons' | 'warnings'>;
 interface OverallStatisticsTabProps {
   teacherId?: number;
   classes?: any[];
@@ -30,6 +32,13 @@ const palette = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6
 const toNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+// A lesson score as a percent: the server's percentage, else marks over total. Null when unscored.
+const gradePercent = (grade: any): number | null => {
+  if (grade?.percentage != null && Number.isFinite(Number(grade.percentage))) return Number(grade.percentage);
+  const total = toNumber(grade?.total_marks, 0);
+  return total > 0 ? (toNumber(grade?.marks_obtained, 0) / total) * 100 : null;
 };
 
 const getDisplayName = (item: any, fallback: string) => {
@@ -74,7 +83,7 @@ const OverallStatisticsTab = ({
 }: OverallStatisticsTabProps) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<SectionKey>('students');
+  const [activeSection, setActiveSection] = useState<SectionKey>('lessons');
   const [now, setNow] = useState(() => new Date());
   const [pickerLesson, setPickerLesson] = useState<typeof todayLessons[number] | null>(null);
   useEffect(() => {
@@ -204,14 +213,8 @@ const OverallStatisticsTab = ({
       const classGrades = teacherGrades.filter((grade) =>
         studentIds.has(Number(grade?.student_id ?? grade?.studentId ?? 0))
       );
-      const valid = classGrades.filter((grade) => toNumber(grade?.max_value, 0) > 0);
-      const average = valid.length > 0
-        ? valid.reduce((sum, grade) => {
-            const value = toNumber(grade?.grade_value, 0);
-            const max = toNumber(grade?.max_value, 0) || 100;
-            return sum + ((value / max) * 100);
-          }, 0) / valid.length
-        : 0;
+      const valid = classGrades.map(gradePercent).filter((value): value is number => value !== null);
+      const average = valid.length > 0 ? valid.reduce((sum, value) => sum + value, 0) / valid.length : 0;
 
       return {
         id: classId,
@@ -257,12 +260,8 @@ const OverallStatisticsTab = ({
   }).length;
   const overallAttendanceRate = totalAttendanceRecords > 0 ? (presentCount / totalAttendanceRecords) * 100 : 0;
 
-  const scoredGrades = teacherGrades.filter((grade) => toNumber(grade?.max_value, 0) > 0);
-  const totalScore = scoredGrades.reduce((sum, grade) => {
-    const value = toNumber(grade?.grade_value, 0);
-    const max = toNumber(grade?.max_value, 0) || 100;
-    return sum + ((value / max) * 100);
-  }, 0);
+  const scoredGrades = teacherGrades.map(gradePercent).filter((value): value is number => value !== null);
+  const totalScore = scoredGrades.reduce((sum, value) => sum + value, 0);
   const averageGrade = scoredGrades.length > 0 ? totalScore / scoredGrades.length : 0;
 
   const completedPaymentStudentIds = new Set(
@@ -282,7 +281,7 @@ const OverallStatisticsTab = ({
 
   const paymentRate = totalStudentsForPayments > 0 ? (completedPayments / totalStudentsForPayments) * 100 : 0;
 
-  const sectionMap: Record<SectionKey, { label: string; total: string; detail: string; data: { label: string; value: number; color: string }[]; icon: any }> = {
+  const sectionMap: Record<StatKey | 'warnings', { label: string; total: string; detail: string; data: { label: string; value: number; color: string }[]; icon: any }> = {
     students: {
       label: 'Students',
       total: `${teacherStudents.length}`,
@@ -320,8 +319,8 @@ const OverallStatisticsTab = ({
     },
   };
 
-  const selectedSection = sectionMap[activeSection];
-  const chartData = selectedSection.data.length > 0 ? selectedSection.data : [{ id: 0, label: 'No data', value: 1, color: '#cbd5e1' }];
+  const selectedSection = activeSection === 'lessons' ? null : sectionMap[activeSection];
+  const chartData = selectedSection && selectedSection.data.length > 0 ? selectedSection.data : [{ id: 0, label: 'No data', value: 1, color: '#cbd5e1' }];
   const [selectedGroup, setSelectedGroup] = useState<{ id: number; label: string } | null>(null);
   const [groupSearch, setGroupSearch] = useState('');
 
@@ -425,6 +424,7 @@ const OverallStatisticsTab = ({
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3 dark:border-white/10">
         {(
           [
+            { key: 'lessons', label: t("Today's lessons"), icon: BookOpen },
             { key: 'students', label: 'Student count', icon: Users },
             { key: 'warnings', label: 'Warnings', icon: AlertTriangle },
             { key: 'attendance', label: 'Attendance', icon: CalendarCheck2 },
@@ -457,8 +457,8 @@ const OverallStatisticsTab = ({
         />
       )}
 
-      {activeSection !== 'warnings' && <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]">
-        <div className="min-w-0 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-sky-50 p-4 dark:border-white/10 dark:from-slate-900/50 dark:via-slate-900/70 dark:to-slate-900">
+      {activeSection !== 'warnings' && <div className={`mt-5 grid grid-cols-1 gap-6 ${selectedSection ? 'xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]' : ''}`}>
+        {selectedSection && <div className="min-w-0 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-sky-50 p-4 dark:border-white/10 dark:from-slate-900/50 dark:via-slate-900/70 dark:to-slate-900">
           <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
             <span>{selectedSection.label}</span>
             <span className="rounded-full bg-slate-100 px-2 py-1 text-[0.625rem] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -497,7 +497,7 @@ const OverallStatisticsTab = ({
               </button>
             )) : <div className="text-sm text-muted-foreground">{t('No groups available.')}</div>}
           </div>
-        </div>
+        </div>}
 
         <div className="min-w-0 space-y-3">
           <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("Today's lessons")}</div>
@@ -601,13 +601,13 @@ const OverallStatisticsTab = ({
       </Dialog>
       </div>}
 
-      <div className="mt-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-900/40">
+      {selectedSection && <div className="mt-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-900/40">
         <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
           <BarChart3 className="h-4 w-4 text-blue-600" />
           {t('{name} overview', { name: selectedSection.label })}
         </div>
         <div className="text-sm font-black text-slate-900 dark:text-white">{selectedSection.total}</div>
-      </div>
+      </div>}
     </div>
     </div>
   );
