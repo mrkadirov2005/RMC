@@ -24,7 +24,7 @@ import {
 import type { SalaryOverviewRow } from '../types';
 import { PaymentLine, PayoutLine, STATUS_STYLE } from './SalaryPaymentLine';
 
-const COLUMNS = 'lg:grid-cols-[minmax(160px,1.2fr)_minmax(170px,1.4fr)_minmax(120px,0.9fr)_minmax(180px,1.4fr)_minmax(150px,1fr)_20px]';
+const COLUMNS = 'lg:grid-cols-[36px_minmax(160px,1.2fr)_minmax(170px,1.4fr)_minmax(120px,0.9fr)_minmax(180px,1.4fr)_minmax(150px,1fr)_20px]';
 
 const Tile = ({ label, value, detail, tone }: { label: string; value: string | number; detail?: string; tone?: string }) => (
   <div className="rounded-lg border bg-card px-3 py-2.5 shadow-sm">
@@ -116,6 +116,7 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
 
         {/* Column titles (wide screens; on a phone each row stacks). */}
         <div className={cn('hidden gap-4 border-b px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-wide text-muted-foreground lg:grid', COLUMNS)}>
+          <span>№</span>
           <span>{t('Teacher')}</span>
           <span>{t('Student payments')}</span>
           <span className="text-right">{t('Salary')}</span>
@@ -132,7 +133,7 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
           <p className="py-10 text-center text-sm text-muted-foreground">{search ? t('No teachers match your search') : t('No teachers found')}</p>
         ) : (
           <div className="divide-y">
-            {rows.map((row) => {
+            {rows.map((row, index) => {
               const figures = rowFigures(row);
               const style = STATUS_STYLE[payoutStatus(figures.received, figures.due)];
               const rate = Number(row.earnings?.rate ?? row.salary_percentage) || 0;
@@ -143,8 +144,13 @@ export const SalaryListTab = ({ year, month, allRows, rows, loading, search, onS
                   onClick={() => navigate(`/salary/${row.teacher_id}?month=${monthKey}`)}
                   className={cn('grid w-full grid-cols-2 items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors hover:bg-muted/40', COLUMNS)}
                 >
+                  {/* The row's place in the whole list, carried on across pages. */}
+                  <span className="hidden text-sm font-bold tabular-nums text-muted-foreground lg:block">{pagination.start + index + 1}</span>
                   <div className="col-span-2 min-w-0 lg:col-span-1">
-                    <div className="truncate font-semibold">{teacherFullName(row)}</div>
+                    <div className="truncate font-semibold">
+                      <span className="mr-1.5 tabular-nums text-muted-foreground lg:hidden">{pagination.start + index + 1}.</span>
+                      {teacherFullName(row)}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {t('{count} students', { count: row.payment_progress?.students ?? row.student_stats?.total_students ?? 0 })}
                     </div>
