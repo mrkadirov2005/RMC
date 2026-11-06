@@ -16,6 +16,7 @@ const {
   UpdateClassSessionDto,
 } = require('../dtos/request.dto');
 const classController=require('../modules/classes/controllers/class.controller');
+const classPriceController = require('../modules/classes/controllers/classPrice.controller');
 /**
  * @swagger
  * /classes:
@@ -133,6 +134,10 @@ router_class.post('/', requireAuth, validateBody(CreateClassDto), classControlle
  *         description: Class not found
  */
 router_class.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdateClassDto), classController.updateClass);
+
+// Group price history; "Change group payment" sets a new price from a month.
+router_class.get('/:id/price-history', requireAuth, validateParams(IdParamDto), classPriceController.getHistory);
+router_class.post('/:id/price-changes', requireAuth, validateParams(IdParamDto), classPriceController.changePrice);
 
 /**
  * @swagger

@@ -226,6 +226,11 @@ export const ClassDialogs = ({
                     <div className="space-y-1">
                       <Label htmlFor="payment_amount" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Payment Amount')} *</Label>
                       <Input id="payment_amount" type="number" required step="0.01" value={formData.payment_amount || ''} onChange={(e) => setFormData({ ...formData, payment_amount: Number(e.target.value) })} className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm focus-visible:ring-emerald-500 dark:border-input dark:bg-background" />
+                      {editingId && (
+                        <p className="text-[0.625rem] text-muted-foreground">
+                          {t('To change the price from a month, use "Change group payment" in Payments → Groups.')}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="payment_frequency" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Payment Frequency')}</Label>

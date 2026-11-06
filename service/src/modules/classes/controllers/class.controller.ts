@@ -76,6 +76,12 @@ const updateClass = async (req: any, res: any) => {
     if (row && row.error === 'bad_subject') {
       return res.status(400).json({ error: 'Bu markaz uchun yaratilgan mavjud fanni tanlang.' });
     }
+    if (row && row.error === 'price_has_history') {
+      return res.status(409).json({
+        error: "Guruh narxi to'lovlar bo'limidagi \"Guruh to'lovini o'zgartirish\" tugmasi orqali o'zgartiriladi.",
+        code: 'PRICE_HAS_HISTORY',
+      });
+    }
     if (!row) return res.status(404).json({ error: 'Guruh topilmadi' });
     res.json(row);
   } catch (error: any) {
