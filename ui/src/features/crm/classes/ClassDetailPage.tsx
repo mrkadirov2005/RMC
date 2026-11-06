@@ -28,6 +28,7 @@ import { studentsApi } from '../students/api/studentsApi';
 import { DeleteStudentDialog } from '../students/components/DeleteStudentDialog';
 import { getClassStudentId, removeClassStudentById } from './classStudentActions';
 import { LessonPickerDialog } from './components/LessonPickerDialog';
+import { GroupPaymentsTab } from './components/GroupPaymentsTab';
 import { buildSessionWorkflowPath, defaultLessonActions, getSessionId } from './lessonStart';
 
 // Overview rows that get an inline "Edit"/"Assign" button opening the full class editor.
@@ -45,7 +46,7 @@ const EDITABLE_OVERVIEW_FIELDS = new Set([
 
 const ClassDetailPage = () => {
   const { classId } = useParams<{ classId: string }>();
-  const [activeTab, setActiveTab] = useUrlTab<string>(DEFAULT_CLASS_DETAIL_TAB, ['overview', 'students', 'subjects', 'points', 'tests', 'sessions']);
+  const [activeTab, setActiveTab] = useUrlTab<string>(DEFAULT_CLASS_DETAIL_TAB, ['overview', 'students', 'subjects', 'points', 'tests', 'sessions', 'payments']);
   const navigate = useNavigate();
   const authUser = useAppSelector((state) => state.auth.user);
   const { classData, students, setStudents, subjects, sessions, setSessions, assignedTests, loading, error, refetch } = useClassDetailData(classId, authUser);
@@ -261,6 +262,7 @@ const ClassDetailPage = () => {
           <TabsTrigger value="points" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Points')}</TabsTrigger>
           <TabsTrigger value="tests" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Tests')}</TabsTrigger>
           <TabsTrigger value="sessions" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Sessions')}</TabsTrigger>
+          <TabsTrigger value="payments" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-teal-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Payments')}</TabsTrigger>
         </TabsList>
 
         <div className="p-3">
@@ -518,6 +520,18 @@ const ClassDetailPage = () => {
                 ))}
               </TableBody>
             </Table>
+          </TabsContent>
+
+          {/* The group's price, "Change group payment" (developer only) and the price history. */}
+          <TabsContent value="payments" className="mt-0">
+            {activeTab === 'payments' && classData && (
+              <GroupPaymentsTab
+                classId={Number(classData.class_id || classId)}
+                className={classData.class_name}
+                currentAmount={Number(classData.payment_amount || 0)}
+                onChanged={refetch}
+              />
+            )}
           </TabsContent>
         </div>
       </Tabs>
