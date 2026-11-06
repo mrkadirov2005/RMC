@@ -37,6 +37,8 @@ describe('group price history with PostgreSQL', () => {
   beforeAll(async () => {
     pool = require('../../../src/db/pool');
     await pool.query('TRUNCATE TABLE edu_centers, class_price_history, payments RESTART IDENTITY CASCADE');
+    // Wiping tables changes what the developer seal covers; sign it again, as the app would.
+    await require('../../../src/modules/developer/seal').reseal();
     centerId = (await pool.query(`INSERT INTO edu_centers (center_name, center_code) VALUES ('Price Center', 'PRICE-C') RETURNING center_id`)).rows[0].center_id;
     teacherId = (await pool.query(
       `INSERT INTO teachers (center_id, employee_id, first_name, last_name) VALUES ($1, 'PR-T', 'Temur', 'Aliyev') RETURNING teacher_id`, [centerId],

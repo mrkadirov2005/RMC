@@ -1,8 +1,32 @@
 // A group's price over time (class_price_history). Each month is billed at the price in effect
 // for it, so a new price only counts from the month it starts. classes.payment_amount stays the
 // price in effect this month, for everything that shows "the group's price".
-const { query, one, tx, tashkentDay } = require('../../appkit/kit');
+const pool = require('../../../db/pool');
 const { priceAtSql } = require('../classPriceSql');
+
+const query = (text: string, params: any[] = []) => pool.query(text, params).then((r: any) => r.rows);
+const one = (text: string, params: any[] = []) => query(text, params).then((rows: any[]) => rows[0] || null);
+
+// Runs work on one client inside BEGIN/COMMIT; the callback gets query/one bound to that client.
+const tx = async <T>(work: (q: { query: typeof query; one: typeof one }) => Promise<T>): Promise<T> => {
+  const client = await pool.connect();
+  const q = (text: string, params: any[] = []) => client.query(text, params).then((r: any) => r.rows);
+  const o = (text: string, params: any[] = []) => q(text, params).then((rows: any[]) => rows[0] || null);
+  try {
+    await client.query('BEGIN');
+    const result = await work({ query: q, one: o });
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+// Tashkent is UTC+5 all year: the month a price starts is Tashkent's month.
+const tashkentDay = (now = new Date()) => new Date(now.getTime() + 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 type Actor = { userType: string; id: number; name: string | null };
 
@@ -108,6 +132,16 @@ const syncCurrentPrices = () =>
     [thisMonth()]
   );
 
-module.exports = { priceAtSql, history, changePrice, hasHistory, syncCurrentPrices, thisMonth };
+// Checks every 10 minutes, so a planned price takes over soon after its month starts.
+const startPriceSync = () => {
+  if (process.env.NODE_ENV === 'test') return null;
+  const run = () => syncCurrentPrices().catch((error: any) => console.error('[class-prices] sync failed:', error?.message || error));
+  void run();
+  const timer = setInterval(run, 10 * 60 * 1000);
+  timer.unref?.();
+  return timer;
+};
+
+module.exports = { priceAtSql, history, changePrice, hasHistory, syncCurrentPrices, startPriceSync, thisMonth };
 
 export {};
