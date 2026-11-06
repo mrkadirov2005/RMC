@@ -64,4 +64,5 @@ export const paymentsLabels: Record<string, string> = {
   'Note': 'Izoh',
   'Before the first change': "Birinchi o'zgarishdan oldin",
   'To change the price from a month, use "Change group payment" in Payments → Groups.': "Narxni ma'lum oydan o'zgartirish uchun To'lovlar → Guruhlar bo'limidagi \"Guruh to'lovini o'zgartirish\" tugmasidan foydalaning.",
+  "Only the developer can change a group's price.": "Guruh narxini faqat dasturchi o'zgartira oladi.",
 };
