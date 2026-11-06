@@ -72,9 +72,20 @@ const updateClass = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
-    const row = await classService.updateClass(Number(req.params.id), req.body, centerId ?? undefined);
+    const row = await classService.updateClass(Number(req.params.id), req.body, centerId ?? undefined, {
+      isDeveloper: req.user?.userType === 'superuser' && req.user?.is_developer === true,
+    });
     if (row && row.error === 'bad_subject') {
       return res.status(400).json({ error: 'Bu markaz uchun yaratilgan mavjud fanni tanlang.' });
+    }
+    if (row && row.error === 'price_developer_only') {
+      return res.status(403).json({ error: "Guruh to'lovini faqat dasturchi o'zgartira oladi.", code: 'PRICE_DEVELOPER_ONLY' });
+    }
+    if (row && row.error === 'price_has_history') {
+      return res.status(409).json({
+        error: "Guruh narxi to'lovlar bo'limidagi \"Guruh to'lovini o'zgartirish\" tugmasi orqali o'zgartiriladi.",
+        code: 'PRICE_HAS_HISTORY',
+      });
     }
     if (!row) return res.status(404).json({ error: 'Guruh topilmadi' });
     res.json(row);

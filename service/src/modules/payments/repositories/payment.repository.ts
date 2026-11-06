@@ -2,6 +2,7 @@ const { and, desc, eq, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { classes, payments, students } = require('../../../db/schema');
 const { effectiveEndDateSql } = require('../../discounts/repositories/discount.repository');
+const { priceAtSql } = require('../../classes/classPriceSql');
 
 type PaymentListOptions = {
   centerId?: number;
@@ -270,6 +271,14 @@ const findStudentPaymentSummary = async (filters: {
                   ELSE ((m + interval '1 month')::date - s.start_date)::numeric / ((m + interval '1 month')::date - m::date)
                 END), 0)
                 FROM generate_series(date_trunc('month', $1::date), date_trunc('month', $2::date), interval '1 month') m), $3::int)::numeric AS billed_months,
+              -- What those months cost, each at the group's price in effect for that month.
+              (SELECT COALESCE(SUM(CASE
+                  WHEN s.start_date IS NULL OR s.start_date <= m::date THEN 1
+                  WHEN s.start_date >= (m + interval '1 month')::date THEN 0
+                  ELSE ((m + interval '1 month')::date - s.start_date)::numeric / ((m + interval '1 month')::date - m::date)
+                END * ${priceAtSql('s.class_id', 'm', 'c.payment_amount')}), 0)
+                FROM (SELECT m FROM generate_series(date_trunc('month', $1::date), date_trunc('month', $2::date), interval '1 month') m
+                      ORDER BY m LIMIT $3::int) months)::numeric AS billed_amount,
               CASE
                 WHEN sd.discount_type = 'percent' THEN LEAST(COALESCE(c.payment_amount, 0), COALESCE(c.payment_amount, 0) * LEAST(GREATEST(sd.value, 0), 100) / 100)
                 WHEN sd.value IS NOT NULL THEN LEAST(COALESCE(c.payment_amount, 0), GREATEST(sd.value, 0))
@@ -300,7 +309,7 @@ const findStudentPaymentSummary = async (filters: {
      ),
      owed AS (
        SELECT *,
-              ROUND(monthly_fee * billed_months, 2) AS expected_before_discount,
+              ROUND(billed_amount, 2) AS expected_before_discount,
               ROUND(serial_discount_per_month * GREATEST(billed_months - paid_months, 0), 2) AS pending_discount
        FROM base
      ),

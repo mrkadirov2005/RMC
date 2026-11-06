@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Loader2, RefreshCw, Search } from 'lucide-react';
+import { BookOpen, History, Loader2, Pencil, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,9 @@ import { coversExpectedAmount, getExpectedAmountForMonth } from '@/shared/billin
 import { classAPI, paymentAPI, studentAPI, teacherAPI } from '../api';
 import type { Class, Payment, Student, Teacher } from '../types';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAppSelector } from '@/features/crm/hooks';
+import { priceForMonth, priceHistoryAPI, type PriceHistory } from '../priceHistory';
+import { ChangeGroupPriceDialog } from './ChangeGroupPriceDialog';
 
 type MonthCellState = 'full' | 'partial' | 'none';
 
@@ -74,6 +77,14 @@ const getDotClass = (state: MonthCellState) => {
   return 'border-rose-500 bg-rose-500';
 };
 
+const formatMoney = (value: number) => `${Math.round(value).toLocaleString('ru-RU')} UZS`;
+
+const formatMonth = (monthKey: string) => {
+  if (monthKey <= '2000-01') return '';
+  const date = new Date(`${monthKey}-01T00:00:00`);
+  return Number.isNaN(date.getTime()) ? monthKey : date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+};
+
 const getStateTitle = (state: MonthCellState) => {
   if (state === 'full') return 'Fully done';
   if (state === 'partial') return 'Partly done';
@@ -82,6 +93,11 @@ const getStateTitle = (state: MonthCellState) => {
 
 export const PaymentGroupsMatrixTab = () => {
   const { t } = useLanguage();
+  // Only the developer account changes group prices; everyone else just sees the history.
+  const authUser = useAppSelector((state) => state.auth.user);
+  const isDeveloper = authUser?.userType === 'superuser' && authUser?.is_developer === true;
+  const [priceHistory, setPriceHistory] = useState<PriceHistory | null>(null);
+  const [priceDialogOpen, setPriceDialogOpen] = useState(false);
   const [groups, setGroups] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -132,12 +148,15 @@ export const PaymentGroupsMatrixTab = () => {
       const studentId = getStudentId(student);
       const payments = paymentsByStudent[studentId] || [];
       const states = months.reduce<Record<string, MonthCellState>>((acc, month) => {
-        acc[month.key] = getMonthState(payments, month.key, getExpectedAmountForMonth(student, expectedAmount, month.key));
+        // Each month at the group's price in effect for it, so a raise doesn't turn months paid at
+        // the old price orange.
+        const monthPrice = priceForMonth(priceHistory?.items, month.key, expectedAmount);
+        acc[month.key] = getMonthState(payments, month.key, getExpectedAmountForMonth(student, monthPrice, month.key));
         return acc;
       }, {});
       return { student, studentId, states };
     });
-  }, [expectedAmount, months, paymentsByStudent, students]);
+  }, [expectedAmount, months, paymentsByStudent, priceHistory, students]);
 
   const monthPercentages = useMemo(() => {
     if (rowStates.length === 0) {
@@ -171,6 +190,15 @@ export const PaymentGroupsMatrixTab = () => {
       setError('Could not load groups.');
     } finally {
       setGroupsLoading(false);
+    }
+  };
+
+  const loadPriceHistory = async (groupId: number) => {
+    try {
+      const response = await priceHistoryAPI.get(groupId);
+      setPriceHistory(response.data);
+    } catch {
+      setPriceHistory(null);
     }
   };
 
@@ -214,6 +242,8 @@ export const PaymentGroupsMatrixTab = () => {
 
   useEffect(() => {
     if (selectedGroupId) {
+      setPriceHistory(null);
+      loadPriceHistory(selectedGroupId);
       loadGroupStudents(selectedGroupId);
     }
   }, [selectedGroupId]);
@@ -318,10 +348,18 @@ export const PaymentGroupsMatrixTab = () => {
                 {selectedGroup?.class_name || 'Choose a group'}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {selectedGroup ? `${students.length} students / expected ${expectedAmount || 0} UZS` : t('Select a group to see monthly payment status')}
+                {selectedGroup
+                  ? t('{count} students · price {amount} a month', { count: students.length, amount: formatMoney(expectedAmount || 0) })
+                  : t('Select a group to see monthly payment status')}
               </p>
             </div>
             <div className="flex flex-wrap items-end gap-3">
+              {selectedGroup && isDeveloper && (
+                <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setPriceDialogOpen(true)}>
+                  <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                  {t('Change group payment')}
+                </Button>
+              )}
               <div className="space-y-1">
                 <label htmlFor="group-payment-month" className="block text-[0.6875rem] font-semibold text-muted-foreground">
                   {t('Select month')}
@@ -417,8 +455,72 @@ export const PaymentGroupsMatrixTab = () => {
               </Table>
             </div>
           )}
+
+          {selectedGroup && (
+            <div className="space-y-2 rounded-md border border-slate-200/80 p-3 dark:border-border">
+              <h3 className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-foreground">
+                <History className="h-3.5 w-3.5" />
+                {t('Price history')}
+              </h3>
+              {!priceHistory || priceHistory.items.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {t('The price has not been changed yet. Every month is billed at {amount}.', { amount: formatMoney(expectedAmount || 0) })}
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[640px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">{t('From month')}</TableHead>
+                        <TableHead className="text-xs">{t('Price')}</TableHead>
+                        <TableHead className="text-xs">{t('Previous price')}</TableHead>
+                        <TableHead className="text-xs">{t('Changed by')}</TableHead>
+                        <TableHead className="text-xs">{t('Note')}</TableHead>
+                        <TableHead className="text-xs">{t('Saved')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {priceHistory.items.map((entry) => (
+                        <TableRow key={entry.history_id}>
+                          <TableCell className="text-xs font-semibold">
+                            {entry.source === 'initial' ? t('Before the first change') : formatMonth(entry.effective_from)}
+                          </TableCell>
+                          <TableCell className="text-xs font-bold">{formatMoney(entry.amount)}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {entry.previous_amount == null ? '—' : formatMoney(entry.previous_amount)}
+                          </TableCell>
+                          <TableCell className="text-xs">{entry.changed_by_name || '—'}</TableCell>
+                          <TableCell className="max-w-[220px] truncate text-xs" title={entry.note || ''}>
+                            {entry.source === 'initial' ? '—' : entry.note || '—'}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {entry.source === 'initial' ? '—' : new Date(entry.created_at).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {selectedGroup && isDeveloper && (
+        <ChangeGroupPriceDialog
+          open={priceDialogOpen}
+          onOpenChange={setPriceDialogOpen}
+          classId={getClassId(selectedGroup)}
+          className={selectedGroup.class_name}
+          currentAmount={expectedAmount}
+          onChanged={() => {
+            const groupId = getClassId(selectedGroup);
+            void loadPriceHistory(groupId);
+            void loadGroups();
+          }}
+        />
+      )}
     </div>
   );
 };
