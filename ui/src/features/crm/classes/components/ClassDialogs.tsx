@@ -83,7 +83,7 @@ const GroupPriceInput = ({ value, editing, onChange, t }: {
       {editing && (
         <p className="text-[0.625rem] text-muted-foreground">
           {isDeveloper
-            ? t('To change the price from a month, use "Change group payment" in Payments → Groups.')
+            ? t('To change the price from a month, use "Change group payment" in the group\'s Payments tab.')
             : t("Only the developer can change a group's price.")}
         </p>
       )}
