@@ -1,4 +1,5 @@
 const pool = require('../../../db/pool');
+const { priceAtSql } = require('../../classes/classPriceSql');
 
 export type SmsRow = {
   centerId: number | null;
@@ -71,6 +72,10 @@ const findPaymentFigures = async ({ studentIds, centerId, from, to, months }: {
        SELECT s.student_id, s.center_id, ec.center_name, s.first_name, s.last_name, s.phone, s.parent_phone,
               s.class_id, c.class_name,
               COALESCE(c.payment_amount, 0)::numeric AS monthly_fee,
+              -- The months asked about, each at the group's price in effect for that month.
+              (SELECT COALESCE(SUM(${priceAtSql('s.class_id', 'm', 'c.payment_amount')}), 0)
+                 FROM (SELECT m FROM generate_series(date_trunc('month', $1::date), date_trunc('month', $2::date), interval '1 month') m
+                       ORDER BY m LIMIT $3::int) months)::numeric AS billed_amount,
               COALESCE(p.paid, 0)::numeric AS paid_amount,
               COALESCE(p.discounts, 0)::numeric AS discount_applied,
               COALESCE(p.paid_months, 0)::int AS paid_months,
@@ -105,7 +110,7 @@ const findPaymentFigures = async ({ studentIds, centerId, from, to, months }: {
      )
      SELECT student_id, center_id, center_name, first_name, last_name, phone, parent_phone, class_id, class_name,
             paid_amount,
-            GREATEST(monthly_fee * $3::int - discount_applied - serial_discount_per_month * GREATEST($3::int - paid_months, 0), 0) AS expected
+            GREATEST(billed_amount - discount_applied - serial_discount_per_month * GREATEST($3::int - paid_months, 0), 0) AS expected
      FROM base`,
     [from, to, months, studentIds, centerId ?? null]
   );

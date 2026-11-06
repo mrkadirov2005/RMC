@@ -282,6 +282,7 @@ async function main() {
   // @MOB-041 Mobile push notifications (attendance, grades, coins, payments).
   require('./modules/mobile/services/mobileNotification.service').startPushWorker();
   require('./modules/media/media.service').startDriveSync();
+  require('./modules/classes/services/classPrice.service').startPriceSync();
 
   // Graceful shutdown - use a flag to prevent multiple calls
   let isShuttingDown = false;
