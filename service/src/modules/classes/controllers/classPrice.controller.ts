@@ -1,5 +1,6 @@
-// Group price history and "Change group payment". Admins change prices; a teacher can see the
-// history of their own groups; students can't see either.
+// Group price history and "Change group payment". Only the developer account (a superuser
+// flagged is_developer) changes prices; admins and teachers (own groups) see the history;
+// students see neither.
 const classPriceService = require('../services/classPrice.service');
 const { makeController, actorOf } = require('../priceKit');
 
@@ -7,7 +8,10 @@ const { handle } = makeController('Class price', {
   bad_amount: [400, "Narx noto'g'ri"],
   bad_month: [400, "Oy noto'g'ri: 12 oy oldin va 12 oy keyin oralig'ida bo'lishi kerak"],
   not_found: [404, 'Guruh topilmadi'],
+  developer_only: [403, "Guruh to'lovini faqat dasturchi o'zgartira oladi"],
 });
+
+const isDeveloper = (user: any) => user?.userType === 'superuser' && user?.is_developer === true;
 
 const getHistory = handle("Narxlar tarixini yuklab bo'lmadi", async (req: any) => {
   if (req.user?.userType === 'student') return { error: 'forbidden' };
@@ -18,7 +22,7 @@ const getHistory = handle("Narxlar tarixini yuklab bo'lmadi", async (req: any) =
 });
 
 const changePrice = handle("Narxni o'zgartirib bo'lmadi", async (req: any) => {
-  if (req.user?.userType !== 'superuser') return { error: 'admins_only' };
+  if (!isDeveloper(req.user)) return { error: 'developer_only' };
   const actor = actorOf(req);
   if (!actor.centerId && !actor.isGlobal) return { error: 'forbidden' };
   return classPriceService.changePrice(Number(req.params.id), req.body, actor.centerId, actor);

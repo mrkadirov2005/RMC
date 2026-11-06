@@ -40,17 +40,19 @@ const createClass = async (body: any, centerId?: number) => {
   return { row };
 };
 
-const updateClass = async (id: number, body: any, centerId?: number) => {
+const updateClass = async (id: number, body: any, centerId?: number, options: { isDeveloper?: boolean } = {}) => {
   const { class_name, subject_id, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount } = body;
   if (subject_id !== undefined && centerId && !await classRepository.subjectCanAssign(Number(subject_id), centerId, id)) {
     return { error: 'bad_subject' as const };
   }
-  // Once a group has a price history, its price changes only from the payments section ("Change
-  // group payment"), so every change has a start month. Before that the form still sets it.
+  // Only the developer changes a group's price. Once the group has a price history, even the
+  // developer does it from the payments section ("Change group payment"), so every change has a
+  // start month; before that the form still sets it.
   if (payment_amount !== undefined && payment_amount !== null && payment_amount !== '') {
     const before = await classRepository.findById(id, centerId);
-    if (before && Number(before.payment_amount ?? NaN) !== Number(payment_amount) && await classPriceService.hasHistory(id)) {
-      return { error: 'price_has_history' as const };
+    if (before && Number(before.payment_amount ?? NaN) !== Number(payment_amount)) {
+      if (!options.isDeveloper) return { error: 'price_developer_only' as const };
+      if (await classPriceService.hasHistory(id)) return { error: 'price_has_history' as const };
     }
   }
   return classRepository.update(

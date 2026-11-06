@@ -77,6 +77,7 @@ describe('group price history with PostgreSQL', () => {
     });
     const { generateToken } = require('../../../src/middleware/auth');
     tokens.admin = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId, username: 'admin1' });
+    tokens.developer = generateToken({ id: 2, userType: 'superuser', role: 'owner', center_id: centerId, username: 'dev', is_developer: true });
     tokens.teacher = generateToken({ id: teacherId, userType: 'teacher', center_id: centerId, username: 'temur' });
     tokens.student = generateToken({ id: students.ali, userType: 'student', center_id: centerId, class_id: raised, username: 'ali' });
   });
@@ -97,22 +98,22 @@ describe('group price history with PostgreSQL', () => {
     return Object.fromEntries((res.body.rows || res.body.items || []).map((row) => [row.student_id, row]));
   };
 
-  test('the admin reverts the price in the group form, then raises it from the payments section', async () => {
+  test('the developer reverts the price in the group form, then raises it from the payments section', async () => {
     // Today's situation: the raise was typed into the group, so old months look part paid.
     const before = await summary(raised, monthStart(-3), lastDay(-1));
     expect(before[students.ali].state).toBe('partial');
 
     // 1. Back to 300 000 in the group form: allowed, the group has no price history yet.
-    expect((await api().put(`/api/classes/${raised}`).set(auth('admin')).send({ payment_amount: 300000 })).status).toBe(200);
+    expect((await api().put(`/api/classes/${raised}`).set(auth('developer')).send({ payment_amount: 300000 })).status).toBe(200);
     const reverted = await summary(raised, monthStart(-3), lastDay(-1));
     expect(reverted[students.ali].state).toBe('paid');
 
     // 2. "Change group payment": 350 000 from this month.
-    const change = await api().post(`/api/classes/${raised}/price-changes`).set(auth('admin'))
+    const change = await api().post(`/api/classes/${raised}/price-changes`).set(auth('developer'))
       .send({ amount: 350000, effective_month: monthStart(0).slice(0, 7), note: 'New books' });
     expect(change.status).toBe(201);
     expect(change.body.current_amount).toBe(350000);
-    expect(change.body.entry).toMatchObject({ amount: 350000, previous_amount: 300000, note: 'New books', changed_by_name: 'admin1' });
+    expect(change.body.entry).toMatchObject({ amount: 350000, previous_amount: 300000, note: 'New books', changed_by_name: 'dev' });
     expect((await history(raised)).items.map((h) => [h.effective_from, h.amount, h.source])).toEqual([
       [monthStart(0).slice(0, 7), 350000, 'manual'],
       ['2000-01', 300000, 'initial'],
@@ -138,7 +139,7 @@ describe('group price history with PostgreSQL', () => {
   });
 
   test('after the first change, the group form cannot change the price', async () => {
-    const res = await api().put(`/api/classes/${raised}`).set(auth('admin')).send({ payment_amount: 370000 });
+    const res = await api().put(`/api/classes/${raised}`).set(auth('developer')).send({ payment_amount: 370000 });
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('PRICE_HAS_HISTORY');
     // Saving the form with the same price (other fields edited) still works.
@@ -146,14 +147,14 @@ describe('group price history with PostgreSQL', () => {
   });
 
   test('a price planned for next month waits for its month', async () => {
-    await api().put(`/api/classes/${quiet}`).set(auth('admin')).send({ payment_amount: 300000 });
-    const planned = await api().post(`/api/classes/${quiet}/price-changes`).set(auth('admin'))
+    await api().put(`/api/classes/${quiet}`).set(auth('developer')).send({ payment_amount: 300000 });
+    const planned = await api().post(`/api/classes/${quiet}/price-changes`).set(auth('developer'))
       .send({ amount: 400000, effective_month: monthStart(1).slice(0, 7) });
     expect(planned.status).toBe(201);
     expect(planned.body.current_amount).toBe(300000);
     expect((await summary(quiet, monthStart(-3), lastDay(0)))[students.nodir].expected).toBe(1200000);
     // A missed change can be entered for an earlier month: from last month, 320 000.
-    const late = await api().post(`/api/classes/${quiet}/price-changes`).set(auth('admin'))
+    const late = await api().post(`/api/classes/${quiet}/price-changes`).set(auth('developer'))
       .send({ amount: 320000, effective_month: monthStart(-1).slice(0, 7) });
     expect(late.body.current_amount).toBe(320000);
     expect((await history(quiet)).items.map((h) => h.amount)).toEqual([400000, 320000, 300000]);
@@ -161,14 +162,27 @@ describe('group price history with PostgreSQL', () => {
     expect((await summary(quiet, monthStart(-3), lastDay(0)))[students.nodir].expected).toBe(1240000);
   });
 
-  test('only admins change prices; students cannot see them', async () => {
-    const teacherChange = await api().post(`/api/classes/${raised}/price-changes`).set(auth('teacher')).send({ amount: 1 });
-    expect(teacherChange.status).toBe(403);
+  test('only the developer changes prices; students cannot see them', async () => {
+    for (const who of ['admin', 'teacher']) {
+      const change = await api().post(`/api/classes/${raised}/price-changes`).set(auth(who)).send({ amount: 1 });
+      expect(change.status).toBe(403);
+    }
+    // The group form refuses a new price from an admin, even for a group with no history.
+    const fresh = (await pool.query(
+      `INSERT INTO classes (center_id, class_name, class_code, teacher_id, payment_amount) VALUES ($1, 'Fresh', 'PR-Fresh', $2, 300000) RETURNING class_id`,
+      [centerId, teacherId],
+    )).rows[0].class_id;
+    const adminForm = await api().put(`/api/classes/${fresh}`).set(auth('admin')).send({ payment_amount: 350000 });
+    expect(adminForm.status).toBe(403);
+    expect(adminForm.body.code).toBe('PRICE_DEVELOPER_ONLY');
+    // Other edits by an admin still save when the price is unchanged.
+    expect((await api().put(`/api/classes/${fresh}`).set(auth('admin')).send({ payment_amount: 300000, section: 'B' })).status).toBe(200);
+    expect((await api().get(`/api/classes/${raised}/price-history`).set(auth('admin'))).status).toBe(200);
     expect((await api().get(`/api/classes/${raised}/price-history`).set(auth('teacher'))).status).toBe(200);
     expect((await api().get(`/api/classes/${raised}/price-history`).set(auth('student'))).status).toBe(403);
-    const badMonth = await api().post(`/api/classes/${raised}/price-changes`).set(auth('admin')).send({ amount: 1, effective_month: '1999-01' });
+    const badMonth = await api().post(`/api/classes/${raised}/price-changes`).set(auth('developer')).send({ amount: 1, effective_month: '1999-01' });
     expect(badMonth.status).toBe(400);
-    const badAmount = await api().post(`/api/classes/${raised}/price-changes`).set(auth('admin')).send({ amount: -5 });
+    const badAmount = await api().post(`/api/classes/${raised}/price-changes`).set(auth('developer')).send({ amount: -5 });
     expect(badAmount.status).toBe(400);
   });
 
