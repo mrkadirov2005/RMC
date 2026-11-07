@@ -115,6 +115,25 @@ const changePrice = async (classId: number, body: any, centerId: number | null, 
   });
 };
 
+/** Every group's price history in scope, for pages that work out many groups' months at once:
+ * { [class_id]: [{ amount, effective_from (YYYY-MM) }] }, newest first. Groups never changed
+ * have no entry (their price is the group's price). */
+const allHistories = async (centerId: number | null, teacherId: number | null = null) => {
+  const rows = await query(
+    `SELECT h.class_id, h.amount, h.effective_from::text AS effective_from
+     FROM class_price_history h
+     JOIN classes c ON c.class_id = h.class_id AND c.deleted_at IS NULL
+     WHERE ($1::int IS NULL OR c.center_id = $1) AND ($2::int IS NULL OR c.teacher_id = $2)
+     ORDER BY h.class_id, h.effective_from DESC, h.history_id DESC`,
+    [centerId, teacherId]
+  );
+  const byClass: Record<string, Array<{ amount: number; effective_from: string }>> = {};
+  rows.forEach((row: any) => {
+    (byClass[row.class_id] ||= []).push({ amount: Number(row.amount), effective_from: String(row.effective_from).slice(0, 7) });
+  });
+  return { classes: byClass };
+};
+
 /** Whether the group's price has been changed from the payments section yet. */
 const hasHistory = async (classId: number) =>
   Boolean(await one('SELECT 1 AS ok FROM class_price_history WHERE class_id = $1 LIMIT 1', [classId]));
@@ -142,6 +161,6 @@ const startPriceSync = () => {
   return timer;
 };
 
-module.exports = { priceAtSql, history, changePrice, hasHistory, syncCurrentPrices, startPriceSync, thisMonth };
+module.exports = { priceAtSql, history, allHistories, changePrice, hasHistory, syncCurrentPrices, startPriceSync, thisMonth };
 
 export {};

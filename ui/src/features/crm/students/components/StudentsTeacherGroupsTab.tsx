@@ -13,6 +13,7 @@ import type { Class, Student } from '../types';
 import { getGroupWeekdays } from '@/shared/groupLabel';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getPaymentMonths, recentMonthKeys } from '../utils/paymentMonths';
+import { loadGroupPrices } from '@/shared/groupPrices';
 
 interface Option {
   id?: number;
@@ -81,6 +82,7 @@ type PaymentRow = {
 // A student whose payments could not be loaded gets no circles (shown as unknown, not unpaid).
 const PAYMENT_REQUESTS_AT_ONCE = 6;
 const withPaymentMonths = async (students: Student[], monthlyFee: unknown) => {
+  await loadGroupPrices();
   const monthKeys = recentMonthKeys();
   const result: Student[] = new Array(students.length);
   let next = 0;

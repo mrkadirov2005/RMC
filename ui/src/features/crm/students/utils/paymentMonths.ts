@@ -1,4 +1,5 @@
 import { getCenterMonthKey, getExpectedAmountForMonth, getDaysInGroupForMonth, coversExpectedAmount, type BillingPeriodRecord } from '@/shared/billingPeriod';
+import { groupPriceFor } from '@/shared/groupPrices';
 
 // The group view's payment circles: the current month and the two before it, oldest first.
 export type PaymentMonthState = 'full' | 'partial' | 'none' | 'outside';
@@ -49,7 +50,8 @@ export const getPaymentMonths = (
     const paid = payments
       .filter((payment) => isCompleted(payment) && String(payment.payment_date || '').slice(0, 7) === key)
       .reduce((sum, payment) => sum + Number(payment.amount || 0) + Number(payment.discount_amount || 0), 0);
-    const expected = getExpectedAmountForMonth(record, monthlyFee, key);
+    // The group's price in that month (its price history), else the fee given.
+    const expected = getExpectedAmountForMonth(record, groupPriceFor(record.class_id, key, monthlyFee), key);
     if (getDaysInGroupForMonth(record, key).days === 0 && paid <= 0) return { key, state: 'outside', paid, expected: 0 };
     if (paid <= 0) return { key, state: 'none', paid, expected };
     if (expected > 0 && !coversExpectedAmount(paid, expected)) return { key, state: 'partial', paid, expected };

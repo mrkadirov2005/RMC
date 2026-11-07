@@ -4,6 +4,8 @@
 export interface BillingPeriodRecord {
   start_date?: unknown;
   end_date?: unknown;
+  /** The record's group, for the group's price in a month (shared/groupPrices). */
+  class_id?: unknown;
 }
 
 const toDay = (value: unknown) => {

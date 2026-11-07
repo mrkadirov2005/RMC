@@ -2,6 +2,8 @@ const { and, asc, eq, inArray, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { classes, expenses, payments, students, teachers, teacherSalaries, teacherSalaryAdvances } = require('../../../db/schema');
 
+const { priceAtSql } = require('../../classes/classPriceSql');
+
 const db = pool.db;
 
 const salarySelection = {
@@ -547,11 +549,14 @@ const findTeacherGroupPaymentRows = async ({
 
   const classConditions = [eq(classes.teacherId, teacherId), isNull(classes.deletedAt)];
   if (centerId) classConditions.push(eq(classes.centerId, centerId));
+  // The group's price for this month (from its price history), so a later raise doesn't change
+  // what was expected in an earlier month.
+  const monthStart = `${Number(year)}-${pad2(Number(month))}-01`;
   const classRows = await db
     .select({
       class_id: classes.classId,
       class_name: classes.className,
-      payment_amount: classes.paymentAmount,
+      payment_amount: sql`${sql.raw(priceAtSql('"classes"."class_id"', `'${monthStart}'`, '"classes"."payment_amount"'))}`,
     })
     .from(classes)
     .where(and(...classConditions))

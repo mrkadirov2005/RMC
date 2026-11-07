@@ -21,6 +21,7 @@ import type {
   DashboardStudentGrowthPoint,
 } from '../types';
 import { coversExpectedAmount, getExpectedAmountForMonth } from '../../../../shared/billingPeriod';
+import { groupPriceFor } from '../../../../shared/groupPrices';
 import { formatMoney } from '../../../../utils/helpers';
 
 const todayKey = new Date().toISOString().split('T')[0];
@@ -338,7 +339,7 @@ const getExpectedByStudent = (collections: DashboardCollections, selectedMonth: 
     const classId = getRecordNumber(student, 'class_id');
     if (!studentId || !classId) return;
     const cls = classesById.get(classId);
-    const expectedAmount = cls ? getExpectedAmountForMonth(student, getRecordNumber(cls, 'payment_amount'), monthKey) : 0;
+    const expectedAmount = cls ? getExpectedAmountForMonth(student, groupPriceFor(classId, monthKey, getRecordNumber(cls, 'payment_amount')), monthKey) : 0;
     if (expectedAmount > 0) expectedByStudent.set(studentId, expectedAmount);
   });
 

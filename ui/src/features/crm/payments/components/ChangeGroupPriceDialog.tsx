@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getCenterMonthKey } from '@/shared/billingPeriod';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { priceHistoryAPI } from '../priceHistory';
+import { refreshGroupPrices } from '@/shared/groupPrices';
 
 const shiftMonth = (monthKey: string, count: number) => {
   const [year, month] = monthKey.split('-').map(Number);
@@ -54,6 +55,7 @@ export const ChangeGroupPriceDialog = ({ open, onOpenChange, classId, className,
     setError(null);
     try {
       await priceHistoryAPI.change(classId, { amount: value, effective_month: month, note: note.trim() || undefined });
+      void refreshGroupPrices();
       onChanged();
       onOpenChange(false);
     } catch (err: any) {
