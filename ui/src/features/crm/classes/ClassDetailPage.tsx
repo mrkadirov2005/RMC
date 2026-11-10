@@ -81,7 +81,7 @@ const ClassDetailPage = () => {
     { label: CLASS_OVERVIEW_FIELDS[5], value: classData?.room_number || 'Not specified' },
     { label: CLASS_OVERVIEW_FIELDS[6], value: subjects.length === 1 ? '1 subject' : `${subjects.length} subjects` },
     { label: CLASS_OVERVIEW_FIELDS[7], value: `${formatMoney(classData?.payment_amount)} · ${classData?.payment_frequency || 'Monthly'}` },
-    { label: CLASS_OVERVIEW_FIELDS[8], value: classData?.level ? `Level ${classData.level}` : 'Not specified' },
+    { label: CLASS_OVERVIEW_FIELDS[8], value: classData?.level_name || 'Not specified' },
     { label: CLASS_OVERVIEW_FIELDS[9], value: classData?.class_code || 'Not specified' },
   ];
   const {

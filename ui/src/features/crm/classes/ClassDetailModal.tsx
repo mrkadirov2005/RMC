@@ -36,6 +36,7 @@ import ClassCalendar from './ClassCalendar';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Class {
+  level_name?: string | null;
   class_id?: number;
   id?: number;
   center_id: number;
@@ -405,7 +406,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t('Level')}</p>
-                  <p className="font-semibold">{classData.level}</p>
+                  <p className="font-semibold">{classData.level_name || '—'}</p>
                 </div>
               
                 <div>

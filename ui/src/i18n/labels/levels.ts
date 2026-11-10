@@ -42,4 +42,8 @@ export const levelsLabels: Record<string, string> = {
   "Left its level (the group's own price)": "Darajadan chiqdi (guruhning o'z narxi)",
   "The group's own price (months it was in no level)": "Guruhning o'z narxi (darajasiz oylar)",
   'The price comes from level {level}: change it in Subjects.': "Narx {level} darajasidan olinadi: Fanlar bo'limida o'zgartiring.",
+  'Choose the subject first': 'Avval fanni tanlang',
+  'No level (own price)': "Darajasiz (o'z narxi)",
+  'This subject has no levels yet: add them in Subjects.': "Bu fanda hali darajalar yo'q: ularni Fanlar bo'limida qo'shing.",
+  'Subject not found': 'Fan topilmadi',
 };

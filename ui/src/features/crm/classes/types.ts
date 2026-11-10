@@ -17,6 +17,11 @@ export interface Class {
   end_date?: string | null;
   payment_amount: number;
   payment_frequency: string;
+  /** The subject level whose price the group takes (null: its own price). */
+  level_id?: number | null;
+  level_name?: string | null;
+  /** Form only: the chosen level's price. */
+  level_price?: number | null;
 }
 
 export interface ClassSchedule {
