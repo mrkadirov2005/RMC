@@ -42,6 +42,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { countDuplicateClassSubjectAssignments } from './subjectAssignments';
 import { buildSubjectCatalog, getSubjectTeacherCount } from './subjectCatalog';
+import { SubjectLevelsPanel } from './components/SubjectLevelsPanel';
 
 const infoPillClass = 'rounded px-1.5 py-0.5 text-[0.625rem] font-black leading-none whitespace-nowrap';
 const statTileClass = 'rounded-md bg-gradient-to-br p-2 text-white shadow-sm';
@@ -93,6 +94,19 @@ const SubjectsPage = () => {
   );
 
   const catalogSubjects = useMemo(() => buildSubjectCatalog(state.items), [state.items]);
+
+  const levelGroupOptions = useMemo(
+    () =>
+      classes
+        .map((cls: any) => ({
+          class_id: Number(cls.class_id || cls.id || 0),
+          class_name: cls.class_name,
+          level_id: cls.level_id ?? null,
+          level_name: cls.level_name ?? null,
+        }))
+        .filter((cls) => cls.class_id > 0),
+    [classes]
+  );
 
   const filteredSubjects = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
@@ -352,17 +366,10 @@ const SubjectsPage = () => {
                 <div className={`${statTileClass} from-fuchsia-500 to-pink-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Teachers')}</p><p className="text-2xl font-black">{getSubjectTeacherCount(selectedSubject)}</p></div>
                 <div className={`${statTileClass} from-emerald-500 to-teal-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Passing Marks')}</p><p className="text-2xl font-black">{selectedSubject.passing_marks}/{selectedSubject.total_marks}</p></div>
               </div>
-              <div className="overflow-hidden rounded-lg border">
-                <Table>
-                  <TableHeader><TableRow><TableHead>{t('Group')}</TableHead><TableHead>{t('Teacher')}</TableHead><TableHead>{t('Level')}</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {selectedSubject.assignments.length ? selectedSubject.assignments.map((assignment: any) => {
-                      const cls = classes.find((item) => Number(item.class_id || item.id) === Number(assignment.class_id));
-                      return <TableRow key={assignment.class_id}><TableCell className="font-semibold">{cls?.class_name || `#${assignment.class_id}`}</TableCell><TableCell>{teacherLabelMap.get(Number(assignment.teacher_id || cls?.teacher_id || 0)) || t('Unassigned')}</TableCell><TableCell>{cls?.level ?? '-'}</TableCell></TableRow>;
-                    }) : <TableRow><TableCell colSpan={3} className="py-8 text-center text-muted-foreground">{t('No groups assigned')}</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
-              </div>
+              <SubjectLevelsPanel
+                subjectId={Number(selectedSubject.catalogSubject?.subject_id || selectedSubject.subject_id || selectedSubject.id || 0)}
+                groups={levelGroupOptions}
+              />
             </div>
           )}
         </DialogContent>

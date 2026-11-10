@@ -28,6 +28,7 @@ import { studentsLabels } from './students';
 import { teacherLabels } from './teacher';
 import { teachersLabels } from './teachers';
 import { testsLabels } from './tests';
+import { levelsLabels } from './levels';
 
 export const pageLabelTranslations: Record<string, string> = {
   ...assignmentsLabels,
@@ -60,4 +61,5 @@ export const pageLabelTranslations: Record<string, string> = {
   ...teacherLabels,
   ...teachersLabels,
   ...testsLabels,
+  ...levelsLabels,
 };

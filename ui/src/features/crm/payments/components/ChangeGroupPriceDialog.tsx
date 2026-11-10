@@ -25,10 +25,26 @@ interface Props {
   className?: string;
   currentAmount: number;
   onChanged: () => void;
+  /** Dialog title (default "Change group payment"). */
+  title?: string;
+  /** Saves the price somewhere else than the group (a level). */
+  save?: (data: { amount: number; effective_month: string; note?: string }) => Promise<unknown>;
+  /** The first price (a level without one): it counts for every month, so no month is asked. */
+  firstPrice?: boolean;
 }
 
 /** "Change group payment": a new price from a month. Earlier months keep their price. */
-export const ChangeGroupPriceDialog = ({ open, onOpenChange, classId, className, currentAmount, onChanged }: Props) => {
+export const ChangeGroupPriceDialog = ({
+  open,
+  onOpenChange,
+  classId,
+  className,
+  currentAmount,
+  onChanged,
+  title,
+  save,
+  firstPrice = false,
+}: Props) => {
   const { t } = useLanguage();
   const thisMonth = getCenterMonthKey();
   const [amount, setAmount] = useState('');
@@ -54,7 +70,8 @@ export const ChangeGroupPriceDialog = ({ open, onOpenChange, classId, className,
     setSaving(true);
     setError(null);
     try {
-      await priceHistoryAPI.change(classId, { amount: value, effective_month: month, note: note.trim() || undefined });
+      const data = { amount: value, effective_month: month, note: note.trim() || undefined };
+      await (save ? save(data) : priceHistoryAPI.change(classId, data));
       void refreshGroupPrices();
       onChanged();
       onOpenChange(false);
@@ -70,10 +87,12 @@ export const ChangeGroupPriceDialog = ({ open, onOpenChange, classId, className,
       <DialogContent className="sm:max-w-md">
         <form onSubmit={submit} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>{t('Change group payment')}</DialogTitle>
+            <DialogTitle>{title || t('Change group payment')}</DialogTitle>
             <DialogDescription>
               {className ? `${className} · ` : ''}
-              {t('Current price: {amount}', { amount: formatMoney(currentAmount) })}
+              {firstPrice
+                ? t('The first price counts for every month.')
+                : t('Current price: {amount}', { amount: formatMoney(currentAmount) })}
             </DialogDescription>
           </DialogHeader>
 
@@ -91,7 +110,7 @@ export const ChangeGroupPriceDialog = ({ open, onOpenChange, classId, className,
             />
           </div>
 
-          <div className="space-y-1.5">
+          {!firstPrice && <div className="space-y-1.5">
             <Label htmlFor="group-price-month">{t('Starts from month')}</Label>
             <Input
               id="group-price-month"
@@ -105,7 +124,7 @@ export const ChangeGroupPriceDialog = ({ open, onOpenChange, classId, className,
             <p className="text-xs text-muted-foreground">
               {t('Months before this keep their old price, so payments made at the old price stay paid.')}
             </p>
-          </div>
+          </div>}
 
           <div className="space-y-1.5">
             <Label htmlFor="group-price-note">{t('Note (optional)')}</Label>

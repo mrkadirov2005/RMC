@@ -4,6 +4,7 @@ const express_subject = require('express');
 const router_subject = express_subject.Router();
 const subjectController = require('../modules/subjects/controllers/subject.controller');
 const { requireAuth } = require('../middleware/auth');
+const levelController = require('../modules/levels/level.controller');
 
 /**
  * @swagger
@@ -49,6 +50,10 @@ router_subject.get('/class/:classId', requireAuth, subjectController.getSubjects
  *         description: Subject not found
  */
 router_subject.get('/:id', requireAuth, subjectController.getSubjectById);
+
+// The subject's levels (each with its groups) and its groups in no level; adding a level.
+router_subject.get('/:id/levels', requireAuth, levelController.listForSubject);
+router_subject.post('/:id/levels', requireAuth, levelController.createLevel);
 
 /**
  * @swagger

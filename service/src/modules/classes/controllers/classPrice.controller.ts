@@ -10,6 +10,7 @@ const ERRORS: Record<string, [number, string]> = {
   not_found: [404, 'Guruh topilmadi'],
   forbidden: [403, "Bu amalni bajarishga ruxsatingiz yo'q."],
   developer_only: [403, "Guruh to'lovini faqat dasturchi o'zgartira oladi"],
+  in_level: [409, "Guruh darajaga biriktirilgan: narxni daraja orqali o'zgartiring"],
 };
 
 // Wraps a handler: a result with { error } becomes that error's status; anything else is sent.

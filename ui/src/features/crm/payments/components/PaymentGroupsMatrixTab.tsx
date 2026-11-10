@@ -10,7 +10,7 @@ import { coversExpectedAmount, getExpectedAmountForMonth } from '@/shared/billin
 import { classAPI, paymentAPI, studentAPI, teacherAPI } from '../api';
 import type { Class, Payment, Student, Teacher } from '../types';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { priceForMonth, priceHistoryAPI, type PriceHistory } from '../priceHistory';
+import { groupPriceFor, useGroupPrices } from '@/shared/groupPrices';
 
 type MonthCellState = 'full' | 'partial' | 'none';
 
@@ -85,7 +85,7 @@ const getStateTitle = (state: MonthCellState) => {
 
 export const PaymentGroupsMatrixTab = () => {
   const { t } = useLanguage();
-  const [priceHistory, setPriceHistory] = useState<PriceHistory | null>(null);
+  const pricesVersion = useGroupPrices();
   const [groups, setGroups] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -138,13 +138,13 @@ export const PaymentGroupsMatrixTab = () => {
       const states = months.reduce<Record<string, MonthCellState>>((acc, month) => {
         // Each month at the group's price in effect for it, so a raise doesn't turn months paid at
         // the old price orange.
-        const monthPrice = priceForMonth(priceHistory?.items, month.key, expectedAmount);
+        const monthPrice = groupPriceFor(selectedGroupId, month.key, expectedAmount);
         acc[month.key] = getMonthState(payments, month.key, getExpectedAmountForMonth(student, monthPrice, month.key));
         return acc;
       }, {});
       return { student, studentId, states };
     });
-  }, [expectedAmount, months, paymentsByStudent, priceHistory, students]);
+  }, [expectedAmount, months, paymentsByStudent, pricesVersion, selectedGroupId, students]);
 
   const monthPercentages = useMemo(() => {
     if (rowStates.length === 0) {
@@ -178,15 +178,6 @@ export const PaymentGroupsMatrixTab = () => {
       setError('Could not load groups.');
     } finally {
       setGroupsLoading(false);
-    }
-  };
-
-  const loadPriceHistory = async (groupId: number) => {
-    try {
-      const response = await priceHistoryAPI.get(groupId);
-      setPriceHistory(response.data);
-    } catch {
-      setPriceHistory(null);
     }
   };
 
@@ -230,8 +221,6 @@ export const PaymentGroupsMatrixTab = () => {
 
   useEffect(() => {
     if (selectedGroupId) {
-      setPriceHistory(null);
-      loadPriceHistory(selectedGroupId);
       loadGroupStudents(selectedGroupId);
     }
   }, [selectedGroupId]);
