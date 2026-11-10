@@ -1,4 +1,5 @@
 const { generateToken } = require('../../../middleware/auth');
+const journeyService = require('../services/journey.service');
 const accessLock = require('../../developer/accessLock');
 const studentService = require('../services/student.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
@@ -303,6 +304,22 @@ const transferStudent = async (req: any, res: any) => {
   }
 };
 
+// The child's whole journey through the center (every group, teacher and how each ended), for
+// owners and admins.
+const getStudentJourney = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    if (req.user?.userType !== 'superuser') return res.status(403).json({ error: 'Kirish rad etildi.' });
+    const journey = await journeyService.getJourney(Number(req.params.id), centerId ?? null);
+    if (!journey) return res.status(404).json({ error: "O'quvchi topilmadi" });
+    res.json(journey);
+  } catch (error: any) {
+    console.error('Student journey error:', error);
+    res.status(500).json({ error: "O'quvchi yo'lini yuklab bo'lmadi" });
+  }
+};
+
 const getStudentGroups = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -468,6 +485,7 @@ module.exports = {
   purgeStudent,
   transferStudent,
   getStudentGroups,
+  getStudentJourney,
   assignStudentToGroup,
   removeAddedGroup,
   studentLogin,
