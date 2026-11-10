@@ -72,8 +72,10 @@ const findPaymentFigures = async ({ studentIds, centerId, from, to, months }: {
        SELECT s.student_id, s.center_id, ec.center_name, s.first_name, s.last_name, s.phone, s.parent_phone,
               s.class_id, c.class_name,
               COALESCE(c.payment_amount, 0)::numeric AS monthly_fee,
-              -- The months asked about, each at the group's price in effect for that month.
-              (SELECT COALESCE(SUM(${priceAtSql('s.class_id', 'm', 'c.payment_amount')}), 0)
+              -- The months asked about, each at the group's price in effect for that month, and a
+              -- month the student joined or left partway through by its lessons (12 a month).
+              (SELECT COALESCE(SUM(billing_month_share(c.section, s.start_date::date, s.end_date::date, m::date)
+                  * ${priceAtSql('s.class_id', 'm', 'c.payment_amount')}), 0)
                  FROM (SELECT m FROM generate_series(date_trunc('month', $1::date), date_trunc('month', $2::date), interval '1 month') m
                        ORDER BY m LIMIT $3::int) months)::numeric AS billed_amount,
               COALESCE(p.paid, 0)::numeric AS paid_amount,

@@ -1,4 +1,5 @@
 // Page component for the payments screen in the crm feature.
+import { useGroupPrices } from '@/shared/groupPrices';
 
 import { useEffect, useMemo } from 'react';
 import {
@@ -26,6 +27,8 @@ import { getFeeToCollectThisMonth } from '@/shared/billingPeriod';
 // Renders the payments page screen.
 const PaymentsPage = () => {
   const { t } = useLanguage();
+  // Group lesson days, so the amount for a month the student joined partway is by lessons.
+  useGroupPrices();
   const hook = usePaymentsPage();
 
   const {

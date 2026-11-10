@@ -557,6 +557,8 @@ const findTeacherGroupPaymentRows = async ({
       class_id: classes.classId,
       class_name: classes.className,
       payment_amount: sql`${sql.raw(priceAtSql('"classes"."class_id"', `'${monthStart}'`, '"classes"."payment_amount"'))}`,
+      // The lesson days, for a month a student joined or left partway through (12 lessons a month).
+      section: classes.section,
     })
     .from(classes)
     .where(and(...classConditions))

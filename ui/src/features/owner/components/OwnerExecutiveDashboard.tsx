@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useGroupPrices } from '@/shared/groupPrices';
 import { Link } from 'react-router-dom';
 import { Award, Banknote, GraduationCap, TrendingDown, Users, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,8 @@ const StatCard = ({ label, value, detail, icon: Icon, className }: { label: stri
 export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) => {
   const month = new Date().toISOString().slice(0, 7);
   const rankings = useStudentRankings();
+  // Group lesson days, for students who joined or left this month (billed by lessons).
+  const lessonDaysVersion = useGroupPrices();
   const topStudents = useMemo(() => rankStudents(rankings.rows, 'center').filter((item) => item.score > 0).slice(0, 3), [rankings.rows]);
   const metrics = useMemo(() => {
     const classFees = new Map<number, number>();
@@ -82,7 +85,8 @@ export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) =
       topTeachers: kpis.map((row) => ({ row, score: kpiScoreOf(row) })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, 3),
       lostTeachers: [...lossMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([teacherId, count]) => ({ teacherId, count, name: teacherNames.get(teacherId) || `Ustoz #${teacherId}` })),
     };
-  }, [collections, kpis]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recount when group lesson days load
+  }, [collections, kpis, lessonDaysVersion]);
 
   if (loading) return <Card><CardContent className="p-10 text-center text-sm text-muted-foreground">Dashboard maʼlumotlari yuklanmoqda...</CardContent></Card>;
 
