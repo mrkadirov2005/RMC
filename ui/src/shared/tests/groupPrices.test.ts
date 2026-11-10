@@ -16,6 +16,12 @@ describe('groupPriceFor', () => {
     expect(groupPriceFor('7', '2027-02', 350000)).toBe(350000);
   });
 
+  it('uses the price a change replaced for months before it, even without an initial row', () => {
+    setGroupPricesForTest({ '57': [{ amount: 320000, previous_amount: 300000, effective_from: '2026-11' }] });
+    expect(groupPriceFor(57, '2026-10', 320000)).toBe(300000);
+    expect(groupPriceFor(57, '2026-11', 320000)).toBe(320000);
+  });
+
   it("falls back to the group's price when it was never changed", () => {
     setGroupPricesForTest(raised);
     expect(groupPriceFor(8, '2026-09', 480000)).toBe(480000);

@@ -1,6 +1,7 @@
 // A group's price over time, from GET /classes/:id/price-history. Each month is billed at the
 // price in effect for it, so a raise doesn't make months paid at the old price look part paid.
 import { apiClient } from '@/shared/api/api';
+import { priceFromEntries } from '@/shared/groupPrices';
 
 export interface PriceHistoryEntry {
   history_id: number;
@@ -26,9 +27,8 @@ export const priceHistoryAPI = {
     apiClient.post(`/classes/${classId}/price-changes`, data),
 };
 
-/** The price for a month (YYYY-MM): the latest entry starting on or before it, else `fallback`
- * (the group's price when it has no history). Items come newest first. */
-export const priceForMonth = (items: PriceHistoryEntry[] | undefined, monthKey: string, fallback: number) => {
-  const entry = (items || []).find((item) => item.effective_from <= monthKey);
-  return entry ? Number(entry.amount) : fallback;
-};
+/** The price for a month (YYYY-MM): the latest entry starting on or before it; before the first
+ * change, the price it replaced; else `fallback` (the group's price when it has no history).
+ * Items come newest first. */
+export const priceForMonth = (items: PriceHistoryEntry[] | undefined, monthKey: string, fallback: number) =>
+  priceFromEntries(items, monthKey, fallback);

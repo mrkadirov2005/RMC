@@ -120,16 +120,20 @@ const changePrice = async (classId: number, body: any, centerId: number | null, 
  * have no entry (their price is the group's price). */
 const allHistories = async (centerId: number | null, teacherId: number | null = null) => {
   const rows = await query(
-    `SELECT h.class_id, h.amount, h.effective_from::text AS effective_from
+    `SELECT h.class_id, h.amount, h.previous_amount, h.effective_from::text AS effective_from
      FROM class_price_history h
      JOIN classes c ON c.class_id = h.class_id AND c.deleted_at IS NULL
      WHERE ($1::int IS NULL OR c.center_id = $1) AND ($2::int IS NULL OR c.teacher_id = $2)
      ORDER BY h.class_id, h.effective_from DESC, h.history_id DESC`,
     [centerId, teacherId]
   );
-  const byClass: Record<string, Array<{ amount: number; effective_from: string }>> = {};
+  const byClass: Record<string, Array<{ amount: number; previous_amount: number | null; effective_from: string }>> = {};
   rows.forEach((row: any) => {
-    (byClass[row.class_id] ||= []).push({ amount: Number(row.amount), effective_from: String(row.effective_from).slice(0, 7) });
+    (byClass[row.class_id] ||= []).push({
+      amount: Number(row.amount),
+      previous_amount: row.previous_amount == null ? null : Number(row.previous_amount),
+      effective_from: String(row.effective_from).slice(0, 7),
+    });
   });
   return { classes: byClass };
 };
