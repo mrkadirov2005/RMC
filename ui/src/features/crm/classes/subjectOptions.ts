@@ -11,8 +11,11 @@ export const buildAssignableSubjectOptions = (subjects: any[]) => {
   });
 };
 
-export const getClassSubjectLabel = (group: any) =>
-  String(group?.subject_name || '').trim() || 'No subject assigned';
+export const getClassSubjectLabel = (group: any) => {
+  const subject = String(group?.subject_name || '').trim() || 'No subject assigned';
+  const level = String(group?.level_name || '').trim();
+  return level ? `${subject} · ${level}` : subject;
+};
 
 export const hasPersistedClassSubject = (group: any, expectedSubjectName: string) =>
   String(group?.subject_name || '').trim().toLowerCase() === expectedSubjectName.trim().toLowerCase();

@@ -31,6 +31,10 @@ describe('getClassSubjectLabel', () => {
     expect(getClassSubjectLabel({ subject_name: 'English' })).toBe('English');
   });
 
+  it("adds the group's level", () => {
+    expect(getClassSubjectLabel({ subject_name: 'English', level_name: 'Starter' })).toBe('English · Starter');
+  });
+
   it('uses a clear fallback when no subject is assigned', () => {
     expect(getClassSubjectLabel({})).toBe('No subject assigned');
   });

@@ -17,6 +17,8 @@ import type { Class } from '../types';
 import { parseSchedule, weekDays } from '../queries';
 import { buildAssignableSubjectOptions, buildClassSubjectAssignment, hasPersistedClassSubject } from '../subjectOptions';
 import { findClassRoomConflict } from '../classRoomConflict';
+import { levelsAPI } from '@/features/crm/subjects/levels';
+import { refreshGroupPrices } from '@/shared/groupPrices';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AttendanceRecord {
@@ -56,6 +58,8 @@ export const useClassesPage = (onSaved?: () => void) => {
     center_id: defaultCenterId,
     payment_frequency: 'Monthly',
   });
+  // The group's level when the form opened: saved separately only when it changes.
+  const [initialLevelId, setInitialLevelId] = useState<number | null>(null);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState('09:00');
   const [scheduleEndTime, setScheduleEndTime] = useState('10:00');
@@ -118,6 +122,7 @@ export const useClassesPage = (onSaved?: () => void) => {
     if (cls) {
       setEditingId(cls.class_id || cls.id || null);
       setFormData(cls);
+      setInitialLevelId(cls.level_id ?? null);
       const schedule = parseSchedule(cls.section);
       setSelectedDays(schedule.days);
       setScheduleTime(schedule.time);
@@ -125,6 +130,7 @@ export const useClassesPage = (onSaved?: () => void) => {
     } else {
       setEditingId(null);
       setFormData({ center_id: defaultCenterId, payment_frequency: 'Monthly' });
+      setInitialLevelId(null);
       setSelectedDays([]);
       setScheduleTime('09:00');
       setScheduleEndTime('10:00');
@@ -156,9 +162,17 @@ export const useClassesPage = (onSaved?: () => void) => {
       showToast.error('Room {room} is already booked by {group} on {day}, {start}–{end}.', { vars: { room: formData.room_number || '', group: roomConflict.group, day: t(roomConflict.day), start: roomConflict.start, end: roomConflict.end } });
       return;
     }
+    const { level_id: chosenLevelId, level_name: _levelName, level_price: _levelPrice, ...groupFields } = formData;
     const dataToSubmit = {
-      ...formData,
+      ...groupFields,
       section: JSON.stringify({ days: selectedDays, time: scheduleTime, endTime: scheduleEndTime }),
+    };
+    const levelId = chosenLevelId ?? null;
+    // The level is saved on its own (from this month), after the group itself.
+    const saveLevel = async (classId: number) => {
+      if (!classId || levelId === initialLevelId) return;
+      await levelsAPI.setClassLevel(classId, { level_id: levelId });
+      void refreshGroupPrices();
     };
     try {
       if (editingId) {
@@ -182,9 +196,12 @@ export const useClassesPage = (onSaved?: () => void) => {
             throw new Error('The class was updated, but the selected subject was not saved.');
           }
         }
+        await saveLevel(editingId);
         showToast.success('Class updated successfully!');
       } else {
-        await classAPI.create(dataToSubmit);
+        const created = await classAPI.create(dataToSubmit);
+        const createdRow = (created as any)?.data ?? created;
+        await saveLevel(Number(createdRow?.class_id || createdRow?.id || 0));
         showToast.success('Class created successfully!');
       }
       await Promise.all([

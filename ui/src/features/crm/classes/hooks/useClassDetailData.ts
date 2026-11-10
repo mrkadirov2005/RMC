@@ -12,6 +12,9 @@ export type ClassDetailClass = {
   class_code?: string;
   center_id?: number;
   level?: number;
+  /** The subject level whose price the group takes. */
+  level_id?: number | null;
+  level_name?: string | null;
   capacity?: number;
   teacher_id?: number;
   teacher_name?: string;

@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { useAppSelector } from '@/features/crm/hooks';
+import { useEffect, useState } from 'react';
+import { levelsAPI, type SubjectLevel } from '@/features/crm/subjects/levels';
 
 interface ClassDialogsProps {
   t: TranslateFn;
@@ -65,23 +67,81 @@ const toDateInputValue = (value?: string | null) => {
   return String(value).split('T')[0];
 };
 
+const NO_LEVEL = 'none';
+
+// The group's level: the levels of the chosen subject. A group in a level takes its price.
+const GroupLevelSelect = ({ subjectId, value, onChange, t }: {
+  subjectId?: number | null;
+  value?: number | null;
+  onChange: (level: SubjectLevel | null) => void;
+  t: TranslateFn;
+}) => {
+  const [levels, setLevels] = useState<SubjectLevel[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    if (!subjectId) {
+      setLevels([]);
+      return;
+    }
+    setLoading(true);
+    levelsAPI
+      .forSubject(Number(subjectId))
+      .then((response) => alive && setLevels(response.data.levels || []))
+      .catch(() => alive && setLevels([]))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [subjectId]);
+
+  const money = (amount: number) => `${Math.round(amount).toLocaleString('ru-RU')} UZS`;
+  return (
+    <>
+      <Select
+        value={value ? String(value) : NO_LEVEL}
+        disabled={!subjectId || loading}
+        onValueChange={(next) => onChange(next === NO_LEVEL ? null : levels.find((level) => String(level.level_id) === next) || null)}
+      >
+        <SelectTrigger id="level_id" className="h-8 border-violet-100 bg-violet-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background">
+          <SelectValue placeholder={subjectId ? t('Choose a level') : t('Choose the subject first')} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NO_LEVEL}>{t('No level (own price)')}</SelectItem>
+          {levels.map((level) => (
+            <SelectItem key={level.level_id} value={String(level.level_id)}>
+              {level.level_name}{level.payment_amount != null ? ` · ${money(level.payment_amount)}` : ''}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {subjectId && !loading && levels.length === 0 && (
+        <p className="text-[0.625rem] text-amber-700">{t('This subject has no levels yet: add them in Subjects.')}</p>
+      )}
+    </>
+  );
+};
+
 // A new group gets its price here. Changing an existing group's price is for the developer
 // account only, and then from Payments → Groups ("Change group payment"), so every change has a
 // start month and months paid at the old price stay paid.
-const GroupPriceInput = ({ value, editing, levelName, onChange, t }: {
+const GroupPriceInput = ({ value, editing, levelName, levelPrice, onChange, t }: {
   value?: number | string | null;
   editing: boolean;
   /** The group's level: it takes the level's price, set in Subjects. */
   levelName?: string | null;
+  /** The chosen level's price (null: the level has no price yet). */
+  levelPrice?: number | null;
   onChange: (value: number) => void;
   t: TranslateFn;
 }) => {
   const user = useAppSelector((state) => state.auth.user);
   const isDeveloper = user?.userType === 'superuser' && user?.is_developer === true;
-  if (editing && levelName) {
+  if (levelName && (editing || levelPrice != null)) {
     return (
       <>
-        <Input id="payment_amount" type="number" value={value || ''} disabled className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background" />
+        <Input id="payment_amount" type="number" value={levelPrice ?? value ?? ''} disabled className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background" />
         <p className="text-[0.625rem] text-muted-foreground">
           {t("The price comes from level {level}: change it in Subjects.", { level: levelName })}
         </p>
@@ -169,7 +229,14 @@ export const ClassDialogs = ({
                     value={formData.subject_id ? String(formData.subject_id) : ''}
                     onValueChange={(value) => {
                       const selected = subjectOptions.find((option) => String(option.value) === value);
-                      setFormData({ ...formData, subject_id: Number(value), subject_name: selected?.subjectName || selected?.label });
+                      // Another subject has other levels: choose the level again.
+                      const sameSubject = Number(formData.subject_id || 0) === Number(value);
+                      setFormData({
+                        ...formData,
+                        subject_id: Number(value),
+                        subject_name: selected?.subjectName || selected?.label,
+                        ...(sameSubject ? {} : { level_id: null, level_name: null, level_price: null }),
+                      });
                     }}
                   >
                     <SelectTrigger id="subject_id" className="h-8 border-teal-100 bg-teal-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background">
@@ -190,8 +257,22 @@ export const ClassDialogs = ({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <Label htmlFor="level" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Level')} *</Label>
-                  <Input id="level" type="number" required value={formData.level || ''} onChange={(e) => setFormData({ ...formData, level: Number(e.target.value) })} className="h-8 border-violet-100 bg-violet-50/60 text-xs font-semibold shadow-sm focus-visible:ring-violet-500 dark:border-input dark:bg-background" />
+                  <Label htmlFor="level_id" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Level')}</Label>
+                  <GroupLevelSelect
+                    subjectId={formData.subject_id}
+                    value={formData.level_id}
+                    t={t}
+                    onChange={(level) =>
+                      setFormData({
+                        ...formData,
+                        level_id: level?.level_id ?? null,
+                        level_name: level?.level_name ?? null,
+                        level_price: level?.payment_amount ?? null,
+                        // A new group starts at its level's price.
+                        ...(!editingId && level?.payment_amount != null ? { payment_amount: level.payment_amount } : {}),
+                      })
+                    }
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="capacity" className="text-[0.625rem] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Capacity')} *</Label>
@@ -267,7 +348,8 @@ export const ClassDialogs = ({
                       <GroupPriceInput
                         value={formData.payment_amount}
                         editing={Boolean(editingId)}
-                        levelName={(formData as any).level_id ? (formData as any).level_name || '—' : null}
+                        levelName={formData.level_id ? formData.level_name || '—' : null}
+                        levelPrice={formData.level_id ? formData.level_price ?? null : null}
                         onChange={(value) => setFormData({ ...formData, payment_amount: value })}
                         t={t}
                       />

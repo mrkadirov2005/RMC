@@ -1,6 +1,7 @@
 // Page component for the subjects screen in the crm feature.
 
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   CheckCircle2,
@@ -42,7 +43,6 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { countDuplicateClassSubjectAssignments } from './subjectAssignments';
 import { buildSubjectCatalog, getSubjectTeacherCount } from './subjectCatalog';
-import { SubjectLevelsPanel } from './components/SubjectLevelsPanel';
 
 const infoPillClass = 'rounded px-1.5 py-0.5 text-[0.625rem] font-black leading-none whitespace-nowrap';
 const statTileClass = 'rounded-md bg-gradient-to-br p-2 text-white shadow-sm';
@@ -52,7 +52,9 @@ const SubjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
+  const navigate = useNavigate();
+  const openSubject = (subject: any) =>
+    navigate(`/subjects/${Number(subject.catalogSubject?.subject_id || subject.subject_id || subject.id || 0)}`);
   const { t } = useLanguage();
   const {
     state,
@@ -95,18 +97,6 @@ const SubjectsPage = () => {
 
   const catalogSubjects = useMemo(() => buildSubjectCatalog(state.items), [state.items]);
 
-  const levelGroupOptions = useMemo(
-    () =>
-      classes
-        .map((cls: any) => ({
-          class_id: Number(cls.class_id || cls.id || 0),
-          class_name: cls.class_name,
-          level_id: cls.level_id ?? null,
-          level_name: cls.level_name ?? null,
-        }))
-        .filter((cls) => cls.class_id > 0),
-    [classes]
-  );
 
   const filteredSubjects = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
@@ -297,7 +287,9 @@ const SubjectsPage = () => {
                           <span data-keep-bg className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-violet-600 text-white">
                             <BookOpen className="h-3.5 w-3.5" />
                           </span>
-                          <span className="truncate">{subject.subject_name}</span>
+                          <button type="button" onClick={() => openSubject(subject)} className="truncate text-left hover:text-violet-700 hover:underline">
+                            {subject.subject_name}
+                          </button>
                         </div>
                       </TableCell>
                       <TableCell className="py-1.5">
@@ -318,7 +310,7 @@ const SubjectsPage = () => {
                       </TableCell>
                       <TableCell className="py-1.5 text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => setSelectedSubject(subject)} className="h-7 w-7 rounded bg-violet-100 text-violet-700 hover:bg-violet-600 hover:text-white">
+                          <Button variant="ghost" size="icon" onClick={() => openSubject(subject)} className="h-7 w-7 rounded bg-violet-100 text-violet-700 hover:bg-violet-600 hover:text-white">
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleOpenModal(subject.catalogSubject || subject)} className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white">
@@ -354,26 +346,6 @@ const SubjectsPage = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={Boolean(selectedSubject)} onOpenChange={(open) => !open && setSelectedSubject(null)}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedSubject?.subject_name}</DialogTitle>
-          </DialogHeader>
-          {selectedSubject && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                <div className={`${statTileClass} from-violet-500 to-indigo-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Groups')}</p><p className="text-2xl font-black">{selectedSubject.assignments.length}</p></div>
-                <div className={`${statTileClass} from-fuchsia-500 to-pink-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Teachers')}</p><p className="text-2xl font-black">{getSubjectTeacherCount(selectedSubject)}</p></div>
-                <div className={`${statTileClass} from-emerald-500 to-teal-600`}><p className="text-[0.625rem] font-black uppercase text-white/75">{t('Passing Marks')}</p><p className="text-2xl font-black">{selectedSubject.passing_marks}/{selectedSubject.total_marks}</p></div>
-              </div>
-              <SubjectLevelsPanel
-                subjectId={Number(selectedSubject.catalogSubject?.subject_id || selectedSubject.subject_id || selectedSubject.id || 0)}
-                groups={levelGroupOptions}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-w-lg">

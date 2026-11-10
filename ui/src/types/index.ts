@@ -78,6 +78,9 @@ export interface Class {
   room_number: string;
   payment_amount: number;
   payment_frequency: string;
+  /** The subject level whose price the group takes (null: its own price). */
+  level_id?: number | null;
+  level_name?: string | null;
 }
 
 // Payment Types
