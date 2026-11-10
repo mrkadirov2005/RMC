@@ -10,6 +10,7 @@ import { SelectField } from '../../students/components/SelectField';
 import { formLabelClassName } from '@/components/ui/form-control';
 import { cn } from '@/lib/utils';
 import { getExpectedAmountForMonth, type BillingPeriodRecord } from '@/shared/billingPeriod';
+import { groupPriceFor, useGroupPrices } from '@/shared/groupPrices';
 import type { Payment, Student } from '../types';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
 import { discountAPI, paymentAPI, studentAPI } from '../api';
@@ -113,6 +114,8 @@ export const PaymentFormDialog = ({
   onStudentsFound,
 }: PaymentFormDialogProps) => {
   const { t } = useLanguage();
+  // Re-render when the groups' price histories arrive: each month uses its own price.
+  useGroupPrices();
   const normalizedAmount = Number(formData.amount || 0);
   // A payment can't be more than what the student pays for the group.
   const maxAmount = Number(selectedStudent?.amount || 0) > 0 ? Number(selectedStudent?.amount) : null;
@@ -589,7 +592,7 @@ export const PaymentFormDialog = ({
                 <div className="grid grid-cols-6 bg-white dark:bg-slate-950/70">
                   {historyMonths.map((month) => {
                     const rows = historyPaymentsByMonth.get(getMonthKey(month)) || [];
-                    const monthState = getMonthPaymentState(rows, getExpectedAmountForMonth(historyBillingPeriod, historyExpectedAmount, getMonthKey(month)));
+                    const monthState = getMonthPaymentState(rows, getExpectedAmountForMonth(historyBillingPeriod, groupPriceFor(historyBillingPeriod?.class_id, getMonthKey(month), historyExpectedAmount), getMonthKey(month)));
                     const monthStatus = getMonthPaymentStatus(monthState);
                     return (
                       <div

@@ -164,6 +164,29 @@ describe('group price history with PostgreSQL', () => {
     expect((await summary(quiet, monthStart(-3), lastDay(0)))[students.nodir].expected).toBe(1240000);
   });
 
+  test('all groups\' histories in one call, for pages that bill many groups', async () => {
+    const res = await api().get('/api/classes/price-histories').set(auth('admin'));
+    expect(res.status).toBe(200);
+    expect(res.body.classes[raised].map((h) => [h.effective_from, h.amount])).toEqual([
+      [monthStart(0).slice(0, 7), 350000],
+      ['2000-01', 300000],
+    ]);
+    expect((await api().get('/api/classes/price-histories').set(auth('teacher'))).status).toBe(200);
+    expect((await api().get('/api/classes/price-histories').set(auth('student'))).status).toBe(403);
+  });
+
+  test('a teacher\'s salary page bills each month at that month\'s price', async () => {
+    const groupOf = async (offset) => {
+      const res = await api().get(`/api/salaries/teacher/${teacherId}/payments`).query({ month: monthStart(offset).slice(0, 7) }).set(auth('admin'));
+      expect(res.status).toBe(200);
+      return res.body.groups.find((group) => group.class_id === raised);
+    };
+    const before = await groupOf(-2);
+    expect(before.monthly_fee).toBe(300000);
+    expect(before.paid_students).toBe(3);
+    expect((await groupOf(0)).monthly_fee).toBe(350000);
+  });
+
   test('only the developer changes prices; students cannot see them', async () => {
     for (const who of ['admin', 'teacher']) {
       const change = await api().post(`/api/classes/${raised}/price-changes`).set(auth(who)).send({ amount: 1 });

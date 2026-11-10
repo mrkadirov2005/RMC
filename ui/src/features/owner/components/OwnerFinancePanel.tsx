@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
+import { groupPriceFor, useGroupPrices } from '@/shared/groupPrices';
 import { formatMoney } from '@/utils/helpers';
 import {
   buildOwnerDailyIncomeRows,
@@ -71,7 +72,7 @@ const buildTeacherGroups = (
         name: getName(student, `Student ${studentId}`),
         paid: studentPayments.length > 0,
         paidAmount,
-        expectedAmount: getExpectedAmountForMonth(student, student?.payment_amount || cls?.payment_amount, monthKey),
+        expectedAmount: getExpectedAmountForMonth(student, groupPriceFor(classId, monthKey, student?.payment_amount || cls?.payment_amount), monthKey),
       };
     });
     const paidCount = students.filter((student) => student.paid).length;
@@ -106,6 +107,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paidDateModalOpen, setPaidDateModalOpen] = useState(false);
 
+  const groupPricesVersion = useGroupPrices();
   const paymentStats = useMemo(
     () => buildOwnerPaymentMonthStats(collections.students, collections.payments, selectedMonth),
     [collections.payments, collections.students, selectedMonth]
@@ -150,7 +152,11 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   }, [collections.classes]);
   const expectedMonthlyTotal = collections.students.reduce(
     (sum, student) =>
-      sum + getExpectedAmountForMonth(student, student?.payment_amount || classPaymentAmountById.get(Number(student?.class_id || 0)), selectedMonth),
+      sum + getExpectedAmountForMonth(
+        student,
+        groupPriceFor(student?.class_id, selectedMonth, student?.payment_amount || classPaymentAmountById.get(Number(student?.class_id || 0))),
+        selectedMonth
+      ),
     0
   );
   const unpaidEstimate = Math.max(expectedMonthlyTotal - totalCollected, 0);
@@ -164,7 +170,8 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
 
   const teacherGroups = useMemo(
     () => buildTeacherGroups(collections, monthPayments, selectedTeacherId, selectedMonth),
-    [collections, monthPayments, selectedTeacherId, selectedMonth]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute when the price histories load
+    [collections, monthPayments, selectedTeacherId, selectedMonth, groupPricesVersion]
   );
 
   const selectedGroup = teacherGroups.find((group) => group.id === selectedGroupId) || null;
@@ -172,7 +179,8 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const selectedStatsTeacher = teacherRows.find((teacher) => teacher.teacherId === statsTeacherId) || null;
   const statsTeacherGroups = useMemo(
     () => buildTeacherGroups(collections, monthPayments, statsTeacherId, selectedMonth),
-    [collections, monthPayments, statsTeacherId, selectedMonth]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute when the price histories load
+    [collections, monthPayments, statsTeacherId, selectedMonth, groupPricesVersion]
   );
   const statsPaidStudents = statsTeacherGroups.reduce((sum, group) => sum + group.paidCount, 0);
   const statsUnpaidStudents = statsTeacherGroups.reduce((sum, group) => sum + group.unpaidCount, 0);

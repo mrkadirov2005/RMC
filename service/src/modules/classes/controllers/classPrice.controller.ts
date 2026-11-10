@@ -48,6 +48,14 @@ const getHistory = handle("Narxlar tarixini yuklab bo'lmadi", async (req: any) =
   return classPriceService.history(Number(req.params.id), actor.centerId, teacherId);
 });
 
+const getAllHistories = handle("Narxlar tarixini yuklab bo'lmadi", async (req: any) => {
+  if (req.user?.userType === 'student') return { error: 'forbidden' };
+  const actor = actorOf(req);
+  if (!actor.centerId && !actor.isGlobal) return { error: 'forbidden' };
+  const teacherId = actor.userType === 'teacher' ? actor.id : null;
+  return classPriceService.allHistories(actor.centerId, teacherId);
+});
+
 const changePrice = handle("Narxni o'zgartirib bo'lmadi", async (req: any) => {
   if (!isDeveloper(req.user)) return { error: 'developer_only' };
   const actor = actorOf(req);
@@ -55,6 +63,6 @@ const changePrice = handle("Narxni o'zgartirib bo'lmadi", async (req: any) => {
   return classPriceService.changePrice(Number(req.params.id), req.body, actor.centerId, actor);
 }, 201);
 
-module.exports = { getHistory, changePrice };
+module.exports = { getHistory, getAllHistories, changePrice };
 
 export {};

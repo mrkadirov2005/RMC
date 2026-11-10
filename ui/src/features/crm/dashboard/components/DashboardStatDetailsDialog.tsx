@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/table';
 import type { DashboardCollections, DashboardRecord, DashboardStatCard } from '../types';
 import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
+import { groupPriceFor, useGroupPrices } from '@/shared/groupPrices';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -134,6 +135,7 @@ export const DashboardStatDetailsDialog = ({
 }: DashboardStatDetailsDialogProps) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const groupPricesVersion = useGroupPrices();
   const studentMap = useMemo(() => {
     const map = new Map<number, DashboardRecord>();
     collections.students.forEach((student) => {
@@ -170,7 +172,7 @@ export const DashboardStatDetailsDialog = ({
           const studentId = getStudentId(student);
           const classId = getNumber(student, 'class_id');
           const cls = classId ? classMap.get(classId) : undefined;
-          const expected = cls ? getExpectedAmountForMonth(student, getNumber(cls, 'payment_amount'), monthKey) : 0;
+          const expected = cls ? getExpectedAmountForMonth(student, groupPriceFor(classId, monthKey, getNumber(cls, 'payment_amount')), monthKey) : 0;
           const paid = studentId ? paidByStudent.get(studentId) || 0 : 0;
           return {
             student,
@@ -248,7 +250,8 @@ export const DashboardStatDetailsDialog = ({
     }
     if (card?.detailsType === 'teachers') return collections.teachers;
     return collections.students;
-  }, [card?.detailsType, classMap, collections.debts, collections.payments, collections.students, collections.teachers, selectedMonth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute when the price histories load
+  }, [card?.detailsType, classMap, collections.debts, collections.payments, collections.students, collections.teachers, selectedMonth, groupPricesVersion]);
 
   const goToStudent = (student: DashboardRecord) => {
     const id = getStudentId(student);

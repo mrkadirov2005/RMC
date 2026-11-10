@@ -37,6 +37,9 @@ router_class.get('/', requireAuth, classController.getAllClasses);
 
 router_class.get('/sessions/bulk', requireAuth, classController.getBulkClassSessions);
 
+// Every group's price history in scope (pages that bill many groups' months at once).
+router_class.get('/price-histories', requireAuth, classPriceController.getAllHistories);
+
 /**
  * @swagger
  * /classes/{id}:

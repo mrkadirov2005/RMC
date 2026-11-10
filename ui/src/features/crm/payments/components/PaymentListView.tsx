@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { coversExpectedAmount, getExpectedAmountForMonth } from '@/shared/billingPeriod';
+import { groupPriceFor, useGroupPrices } from '@/shared/groupPrices';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Table,
@@ -99,9 +100,15 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
     ? classes.find((item) => Number(item.class_id || item.id) === Number(selectedFolder.id))
     : undefined;
 
+  const groupPricesVersion = useGroupPrices();
+  // The group's price in the chosen month, from its price history.
+  const groupMonthFee = selectedFolder?.type === 'class'
+    ? groupPriceFor(selectedFolder.id, groupPaymentMonth, selectedGroupClass?.payment_amount)
+    : 0;
+
   const groupStudentRows = useMemo(() => {
     if (selectedFolder?.type !== 'class') return [];
-    const monthlyAmount = Number(selectedGroupClass?.payment_amount || 0);
+    const monthlyAmount = groupMonthFee;
     const search = searchTerm.trim().toLowerCase();
 
     return students
@@ -137,7 +144,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
       })
       .filter((row) => !search || row.name.toLowerCase().includes(search))
       .filter((row) => groupPaymentFilter === 'all' || (groupPaymentFilter === 'paid' ? row.paymentState === 'paid' : row.paymentState !== 'paid'));
-  }, [groupPaymentFilter, groupPaymentMonth, searchTerm, selectedFolder, selectedGroupClass, state.items, students]);
+  }, [groupMonthFee, groupPaymentFilter, groupPaymentMonth, groupPricesVersion, searchTerm, selectedFolder, selectedGroupClass, state.items, students]);
 
   // Students in this group who have not paid the month in full; the bot reminds them and their parents.
   const unpaidGroupRows = groupStudentRows.filter((row) => row.paymentState !== 'paid');
@@ -187,7 +194,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
               <ReceiptText className="h-4 w-4 text-slate-500" />
               <span className="text-muted-foreground">{t('Monthly group fee:')}</span>
               <span className="font-bold text-slate-900 dark:text-foreground">
-                {formatAmount(Number(selectedGroupClass?.payment_amount || 0))}
+                {formatAmount(groupMonthFee)}
               </span>
             </div>
 

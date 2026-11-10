@@ -1,6 +1,7 @@
 // React hooks for the crm feature.
 
 import { useEffect, useMemo } from 'react';
+import { useGroupPrices } from '@/shared/groupPrices';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchStudents, fetchStudentsForce } from '../../../../slices/studentsSlice';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
@@ -100,9 +101,12 @@ export const useDashboardData = (
     [scopedCollections, isSuperuser, selectedMonth]
   );
 
+  // Groups' price histories: each month's expected money at that month's price.
+  const groupPricesVersion = useGroupPrices();
   const finance = useMemo<DashboardFinancialMonth>(
     () => buildDashboardFinancialMonth(scopedCollections, selectedMonth),
-    [scopedCollections, selectedMonth]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute when the price histories load
+    [scopedCollections, selectedMonth, groupPricesVersion]
   );
 
   const schoolDistribution = useMemo<DashboardSchoolSlice[]>(
