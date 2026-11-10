@@ -7,6 +7,10 @@ jest.mock('../../services/subject.service', () => ({
   deleteSubject: jest.fn(),
 }));
 
+jest.mock('../../../levels/level.service', () => ({
+  subjectHasLevels: jest.fn(async () => false),
+}));
+
 jest.mock('../../../../shared/tenant', () => ({
   getScopedCenterId: jest.fn(),
 }));
@@ -283,5 +287,19 @@ describe('subjects controller', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Fanni o'chirib bo'lmadi", details: 'locked' });
     });
+  });
+});
+
+describe('subjects controller: levels', () => {
+  it('refuses to delete a subject that has levels', async () => {
+    const levelService = require('../../../levels/level.service');
+    const { getScopedCenterId: scoped } = require('../../../../shared/tenant');
+    const service = require('../../services/subject.service');
+    scoped.mockReturnValue({ centerId: 6, isGlobal: false });
+    levelService.subjectHasLevels.mockResolvedValueOnce(true);
+    const res = { status: jest.fn(() => res), json: jest.fn(() => res) };
+    await require('../subject.controller').deleteSubject({ params: { id: '4' }, user: { userType: 'superuser', id: 1 } }, res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(service.deleteSubject).not.toHaveBeenCalled();
   });
 });

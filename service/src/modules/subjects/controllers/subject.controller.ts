@@ -1,4 +1,5 @@
 const subjectService = require('../services/subject.service');
+const levelService = require('../../levels/level.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 
 const getAllSubjects = async (req: any, res: any) => {
@@ -122,6 +123,9 @@ const deleteSubject = async (req: any, res: any) => {
     }
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
+    }
+    if (await levelService.subjectHasLevels(Number(req.params.id))) {
+      return res.status(409).json({ error: "Fanning darajalari bor: avval darajalarni o'chiring.", code: 'SUBJECT_HAS_LEVELS' });
     }
     const row = await subjectService.deleteSubject(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Fan topilmadi' });

@@ -68,14 +68,26 @@ const toDateInputValue = (value?: string | null) => {
 // A new group gets its price here. Changing an existing group's price is for the developer
 // account only, and then from Payments → Groups ("Change group payment"), so every change has a
 // start month and months paid at the old price stay paid.
-const GroupPriceInput = ({ value, editing, onChange, t }: {
+const GroupPriceInput = ({ value, editing, levelName, onChange, t }: {
   value?: number | string | null;
   editing: boolean;
+  /** The group's level: it takes the level's price, set in Subjects. */
+  levelName?: string | null;
   onChange: (value: number) => void;
   t: TranslateFn;
 }) => {
   const user = useAppSelector((state) => state.auth.user);
   const isDeveloper = user?.userType === 'superuser' && user?.is_developer === true;
+  if (editing && levelName) {
+    return (
+      <>
+        <Input id="payment_amount" type="number" value={value || ''} disabled className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background" />
+        <p className="text-[0.625rem] text-muted-foreground">
+          {t("The price comes from level {level}: change it in Subjects.", { level: levelName })}
+        </p>
+      </>
+    );
+  }
   const locked = editing && !isDeveloper;
   return (
     <>
@@ -255,6 +267,7 @@ export const ClassDialogs = ({
                       <GroupPriceInput
                         value={formData.payment_amount}
                         editing={Boolean(editingId)}
+                        levelName={(formData as any).level_id ? (formData as any).level_name || '—' : null}
                         onChange={(value) => setFormData({ ...formData, payment_amount: value })}
                         t={t}
                       />

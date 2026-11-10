@@ -140,6 +140,23 @@ describe('group price history with PostgreSQL', () => {
     expect(all[students.ali].state).toBe('paid');
   });
 
+  test('old months keep the old price even when the initial row is missing', async () => {
+    const { rows: [initial] } = await pool.query(
+      "DELETE FROM class_price_history WHERE class_id = $1 AND source = 'initial' RETURNING *", [raised]
+    );
+    try {
+      const rows = await summary(raised, monthStart(-3), lastDay(-1));
+      expect(rows[students.ali].state).toBe('paid');
+      expect(Number(rows[students.ali].expected)).toBe(900000);
+    } finally {
+      await pool.query(
+        `INSERT INTO class_price_history (history_id, class_id, center_id, amount, effective_from, note, source)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [initial.history_id, initial.class_id, initial.center_id, initial.amount, initial.effective_from, initial.note, initial.source]
+      );
+    }
+  });
+
   test('after the first change, the group form cannot change the price', async () => {
     const res = await api().put(`/api/classes/${raised}`).set(auth('developer')).send({ payment_amount: 370000 });
     expect(res.status).toBe(409);

@@ -17,6 +17,7 @@ const {
 } = require('../dtos/request.dto');
 const classController=require('../modules/classes/controllers/class.controller');
 const classPriceController = require('../modules/classes/controllers/classPrice.controller');
+const levelController = require('../modules/levels/level.controller');
 /**
  * @swagger
  * /classes:
@@ -141,6 +142,8 @@ router_class.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(U
 // Group price history; "Change group payment" sets a new price from a month.
 router_class.get('/:id/price-history', requireAuth, validateParams(IdParamDto), classPriceController.getHistory);
 router_class.post('/:id/price-changes', requireAuth, validateParams(IdParamDto), classPriceController.changePrice);
+// Puts the group in a level (or out of it) from a month.
+router_class.put('/:id/level', requireAuth, validateParams(IdParamDto), levelController.setClassLevel);
 
 /**
  * @swagger

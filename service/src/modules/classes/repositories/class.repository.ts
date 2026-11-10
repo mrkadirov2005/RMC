@@ -72,6 +72,8 @@ const classSelection = (extra: Record<string, any> = {}) => ({
   room_number: sql`COALESCE(NULLIF(${classes.roomNumber}, ''), ${roomNumbersSql})`,
   total_students: classes.totalStudents,
   payment_amount: classes.paymentAmount,
+  level_id: classes.levelId,
+  level_name: sql`(SELECT l.level_name FROM subject_levels l WHERE l.level_id = classes.level_id)`,
   payment_frequency: classes.paymentFrequency,
   start_date: classes.startDate,
   end_date: classes.endDate,

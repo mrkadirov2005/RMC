@@ -243,6 +243,8 @@ const classes = pgTable('classes', {
   className: varchar('class_name', { length: 100 }).notNull(),
   classCode: varchar('class_code', { length: 50 }).notNull(),
   level: integer('level'),
+  // The subject level whose price the group takes this month (see class_level_history).
+  levelId: integer('level_id'),
   section: text('section'),
   capacity: integer('capacity'),
   teacherId: integer('teacher_id'),

@@ -4,7 +4,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { apiClient } from '@/shared/api/api';
 
-type Entry = { amount: number; effective_from: string };
+type Entry = { amount: number; previous_amount?: number | null; effective_from: string };
 
 const MAX_AGE_MS = 30 * 1000;
 
@@ -43,14 +43,21 @@ export const loadGroupPrices = (force = false): Promise<void> => {
 export const refreshGroupPrices = () => loadGroupPrices(true);
 
 /**
- * The group's price for a month (YYYY-MM): the latest price starting on or before it. A group
- * whose price never changed (or before the histories have loaded) uses `fallback`, the group's
- * current price.
+ * The group's price for a month (YYYY-MM): the latest price starting on or before it; a month
+ * before the first change uses the price that change replaced. A group whose price never changed
+ * (or before the histories have loaded) uses `fallback`, the group's current price.
  */
-export const groupPriceFor = (classId: unknown, monthKey: string, fallback: unknown) => {
-  const items = prices[String(Number(classId) || '')];
-  const entry = items?.find((item) => item.effective_from <= monthKey);
-  return entry ? Number(entry.amount) : Number(fallback || 0);
+export const groupPriceFor = (classId: unknown, monthKey: string, fallback: unknown) =>
+  priceFromEntries(prices[String(Number(classId) || '')], monthKey, Number(fallback || 0));
+
+/** Entries come newest first. */
+export const priceFromEntries = (items: Entry[] | undefined, monthKey: string, fallback: number) => {
+  const list = items || [];
+  const entry = list.find((item) => item.effective_from <= monthKey);
+  if (entry) return Number(entry.amount);
+  const earliest = list[list.length - 1];
+  if (earliest && earliest.previous_amount != null) return Number(earliest.previous_amount);
+  return fallback;
 };
 
 const subscribe = (listener: () => void) => {
