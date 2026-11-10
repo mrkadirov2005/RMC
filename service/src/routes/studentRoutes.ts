@@ -136,6 +136,8 @@ router_student.delete('/:id/purge', requireAuth, requireRole('superuser'), requi
 router_student.post('/:id/transfer', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(TransferStudentDto), studentController.transferStudent);
 // The child's group records (main record first) and adding them to another group under the same login.
 router_student.get('/:id/groups', requireAuth, validateParams(IdParamDto), studentController.getStudentGroups);
+// The child's whole journey: every group and teacher, and how each ended (owners and admins).
+router_student.get('/:id/journey', requireAuth, requireRole('superuser'), validateParams(IdParamDto), studentController.getStudentJourney);
 router_student.post('/:id/groups', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(AssignStudentGroupDto), studentController.assignStudentToGroup);
 // Undo an added group (only before any lesson, payment or coin there). :id is the added record.
 router_student.delete('/:id/added-group', requireAuth, requireRole('superuser'), validateParams(IdParamDto), studentController.removeAddedGroup);

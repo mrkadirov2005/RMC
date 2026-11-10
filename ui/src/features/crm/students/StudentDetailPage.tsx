@@ -22,9 +22,12 @@ import {
   Users,
   X,
   Video,
+  Route,
 } from 'lucide-react';
 import { studentAPI, classAPI, teacherAPI } from './api';
 import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab, GroupsTab, VideosTab } from './tabs';
+import { JourneyTab } from './tabs/JourneyTab';
+import { useAppSelector } from '@/features/crm/hooks';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -148,7 +151,7 @@ interface CoinTransaction {
 
 // Renders the student detail page screen.
 
-const STUDENT_TABS = ['overview', 'groups', 'videos', 'attendance', 'payments', 'assignments', 'individual-tasks', 'grades', 'coins'] as const;
+const STUDENT_TABS = ['overview', 'groups', 'journey', 'videos', 'attendance', 'payments', 'assignments', 'individual-tasks', 'grades', 'coins'] as const;
 const StudentDetailPage = () => {
   const { t } = useLanguage();
   const { studentId } = useParams<{ studentId: string }>();
@@ -173,6 +176,7 @@ const StudentDetailPage = () => {
   const location = useLocation();
   // The open tab is in the address (?tab=groups), so a reload stays on it.
   const [activeTab, setActiveTab] = useUrlTab('overview', STUDENT_TABS);
+  const authUser = useAppSelector((state) => state.auth.user);
   const [isEditingOverview, setIsEditingOverview] = useState(false);
   const [overviewDraft, setOverviewDraft] = useState<StudentOverviewDraft | null>(null);
   const [savingOverview, setSavingOverview] = useState(false);
@@ -431,9 +435,12 @@ const StudentDetailPage = () => {
   const groupName = classData?.class_name || '';
   const overviewRows = buildStudentOverviewRows({ student, groupName, teacherName, coinBalance });
   const overviewColumns = splitStudentOverviewRows(overviewRows);
+  const isManager = authUser?.userType === 'superuser';
   const tabItems = [
     { value: 'overview', label: 'Overview', icon: User },
     { value: 'groups', label: 'Groups', icon: Users },
+    // The whole journey (every group, teacher and how each ended): owners and admins only.
+    ...(isManager ? [{ value: 'journey', label: 'Journey', icon: Route }] : []),
     { value: 'videos', label: 'Videos', icon: Video },
     { value: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { value: 'payments', label: 'Payments', icon: Receipt },
@@ -641,6 +648,9 @@ const StudentDetailPage = () => {
             )}
 
             {activeTab === 'videos' && studentId && <VideosTab studentId={Number(studentId)} />}
+            {activeTab === 'journey' && isManager && studentId && (
+              <JourneyTab studentId={Number(studentId)} onOpenStudent={(id) => navigate(`/students/${id}/profile?tab=journey`)} />
+            )}
             {activeTab === 'groups' && studentId && (
               <GroupsTab studentId={Number(studentId)} onOpenStudent={(id) => navigate(`/students/${id}/profile?tab=groups`)} />
             )}
