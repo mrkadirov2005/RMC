@@ -9,6 +9,8 @@ type Entry = { amount: number; previous_amount?: number | null; effective_from: 
 const MAX_AGE_MS = 30 * 1000;
 
 let prices: Record<string, Entry[]> = {};
+// Each group's lesson days (e.g. ["Monday", "Wednesday", "Friday"]), for months billed by lessons.
+let schedules: Record<string, string[]> = {};
 let loadedAt = 0;
 let pending: Promise<void> | null = null;
 let version = 0;
@@ -27,6 +29,7 @@ export const loadGroupPrices = (force = false): Promise<void> => {
     .get('/classes/price-histories', { params: { _fresh: Date.now() } })
     .then((response: any) => {
       prices = response?.data?.classes || {};
+      schedules = response?.data?.schedules || {};
       loadedAt = Date.now();
       notify();
     })
@@ -60,6 +63,9 @@ export const priceFromEntries = (items: Entry[] | undefined, monthKey: string, f
   return fallback;
 };
 
+/** The group's lesson days from its schedule ([] when unknown or not loaded yet). */
+export const groupLessonDaysFor = (classId: unknown): string[] => schedules[String(Number(classId) || '')] || [];
+
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
   return () => {
@@ -80,8 +86,9 @@ export const useGroupPrices = () => {
 };
 
 /** For tests: replace the loaded histories. */
-export const setGroupPricesForTest = (next: Record<string, Entry[]>) => {
+export const setGroupPricesForTest = (next: Record<string, Entry[]>, nextSchedules: Record<string, string[]> = {}) => {
   prices = next;
+  schedules = nextSchedules;
   loadedAt = Date.now();
   notify();
 };

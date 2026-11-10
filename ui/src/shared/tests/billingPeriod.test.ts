@@ -81,3 +81,40 @@ describe('getFeeToCollectThisMonth', () => {
     expect(getFeeToCollectThisMonth({ start_date: '2026-11-05' }, 320000, october20)).toBe(320000);
   });
 });
+
+describe('billing by lessons (12 a month)', () => {
+  // October 2026: Mon/Wed/Fri has 13 lesson days; Oct 1 is a Thursday.
+  const mwf = ['Monday', 'Wednesday', 'Friday'];
+
+  it('a whole month is the full price, even with 13 lesson days', () => {
+    expect(getExpectedAmountForMonth({}, 320000, '2026-10', mwf)).toBe(320000);
+  });
+
+  it('a student who joins partway pays price / 12 per lesson left', () => {
+    // From Tue 6 Oct: Wed 7, Fri 9, Mon 12 ... Fri 30 = 11 lessons.
+    expect(getExpectedAmountForMonth({ start_date: '2026-10-06' }, 320000, '2026-10', mwf)).toBe(293333.33);
+    // From Mon 26 Oct: Mon 26, Wed 28, Fri 30 = 3 lessons.
+    expect(getExpectedAmountForMonth({ start_date: '2026-10-26' }, 300000, '2026-10', mwf)).toBe(75000);
+  });
+
+  it('never more than the full price', () => {
+    // From Fri 2 Oct: 13 lessons, capped at 12.
+    expect(getExpectedAmountForMonth({ start_date: '2026-10-02' }, 300000, '2026-10', mwf)).toBe(300000);
+  });
+
+  it('a student who leaves partway pays for the lessons until they left', () => {
+    // Until Mon 5 Oct: Fri 2, Mon 5 = 2 lessons.
+    expect(getExpectedAmountForMonth({ end_date: '2026-10-05' }, 340000, '2026-10', mwf)).toBe(56666.67);
+  });
+
+  it('takes the lesson days from the loaded group schedules by class_id', async () => {
+    const { setGroupPricesForTest } = await import('../groupPrices');
+    setGroupPricesForTest({}, { '35': mwf });
+    expect(getExpectedAmountForMonth({ class_id: 35, start_date: '2026-10-26' }, 300000, '2026-10')).toBe(75000);
+    setGroupPricesForTest({});
+  });
+
+  it('a group without lesson days goes by calendar days', () => {
+    expect(getExpectedAmountForMonth({ start_date: '2026-10-06' }, 310000, '2026-10', [])).toBe(260000);
+  });
+});

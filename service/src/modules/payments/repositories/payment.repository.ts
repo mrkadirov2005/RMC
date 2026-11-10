@@ -263,20 +263,13 @@ const findStudentPaymentSummary = async (filters: {
               (SELECT string_agg(DISTINCT sub.subject_name, ', ') FROM subjects sub WHERE sub.class_id = s.class_id) AS subject,
               COALESCE(p.paid, 0)::numeric AS paid_amount, COALESCE(p.payments_count, 0)::int AS payments_count, p.last_payment_date,
               COALESCE(p.discounts, 0)::numeric AS discount_applied, COALESCE(p.paid_months, 0)::int AS paid_months,
-              -- Months billed in the range: none before the start date, and the start month only
-              -- for the days from the start date (as a transfer splits a month).
-              LEAST((SELECT COALESCE(SUM(CASE
-                  WHEN s.start_date IS NULL OR s.start_date <= m::date THEN 1
-                  WHEN s.start_date >= (m + interval '1 month')::date THEN 0
-                  ELSE ((m + interval '1 month')::date - s.start_date)::numeric / ((m + interval '1 month')::date - m::date)
-                END), 0)
+              -- Months billed in the range: none outside the record's dates, and a month the student
+              -- joined or left partway through by its lessons (a month is 12 lessons).
+              LEAST((SELECT COALESCE(SUM(billing_month_share(c.section, s.start_date::date, s.end_date::date, m::date)), 0)
                 FROM generate_series(date_trunc('month', $1::date), date_trunc('month', $2::date), interval '1 month') m), $3::int)::numeric AS billed_months,
               -- What those months cost, each at the group's price in effect for that month.
-              (SELECT COALESCE(SUM(CASE
-                  WHEN s.start_date IS NULL OR s.start_date <= m::date THEN 1
-                  WHEN s.start_date >= (m + interval '1 month')::date THEN 0
-                  ELSE ((m + interval '1 month')::date - s.start_date)::numeric / ((m + interval '1 month')::date - m::date)
-                END * ${priceAtSql('s.class_id', 'm', 'c.payment_amount')}), 0)
+              (SELECT COALESCE(SUM(billing_month_share(c.section, s.start_date::date, s.end_date::date, m::date)
+                  * ${priceAtSql('s.class_id', 'm', 'c.payment_amount')}), 0)
                 FROM (SELECT m FROM generate_series(date_trunc('month', $1::date), date_trunc('month', $2::date), interval '1 month') m
                       ORDER BY m LIMIT $3::int) months)::numeric AS billed_amount,
               CASE

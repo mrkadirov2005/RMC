@@ -3,6 +3,7 @@
 // price in effect this month, for everything that shows "the group's price".
 const pool = require('../../../db/pool');
 const { priceAtSql, ownPriceAtSql, levelPriceAtSql } = require('../classPriceSql');
+const { lessonDaysOf } = require('../../salaries/services/groupPayments');
 
 const query = (text: string, params: any[] = []) => pool.query(text, params).then((r: any) => r.rows);
 const one = (text: string, params: any[] = []) => query(text, params).then((rows: any[]) => rows[0] || null);
@@ -203,7 +204,18 @@ const allHistories = async (centerId: number | null, teacherId: number | null = 
     else if (list[list.length - 1].amount !== amount) list.push({ amount, effective_from: String(row.month) });
   });
   Object.values(byClass).forEach((list) => list.reverse());
-  return { classes: byClass };
+  // Every group's lesson days, for a month a student joined or left partway (12 lessons a month).
+  const sections = await query(
+    `SELECT c.class_id, c.section FROM classes c
+     WHERE c.deleted_at IS NULL AND ($1::int IS NULL OR c.center_id = $1) AND ($2::int IS NULL OR c.teacher_id = $2)`,
+    [centerId, teacherId]
+  );
+  const schedules: Record<string, string[]> = {};
+  sections.forEach((row: any) => {
+    const days = lessonDaysOf(row.section);
+    if (days.length) schedules[row.class_id] = days;
+  });
+  return { classes: byClass, schedules };
 };
 
 /** Whether the group's price has been changed from the payments section yet. */

@@ -1,4 +1,5 @@
 // Source file for the students area in the crm feature.
+import { useGroupPrices } from '@/shared/groupPrices';
 
 import { useState } from 'react';
 import { Pencil, Printer, Trash2, Plus } from 'lucide-react';
@@ -73,6 +74,8 @@ const getStatusBadgeVariant = (status: string) => {
 // Renders the payment section module.
 export const PaymentSection = ({ payments, student, classData, onRefresh }: PaymentSectionProps) => {
   const { t } = useLanguage();
+  // Group lesson days, so the amount for a month the student joined partway is by lessons.
+  useGroupPrices();
   const defaultCenterId = student?.center_id || 0;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);

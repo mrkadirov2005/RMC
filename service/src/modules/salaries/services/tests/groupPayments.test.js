@@ -112,3 +112,20 @@ describe('teacher group payments', () => {
     expect(bek.transferred).toBe(false);
   });
 });
+
+describe('billing by lessons (12 a month)', () => {
+  const { getExpectedAmountForMonth, lessonDaysOf } = require('../groupPayments');
+  const mwf = lessonDaysOf('{"days":["Monday","Wednesday","Friday"],"time":"14:00"}');
+
+  it('reads the lesson days from the schedule', () => {
+    expect(mwf).toEqual(['Monday', 'Wednesday', 'Friday']);
+    expect(lessonDaysOf('not json')).toEqual([]);
+  });
+
+  it('whole months are the full price; partial months price / 12 per lesson, at most 12', () => {
+    expect(getExpectedAmountForMonth({}, 320000, '2026-10', mwf)).toBe(320000);
+    expect(getExpectedAmountForMonth({ start_date: '2026-10-06' }, 320000, '2026-10', mwf)).toBe(293333.33);
+    expect(getExpectedAmountForMonth({ start_date: '2026-10-02' }, 300000, '2026-10', mwf)).toBe(300000);
+    expect(getExpectedAmountForMonth({ end_date: '2026-10-05' }, 340000, '2026-10', mwf)).toBe(56666.67);
+  });
+});
