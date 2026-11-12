@@ -10,6 +10,12 @@ export interface KpiRecord {
   retention_score: number | string;
   contribution_score: number | string;
   teaching_quality_score: number | string;
+  /** The teacher's students' exam score for the month (entered). */
+  exam_score?: number | string | null;
+  /** On-time scoring: 100 minus lesson control's minus (auto). */
+  grading_score?: number | string | null;
+  /** New students who came asking for this teacher: +1 point each (auto). */
+  referral_count?: number | null;
   final_score: number | string;
   notes?: string | null;
   marked_by_id?: number | null;
@@ -23,6 +29,8 @@ export interface KpiRecord {
 export interface KpiAutoScores {
   student_score: number;
   retention_score: number;
+  grading_score?: number;
+  referral_count?: number;
 }
 
 export interface KpiOverviewRow {
@@ -32,6 +40,10 @@ export interface KpiOverviewRow {
   center_id?: number | null;
   kpi: KpiRecord | null;
   preview: KpiAutoScores;
+  /** Place this month (saved KPIs only), the year so far added up, and its place. */
+  month_place?: number | null;
+  year_total?: number | null;
+  year_place?: number | null;
 }
 
 export interface KpiTeacherSummary {
@@ -53,5 +65,6 @@ export interface UpsertKpiPayload {
   kpi_month: number;
   contribution_score: number;
   teaching_quality_score: number;
+  exam_score?: number;
   notes?: string;
 }

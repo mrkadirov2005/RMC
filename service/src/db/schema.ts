@@ -144,6 +144,11 @@ const teacherKpis = pgTable('teacher_kpis', {
   retentionScore: numeric('retention_score').notNull(),
   contributionScore: numeric('contribution_score').notNull(),
   teachingQualityScore: numeric('teaching_quality_score').notNull(),
+  // Monthly exam score of the teacher's students (entered), on-time scoring (lesson control) and
+  // new students who came asking for this teacher (+1 point each).
+  examScore: numeric('exam_score'),
+  gradingScore: numeric('grading_score'),
+  referralCount: integer('referral_count').notNull().default(0),
   finalScore: numeric('final_score').notNull(),
   notes: text('notes'),
   markedById: integer('marked_by_id'),

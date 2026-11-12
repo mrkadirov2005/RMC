@@ -32,6 +32,7 @@ const TeacherKpiDetailPage = () => {
     month: number;
     contributionScore?: number | string | null;
     teachingQualityScore?: number | string | null;
+    examScore?: number | string | null;
     notes?: string | null;
   } | null>(null);
 
@@ -47,6 +48,7 @@ const TeacherKpiDetailPage = () => {
       month: entry?.kpi_month ?? currentPeriod.month,
       contributionScore: entry?.contribution_score,
       teachingQualityScore: entry?.teaching_quality_score,
+      examScore: entry?.exam_score,
       notes: entry?.notes,
     });
   };
@@ -57,6 +59,8 @@ const TeacherKpiDetailPage = () => {
       : {
           student_score: Number(detail?.history.find((e) => e.kpi_year === dialogPeriod.year && e.kpi_month === dialogPeriod.month)?.student_score) || 0,
           retention_score: Number(detail?.history.find((e) => e.kpi_year === dialogPeriod.year && e.kpi_month === dialogPeriod.month)?.retention_score) || 0,
+          grading_score: Number(detail?.history.find((e) => e.kpi_year === dialogPeriod.year && e.kpi_month === dialogPeriod.month)?.grading_score ?? 100),
+          referral_count: Number(detail?.history.find((e) => e.kpi_year === dialogPeriod.year && e.kpi_month === dialogPeriod.month)?.referral_count ?? 0),
         }
     : { student_score: 0, retention_score: 0 };
 
@@ -147,6 +151,7 @@ const TeacherKpiDetailPage = () => {
           autoScores={dialogAutoScores}
           existingContributionScore={dialogPeriod.contributionScore}
           existingTeachingQualityScore={dialogPeriod.teachingQualityScore}
+          existingExamScore={dialogPeriod.examScore}
           existingNotes={dialogPeriod.notes}
         />
       )}

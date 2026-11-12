@@ -36,12 +36,19 @@ export const parseMonthInputValue = (value: string): KpiPeriod | null => {
 export const teacherFullName = (row: { first_name?: string | null; last_name?: string | null }): string =>
   [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || 'Unknown Teacher';
 
-export const computeFinalScorePreview = (
-  studentScore: number,
-  retentionScore: number,
-  contributionScore: number,
-  teachingQualityScore: number
-): number => Math.round(((studentScore + retentionScore + contributionScore + teachingQualityScore) / 4) * 100) / 100;
+/**
+ * The month's KPI, as the server works it out: the average of the six parts out of 100
+ * (retention, average lesson score, contribution, exam, teaching quality, on-time scoring) plus
+ * 1 point for each new student who came asking for the teacher.
+ */
+export const computeFinalScorePreview = (parts: {
+  studentScore: number; retentionScore: number; contributionScore: number; examScore: number;
+  teachingQualityScore: number; gradingScore: number; referralCount: number;
+}): number => {
+  const outOf100 = [parts.retentionScore, parts.studentScore, parts.contributionScore, parts.examScore, parts.teachingQualityScore, parts.gradingScore]
+    .map((value) => Number(value) || 0);
+  return Math.round((outOf100.reduce((sum, value) => sum + value, 0) / outOf100.length + (Number(parts.referralCount) || 0)) * 100) / 100;
+};
 
 export const formatScore = (value: number | string | null | undefined): string => {
   if (value === null || value === undefined || value === '') return '—';

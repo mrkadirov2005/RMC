@@ -183,6 +183,7 @@ describe('KPIs controller', () => {
         kpiMonth: 4,
         contributionScore: 8,
         teachingQualityScore: 9,
+        examScore: 0,
         notes: 'Strong quarter',
         actingUser: user,
       });

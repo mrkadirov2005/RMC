@@ -30,6 +30,14 @@ class UpsertKpiDto {
   @Max(100)
   teaching_quality_score!: number;
 
+  // The teacher's students' exam score for the month, out of 100 (entered by the owner).
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  exam_score?: number;
+
   @IsOptional()
   @IsString()
   notes?: string;

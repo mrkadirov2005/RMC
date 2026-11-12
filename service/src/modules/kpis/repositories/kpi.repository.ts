@@ -14,6 +14,9 @@ const kpiSelection = {
   retention_score: teacherKpis.retentionScore,
   contribution_score: teacherKpis.contributionScore,
   teaching_quality_score: teacherKpis.teachingQualityScore,
+  exam_score: teacherKpis.examScore,
+  grading_score: teacherKpis.gradingScore,
+  referral_count: teacherKpis.referralCount,
   final_score: teacherKpis.finalScore,
   notes: teacherKpis.notes,
   marked_by_id: teacherKpis.markedById,
@@ -53,6 +56,9 @@ const upsertRecord = async (data: {
   retentionScore: number;
   contributionScore: number;
   teachingQualityScore: number;
+  examScore: number;
+  gradingScore: number;
+  referralCount: number;
   finalScore: number;
   markedById?: number | null;
   markedByUserType?: string | null;
@@ -71,6 +77,9 @@ const upsertRecord = async (data: {
       retentionScore: String(data.retentionScore),
       contributionScore: String(data.contributionScore),
       teachingQualityScore: String(data.teachingQualityScore),
+      examScore: String(data.examScore),
+      gradingScore: String(data.gradingScore),
+      referralCount: data.referralCount,
       finalScore: String(data.finalScore),
       markedById: data.markedById ?? null,
       markedByUserType: data.markedByUserType ?? null,
@@ -88,6 +97,9 @@ const upsertRecord = async (data: {
         retentionScore: String(data.retentionScore),
         contributionScore: String(data.contributionScore),
         teachingQualityScore: String(data.teachingQualityScore),
+        examScore: String(data.examScore),
+        gradingScore: String(data.gradingScore),
+        referralCount: data.referralCount,
         finalScore: String(data.finalScore),
         markedById: data.markedById ?? null,
         markedByUserType: data.markedByUserType ?? null,
@@ -221,7 +233,34 @@ const monthlyRetentionCounts = async ({
   };
 };
 
+// New students this month who came asking for this teacher (Students -> "How they found us" ->
+// referred by teacher). A record created by a transfer is not a new student.
+const monthlyReferralCount = async ({ centerId, teacherId, year, month }: { centerId?: number; teacherId: number; year: number; month: number }) => {
+  const { start, end } = monthRange(year, month);
+  const result = await pool.query(
+    `SELECT COUNT(DISTINCT COALESCE(s.main_student_id, s.student_id))::int AS total
+     FROM students s
+     WHERE s.referred_by_teacher_id = $1
+       AND s.deleted_at IS NULL
+       AND s.transferred_from_student_id IS NULL
+       AND COALESCE(s.start_date::date, s.created_at::date) >= $2::date
+       AND COALESCE(s.start_date::date, s.created_at::date) < $3::date
+       AND ($4::int IS NULL OR s.center_id = $4)`,
+    [teacherId, start, end, centerId ?? null],
+  );
+  return Number(result.rows[0]?.total || 0);
+};
+
+// Every saved month of a year, for the year-to-date ranking.
+const listRecordsForYear = (year: number, centerId?: number) => {
+  const conditions = [eq(teacherKpis.kpiYear, year)];
+  if (centerId) conditions.push(eq(teacherKpis.centerId, centerId));
+  return db.select(kpiSelection).from(teacherKpis).where(and(...conditions));
+};
+
 module.exports = {
+  monthlyReferralCount,
+  listRecordsForYear,
   findRecord,
   upsertRecord,
   listTeachers,
