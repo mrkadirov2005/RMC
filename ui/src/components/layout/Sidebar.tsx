@@ -11,7 +11,7 @@ import {
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown, MessageSquareText, Network, LockKeyhole,
   School, BadgeAlert, Server, ClipboardCheck,
   TrendingDown, BadgePercent, ChevronDown, GripVertical, Wallet, PanelLeft,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Route as RouteIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -62,6 +62,7 @@ const iconMap: Record<string, ElementType> = {
   Developer: LockKeyhole,
   Sms: MessageSquareText,
   Graph: Network,
+  Process: RouteIcon,
   Centers: School,
   Reports: BarChart3,
   Retention: TrendingDown,
@@ -95,6 +96,7 @@ const iconToneMap: Record<string, string> = {
   Developer: 'from-slate-700 to-slate-950 shadow-slate-500/25',
   Sms: 'from-emerald-500 to-teal-700 shadow-emerald-500/25',
   Graph: 'from-sky-500 to-indigo-700 shadow-sky-500/25',
+  Process: 'from-lime-600 to-emerald-700 shadow-lime-500/25',
   Centers: 'from-cyan-600 to-teal-700 shadow-cyan-500/25',
   Reports: 'from-slate-800 to-slate-950 shadow-slate-500/25',
   Retention: 'from-rose-600 to-red-700 shadow-rose-500/25',
@@ -297,6 +299,8 @@ const Sidebar = memo(() => {
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
+    // Progress reports on the owner's task lists: what is done and what is left.
+    { label: 'Process', path: '/process', iconName: 'Process', roles: ['superuser'], ownerOnly: true },
     // Locks on any account and owner accounts; the developer account only.
     { label: 'Technical section', path: '/developer', iconName: 'Developer', roles: ['superuser'], developerOnly: true },
     // @MOB-160 Announcements, rules, links and requests of the student and parent mobile app.
