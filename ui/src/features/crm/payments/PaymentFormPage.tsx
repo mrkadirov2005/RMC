@@ -22,6 +22,7 @@ import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { TransferSplitNotice } from './transfer/TransferSplitNotice';
 import type { Class, Payment, Student } from './types';
 
 const defaultPayment = (centerId: number): Partial<Payment> => ({
@@ -642,6 +643,10 @@ const PaymentFormPage = () => {
                 )}
               </div>
             </section>
+
+            {!isEditing && Number(formData.student_id || 0) > 0 ? (
+              <TransferSplitNotice studentId={Number(formData.student_id)} paymentDate={formData.payment_date} amount={Number(formData.amount || 0)} />
+            ) : null}
 
             {(isEditing || selectedStudent) && (
             <section className="rounded-lg border border-sky-200 bg-sky-50/80 p-4">

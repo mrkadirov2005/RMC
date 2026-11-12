@@ -75,4 +75,10 @@ export const paymentsLabels: Record<string, string> = {
   "Only the developer can change a group's price.": "Guruh narxini faqat dasturchi o'zgartira oladi.",
   'Monthly price': 'Oylik narx',
   'Could not load the price history.': "Narxlar tarixini yuklab bo'lmadi.",
+  // Payment form: the yellow notice for a student who moved to another teacher.
+  'This student moved to another teacher. The payment is split by the lessons studied with each.': "Bu o'quvchi boshqa ustozga o'tgan. To'lov har bir ustozda o'qigan darslariga qarab bo'linadi.",
+  'Days {days}: {lessons} of 12 lessons': '{days}-kunlar: 12 darsdan {lessons} tasi',
+  'Enter the amount to see how much each teacher gets.': "Har bir ustozga qancha tushishini ko'rish uchun summani kiriting.",
+  'No teacher': "Ustoz yo'q",
+  "so'm": "so'm",
 };

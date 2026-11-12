@@ -70,18 +70,73 @@ const monthStartBefore = (date: string, back: number) => {
 /** How many months back a late payment still settles a transfer month. */
 const TRANSFER_LOOKBACK_MONTHS = 2;
 
-const findTransferSplits = async (studentId: number, amount: number, paymentDate: string) => {
+/**
+ * The months a payment can settle a transfer in, oldest first: two months back (only the month the
+ * student left a group, and only while that group is still owed), then the payment's own month.
+ * Each with every group the student was in that month.
+ */
+const findTransferMonths = async (studentId: number, paymentDate: string) => {
+  const months: Array<{ month: string; shares: any[] }> = [];
+  for (let back = TRANSFER_LOOKBACK_MONTHS; back >= 0; back -= 1) {
+    const monthStart = monthStartBefore(paymentDate, back);
+    const shares = (await paymentRepository.findTransferMonthShares(studentId, back === 0 ? paymentDate : monthStart, back === 0 ? {} : { transferMonthOnly: true })) || [];
+    const earlier = shares.filter((row: any) => row.student_id !== studentId && Number(row.expected) > 0);
+    const owed = earlier.some((row: any) => Number(row.expected) - Number(row.paid || 0) > 0.009);
+    if (earlier.length && (back === 0 || owed)) months.push({ month: monthStart.slice(0, 7), shares });
+  }
+  return months;
+};
+
+/** The payment's parts that go to earlier groups, month by month, from what is left of it. */
+const splitAcrossMonths = (studentId: number, amount: number, months: Array<{ month: string; shares: any[] }>) => {
   const parts: any[] = [];
   let left = amount;
-  for (let back = TRANSFER_LOOKBACK_MONTHS; back >= 0 && left > 0; back -= 1) {
-    const monthStart = monthStartBefore(paymentDate, back);
-    const shares = await paymentRepository.findTransferMonthShares(studentId, back === 0 ? paymentDate : monthStart, back === 0 ? {} : { transferMonthOnly: true });
-    for (const part of splitTransferPayment(left, shares || [], studentId)) {
-      parts.push({ ...part, month: monthStart.slice(0, 7) });
+  for (const { month, shares } of months) {
+    if (!(left > 0)) break;
+    for (const part of splitTransferPayment(left, shares, studentId)) {
+      parts.push({ ...part, month });
       left = Math.round((left - part.amount) * 100) / 100;
     }
   }
   return parts;
+};
+
+const findTransferSplits = async (studentId: number, amount: number, paymentDate: string) =>
+  splitAcrossMonths(studentId, amount, await findTransferMonths(studentId, paymentDate));
+
+/**
+ * For the payment form: the groups a transferred student was in during the month(s) this payment
+ * settles, with the teacher, the lessons there (of 12) and, for an amount, the part each gets.
+ * Null when the student was not transferred.
+ */
+const previewTransferSplit = async (studentId: number, amount: number, paymentDate: string) => {
+  const months = await findTransferMonths(studentId, paymentDate);
+  if (!months.length) return null;
+  const parts = splitAcrossMonths(studentId, Number(amount) > 0 ? Number(amount) : 0, months);
+  const partOf = (month: string, recordId: number) => parts.find((part) => part.month === month && part.student_id === recordId)?.amount || 0;
+  const splitTotal = parts.reduce((sum, part) => sum + part.amount, 0);
+  return {
+    months: months.map(({ month, shares }) => ({
+      month,
+      groups: shares
+        .filter((row: any) => Number(row.share) > 0)
+        .sort((a: any, b: any) => String(a.start_date || '').localeCompare(String(b.start_date || '')))
+        .map((row: any) => ({
+          student_id: row.student_id,
+          class_name: row.class_name,
+          teacher_name: row.teacher_name,
+          start_date: row.start_date,
+          end_date: row.end_date,
+          lessons: Math.round(Number(row.share || 0) * 12),
+          expected: Number(row.expected || 0),
+          paid: Number(row.paid || 0),
+          current: row.student_id === studentId,
+          split_amount: row.student_id === studentId ? null : partOf(month, row.student_id),
+        })),
+    })),
+    split_total: Math.round(splitTotal * 100) / 100,
+    kept_amount: Math.max(0, Math.round((Number(amount || 0) - splitTotal) * 100) / 100),
+  };
 };
 
 const createPayment = async (body: any, centerId?: number, receivedByName?: string | null) => {
@@ -349,6 +404,8 @@ const listStudentPaymentSummary = async (query: any, centerId?: number) => {
 };
 
 module.exports = {
+  previewTransferSplit,
+  findStudentCenter: (studentId: number) => paymentRepository.findStudentCenter(studentId),
   listStudentPaymentSummary,
   resolveCashierName,
   getReceipt,

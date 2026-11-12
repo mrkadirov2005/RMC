@@ -24,6 +24,7 @@ import {
   getSixMonthWindow,
 } from '../utils/paymentHistory';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { TransferSplitNotice } from '../transfer/TransferSplitNotice';
 
 type Option = { id?: number; label: string; value: string | number };
 
@@ -783,6 +784,11 @@ export const PaymentFormDialog = ({
                 placeholder={t('Select status')}
               />
             </div>
+            {!isEditing && Number(formData.student_id || 0) > 0 ? (
+              <div className="mt-4">
+                <TransferSplitNotice studentId={Number(formData.student_id)} paymentDate={formData.payment_date} amount={Number(formData.amount || 0)} />
+              </div>
+            ) : null}
           </section>
 
           <section className={sectionClass}>

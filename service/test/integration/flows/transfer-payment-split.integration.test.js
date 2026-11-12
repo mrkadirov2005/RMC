@@ -56,6 +56,20 @@ describe('payment of a student transferred mid-month, with PostgreSQL', () => {
     expect(byId[newRecord].expected).toBeCloseTo(233333.33, 2);
   });
 
+  test('the payment form preview lists each teacher, the lessons there and the part each gets', async () => {
+    const paymentService = require('../../../src/modules/payments/services/payment.service');
+    const preview = await paymentService.previewTransferSplit(newRecord, 400000, '2026-09-20');
+    expect(preview.months).toHaveLength(1);
+    expect(preview.months[0].month).toBe('2026-09');
+    const [first, second] = preview.months[0].groups;
+    expect(first).toMatchObject({ student_id: oldRecord, class_name: 'First', teacher_name: 'T-1 Teacher', lessons: 6, end_date: '2026-09-15', current: false });
+    expect(first.split_amount).toBeCloseTo(184615.38, 1);
+    expect(second).toMatchObject({ student_id: newRecord, class_name: 'Second', teacher_name: 'T-2 Teacher', lessons: 7, start_date: '2026-09-16', current: true, split_amount: null });
+    expect(preview.kept_amount).toBeCloseTo(215384.62, 1);
+    // A student who never moved groups: nothing to show.
+    expect(await paymentService.previewTransferSplit(oldRecord, 400000, '2026-08-20')).toBeNull();
+  });
+
   test('a full-month payment in the new group is split 6 : 7 by lessons', async () => {
     const paymentService = require('../../../src/modules/payments/services/payment.service');
     await paymentService.createPayment({ student_id: newRecord, payment_date: '2026-09-20', amount: 400000, payment_type: 'Tuition', payment_method: 'Cash' }, centerId, 'admin');
