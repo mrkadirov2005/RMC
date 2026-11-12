@@ -216,8 +216,14 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
         <div className={fieldClass}>
           <SelectField compact label={t('Place of study')} name="study_place_type" value={formData.study_place_type || ''} onChange={(value) => setFormData({ ...formData, study_place_type: value })} options={STUDY_PLACE_OPTIONS} placeholder={t('Select')} />
         </div>
-        <TextField label={t('Institution name')} value={formData.school_name || ''} onChange={(value) => setFormData({ ...formData, school_name: value })} placeholder={t('School, college or university name')} />
-        <TextField label={formData.study_place_type === 'school' || !formData.study_place_type ? t('School class') : t('Course')} value={formData.school_class || ''} onChange={(value) => setFormData({ ...formData, school_class: value })} placeholder={t('Example: 7')} />
+        {/* For a school only the number is typed; it is saved as "7-Maktab" and the class as "7-Sinf". */}
+        <TextField
+          label={formData.study_place_type === 'school' || !formData.study_place_type ? t('School number') : t('Institution name')}
+          value={formData.school_name || ''}
+          onChange={(value) => setFormData({ ...formData, school_name: value })}
+          placeholder={formData.study_place_type === 'school' || !formData.study_place_type ? t('Example: 7 (saved as 7-Maktab)') : t('College or university name')}
+        />
+        <TextField label={formData.study_place_type === 'school' || !formData.study_place_type ? t('School class') : t('Course')} value={formData.school_class || ''} onChange={(value) => setFormData({ ...formData, school_class: value })} placeholder={formData.study_place_type === 'school' || !formData.study_place_type ? t('Example: 7 (saved as 7-Sinf)') : t('Example: 2')} />
         {formData.study_place_type && formData.study_place_type !== 'school' && (
           <TextField label={t('Previous school')} value={formData.previous_school || ''} onChange={(value) => setFormData({ ...formData, previous_school: value })} placeholder={t('School name')} />
         )}

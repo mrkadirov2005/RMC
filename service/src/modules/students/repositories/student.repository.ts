@@ -1,4 +1,5 @@
 const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, ne, or, sql } = require('drizzle-orm');
+const { standardizeStudentPayload } = require('../../../shared/studentFormat');
 const pool = require('../../../db/pool');
 const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, studentActionReasons, subjects, teachers } = require('../../../db/schema');
 const { effectiveEndDate } = require('../../discounts/repositories/discount.repository');
@@ -91,7 +92,9 @@ const studentSelection = {
   updated_at: students.updatedAt,
 };
 
-const studentInsertValues = (payload: Record<string, unknown>) => ({
+const studentInsertValues = (raw: Record<string, unknown>) => studentInsertColumns(standardizeStudentPayload(raw));
+
+const studentInsertColumns = (payload: Record<string, unknown>) => ({
   centerId: payload.center_id,
   enrollmentNumber: payload.enrollment_number,
   firstName: payload.first_name,
@@ -533,7 +536,9 @@ const insert = async (payload: Record<string, unknown>) => {
   return rows[0];
 };
 
-const update = async (id: number, payload: Record<string, unknown>, centerId?: number, teacherId?: number) => {
+const update = async (id: number, rawPayload: Record<string, unknown>, centerId?: number, teacherId?: number) => {
+  // School, class and phones in one standard form ("7-Maktab", "7-Sinf", "+998901234567").
+  const payload: Record<string, any> = standardizeStudentPayload(rawPayload);
   const conditions = [eq(students.studentId, id), isNull(students.deletedAt)];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(students.teacherId, teacherId));
