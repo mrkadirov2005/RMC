@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { toReports, withInPageLinks } from '../ProcessPage';
+import { describe, expect, it, vi } from 'vitest';
+import { openReport, toReports } from '../ProcessPage';
 
 describe('process reports', () => {
   it('names each report by its <title> and lists the newest first', () => {
@@ -13,18 +13,22 @@ describe('process reports', () => {
     ]);
   });
 
-  it('makes "#task" links scroll inside the report instead of loading the app in the frame', () => {
-    const html = withInPageLinks('<html><body><a href="#task-9">9</a></body></html>');
-    expect(html).toMatch(/a\[href\^="#"\][\s\S]*scrollIntoView[\s\S]*<\/script><\/body>/);
-    expect(withInPageLinks('<p>no body tag</p>')).toContain('scrollIntoView');
-  });
-
   it('falls back to the file name when there is no title', () => {
     expect(toReports({ './reports/notes.html': '<p>hi</p>' })[0]).toMatchObject({ id: 'notes', title: 'notes', date: '' });
   });
 
-  it('includes the task status report shipped with the app', () => {
+  it('opens the report in a new tab', () => {
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:report');
+    const open = vi.fn();
+    openReport({ id: 'r', title: 'R', date: '', html: '<p>hi</p>' }, open as unknown as typeof window.open);
+    expect(open).toHaveBeenCalledWith('blob:report', '_blank');
+    expect((create.mock.calls[0][0] as Blob).type).toBe('text/html');
+    create.mockRestore();
+  });
+
+  it('ships the task status report as a table of every task', () => {
     const files = import.meta.glob('../reports/*.html', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
-    expect(toReports(files).map((report) => report.title)).toContain('RMC Task Status');
+    const report = toReports(files).find((r) => r.title === 'RMC Task Status');
+    expect(report?.html).toMatch(/<th>#<\/th><th>Task<\/th><th>Description<\/th><th>Status<\/th>/);
   });
 });

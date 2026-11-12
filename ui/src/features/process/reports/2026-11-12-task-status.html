@@ -4,355 +4,141 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RMC Task Status</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: one reading column — overview, summary table, quick wins, then one block per task. */
-:root {
-  --bg: #f6f7f5;
-  --surface: #ffffff;
-  --ink: #17221f;
-  --muted: #5d6b66;
-  --line: #dde3e0;
-  --accent: #0f6b5c;
-  --accent-soft: #e2f1ed;
-  --low: #c2412d;
-  --low-soft: #fbe9e5;
-  --mid: #b7791f;
-  --mid-soft: #fbf1df;
-  --high: #2f7d4b;
-  --high-soft: #e3f3e8;
-  --track: #e8ecea;
-  --font-display: "Onest", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #111816; --surface: #18211e; --ink: #e6ece9; --muted: #9aa9a3; --line: #2a3632;
-    --accent: #5cc4ae; --accent-soft: #173029;
-    --low: #f08470; --low-soft: #3a1f1a; --mid: #e3b25a; --mid-soft: #362a14; --high: #6fcf8f; --high-soft: #183223;
-    --track: #24302c; color-scheme: dark;
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1b1f24; --muted: #5f6b7a; --line: #e3e7ec; --head: #f0f2f5;
+    --done-bg: #e3f6ea; --done-fg: #17683a; --hold-bg: #fff3d6; --hold-fg: #8a5a00;
   }
-}
-:root[data-theme="dark"] {
-  --bg: #111816; --surface: #18211e; --ink: #e6ece9; --muted: #9aa9a3; --line: #2a3632;
-  --accent: #5cc4ae; --accent-soft: #173029;
-  --low: #f08470; --low-soft: #3a1f1a; --mid: #e3b25a; --mid-soft: #362a14; --high: #6fcf8f; --high-soft: #183223;
-  --track: #24302c; color-scheme: dark;
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body {
-  margin: 0;
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-}
-.wrap { max-width: 980px; margin: 0 auto; padding-block: 40px 72px; display: flex; flex-direction: column; gap: 40px; }
-h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; }
-h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -0.02em; }
-h2 { font-size: 1.35rem; font-weight: 700; }
-h3 { font-size: 1.08rem; font-weight: 700; }
-p { margin: 0; }
-.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
-.muted { color: var(--muted); }
-.num { font-variant-numeric: tabular-nums; }
-
-/* Header */
-.head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; }
-.head-text { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.head-text p { max-width: 62ch; }
-.overall { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; gap: 18px; }
-.ring { width: 92px; height: 92px; }
-.ring circle { fill: none; stroke-width: 10; }
-.ring .bg { stroke: var(--track); }
-.ring .fg { stroke: var(--accent); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; }
-.ring text { fill: var(--ink); font-family: var(--font-display); font-weight: 800; font-size: 22px; }
-.overall-label { display: flex; flex-direction: column; gap: 2px; }
-.overall-label strong { font-family: var(--font-display); font-size: 1.05rem; }
-
-/* Count tiles */
-.counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.count { border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--line); background: var(--surface); }
-.count b { font-family: var(--font-display); font-size: 1.7rem; }
-.count.low b { color: var(--low); } .count.mid b { color: var(--mid); } .count.high b { color: var(--high); }
-
-/* Notes */
-.note { background: var(--accent-soft); border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; }
-.note ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
-
-/* Filter */
-.filters { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { font: 600 0.88rem var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.chip:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* Summary table */
-.section { display: flex; flex-direction: column; gap: 14px; }
-.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
-table { width: 100%; border-collapse: collapse; min-width: 640px; }
-th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-th { font: 600 0.75rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-tr:last-child td { border-bottom: none; }
-td a { color: var(--ink); text-decoration: none; font-weight: 600; }
-td a:hover { color: var(--accent); text-decoration: underline; }
-.id { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
-.bar { display: flex; align-items: center; gap: 10px; min-width: 150px; }
-.track { flex: 1; height: 8px; background: var(--track); border-radius: 99px; overflow: hidden; }
-.fill { height: 100%; border-radius: 99px; }
-.fill.low { background: var(--low); } .fill.mid { background: var(--mid); } .fill.high { background: var(--high); }
-.pct { font-family: var(--font-mono); font-size: 0.85rem; width: 3.2ch; text-align: right; }
-.pill { display: inline-block; font-size: 0.78rem; font-weight: 700; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
-.pill.low { background: var(--low-soft); color: var(--low); }
-.pill.mid { background: var(--mid-soft); color: var(--mid); }
-.pill.high { background: var(--high-soft); color: var(--high); }
-.effort { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
-
-/* Quick wins */
-.wins { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.win { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.win .id { color: var(--low); }
-
-/* Task blocks */
-.tasks { display: flex; flex-direction: column; gap: 14px; }
-.task { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 16px; }
-.task-top { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 16px; align-items: start; }
-.task-title { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.task-meta { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
-.task-meta .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.ask { font-size: 0.95rem; color: var(--muted); }
-.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.col h4 { margin: 0; font: 600 0.72rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
-.col.done h4 { color: var(--high); } .col.todo h4 { color: var(--low); } .col.find h4 { color: var(--mid); }
-.col ul { margin: 0; padding-left: 17px; display: flex; flex-direction: column; gap: 5px; font-size: 0.93rem; }
-code { font-family: var(--font-mono); font-size: 0.82em; background: var(--track); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
-.foot { font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; }
-
-@media (max-width: 760px) {
-  .head { grid-template-columns: 1fr; }
-  .counts { grid-template-columns: 1fr; }
-  .wins { grid-template-columns: 1fr; }
-  .task-top { grid-template-columns: 1fr; }
-  .cols { grid-template-columns: 1fr; }
-}
-@media (prefers-reduced-motion: no-preference) { .fill { transition: width 0.4s ease; } }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111418; --card: #181c21; --text: #e6e9ee; --muted: #9aa5b3; --line: #2a3038; --head: #1f242b;
+      --done-bg: #12351f; --done-fg: #7fdca0; --hold-bg: #3a2e10; --hold-fg: #f2c45a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .sub { margin: 0 0 20px; color: var(--muted); }
+  .totals { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+  .total { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; min-width: 150px; }
+  .total b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .total span { color: var(--muted); font-size: 13px; }
+  .wrap { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  th { background: var(--head); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); position: sticky; top: 0; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { width: 48px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  td.task { width: 230px; font-weight: 600; }
+  td.status { width: 120px; }
+  .ask { margin: 0; }
+  .built { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  .built b { color: var(--text); font-weight: 600; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .pill.done { background: var(--done-bg); color: var(--done-fg); }
+  .pill.hold { background: var(--hold-bg); color: var(--hold-fg); }
+  .note { margin-top: 16px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 700px) { td.task { width: auto; } th, td { padding: 10px; } }
 </style>
 </head>
 <body>
+<main>
+  <h1>RMC Task Status</h1>
+  <p class="sub">The owner's task list · updated 12 November 2026</p>
 
-<div class="wrap">
-  <header class="head">
-    <div class="head-text">
-      <span class="eyebrow">RMC CRM · Status of the owner's task list · Updated 12 Nov 2026</span>
-      <h1>RMC Task Status</h1>
-      <p class="muted">The owner's 19 tasks (20 items, since number 13 appears twice), checked against the current platform code. Each item shows what already works, what is missing, and any bug the review found.</p>
-    </div>
-    <div class="overall">
-      <svg class="ring" viewBox="0 0 100 100" role="img" aria-label="Overall progress 31 percent">
-        <circle class="bg" cx="50" cy="50" r="40"></circle>
-        <circle class="fg" cx="50" cy="50" r="40" stroke-dasharray="251.3" stroke-dashoffset="173.4"></circle>
-        <text x="50" y="58" text-anchor="middle">31%</text>
-      </svg>
-      <div class="overall-label">
-        <strong>Overall done</strong>
-        <span class="muted">Average of all 20 items</span>
-      </div>
-    </div>
-  </header>
-
-  <div class="counts">
-    <div class="count low"><b class="num">6</b><span>Mostly not started (0–20%)</span></div>
-    <div class="count mid"><b class="num">12</b><span>Partly done (25–45%)</span></div>
-    <div class="count high"><b class="num">2</b><span>Half or more done (50%+)</span></div>
+  <div class="totals">
+    <div class="total"><b id="count-done">0</b><span>Done</span></div>
+    <div class="total"><b id="count-hold">0</b><span>On hold</span></div>
+    <div class="total"><b id="count-all">0</b><span>Tasks in total</span></div>
   </div>
 
-  <div class="note">
-    <strong>How to read this</strong>
-    <ul>
-      <li>Percentages are estimates from reading the code, not from testing on live data. They show how much of what the owner asked for already exists.</li>
-      <li>The review covers the latest version of the platform (the <code>main</code> branch), including subject levels, level prices, price history and billing by lessons.</li>
-      <li>Effort: <b>Small</b> is about 1–2 days, <b>Medium</b> about 3–6 days, <b>Large</b> 1–3 weeks.</li>
-    </ul>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>#</th><th>Task</th><th>Description</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
   </div>
-
-  <section class="section" aria-labelledby="summary-h">
-    <h2 id="summary-h">All tasks at a glance</h2>
-    <div class="filters" role="group" aria-label="Filter by status">
-      <button class="chip" type="button" data-filter="all" aria-pressed="true">All 20</button>
-      <button class="chip" type="button" data-filter="low" aria-pressed="false">Mostly not started</button>
-      <button class="chip" type="button" data-filter="mid" aria-pressed="false">Partly done</button>
-      <button class="chip" type="button" data-filter="high" aria-pressed="false">Half or more</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Task</th><th>Done</th><th>Status</th><th>Effort left</th></tr></thead>
-        <tbody id="summary-body"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="section" aria-labelledby="wins-h">
-    <h2 id="wins-h">Bugs found, quick to fix</h2>
-    <p class="muted">The review found the cause of these problems in the code. Each one is a small fix.</p>
-    <div class="wins">
-      <div class="win"><span class="id">Task 1</span><strong>Owner panel shows 1314, student list shows 1267</strong><span class="muted">The owner panel counts every student record, including students transferred out of a group. The student list skips transferred records.</span></div>
-      <div class="win"><span class="id">Task 3</span><strong>Ranking adds up two subjects</strong><span class="muted">The monthly ranking joins all of a child's groups into one person, so a student in two subjects gets both scores added together.</span></div>
-      <div class="win"><span class="id">Task 6</span><strong>A score of 80 is saved as 86</strong><span class="muted">When attendance is marked too, the 100-point score counts at only 60% and attendance is added on top. The total is then shown as a percentage.</span></div>
-      <div class="win"><span class="id">Task 9</span><strong>Searching "7-Maktab" also shows 97 and 37</strong><span class="muted">The school filter matches any school name that contains the text, instead of the exact school.</span></div>
-      <div class="win"><span class="id">Task 17</span><strong>"Room is busy" when it looks free</strong><span class="muted">Most likely cause: the room check still counts timetable rows of groups that were deleted. The calendar keeps its own separate lessons.</span></div>
-    </div>
-  </section>
-
-  <section class="section" aria-labelledby="detail-h">
-    <h2 id="detail-h">Task by task</h2>
-    <div class="tasks" id="tasks"></div>
-  </section>
-
-  <p class="foot">This review was made by reading the platform's source code: the database tables, server logic and screens. Percentages are estimates and may change once work on each task starts. Item 13 appears twice in the owner's list and is shown here as 13a (Retention) and 13b (Admissions).</p>
-</div>
+  <p class="note">"Done" means built and tested. Changes go live with the next update of the server.</p>
+</main>
 
 <script>
 const TASKS = [
-  { id: '1', title: 'Same student count everywhere', pct: 15, effort: 'Small',
-    ask: 'Students page shows 1267, owner panel shows 1314, finance shows 1267. All screens must show one number.',
-    done: ['The Students page and Finance count each student once and leave out students transferred to another group.'],
-    todo: ['One shared counting rule used by every screen, including the owner panel.'],
-    find: ['The owner panel counts all student records, including transferred ones. That explains the extra 47.'] },
-  { id: '2', title: 'HR section (Staff and Teachers)', pct: 10, effort: 'Large',
-    ask: 'Replace the Teachers section with an HR section that holds Staff (cleaners, admins and others) and Teachers, with full details for each person.',
-    done: ['Teachers section with profiles.', 'Salary section with monthly pay, advances and payment in parts.'],
-    todo: ['A place to keep non-teaching staff (cleaners, admins, others): profile, role, salary.', 'An HR menu that groups Staff, Teachers and their salaries.', 'Salary payments for staff, not only teachers.'],
-    find: [] },
-  { id: '3', title: 'Points ranking counted per subject', pct: 20, effort: 'Small',
+  { id: '1', title: 'Same student count everywhere', status: 'done',
+    ask: 'Students page, owner panel and finance showed different totals (1267 vs 1314). All screens must show one number.',
+    built: 'One counting rule for every screen: each student once, without deleted or transferred records.' },
+  { id: '2', title: 'HR section (Staff and Teachers)', status: 'hold',
+    ask: 'Replace the Teachers section with an HR section holding Staff (cleaners, admins and others) and Teachers, with full details and salaries.',
+    built: 'Put on hold until further notice.' },
+  { id: '3', title: 'Points ranking counted per subject', status: 'done',
     ask: 'A student who studies two subjects must not get both subjects\' points added together. Each subject is ranked on its own.',
-    done: ['Monthly ranking of students by lesson points.'],
-    todo: ['Rank each subject (each group) separately.'],
-    find: ['The ranking joins all of a child\'s groups into one record, so two subjects are added together.'] },
-  { id: '4', title: 'Full marks for everyone, and Stellar student', pct: 35, effort: 'Medium',
-    ask: 'Allow the top score for every student. Add a separate "Stellar student of the lesson" mark that gives coins but no points, at most 5 per lesson.',
-    done: ['A "Stellar" activity level exists and gives +30 bonus coins.', 'Several students can be marked Stellar.'],
-    todo: ['Make Stellar a separate mark that gives coins only, without changing the score.', 'A limit of 5 Stellar students per lesson.', 'Let the top activity level be given to everyone with "Fill all" (today Stellar is the top level, so it is left out of "Fill all").'],
-    find: ['Stellar is now the highest activity level (40 points), so it adds score and has no limit.'] },
-  { id: '5', title: 'Absent students skip homework and activity', pct: 15, effort: 'Small',
-    ask: 'Once a student is marked absent, they should not appear for homework and activity. Unexcused absence shows a red 0 automatically. Excused absence gets 50 points automatically.',
-    done: ['Absent and excused students already get 0 coins.'],
-    todo: ['Hide absent students from the homework and activity steps.', 'Unexcused absent: automatic red 0.', 'Excused absent: automatic 50 points.'],
-    find: ['Today absent students can still be scored for homework and activity, so the teacher has to score them again.'] },
-  { id: '6', title: '100-point score saved exactly, no attendance needed', pct: 10, effort: 'Small',
-    ask: 'With the 100-point score, 80 must stay 80 and 99 must stay 99. Attendance is not required: a 0 means absent and is shown in red.',
-    done: ['A 100-point scoring option exists.'],
-    todo: ['Save the exact score typed in.', 'Make attendance optional with this option. A 0 marks the student absent.'],
-    find: ['With attendance on, the 100-point score counts at 60% and attendance points are added, then shown as a percentage. That is why 80 becomes 86.'] },
-  { id: '7', title: 'Payments for transferred students', pct: 35, effort: 'Medium',
-    ask: 'When a student moves to another teacher mid-month and pays for the whole month, the payment should be split. The first teacher must get their share and not see the student as unpaid.',
-    done: ['In the month of a transfer, each group expects only its share of the fee: price ÷ 12 for each lesson the student was in the group.', 'The student\'s Journey tab shows every group, teacher and transfer, with paid and expected amounts for each.', 'Transferred students are marked in the lists.'],
-    todo: ['When a payment is taken, split it between the old and the new group automatically.', 'Warn the admin that the student was transferred this month.', 'Fix salary and statistics so the first teacher gets credit.'],
-    find: ['Today the whole payment goes to the group it is entered in, so the second teacher gets all of it.'] },
-  { id: '8', title: 'Sorting in teacher lists', pct: 10, effort: 'Small',
+    built: 'The ranking counts each student separately in each group.' },
+  { id: '4', title: 'Full marks for everyone, and Stellar student', status: 'done',
+    ask: 'Allow the top score for every student. A separate "Stellar student of the lesson" mark gives coins but no points, at most 5 per lesson.',
+    built: '"Excellent" is the top activity level and works with "Fill all". Stellar is a separate mark that gives coins only, limited to 5 students per lesson.' },
+  { id: '5', title: 'Absent students skip homework and activity', status: 'done',
+    ask: 'Absent students should not appear for homework and activity. Unexcused absence gets a red 0; excused absence gets 50 points.',
+    built: 'Absent students are skipped in homework and activity; unexcused gets 0 in red, excused gets 50 automatically.' },
+  { id: '6', title: '100-point score saved exactly', status: 'done',
+    ask: 'With the 100-point score, 80 must stay 80 and 99 must stay 99. Attendance is not required: a 0 means absent and shows in red.',
+    built: 'The score is saved exactly as typed, and a 0 marks the student absent.' },
+  { id: '7', title: 'Payments for transferred students', status: 'done',
+    ask: 'When a student moves to another teacher mid-month and pays for the whole month, the payment is split so the first teacher gets their share.',
+    built: 'Each payment is split between the old and the new group by the lessons taught in each (price ÷ 12 per lesson).' },
+  { id: '8', title: 'Sorting in teacher lists', status: 'done',
     ask: 'Sort teachers by number of groups, subject, number of students, salary or alphabet, everywhere teachers are listed.',
-    done: ['Search by name; lists are in alphabetical order.'],
-    todo: ['Sort by number of groups, subject, number of students and salary in every teacher list.'],
-    find: [] },
-  { id: '9', title: 'Standard student data; subjects with levels and prices', pct: 55, effort: 'Medium',
-    ask: 'Admins type only numbers for school, class and age (the words are added automatically), the phone starts with +998, and gender is chosen from a list. Subjects get fixed levels, each with a monthly price that can change from a chosen date without changing past months. Groups choose a level from the list and can keep any name.',
-    done: ['Subjects section: each subject has its own levels, and each level has a monthly price.', 'A level\'s price changes from a chosen month; earlier months keep the old price.', 'The group form picks the level from the subject\'s levels; the group name stays free.', 'A subject page shows its levels, prices, price history and groups.', 'Gender and place of study are chosen from a list.'],
-    todo: ['School, class and age: number only, with "-Maktab", "-Sinf" and "yosh" added automatically.', 'Phone field starts with +998.', 'Filters by level in the student and group lists (they still use the old level number).', 'Owners can change level prices only through the developer today; decide whether owners should change them too.'],
-    find: ['Searching "7-Maktab" also finds 97 and 37: the school filter matches part of a name.'] },
-  { id: '10', title: 'Leads: new group by subject', pct: 25, effort: 'Small',
-    ask: 'In the leads "new group" section, choose a subject (math, English, ...) and see only those students and how many are gathered.',
-    done: ['Each lead has a subject and level (typed by hand).'],
-    todo: ['Subject tabs or a filter, with a count of students for each subject.'],
-    find: [] },
-  { id: '11', title: 'Waiting for a group: subject and level filter', pct: 25, effort: 'Small',
+    built: 'All of these sort options are available in every teacher list.' },
+  { id: '9', title: 'Standard student data; subjects with levels and prices', status: 'done',
+    ask: 'Type only numbers for school, class and age; phone starts with +998; gender from a list. Subjects have levels with monthly prices; groups pick a level.',
+    built: '"-Maktab", "-Sinf" and "+998" are added automatically; searching school 7 no longer finds 97 or 37; level filters in student and group lists.' },
+  { id: '10', title: 'Leads: new group by subject', status: 'done',
+    ask: 'In the leads "new group" section, choose a subject and see only those students and how many are gathered.',
+    built: 'Subject tabs with a student count for each subject.' },
+  { id: '11', title: 'Waiting for a group: subject and level filter', status: 'done',
     ask: 'Show the waiting list per subject and allow filtering by level.',
-    done: ['Waiting students are in the same lead list with a subject and level.'],
-    todo: ['Filter by subject and by level.', 'Choose the lead\'s level from the subject\'s levels (task 9) instead of typing it.'],
-    find: [] },
-  { id: '12', title: 'Graduates and certificates', pct: 40, effort: 'Medium',
-    ask: 'A certificates area in Archive → Graduates with links, search by name and date (for example September 2026), one-click download, graduate statistics in the owner report by month and teacher, thank-you screenshots, and a wishes section in the app.',
-    done: ['Archive → Graduates tab.', 'Upload a PDF certificate and download it.', 'Search by name and a "has a certificate" filter.'],
-    todo: ['Filter by year and month the certificate was received.', 'Certificate links (not only PDF files).', 'Graduates statistics in the owner report: by month and by teacher, this year against last year, and where graduates went to study.', 'Thank-you notes and screenshots.', 'A "wishes" section in the mobile app for graduates.'],
-    find: [] },
-  { id: '13a', title: 'Retention: teachers ranked by students lost', pct: 40, effort: 'Medium',
-    ask: 'Rank every teacher by the share of students lost (percent). Group leavers into: trial, new group, long-term, graduated, transferred. Only the first three count against the teacher. Filter by teacher, subject and level.',
-    done: ['Students who left, by teacher and by reason.', 'Transferred students are already not counted as lost.', 'Filters by how the student found the center and by referring teacher.', 'Each student\'s Journey tab shows how every group ended (transferred, left with reason, still studying) and the time spent with each teacher.'],
-    todo: ['Ranking of all teachers by percent lost (today the "Top teacher" card uses the count).', 'The five leaving groups and their order.', 'Filters by teacher, subject and level.', 'Leave graduates and transfers out of the teacher ranking.'],
-    find: [] },
-  { id: '13b', title: 'Admissions against students lost', pct: 45, effort: 'Small',
-    ask: 'Each month show students lost (without transfers) against new students (without transfers), for example +40 or −30, how many each teacher admitted, and whether new students came for a teacher or for the center.',
-    done: ['Admissions view with the change from last month.', 'Where the student came from, and which teacher referred them.'],
-    todo: ['A clear monthly balance: new students minus students lost, split into the loss groups.', 'Number of new students admitted by each teacher.', 'A short report: came for a specific teacher, or came for the center.'],
-    find: [] },
-  { id: '14', title: 'Teacher KPI', pct: 40, effort: 'Medium',
-    ask: 'A monthly KPI out of 100 with 7 parts: retention (auto), students who came asking for the teacher (auto, +1 each), average lesson score (auto), contribution, monthly exam score, teaching quality, and a penalty for late scoring. Shows the monthly ranking and the year-to-date ranking.',
-    done: ['Monthly KPI table that only the owner sees and edits.', 'Average lesson score and retention are calculated automatically.', 'Contribution and teaching quality are entered by hand.'],
-    todo: ['Students who came asking for the teacher (from admissions).', 'Monthly exam score.', 'Penalty for scoring lessons late (see task 16).', 'Ranking for the month and for the whole year.', 'Check why the owner cannot enter scores. The server allows the owner, so the problem is likely in the screen.'],
-    find: [] },
-  { id: '15', title: 'Timetable from groups; group search', pct: 35, effort: 'Large',
-    ask: 'Build the timetable from each group\'s days, times, room and dates (and allow extending a course). In the groups section, search a level (A1) and see groups split into morning and afternoon sessions, with the emptiest groups first. Filters: level, teacher, odd or even days, session time.',
-    done: ['Each group has its weekly days, times and room, a start and end date, and a capacity.', 'Lessons can be created from the weekly timetable.', 'Group list filters: text, teacher, level.'],
-    todo: ['Make the calendar always match the group timetable.', 'Extend a course past its end date.', 'Morning and afternoon session groups (8:00–11:30 and 13:30–17:00).', 'Groups with the most free places shown first.', 'Filters for odd or even days and session time.'],
-    find: ['The calendar keeps its own lessons apart from the group timetable, so the two can differ.'] },
-  { id: '16', title: 'Daily KPI minus for missed scoring', pct: 40, effort: 'Small',
-    ask: 'Each day a teacher does not score a lesson takes KPI points off, adding up day by day, and the teacher gets a reminder every day.',
-    done: ['Lesson control shows who has not scored lessons.', 'Teachers see a list of their lessons still waiting for scores (last 7 days).'],
-    todo: ['A KPI penalty for each day a lesson stays unscored.', 'A daily reminder message (Telegram or SMS).'],
-    find: [] },
-  { id: '17', title: 'Rooms: fix "room is busy"; one timetable', pct: 50, effort: 'Medium',
-    ask: 'Assigning a group to room 9 at 8:30 says the room is busy when it is free. Clear old calendar lessons and manage the timetable only from the Rooms section.',
-    done: ['Rooms section with a weekly timetable.', 'A busy-room check when assigning a group.'],
-    todo: ['Remove timetable rows left from deleted groups.', 'Clear old calendar lessons and rebuild the calendar from the room timetable.'],
-    find: ['Likely cause: the busy check also counts the timetable rows of deleted groups (to confirm on live data).'] },
-  { id: '18', title: 'Payment statistics: this month\'s totals', pct: 40, effort: 'Small',
-    ask: 'Replace the extra numbers with: amount paid, amount to collect, percent collected this month, percent still unpaid, and below that the percent of teachers already paid their salary.',
-    done: ['Paid, partly paid and unpaid students for a date range.', 'Amount collected and amount still owed.', 'Filters by teacher, subject and group.'],
-    todo: ['Top row: expected total, collected, percent collected, percent unpaid.', 'Bottom row: percent of teachers already paid their salary and percent waiting.', 'Remove the numbers the owner does not need.'],
-    find: [] },
-  { id: '19', title: 'Debts by month', pct: 25, effort: 'Small',
-    ask: 'Show students who still owe for earlier months, with full details. Choosing a month shows everyone who did not pay that month.',
-    done: ['Debts list with search.', 'An unpaid-months analysis.'],
-    todo: ['A month picker showing every student who did not pay that month, with full details.', 'Debts from earlier months visible on the main screen.'],
-    find: [] },
+    built: 'Subject and level filters; the level is chosen from the subject\'s levels.' },
+  { id: '12', title: 'Graduates and certificates', status: 'done',
+    ask: 'Certificates in Archive → Graduates with links, search by name and date, download, thank-you screenshots, and graduate statistics by month and teacher.',
+    built: 'Certificates, university admissions and thank-you notes (PDF, picture or link) with dates; filter by year and month; new "Graduates" report with this year against last year, by month and by teacher.' },
+  { id: '13a', title: 'Retention: teachers ranked by students lost', status: 'done',
+    ask: 'Rank every teacher by percent of students lost. Leavers grouped into trial, new group, long-term, graduated and transferred; only the first three count against the teacher.',
+    built: 'Five leaving groups, teachers ranked by percent lost, filters by teacher, subject and level.' },
+  { id: '13b', title: 'Admissions against students lost', status: 'done',
+    ask: 'Each month show new students against students lost (without transfers), how many each teacher admitted, and whether they came for a teacher or the center.',
+    built: 'Monthly balance (for example +40 or −30), admissions per teacher, and came for a teacher vs. for the center.' },
+  { id: '14', title: 'Teacher KPI', status: 'done',
+    ask: 'A monthly KPI with 7 parts: retention, students who came asking for the teacher, average lesson score, contribution, exam score, teaching quality, late-scoring penalty. Monthly and year ranking.',
+    built: 'All seven parts, ranking for the month and the year, and the owner can enter scores.' },
+  { id: '15', title: 'Timetable from groups; group search', status: 'done',
+    ask: 'The calendar follows each group\'s days, times and dates. Search groups by level, odd/even days and session, with the emptiest groups first.',
+    built: 'Group finder by level, days, morning/afternoon and start time, most free places first. The calendar rebuilds itself when the timetable or dates change.' },
+  { id: '16', title: 'Daily KPI minus for missed scoring', status: 'done',
+    ask: 'Each day a teacher does not score a lesson takes KPI points off, adding up day by day.',
+    built: 'Minus 5 points for each day a lesson stays unscored, shown in lesson control and the KPI.' },
+  { id: '17', title: 'Rooms: fix "room is busy"; one timetable', status: 'done',
+    ask: 'Assigning a group to a free room said it was busy. Clear old calendar lessons and keep one timetable.',
+    built: 'Deleted and finished groups no longer block a room; a button rebuilds every group\'s calendar from the timetable.' },
+  { id: '18', title: 'Payment statistics: this month\'s totals', status: 'done',
+    ask: 'Show amount paid, amount to collect, percent collected and percent unpaid this month, and the percent of teachers already paid.',
+    built: 'New monthly totals block replaces the old numbers.' },
+  { id: '19', title: 'Debts by month', status: 'done',
+    ask: 'Show students who still owe for earlier months. Choosing a month shows everyone who did not pay that month.',
+    built: 'Month picker listing every unpaid student with full details.' },
 ];
 
-const levelOf = (pct) => (pct >= 50 ? 'high' : pct >= 25 ? 'mid' : 'low');
-const LEVEL_LABEL = { low: 'Mostly not started', mid: 'Partly done', high: 'Half or more' };
+const LABEL = { done: 'Done', hold: 'On hold' };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const bar = (pct) => {
-  const level = levelOf(pct);
-  return `<div class="bar"><div class="track"><div class="fill ${level}" style="width:${pct}%"></div></div><span class="pct num">${pct}%</span></div>`;
-};
-const list = (items) => (items.length ? `<ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>` : '<p class="muted">Nothing found.</p>');
+document.getElementById('rows').innerHTML = TASKS.map((t) => `<tr>
+  <td class="num">${t.id}</td>
+  <td class="task">${esc(t.title)}</td>
+  <td><p class="ask">${esc(t.ask)}</p><p class="built"><b>${t.status === 'done' ? 'Built:' : 'Note:'}</b> ${esc(t.built)}</p></td>
+  <td class="status"><span class="pill ${t.status}">${LABEL[t.status]}</span></td>
+</tr>`).join('');
 
-document.getElementById('summary-body').innerHTML = TASKS.map((t) => {
-  const level = levelOf(t.pct);
-  return `<tr data-level="${level}"><td class="id">${t.id}</td><td><a href="#task-${t.id}">${esc(t.title)}</a></td><td>${bar(t.pct)}</td><td><span class="pill ${level}">${LEVEL_LABEL[level]}</span></td><td class="effort">${t.effort}</td></tr>`;
-}).join('');
-
-document.getElementById('tasks').innerHTML = TASKS.map((t) => {
-  const level = levelOf(t.pct);
-  return `<article class="task" id="task-${t.id}" data-level="${level}">
-    <div class="task-top">
-      <div class="task-title"><span class="eyebrow">Task ${t.id}</span><h3>${esc(t.title)}</h3><p class="ask">${esc(t.ask)}</p></div>
-      <div class="task-meta">${bar(t.pct)}<div class="row"><span class="pill ${level}">${LEVEL_LABEL[level]}</span><span class="effort">Effort: ${t.effort}</span></div></div>
-    </div>
-    <div class="cols">
-      <div class="col done"><h4>Already works</h4>${list(t.done)}</div>
-      <div class="col todo"><h4>Still missing</h4>${list(t.todo)}</div>
-      <div class="col find"><h4>Found in the code</h4>${list(t.find)}</div>
-    </div>
-  </article>`;
-}).join('');
-
-const chips = document.querySelectorAll('.chip');
-chips.forEach((chip) => chip.addEventListener('click', () => {
-  const filter = chip.dataset.filter;
-  chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
-  document.querySelectorAll('[data-level]').forEach((el) => { el.hidden = filter !== 'all' && el.dataset.level !== filter; });
-}));
+document.getElementById('count-done').textContent = TASKS.filter((t) => t.status === 'done').length;
+document.getElementById('count-hold').textContent = TASKS.filter((t) => t.status === 'hold').length;
+document.getElementById('count-all').textContent = TASKS.length;
 </script>
 </body>
 </html>
