@@ -27,7 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { useAppSelector } from '@/features/crm/hooks';
+import { useCanChangeGroupPrice } from '@/features/crm/payments/priceHistory';
 
 interface ClassDialogsProps {
   t: TranslateFn;
@@ -65,26 +65,25 @@ const toDateInputValue = (value?: string | null) => {
   return String(value).split('T')[0];
 };
 
-// A new group gets its price here. Changing an existing group's price is for the developer
-// account only, and then from Payments → Groups ("Change group payment"), so every change has a
-// start month and months paid at the old price stay paid.
+// A new group gets its price here. Changing an existing group's price is for the staff the
+// developer allows (Technical section → Permissions), and then from Payments → Groups ("Change
+// group payment"), so every change has a start month and months paid at the old price stay paid.
 const GroupPriceInput = ({ value, editing, onChange, t }: {
   value?: number | string | null;
   editing: boolean;
   onChange: (value: number) => void;
   t: TranslateFn;
 }) => {
-  const user = useAppSelector((state) => state.auth.user);
-  const isDeveloper = user?.userType === 'superuser' && user?.is_developer === true;
-  const locked = editing && !isDeveloper;
+  const canChangePrice = useCanChangeGroupPrice();
+  const locked = editing && !canChangePrice;
   return (
     <>
       <Input id="payment_amount" type="number" required step="0.01" value={value || ''} disabled={locked} onChange={(e) => onChange(Number(e.target.value))} className="h-8 border-emerald-100 bg-emerald-50/60 text-xs font-semibold shadow-sm focus-visible:ring-emerald-500 dark:border-input dark:bg-background" />
       {editing && (
         <p className="text-[0.625rem] text-muted-foreground">
-          {isDeveloper
+          {canChangePrice
             ? t('To change the price from a month, use "Change group payment" in Payments → Groups.')
-            : t("Only the developer can change a group's price.")}
+            : t("You don't have permission to change a group's price.")}
         </p>
       )}
     </>

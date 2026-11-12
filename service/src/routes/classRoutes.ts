@@ -37,6 +37,9 @@ router_class.get('/', requireAuth, classController.getAllClasses);
 
 router_class.get('/sessions/bulk', requireAuth, classController.getBulkClassSessions);
 
+// Whether the signed-in user may change group prices (set by the developer).
+router_class.get('/price-permission', requireAuth, classPriceController.getPermission);
+
 /**
  * @swagger
  * /classes/{id}:

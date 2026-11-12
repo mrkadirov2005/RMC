@@ -2,6 +2,7 @@ const classService = require('../services/class.service');
 const sessionService = require('../../sessions/services/session.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 const { hasClassListParams, parseClassListQuery } = require('./classListQuery');
+const permissions = require('../../developer/permissions');
 
 const getAllClasses = async (req: any, res: any) => {
   try {
@@ -73,13 +74,13 @@ const updateClass = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await classService.updateClass(Number(req.params.id), req.body, centerId ?? undefined, {
-      isDeveloper: req.user?.userType === 'superuser' && req.user?.is_developer === true,
+      canChangePrice: await permissions.allows(req.user, 'change_group_price'),
     });
     if (row && row.error === 'bad_subject') {
       return res.status(400).json({ error: 'Bu markaz uchun yaratilgan mavjud fanni tanlang.' });
     }
-    if (row && row.error === 'price_developer_only') {
-      return res.status(403).json({ error: "Guruh to'lovini faqat dasturchi o'zgartira oladi.", code: 'PRICE_DEVELOPER_ONLY' });
+    if (row && row.error === 'price_not_allowed') {
+      return res.status(403).json({ error: "Guruh to'lovini o'zgartirishga ruxsatingiz yo'q.", code: 'PRICE_NOT_ALLOWED' });
     }
     if (row && row.error === 'price_has_history') {
       return res.status(409).json({

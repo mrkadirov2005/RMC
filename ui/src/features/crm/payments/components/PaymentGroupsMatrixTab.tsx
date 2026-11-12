@@ -10,8 +10,7 @@ import { coversExpectedAmount, getExpectedAmountForMonth } from '@/shared/billin
 import { classAPI, paymentAPI, studentAPI, teacherAPI } from '../api';
 import type { Class, Payment, Student, Teacher } from '../types';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { useAppSelector } from '@/features/crm/hooks';
-import { priceForMonth, priceHistoryAPI, type PriceHistory } from '../priceHistory';
+import { priceForMonth, priceHistoryAPI, useCanChangeGroupPrice, type PriceHistory } from '../priceHistory';
 import { ChangeGroupPriceDialog } from './ChangeGroupPriceDialog';
 
 type MonthCellState = 'full' | 'partial' | 'none';
@@ -93,9 +92,8 @@ const getStateTitle = (state: MonthCellState) => {
 
 export const PaymentGroupsMatrixTab = () => {
   const { t } = useLanguage();
-  // Only the developer account changes group prices; everyone else just sees the history.
-  const authUser = useAppSelector((state) => state.auth.user);
-  const isDeveloper = authUser?.userType === 'superuser' && authUser?.is_developer === true;
+  // Who changes group prices is set by the developer; everyone else just sees the history.
+  const canChangePrice = useCanChangeGroupPrice();
   const [priceHistory, setPriceHistory] = useState<PriceHistory | null>(null);
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
   const [groups, setGroups] = useState<Class[]>([]);
@@ -354,7 +352,7 @@ export const PaymentGroupsMatrixTab = () => {
               </p>
             </div>
             <div className="flex flex-wrap items-end gap-3">
-              {selectedGroup && isDeveloper && (
+              {selectedGroup && canChangePrice && (
                 <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setPriceDialogOpen(true)}>
                   <Pencil className="mr-1.5 h-3.5 w-3.5" />
                   {t('Change group payment')}
@@ -507,7 +505,7 @@ export const PaymentGroupsMatrixTab = () => {
         </CardContent>
       </Card>
 
-      {selectedGroup && isDeveloper && (
+      {selectedGroup && canChangePrice && (
         <ChangeGroupPriceDialog
           open={priceDialogOpen}
           onOpenChange={setPriceDialogOpen}

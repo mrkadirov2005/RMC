@@ -1,6 +1,9 @@
 // A group's price over time, from GET /classes/:id/price-history. Each month is billed at the
 // price in effect for it, so a raise doesn't make months paid at the old price look part paid.
+import { useEffect, useState } from 'react';
 import { apiClient } from '@/shared/api/api';
+import { getApiPayload } from '@/shared/api/response';
+import { useAppSelector } from '@/features/crm/hooks';
 
 export interface PriceHistoryEntry {
   history_id: number;
@@ -24,6 +27,35 @@ export const priceHistoryAPI = {
   get: (classId: number) => apiClient.get<PriceHistory>(`/classes/${classId}/price-history`, { params: { _fresh: Date.now() } }),
   change: (classId: number, data: { amount: number; effective_month: string; note?: string }) =>
     apiClient.post(`/classes/${classId}/price-changes`, data),
+  permission: () => apiClient.get<{ can_change: boolean }>('/classes/price-permission', { params: { _fresh: Date.now() } }),
+};
+
+/** Whether the signed-in user may change group prices. The developer always may; owners and
+ * admins only while the developer allows it (Technical section → Permissions). The server checks
+ * again on every change, so this only shows or hides the controls. */
+export const useCanChangeGroupPrice = () => {
+  const user = useAppSelector((state) => state.auth.user);
+  const isDeveloper = user?.userType === 'superuser' && user?.is_developer === true;
+  const isStaff = user?.userType === 'superuser';
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    if (isDeveloper || !isStaff) return;
+    let cancelled = false;
+    priceHistoryAPI
+      .permission()
+      .then((res) => {
+        if (!cancelled) setAllowed(Boolean(getApiPayload<{ can_change: boolean }>(res)?.can_change));
+      })
+      .catch(() => {
+        if (!cancelled) setAllowed(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDeveloper, isStaff]);
+
+  return isDeveloper || (isStaff && allowed);
 };
 
 /** The price for a month (YYYY-MM): the latest entry starting on or before it, else `fallback`

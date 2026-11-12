@@ -16,6 +16,9 @@ router.put('/lockdown', sealed, developer.setLockdown);
 router.get('/owners', developer.listOwners);
 router.post('/owners/:id/unlock', developer.unlockOwnerPassword);
 router.post('/owners/:id/password', sealed, developer.resetOwnerPassword);
+// What owners and admins may do (e.g. change group prices).
+router.get('/permissions', developer.listPermissions);
+router.put('/permissions/:key', sealed, developer.updatePermission);
 // The seal: what changed outside the app, and putting it back or accepting it.
 router.get('/seal', developer.sealStatus);
 router.post('/seal/restore', developer.restoreSeal);

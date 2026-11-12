@@ -6,6 +6,19 @@ export const developerLabels: Record<string, string> = {
   'Access control': 'Kirish nazorati',
   'Server and database': 'Server va baza',
   Journals: 'Jurnallar',
+  Permissions: 'Ruxsatlar',
+  'Access control, permissions, server and database tools, and request logs. Only you see this section.':
+    "Kirish nazorati, ruxsatlar, server va baza vositalari hamda so'rovlar jurnali. Bu bo'limni faqat siz ko'rasiz.",
+  'Choose what owners and admins may do. You can always do everything.':
+    "Egalar va adminlar nima qila olishini tanlang. Siz har doim hamma narsani qila olasiz.",
+  'Change group price': "Guruh narxini o'zgartirish",
+  'The price in the group form and "Change group payment" in Payments → Groups.':
+    "Guruh formasidagi narx va To'lovlar → Guruhlar bo'limidagi \"Guruh to'lovini o'zgartirish\".",
+  Owners: 'Egalar',
+  Admins: 'Adminlar',
+  'Permission saved': 'Ruxsat saqlandi',
+  'Allowed for owners': 'Egalarga ruxsat berilgan',
+  'Allowed for admins': 'Adminlarga ruxsat berilgan',
   'Lock any account, close the whole system, and manage owner accounts. Only you see this page.':
     "Istalgan hisobni bloklash, butun tizimni yopish va ega hisoblarini boshqarish. Bu sahifani faqat siz ko'rasiz.",
   'The system is closed for everyone': 'Tizim hamma uchun yopiq',

@@ -55,8 +55,15 @@ export interface SealStatus {
   developers_changed: number[];
 }
 
+/** What owners and admins may do; the developer may always do everything. */
+export type PermissionKey = 'change_group_price';
+export type PermissionRole = 'owner' | 'admin';
+export type Permissions = Record<PermissionKey, Record<PermissionRole, boolean>>;
+
 // The developer account only; the server refuses everyone else.
 export const developerAPI = {
+  permissions: () => apiClient.get('/developer/permissions'),
+  setPermission: (key: PermissionKey, roles: Partial<Record<PermissionRole, boolean>>) => apiClient.put(`/developer/permissions/${key}`, roles),
   accounts: (type: LockUserType, q: string) => apiClient.get('/developer/accounts', { params: { type, q } }),
   locks: () => apiClient.get('/developer/locks'),
   lock: (user_type: LockUserType, user_id: number, reason?: string) => apiClient.post('/developer/locks', { user_type, user_id, reason }),

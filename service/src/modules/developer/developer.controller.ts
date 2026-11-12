@@ -125,7 +125,38 @@ const acceptSeal = async (_req: any, res: any) => {
   }
 };
 
+// Permissions the developer gives owners and admins (Technical section → Permissions).
+const permissions = require('./permissions');
+
+const listPermissions = async (_req: any, res: any) => {
+  try {
+    res.json({ permissions: await permissions.getAll() });
+  } catch (error) {
+    fail(res, error, "Ruxsatlarni yuklab bo'lmadi");
+  }
+};
+
+const updatePermission = async (req: any, res: any) => {
+  try {
+    const key = String(req.params.key || '');
+    if (!permissions.isPermissionKey(key)) return res.status(400).json({ error: "Ruxsat noto'g'ri", code: 'BAD_PERMISSION' });
+    const roles: Record<string, boolean> = {};
+    for (const role of ['owner', 'admin']) {
+      if (req.body?.[role] !== undefined) {
+        if (typeof req.body[role] !== 'boolean') return res.status(400).json({ error: "Qiymat noto'g'ri", code: 'BAD_VALUE' });
+        roles[role] = req.body[role];
+      }
+    }
+    if (!Object.keys(roles).length) return res.status(400).json({ error: "Qiymat noto'g'ri", code: 'BAD_VALUE' });
+    res.json({ permissions: await permissions.update(key, roles) });
+  } catch (error) {
+    fail(res, error, "Ruxsatni o'zgartirib bo'lmadi");
+  }
+};
+
 module.exports = {
+  listPermissions,
+  updatePermission,
   searchAccounts,
   listLocks,
   lockAccount,

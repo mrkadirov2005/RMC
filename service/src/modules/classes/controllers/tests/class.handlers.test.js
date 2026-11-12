@@ -225,7 +225,7 @@ describe('classes controller handlers', () => {
 
       await controller.updateClass({ params: { id: '3' }, body: { class_name: 'B2' }, user: admin }, res);
 
-      expect(classService.updateClass).toHaveBeenCalledWith(3, { class_name: 'B2' }, 4, { isDeveloper: false });
+      expect(classService.updateClass).toHaveBeenCalledWith(3, { class_name: 'B2' }, 4, { canChangePrice: false });
       expect(res.json).toHaveBeenCalledWith({ class_id: 3 });
     });
 

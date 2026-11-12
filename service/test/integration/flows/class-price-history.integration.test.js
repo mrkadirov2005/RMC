@@ -77,6 +77,7 @@ describe('group price history with PostgreSQL', () => {
     });
     const { generateToken } = require('../../../src/middleware/auth');
     tokens.admin = generateToken({ id: 1, userType: 'superuser', role: 'admin', center_id: centerId, username: 'admin1' });
+    tokens.owner = generateToken({ id: 3, userType: 'superuser', role: 'owner', center_id: centerId, username: 'owner1' });
     tokens.developer = generateToken({ id: 2, userType: 'superuser', role: 'owner', center_id: centerId, username: 'dev', is_developer: true });
     tokens.teacher = generateToken({ id: teacherId, userType: 'teacher', center_id: centerId, username: 'temur' });
     tokens.student = generateToken({ id: students.ali, userType: 'student', center_id: centerId, class_id: raised, username: 'ali' });
@@ -162,19 +163,40 @@ describe('group price history with PostgreSQL', () => {
     expect((await summary(quiet, monthStart(-3), lastDay(0)))[students.nodir].expected).toBe(1240000);
   });
 
-  test('only the developer changes prices; students cannot see them', async () => {
-    for (const who of ['admin', 'teacher']) {
-      const change = await api().post(`/api/classes/${raised}/price-changes`).set(auth(who)).send({ amount: 1 });
-      expect(change.status).toBe(403);
-    }
-    // The group form refuses a new price from an admin, even for a group with no history.
+  test('the developer decides whether owners and admins change prices; students cannot see them', async () => {
+    const permissions = require('../../../src/modules/developer/permissions');
+    const canChange = async (who) => (await api().get('/api/classes/price-permission').set(auth(who))).body.can_change;
     const fresh = (await pool.query(
       `INSERT INTO classes (center_id, class_name, class_code, teacher_id, payment_amount) VALUES ($1, 'Fresh', 'PR-Fresh', $2, 300000) RETURNING class_id`,
       [centerId, teacherId],
     )).rows[0].class_id;
+
+    // Open by default: owners and admins may change prices; teachers never.
+    expect(await canChange('admin')).toBe(true);
+    expect(await canChange('owner')).toBe(true);
+    expect(await canChange('teacher')).toBe(false);
+    expect((await api().put(`/api/classes/${fresh}`).set(auth('admin')).send({ payment_amount: 310000 })).status).toBe(200);
+    expect((await api().post(`/api/classes/${raised}/price-changes`).set(auth('teacher')).send({ amount: 1 })).status).toBe(403);
+
+    // The developer turns it off for admins: admins are refused, owners and the developer are not.
+    await permissions.update('change_group_price', { admin: false });
+    expect(await canChange('admin')).toBe(false);
+    expect(await canChange('owner')).toBe(true);
+    expect(await canChange('developer')).toBe(true);
+    const adminChange = await api().post(`/api/classes/${raised}/price-changes`).set(auth('admin')).send({ amount: 1 });
+    expect(adminChange.status).toBe(403);
+    expect(adminChange.body.code).toBe('PRICE_NOT_ALLOWED');
     const adminForm = await api().put(`/api/classes/${fresh}`).set(auth('admin')).send({ payment_amount: 350000 });
     expect(adminForm.status).toBe(403);
-    expect(adminForm.body.code).toBe('PRICE_DEVELOPER_ONLY');
+    expect(adminForm.body.code).toBe('PRICE_NOT_ALLOWED');
+    expect((await api().put(`/api/classes/${fresh}`).set(auth('owner')).send({ payment_amount: 300000 })).status).toBe(200);
+
+    // Off for owners too: only the developer changes prices.
+    await permissions.update('change_group_price', { owner: false });
+    expect(await canChange('owner')).toBe(false);
+    expect((await api().put(`/api/classes/${fresh}`).set(auth('owner')).send({ payment_amount: 320000 })).status).toBe(403);
+    expect((await api().put(`/api/classes/${fresh}`).set(auth('developer')).send({ payment_amount: 320000 })).status).toBe(200);
+    expect((await api().put(`/api/classes/${fresh}`).set(auth('developer')).send({ payment_amount: 300000 })).status).toBe(200);
     // Other edits by an admin still save when the price is unchanged.
     expect((await api().put(`/api/classes/${fresh}`).set(auth('admin')).send({ payment_amount: 300000, section: 'B' })).status).toBe(200);
     expect((await api().get(`/api/classes/${raised}/price-history`).set(auth('admin'))).status).toBe(200);
@@ -184,6 +206,8 @@ describe('group price history with PostgreSQL', () => {
     expect(badMonth.status).toBe(400);
     const badAmount = await api().post(`/api/classes/${raised}/price-changes`).set(auth('developer')).send({ amount: -5 });
     expect(badAmount.status).toBe(400);
+    // Back to the default for the tests after this one.
+    await permissions.update('change_group_price', { owner: true, admin: true });
   });
 
   test('a planned price becomes the group price when its month comes', async () => {

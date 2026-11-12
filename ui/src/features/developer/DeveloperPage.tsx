@@ -3,7 +3,7 @@
 // Everyone else is sent away by DeveloperRoute (App.tsx) and refused by the server.
 
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { Activity, AlertTriangle, KeyRound, Loader2, Lock, LockOpen, Plus, Power, ScrollText, Search, Server, ShieldAlert } from 'lucide-react';
+import { Activity, AlertTriangle, KeyRound, Loader2, Lock, LockOpen, Plus, Power, ScrollText, Search, Server, ShieldAlert, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,15 +18,17 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAppSelector } from '../crm/hooks';
 import { useUrlTab } from '@/shared/hooks/useUrlTab';
 import { ChangeOwnPasswordCard } from '../owner/components/ChangeOwnPasswordCard';
+import { PermissionsPanel } from './PermissionsPanel';
 import { developerAPI, type DeveloperAccount, type DeveloperLock, type DeveloperOwner, type LockUserType, type Lockdown, type SealStatus } from './api';
 
 const EngineeringPage = lazy(() => import('../crm/server/EngineeringPage'));
 const RequestLogsPage = lazy(() => import('../crm/logs/RequestLogsPage'));
 
-const SECTIONS = ['access', 'engineering', 'logs'] as const;
+const SECTIONS = ['access', 'permissions', 'engineering', 'logs'] as const;
 type Section = (typeof SECTIONS)[number];
 const SECTION_TABS: { id: Section; label: string; icon: typeof Lock }[] = [
   { id: 'access', label: 'Access control', icon: Lock },
+  { id: 'permissions', label: 'Permissions', icon: SlidersHorizontal },
   { id: 'engineering', label: 'Server and database', icon: Server },
   { id: 'logs', label: 'Journals', icon: ScrollText },
 ];
@@ -520,7 +522,7 @@ const TechnicalSection = () => {
     <div className="space-y-4">
       <PageHeader
         title={t('Technical section')}
-        description={t('Access control, server and database tools, and request logs. Only you see this section.')}
+        description={t('Access control, permissions, server and database tools, and request logs. Only you see this section.')}
       />
       <div className="inline-flex flex-wrap rounded-lg border bg-muted/40 p-1" role="tablist">
         {SECTION_TABS.map((item) => {
@@ -551,6 +553,7 @@ const TechnicalSection = () => {
         }
       >
         {section === 'access' && <DeveloperPanel />}
+        {section === 'permissions' && <PermissionsPanel />}
         {section === 'engineering' && <EngineeringPage />}
         {section === 'logs' && <RequestLogsPage />}
       </Suspense>
