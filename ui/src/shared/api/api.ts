@@ -287,7 +287,8 @@ export const archiveAPI = {
     apiClient.delete(`/archive/${entity}/${id}/purge`),
   /** Students archived as "finished successfully", with study history and certificates. */
   getGraduates: () => apiClient.get('/archive/graduates'),
-  uploadCertificate: (studentId: number, data: { title: string; file_name: string; data: string }) =>
+  getGraduateStats: (year?: number) => apiClient.get('/archive/graduates/stats', { params: { year } }),
+  uploadCertificate: (studentId: number, data: { title: string; kind?: string; received_on?: string; link_url?: string; note?: string; file_name?: string; data?: string }) =>
     apiClient.post(`/archive/graduates/${studentId}/certificates`, data),
   downloadCertificate: (id: number) => apiClient.get(`/archive/certificates/${id}/file`, { responseType: 'blob' }),
   deleteCertificate: (id: number) => apiClient.delete(`/archive/certificates/${id}`),

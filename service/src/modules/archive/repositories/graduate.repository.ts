@@ -34,7 +34,10 @@ const findGraduates = async (centerId?: number) => {
             g.school_name, g.school_class, g.study_place_type, g.delete_reason_note AS result,
             h.studied_from, g.deleted_at::date::text AS finished_on, h.groups, h.teachers, h.subjects,
             COALESCE((SELECT json_agg(json_build_object('certificate_id', sc.certificate_id, 'title', sc.title,
-                       'file_name', sc.file_name, 'file_size', sc.file_size, 'created_at', sc.created_at) ORDER BY sc.created_at)
+                       'kind', sc.kind, 'received_on', COALESCE(sc.received_on, sc.created_at::date)::text,
+                       'link_url', sc.link_url, 'note', sc.note, 'has_file', sc.file_data IS NOT NULL,
+                       'file_name', sc.file_name, 'file_size', sc.file_size, 'created_at', sc.created_at)
+                       ORDER BY COALESCE(sc.received_on, sc.created_at::date), sc.certificate_id)
                       FROM student_certificates sc WHERE sc.student_id = g.student_id AND sc.deleted_at IS NULL), '[]') AS certificates
      FROM graduates g
      JOIN history h ON h.student_id = g.student_id
@@ -55,19 +58,44 @@ const findGraduateCenter = async (studentId: number, centerId?: number) => {
   return result.rows[0]?.center_id ?? null;
 };
 
-const insertCertificate = async (row: { centerId: number; studentId: number; title: string; fileName: string; data: Buffer; uploadedByName: string | null }) => {
+const insertCertificate = async (row: {
+  centerId: number; studentId: number; title: string; kind: string; receivedOn: string; linkUrl: string | null; note: string | null;
+  fileName: string | null; data: Buffer | null; contentType: string | null; uploadedByName: string | null;
+}) => {
   const result = await pool.query(
-    `INSERT INTO student_certificates (center_id, student_id, title, file_name, file_size, file_data, uploaded_by_name)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING certificate_id, title, file_name, file_size, created_at`,
-    [row.centerId, row.studentId, row.title, row.fileName, row.data.length, row.data, row.uploadedByName]
+    `INSERT INTO student_certificates (center_id, student_id, title, kind, received_on, link_url, note, file_name, file_size, file_data, content_type, uploaded_by_name)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+     RETURNING certificate_id, title, kind, received_on::text, link_url, note, file_data IS NOT NULL AS has_file, file_name, file_size, created_at`,
+    [row.centerId, row.studentId, row.title, row.kind, row.receivedOn, row.linkUrl, row.note, row.fileName, row.data ? row.data.length : null, row.data, row.contentType, row.uploadedByName]
   );
   return result.rows[0];
 };
 
+/**
+ * Graduates' records for a year and the year before: per month and type, and per teacher (the
+ * teacher of the group the graduate finished in), to compare years and help the teachers' KPI.
+ */
+const findGraduateStats = async (year: number, centerId?: number) => {
+  const result = await pool.query(
+    `SELECT EXTRACT(YEAR FROM COALESCE(sc.received_on, sc.created_at::date))::int AS year,
+            EXTRACT(MONTH FROM COALESCE(sc.received_on, sc.created_at::date))::int AS month,
+            sc.kind, sc.title, c.teacher_id,
+            NULLIF(trim(concat_ws(' ', t.first_name, t.last_name)), '') AS teacher_name
+     FROM student_certificates sc
+     JOIN students s ON s.student_id = sc.student_id
+     LEFT JOIN classes c ON c.class_id = s.class_id
+     LEFT JOIN teachers t ON t.teacher_id = c.teacher_id
+     WHERE sc.deleted_at IS NULL
+       AND EXTRACT(YEAR FROM COALESCE(sc.received_on, sc.created_at::date)) IN ($1::int, $1::int - 1)
+       AND ($2::int IS NULL OR sc.center_id = $2)`,
+    [year, centerId ?? null]
+  );
+  return result.rows;
+};
+
 const findCertificateFile = async (certificateId: number, centerId?: number) => {
   const result = await pool.query(
-    `SELECT file_name, file_data FROM student_certificates
+    `SELECT file_name, file_data, content_type FROM student_certificates
      WHERE certificate_id = $1 AND deleted_at IS NULL AND ($2::int IS NULL OR center_id = $2)`,
     [certificateId, centerId ?? null]
   );
@@ -83,5 +111,5 @@ const softDeleteCertificate = async (certificateId: number, centerId?: number) =
   return result.rowCount > 0;
 };
 
-module.exports = { GRADUATE_REASON_CODES, findGraduates, findGraduateCenter, insertCertificate, findCertificateFile, softDeleteCertificate };
+module.exports = { findGraduateStats, GRADUATE_REASON_CODES, findGraduates, findGraduateCenter, insertCertificate, findCertificateFile, softDeleteCertificate };
 export {};

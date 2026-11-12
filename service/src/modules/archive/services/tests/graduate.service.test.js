@@ -1,8 +1,9 @@
 jest.mock('../../repositories/graduate.repository', () => ({
   findGraduates: jest.fn(),
   findGraduateCenter: jest.fn(),
-  insertCertificate: jest.fn(async (row) => ({ certificate_id: 1, title: row.title, file_size: row.data.length })),
+  insertCertificate: jest.fn(async (row) => ({ certificate_id: 1, title: row.title, file_size: row.data ? row.data.length : null })),
   findCertificateFile: jest.fn(),
+  findGraduateStats: jest.fn(),
   softDeleteCertificate: jest.fn(),
 }));
 
@@ -39,12 +40,41 @@ describe('graduates', () => {
     repository.findGraduateCenter.mockResolvedValue(4);
     const png = Buffer.from('\x89PNG....').toString('base64');
     expect(await service.addCertificate(1, { title: 'x', data: png }, 4, null)).toEqual({ error: 'not_pdf' });
-    expect(await service.addCertificate(1, { title: 'x', data: '' }, 4, null)).toEqual({ error: 'invalid_size' });
+    // No file and no link.
+    expect(await service.addCertificate(1, { title: 'x', data: '' }, 4, null)).toEqual({ error: 'file_or_link' });
+    expect(await service.addCertificate(1, { title: 'x', link_url: 'drive.google.com/x' }, 4, null)).toEqual({ error: 'bad_link' });
     const big = Buffer.concat([Buffer.from('%PDF-'), Buffer.alloc(service.MAX_PDF_BYTES)]).toString('base64');
     expect(await service.addCertificate(1, { title: 'x', data: big }, 4, null)).toEqual({ error: 'invalid_size' });
     expect(await service.addCertificate(1, { title: ' ', data: pdf }, 4, null)).toEqual({ error: 'title_required' });
     repository.findGraduateCenter.mockResolvedValue(null);
     expect(await service.addCertificate(1, { title: 'x', data: pdf }, 4, null)).toEqual({ error: 'not_found' });
     expect(repository.insertCertificate).not.toHaveBeenCalled();
+  });
+
+  it('keeps a certificate link, an admission, or a thank-you screenshot, with the date received', async () => {
+    repository.findGraduateCenter.mockResolvedValue(4);
+    repository.insertCertificate.mockImplementation(async (row) => row);
+    const viaLink = await service.addCertificate(1, { title: 'IELTS 7.0', link_url: 'https://drive.google.com/file/abc', received_on: '2026-09-14' }, 4, 'admin');
+    expect(viaLink.row).toMatchObject({ kind: 'certificate', receivedOn: '2026-09-14', linkUrl: 'https://drive.google.com/file/abc', data: null, fileName: null });
+    const admission = await service.addCertificate(1, { title: 'Westminster University', kind: 'admission', link_url: 'https://wiut.uz/letter' }, 4, 'admin');
+    expect(admission.row.kind).toBe('admission');
+    const pngBytes = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(10)]).toString('base64');
+    const thanks = await service.addCertificate(1, { title: 'Thank you note', kind: 'thanks', data: `data:image/png;base64,${pngBytes}`, note: 'Wrote to the teacher' }, 4, 'admin');
+    expect(thanks.row).toMatchObject({ kind: 'thanks', contentType: 'image/png', fileName: 'thanks.png', note: 'Wrote to the teacher' });
+  });
+
+  it('counts records by month, type and teacher, this year against last year', async () => {
+    repository.findGraduateStats.mockResolvedValue([
+      { year: 2026, month: 9, kind: 'certificate', title: 'IELTS 7.0', teacher_id: 1, teacher_name: 'Aziz' },
+      { year: 2026, month: 9, kind: 'certificate', title: 'ielts 7.0 ', teacher_id: 1, teacher_name: 'Aziz' },
+      { year: 2026, month: 10, kind: 'admission', title: 'WIUT', teacher_id: 2, teacher_name: 'Bobur' },
+      { year: 2025, month: 9, kind: 'certificate', title: 'IELTS 6.5', teacher_id: 1, teacher_name: 'Aziz' },
+    ]);
+    const stats = await service.graduateStats({ year: '2026' }, 4);
+    expect(repository.findGraduateStats).toHaveBeenCalledWith(2026, 4);
+    expect(stats.totals).toEqual({ this_year: { certificate: 2, admission: 1, thanks: 0, total: 3 }, last_year: { certificate: 1, admission: 0, thanks: 0, total: 1 } });
+    expect(stats.months[8]).toMatchObject({ month: 9, this_year: { total: 2 }, last_year: { total: 1 } });
+    expect(stats.by_teacher.map((t) => [t.teacher_name, t.total])).toEqual([['Aziz', 2], ['Bobur', 1]]);
+    expect(stats.top_titles[0]).toMatchObject({ title: 'IELTS 7.0', count: 2 });
   });
 });
