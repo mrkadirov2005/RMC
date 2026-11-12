@@ -60,6 +60,12 @@ describe('grade service', () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
+  test('refuses more than 5 stellar students in one lesson', async () => {
+    const records = [1, 2, 3, 4, 5, 6].map((id) => ({ student_id: id, is_stellar_student: true }));
+    await expect(service.saveSessionWorkflow({ class_id: 1, session_id: 2, records }, 2)).resolves.toEqual({ error: 'too_many_stellar' });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
   test('requires a session for score upsert', async () => {
     await expect(service.upsertSessionScores({ student_id: 1 }, 2)).resolves.toEqual({ error: 'session_id_required' });
     expect(repository.upsertSessionScores).not.toHaveBeenCalled();

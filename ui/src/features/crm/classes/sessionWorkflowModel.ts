@@ -27,6 +27,9 @@ export const clampWorkflowPoints = (value: string) => {
     : String(Math.max(0, Math.min(100, Math.round(numericValue))));
 };
 
+/** Stellar students one lesson may have (the server checks the same limit). */
+export const MAX_STELLAR_STUDENTS = 5;
+
 /** Lesson points an excused absence gets automatically; the student is not scored further. */
 export const EXCUSED_LESSON_POINTS = 50;
 

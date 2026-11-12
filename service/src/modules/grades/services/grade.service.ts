@@ -6,6 +6,7 @@ const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
 const studentService = require('../../students/services/student.service');
 const { calculateCoins } = require('../../../utils/coinCalculator');
 const settingsService = require('../../settings/services/settings.service');
+const { MAX_STELLAR_STUDENTS } = require('../../settings/lessonScoringDefaults');
 const { combineLessonScore, lessonGrade, lessonMaxScore } = require('./lessonScore');
 const db = pool.db;
 
@@ -475,6 +476,10 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
 
   if (!class_id || !session_id || !Array.isArray(records) || records.length === 0) {
     return { error: 'invalid_payload' as const };
+  }
+  // Stellar student of the lesson is for the really outstanding: at most MAX_STELLAR_STUDENTS.
+  if (records.filter((record: any) => record?.is_stellar_student).length > MAX_STELLAR_STUDENTS) {
+    return { error: 'too_many_stellar' as const };
   }
 
   const resolvedCenterId = centerId ?? body.center_id;

@@ -13,16 +13,21 @@ describe('settings service', () => {
     expect(value.stellarBonusCoins).toBe(8);
     expect(value.coinScoreMapping).toEqual([{ score: 100, coins: 6 }, { score: 40, coins: 2 }]);
   });
-  test('keeps the stellar activity level and uses the center scoring rules by default', async () => {
+  test('the old Stellar activity level becomes an ordinary top level; center rules by default', async () => {
     repository.getSetting.mockResolvedValue(null);
     const loaded = await service.getLessonScoring(2);
     expect(loaded.attendance.map((option) => option.score)).toEqual([40, 30, 20, 0]);
     expect(loaded.activity.map((option) => option.score)).toEqual([40, 30, 20, 10, 5]);
-    expect(loaded.activity.filter((option) => option.stellar).map((option) => option.label)).toEqual(['Stellar']);
+    expect(loaded.activity[0].label).toBe('Excellent');
+    expect(loaded.activity.some((option) => 'stellar' in option)).toBe(false);
 
-    const saved = service.normalizeLessonScoring({ activity: [{ label: 'Yulduz', score: 40, stellar: true }, { label: 'Faol', score: 30 }] });
-    expect(saved.activity[0].stellar).toBe(true);
-    expect(saved.activity[1].stellar).toBeUndefined();
+    // Saved settings from before: "Stellar" is renamed, a custom name is kept, the flag is dropped.
+    const saved = service.normalizeLessonScoring({ activity: [{ label: 'Stellar', score: 40, stellar: true }, { label: 'Faol', score: 30 }] });
+    expect(saved.activity[0]).toMatchObject({ label: 'Excellent', score: 40 });
+    expect('stellar' in saved.activity[0]).toBe(false);
+    const custom = service.normalizeLessonScoring({ activity: [{ label: 'Yulduz', score: 40, stellar: true }] });
+    expect(custom.activity[0].label).toBe('Yulduz');
+    expect('stellar' in custom.activity[0]).toBe(false);
   });
   test('keeps a valid text size per account type and defaults the rest to normal', async () => {
     expect(service.normalizeTextSizes({ owner: 'large', admin: 'xlarge', teacher: 'huge' })).toEqual({
