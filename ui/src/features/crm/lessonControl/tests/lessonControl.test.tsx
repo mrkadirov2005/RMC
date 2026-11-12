@@ -21,7 +21,7 @@ describe('teacher scoring reminder', () => {
     vi.clearAllMocks();
     api.myDue.mockResolvedValue({ data: [
       { class_id: 1, class_name: 'A2 plus', date: '2026-10-09', start: '10:00', deadline: '2026-10-09 12:00', status: 'pending' },
-      { class_id: 1, class_name: 'A2 plus', date: '2026-10-07', start: '10:00', deadline: '2026-10-07 12:00', status: 'missing' },
+      { class_id: 1, class_name: 'A2 plus', date: '2026-10-07', start: '10:00', deadline: '2026-10-07 12:00', status: 'missing', days_late: 3 },
     ] });
     api.discipline.mockResolvedValue({ data: { teachers: [{ summary: { due: 3, on_time: 1, late: 1, missing: 1, pending: 1, points: -10 } }] } });
     api.reschedules.mockResolvedValue({ data: [] });
@@ -30,7 +30,9 @@ describe('teacher scoring reminder', () => {
   it('reminds what is due today and what was missed, and shows the month', async () => {
     render(<TeacherGradingPanel classes={[{ class_id: 1, class_name: 'A2 plus' }]} />);
     expect(await screen.findByText('A2 plus: score by 12:00 today')).toBeTruthy();
-    expect(screen.getByText('A2 plus, 07.10.2026: not scored (-5 KPI)')).toBeTruthy();
+    // Three days unscored: 3 x 5, and it grows every day.
+    expect(screen.getByText('A2 plus, 07.10.2026: not scored for 3 days (-15 KPI)')).toBeTruthy();
+    expect(screen.getByText('Every day a lesson stays unscored takes 5 more KPI points.')).toBeTruthy();
     expect(screen.getByText('-10 KPI')).toBeTruthy();
   });
 

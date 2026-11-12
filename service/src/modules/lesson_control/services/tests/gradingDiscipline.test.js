@@ -20,15 +20,21 @@ describe('scoring discipline', () => {
     expect(deadlineOf({ date: '2026-10-05', start: '22:30' })).toBe('2026-10-05 23:59');
   });
 
-  it('marks on time, late, missing and pending, and scores -5 each', () => {
+  it('marks on time, late, missing and pending, and scores -5 for every day a lesson is late', () => {
     const lessons = expectedLessons([a2], '2026-10-05', '2026-10-09', [], []);
     const result = evaluate(lessons, [
       { class_id: 1, session_date: '2026-10-05', first_graded: '2026-10-05 11:40' },
       { class_id: 1, session_date: '2026-10-07', first_graded: '2026-10-07 18:00' },
     ], '2026-10-09 11:00', false);
     expect(result.lessons.map((lesson) => lesson.status)).toEqual(['on_time', 'late', 'pending']);
-    expect(result.summary).toEqual({ due: 2, on_time: 1, late: 1, missing: 0, pending: 1, points: -5, bonus: 0 });
-    expect(evaluate(lessons, [], '2026-10-09 13:00', false).summary).toMatchObject({ missing: 3, points: -15 });
+    // Scored the same evening: one day late.
+    expect(result.summary).toEqual({ due: 2, on_time: 1, late: 1, missing: 0, pending: 1, late_days: 1, points: -5, bonus: 0 });
+    // Nothing scored by 9 October 13:00: the lessons of the 5th, 7th and 9th are 5, 3 and 1 days late.
+    const unscored = evaluate(lessons, [], '2026-10-09 13:00', false);
+    expect(unscored.lessons.map((lesson) => lesson.days_late)).toEqual([5, 3, 1]);
+    expect(unscored.summary).toMatchObject({ missing: 3, late_days: 9, points: -45 });
+    // A day later each missing lesson costs 5 more.
+    expect(evaluate(lessons, [], '2026-10-10 13:00', false).summary).toMatchObject({ late_days: 12, points: -60 });
   });
 
   it('awards 10 only for a finished month with every lesson on time', () => {

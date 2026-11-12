@@ -11,7 +11,7 @@ import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { lessonControlAPI } from '../api';
-import { REQUEST_LABELS, day, type DueLesson, type Reschedule, type Summary } from '../lessonControlFormat';
+import { PENALTY_PER_DAY, REQUEST_LABELS, day, type DueLesson, type Reschedule, type Summary } from '../lessonControlFormat';
 
 type ClassOption = { class_id?: number; id?: number; class_name?: string };
 const EMPTY = { class_id: '', original_date: '', new_date: '', new_time: '', reason: '' };
@@ -70,8 +70,16 @@ export function TeacherGradingPanel({ classes }: { classes: ClassOption[] }) {
           <div className="mb-1 flex items-center gap-2 font-bold"><AlarmClock className="h-4 w-4" />{t('Put scores in on time')}</div>
           <ul className="space-y-0.5">
             {today.map((lesson) => <li key={`${lesson.class_id}-${lesson.date}`}>{t('{group}: score by {time} today', { group: lesson.class_name, time: lesson.deadline.slice(11) })}</li>)}
-            {overdue.map((lesson) => <li key={`${lesson.class_id}-${lesson.date}`} className="font-semibold">{t('{group}, {date}: not scored (-5 KPI)', { group: lesson.class_name, date: day(lesson.date) })}</li>)}
+            {overdue.map((lesson) => {
+              const days = Math.max(1, Number(lesson.days_late || 1));
+              return (
+                <li key={`${lesson.class_id}-${lesson.date}`} className="font-semibold">
+                  {t('{group}, {date}: not scored for {days} days (-{points} KPI)', { group: lesson.class_name, date: day(lesson.date), days, points: days * PENALTY_PER_DAY })}
+                </li>
+              );
+            })}
           </ul>
+          {overdue.length > 0 && <p className="mt-1.5 text-xs font-semibold">{t('Every day a lesson stays unscored takes {points} more KPI points.', { points: PENALTY_PER_DAY })}</p>}
         </div>
       )}
 
