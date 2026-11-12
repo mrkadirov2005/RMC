@@ -1,3 +1,4 @@
+const { splitTransferPayment, isSplittable } = require('./transferSplit');
 const paymentRepository = require('../repositories/payment.repository');
 const discountService = require('../../discounts/services/discount.service');
 const debtRepository = require('../../debts/repositories/debt.repository');
@@ -140,11 +141,19 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
   // The form computes is_complete against its own (possibly stale) discount, so it can only lower the flag
   const complete = paidAmount >= resolvedFinalAmount && is_complete !== false;
 
+  // A student moved from another group this month: the part of the payment the earlier group's
+  // lessons were worth goes to that group (see transferSplit), the rest stays here.
+  const splitParts = student_id && isSplittable(payment_type)
+    ? splitTransferPayment(paidAmount, await paymentRepository.findTransferMonthShares(Number(student_id), paymentDate), Number(student_id))
+    : [];
+  const splitTotal = splitParts.reduce((sum: number, part: any) => sum + part.amount, 0);
+  const keptAmount = Math.round((paidAmount - splitTotal) * 100) / 100;
+
   const paymentPayload = [
     student_id,
     scopedCenterId,
     paymentDate,
-    amount,
+    splitParts.length ? keptAmount : amount,
     currency || 'UZS',
     payment_method || 'Cash',
     transaction_reference,
@@ -166,6 +175,31 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
 
   return paymentRepository.withTransaction(async (client: any) => {
     const createdPayment = await paymentRepository.insert(paymentPayload, client);
+
+    for (const part of splitParts) {
+      await paymentRepository.insert([
+        part.student_id,
+        part.center_id ?? scopedCenterId,
+        paymentDate,
+        part.amount,
+        currency || 'UZS',
+        payment_method || 'Cash',
+        `SPLIT-${createdPayment?.payment_id ?? 'new'}-${part.student_id}`,
+        null,
+        'Completed',
+        'Transfer Split',
+        `Part of a payment taken in the new group after a transfer: the lessons taught in this group that month (${Math.round(Number(part.share || 0) * 12)} of 12).`,
+        null,
+        null,
+        null,
+        0,
+        part.amount,
+        0,
+        part.amount,
+        true,
+        receivedByName ?? null,
+      ], client);
+    }
 
     if (appliedDiscount?.discount_kind === 'monthly_discount' && appliedDiscount?.discount_id) {
       await discountService.update(appliedDiscount.discount_id, { active: false }, Number(scopedCenterId), client);

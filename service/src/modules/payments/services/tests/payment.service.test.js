@@ -9,6 +9,7 @@ jest.mock('../../repositories/payment.repository', () => ({
   purge: jest.fn(),
   findReceipt: jest.fn(),
   findStaffName: jest.fn(),
+  findTransferMonthShares: jest.fn(),
 }));
 
 jest.mock('../../../discounts/services/discount.service', () => ({
@@ -39,10 +40,34 @@ describe('payments service', () => {
     jest.clearAllMocks();
     paymentRepository.insert.mockResolvedValue({ payment_id: 1 });
     paymentRepository.withTransaction.mockImplementation(async (callback) => callback({ query: jest.fn() }));
+    paymentRepository.findTransferMonthShares.mockResolvedValue([]);
     discountService.getActiveByStudent.mockResolvedValue(null);
     discountService.getActiveSerialByStudent.mockResolvedValue(null);
     debtRepository.findOpenDebtsForStudent.mockResolvedValue([]);
     invoiceRepository.findOpenInvoiceForPeriod.mockResolvedValue(null);
+  });
+
+  it('splits a transferred student\'s payment by the lessons each group taught that month', async () => {
+    // Moved mid-month: 6 lessons in the old group (record 7, 200 000) and 6 in the new (record 8).
+    paymentRepository.findTransferMonthShares.mockResolvedValue([
+      { student_id: 8, center_id: 1, expected: 200000, paid: 0, share: 0.5 },
+      { student_id: 7, center_id: 1, expected: 200000, paid: 0, share: 0.5 },
+    ]);
+    paymentRepository.insert.mockResolvedValueOnce({ payment_id: 55 }).mockResolvedValueOnce({ payment_id: 56 });
+
+    await paymentService.createPayment({ student_id: 8, payment_date: '2026-11-20', amount: 400000, payment_type: 'Tuition' }, 1, 'admin');
+
+    expect(paymentRepository.findTransferMonthShares).toHaveBeenCalledWith(8, '2026-11-20');
+    const [kept, split] = paymentRepository.insert.mock.calls.map((call) => call[0]);
+    expect([kept[0], kept[3]]).toEqual([8, 200000]);
+    expect([split[0], split[3], split[6], split[9]]).toEqual([7, 200000, 'SPLIT-55-7', 'Transfer Split']);
+    expect(split[10]).toContain('6 of 12');
+  });
+
+  it('never splits a transfer adjustment', async () => {
+    await paymentService.createPayment({ student_id: 8, payment_date: '2026-11-20', amount: 100000, payment_type: 'Transfer Adjustment' }, 1, 'admin');
+    expect(paymentRepository.findTransferMonthShares).not.toHaveBeenCalled();
+    expect(paymentRepository.insert).toHaveBeenCalledTimes(1);
   });
 
   it('applies explicit monthly discount before inserting payment', async () => {

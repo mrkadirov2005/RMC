@@ -4,6 +4,7 @@ const pool = require('../../../db/pool');
 const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, studentActionReasons, subjects, teachers } = require('../../../db/schema');
 const { effectiveEndDate } = require('../../discounts/repositories/discount.repository');
 const { buildTransferAllocation, toDateOnly, todayInCenterTimeZone } = require('../../../utils/transferAllocation');
+const { lessonDaysOf } = require('../../salaries/services/groupPayments');
 
 const db = pool.db;
 
@@ -623,6 +624,7 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         ...studentSelection,
         source_password_hash: students.passwordHash,
         source_payment_amount: classes.paymentAmount,
+        source_section: classes.section,
       })
       .from(students)
       .leftJoin(classes, eq(classes.classId, students.classId))
@@ -638,6 +640,7 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         center_id: classes.centerId,
         teacher_id: classes.teacherId,
         payment_amount: classes.paymentAmount,
+        section: classes.section,
       })
       .from(classes)
       .where(and(...targetConditions))
@@ -728,7 +731,11 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
           lte(payments.paymentDate, toDateOnly(monthEnd))
         )
       );
-    const allocation = buildTransferAllocation(source.source_payment_amount, targetClass.payment_amount, (paidRows[0] as any)?.paid_amount, transferDate, source.start_date);
+    // Split by lessons, as in billing (calendar days for a group without lesson days).
+    const allocation = buildTransferAllocation(
+      source.source_payment_amount, targetClass.payment_amount, (paidRows[0] as any)?.paid_amount, transferDate, source.start_date,
+      lessonDaysOf(source.source_section), lessonDaysOf(targetClass.section),
+    );
 
     const insertTransferPayment = (studentId: number, amount: number, reference: string, notes: string, center: number) =>
       tx.insert(payments).values({
@@ -761,14 +768,18 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         id,
         -allocation.movedAmount,
         `TRANSFER-${id}-${newStudent.student_id}-SOURCE`,
-        `Transfer credit: ${allocation.sourceDays}/${allocation.totalDays} days kept in previous group`,
+        allocation.sourceLessons !== null
+          ? `Transfer credit: ${allocation.sourceLessons} of 12 lessons kept in previous group`
+          : `Transfer credit: ${allocation.sourceDays}/${allocation.totalDays} days kept in previous group`,
         source.center_id
       );
       await insertTransferPayment(
         newStudent.student_id,
         allocation.movedAmount,
         `TRANSFER-${id}-${newStudent.student_id}-TARGET`,
-        `Transfer credit: ${allocation.targetDays}/${allocation.totalDays} days in new group`,
+        allocation.targetLessons !== null
+          ? `Transfer credit: ${allocation.targetLessons} of 12 lessons in new group`
+          : `Transfer credit: ${allocation.targetDays}/${allocation.totalDays} days in new group`,
         targetClass.center_id
       );
     }
