@@ -22,6 +22,7 @@ import {
   getWorkflowStudentId,
   getWorkflowMaxScore,
   getWorkflowTotalScore,
+  isAbsentFromLesson,
   toWorkflowPointMap,
   type LessonSummary,
 } from './sessionWorkflowModel';
@@ -689,9 +690,9 @@ export default function SessionWorkflowPage() {
                 students={students}
                 options={scoringSettings.homework}
                 values={homeworkScores}
-                isEnabled={isViewMode ? undefined : (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
+                isEnabled={isViewMode ? undefined : (studentId) => !selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId))}
                 onToggle={(studentId, value) => toggleMapValue(setHomeworkScores, studentId, value)}
-                onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId)))}
+                onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId)))}
                 readOnly={isViewMode}
                 action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? t('Complete Homework') : t('Save Scores')}</Button></>}
               />
@@ -702,9 +703,9 @@ export default function SessionWorkflowPage() {
                 students={students}
                 options={scoringSettings.activity}
                 values={activityScores}
-                isEnabled={isViewMode ? undefined : (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
+                isEnabled={isViewMode ? undefined : (studentId) => (!selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
                 onToggle={toggleActivity}
-                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))) && (!stellarLabel || activityScores.get(studentId) !== stellarLabel))}
+                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))) && (!stellarLabel || activityScores.get(studentId) !== stellarLabel))}
                 getTotalScore={getTotalScore}
                 maxScore={maxScore}
                 readOnly={isViewMode}
