@@ -145,15 +145,15 @@ code { font-family: var(--font-mono); font-size: 0.82em; background: var(--track
 <div class="wrap">
   <header class="head">
     <div class="head-text">
-      <span class="eyebrow">RMC CRM · Status of the owner's task list · 12 Nov 2026</span>
+      <span class="eyebrow">RMC CRM · Status of the owner's task list · Updated 12 Nov 2026</span>
       <h1>RMC Task Status</h1>
       <p class="muted">The owner's 19 tasks (20 items, since number 13 appears twice), checked against the current platform code. Each item shows what already works, what is missing, and any bug the review found.</p>
     </div>
     <div class="overall">
-      <svg class="ring" viewBox="0 0 100 100" role="img" aria-label="Overall progress 28 percent">
+      <svg class="ring" viewBox="0 0 100 100" role="img" aria-label="Overall progress 31 percent">
         <circle class="bg" cx="50" cy="50" r="40"></circle>
-        <circle class="fg" cx="50" cy="50" r="40" stroke-dasharray="251.3" stroke-dashoffset="181"></circle>
-        <text x="50" y="58" text-anchor="middle">28%</text>
+        <circle class="fg" cx="50" cy="50" r="40" stroke-dasharray="251.3" stroke-dashoffset="173.4"></circle>
+        <text x="50" y="58" text-anchor="middle">31%</text>
       </svg>
       <div class="overall-label">
         <strong>Overall done</strong>
@@ -163,16 +163,16 @@ code { font-family: var(--font-mono); font-size: 0.82em; background: var(--track
   </header>
 
   <div class="counts">
-    <div class="count low"><b class="num">9</b><span>Mostly not started (0–20%)</span></div>
-    <div class="count mid"><b class="num">10</b><span>Partly done (25–45%)</span></div>
-    <div class="count high"><b class="num">1</b><span>Half or more done (50%+)</span></div>
+    <div class="count low"><b class="num">6</b><span>Mostly not started (0–20%)</span></div>
+    <div class="count mid"><b class="num">12</b><span>Partly done (25–45%)</span></div>
+    <div class="count high"><b class="num">2</b><span>Half or more done (50%+)</span></div>
   </div>
 
   <div class="note">
     <strong>How to read this</strong>
     <ul>
       <li>Percentages are estimates from reading the code, not from testing on live data. They show how much of what the owner asked for already exists.</li>
-      <li>The review covers the latest version of the platform (the <code>main</code> branch). The group price history from a chosen month is finished but not deployed yet. Tasks 7 and 9 count it as done.</li>
+      <li>The review covers the latest version of the platform (the <code>main</code> branch), including subject levels, level prices, price history and billing by lessons.</li>
       <li>Effort: <b>Small</b> is about 1–2 days, <b>Medium</b> about 3–6 days, <b>Large</b> 1–3 weeks.</li>
     </ul>
   </div>
@@ -245,9 +245,9 @@ const TASKS = [
     done: ['A 100-point scoring option exists.'],
     todo: ['Save the exact score typed in.', 'Make attendance optional with this option. A 0 marks the student absent.'],
     find: ['With attendance on, the 100-point score counts at 60% and attendance points are added, then shown as a percentage. That is why 80 becomes 86.'] },
-  { id: '7', title: 'Payments for transferred students', pct: 30, effort: 'Medium',
+  { id: '7', title: 'Payments for transferred students', pct: 35, effort: 'Medium',
     ask: 'When a student moves to another teacher mid-month and pays for the whole month, the payment should be split. The first teacher must get their share and not see the student as unpaid.',
-    done: ['In the month of a transfer, each group expects only its share of the fee, counted by days.', 'Transferred students are marked in the lists.'],
+    done: ['In the month of a transfer, each group expects only its share of the fee: price ÷ 12 for each lesson the student was in the group.', 'The student\'s Journey tab shows every group, teacher and transfer, with paid and expected amounts for each.', 'Transferred students are marked in the lists.'],
     todo: ['When a payment is taken, split it between the old and the new group automatically.', 'Warn the admin that the student was transferred this month.', 'Fix salary and statistics so the first teacher gets credit.'],
     find: ['Today the whole payment goes to the group it is entered in, so the second teacher gets all of it.'] },
   { id: '8', title: 'Sorting in teacher lists', pct: 10, effort: 'Small',
@@ -255,11 +255,11 @@ const TASKS = [
     done: ['Search by name; lists are in alphabetical order.'],
     todo: ['Sort by number of groups, subject, number of students and salary in every teacher list.'],
     find: [] },
-  { id: '9', title: 'Standard student data; subjects with levels and prices', pct: 20, effort: 'Large',
+  { id: '9', title: 'Standard student data; subjects with levels and prices', pct: 55, effort: 'Medium',
     ask: 'Admins type only numbers for school, class and age (the words are added automatically), the phone starts with +998, and gender is chosen from a list. Subjects get fixed levels, each with a monthly price that can change from a chosen date without changing past months. Groups choose a level from the list and can keep any name.',
-    done: ['Gender and place of study are chosen from a list.', 'A group\'s price can change from a chosen month without changing past months (finished, not deployed yet).'],
-    todo: ['School, class and age: number only, with "-Maktab", "-Sinf" and "yosh" added automatically.', 'Phone field starts with +998.', 'Subjects section: fixed levels for each subject and a price for each level, with price history from a date.', 'Group level chosen from the subject\'s levels; filters use the level, not the group name.'],
-    find: ['Searching "7-Maktab" also finds 97 and 37: the school filter matches part of a name.', 'Today the group level is a plain number and the lead level is free text.'] },
+    done: ['Subjects section: each subject has its own levels, and each level has a monthly price.', 'A level\'s price changes from a chosen month; earlier months keep the old price.', 'The group form picks the level from the subject\'s levels; the group name stays free.', 'A subject page shows its levels, prices, price history and groups.', 'Gender and place of study are chosen from a list.'],
+    todo: ['School, class and age: number only, with "-Maktab", "-Sinf" and "yosh" added automatically.', 'Phone field starts with +998.', 'Filters by level in the student and group lists (they still use the old level number).', 'Owners can change level prices only through the developer today; decide whether owners should change them too.'],
+    find: ['Searching "7-Maktab" also finds 97 and 37: the school filter matches part of a name.'] },
   { id: '10', title: 'Leads: new group by subject', pct: 25, effort: 'Small',
     ask: 'In the leads "new group" section, choose a subject (math, English, ...) and see only those students and how many are gathered.',
     done: ['Each lead has a subject and level (typed by hand).'],
@@ -268,16 +268,16 @@ const TASKS = [
   { id: '11', title: 'Waiting for a group: subject and level filter', pct: 25, effort: 'Small',
     ask: 'Show the waiting list per subject and allow filtering by level.',
     done: ['Waiting students are in the same lead list with a subject and level.'],
-    todo: ['Filter by subject and by level (works best once task 9 makes levels standard).'],
+    todo: ['Filter by subject and by level.', 'Choose the lead\'s level from the subject\'s levels (task 9) instead of typing it.'],
     find: [] },
   { id: '12', title: 'Graduates and certificates', pct: 40, effort: 'Medium',
     ask: 'A certificates area in Archive → Graduates with links, search by name and date (for example September 2026), one-click download, graduate statistics in the owner report by month and teacher, thank-you screenshots, and a wishes section in the app.',
     done: ['Archive → Graduates tab.', 'Upload a PDF certificate and download it.', 'Search by name and a "has a certificate" filter.'],
     todo: ['Filter by year and month the certificate was received.', 'Certificate links (not only PDF files).', 'Graduates statistics in the owner report: by month and by teacher, this year against last year, and where graduates went to study.', 'Thank-you notes and screenshots.', 'A "wishes" section in the mobile app for graduates.'],
     find: [] },
-  { id: '13a', title: 'Retention: teachers ranked by students lost', pct: 35, effort: 'Medium',
+  { id: '13a', title: 'Retention: teachers ranked by students lost', pct: 40, effort: 'Medium',
     ask: 'Rank every teacher by the share of students lost (percent). Group leavers into: trial, new group, long-term, graduated, transferred. Only the first three count against the teacher. Filter by teacher, subject and level.',
-    done: ['Students who left, by teacher and by reason.', 'Transferred students are already not counted as lost.', 'Filters by how the student found the center and by referring teacher.'],
+    done: ['Students who left, by teacher and by reason.', 'Transferred students are already not counted as lost.', 'Filters by how the student found the center and by referring teacher.', 'Each student\'s Journey tab shows how every group ended (transferred, left with reason, still studying) and the time spent with each teacher.'],
     todo: ['Ranking of all teachers by percent lost (today the "Top teacher" card uses the count).', 'The five leaving groups and their order.', 'Filters by teacher, subject and level.', 'Leave graduates and transfers out of the teacher ranking.'],
     find: [] },
   { id: '13b', title: 'Admissions against students lost', pct: 45, effort: 'Small',
