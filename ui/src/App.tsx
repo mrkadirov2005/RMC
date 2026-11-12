@@ -27,6 +27,8 @@ const LessonControlPage = lazy(() => import('./features/crm/lessonControl/Lesson
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
 const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
 const OwnerGraphPage = lazy(() => import('./features/owner/graph/OwnerGraphPage'));
+// Progress reports on the owner's task lists (HTML files in features/process/reports).
+const ProcessPage = lazy(() => import('./features/process/ProcessPage'));
 const OwnerSmsPage = lazy(() => import('./features/owner/OwnerSmsPage'));
 // @MOB-160 Content of the student and parent mobile app.
 const MobileAppPage = lazy(() => import('./features/owner/mobileApp/MobileAppPage'));
@@ -440,6 +442,16 @@ function AppContent() {
             <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.VIEW_SMS}>
               <Layout>
                 <OwnerSmsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/process"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+              <Layout>
+                <ProcessPage />
               </Layout>
             </ProtectedRoute>
           }
