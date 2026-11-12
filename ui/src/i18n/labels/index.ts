@@ -16,6 +16,7 @@ import { gradesLabels } from './grades';
 import { homeworkLabels } from './homework';
 import { miscLabels } from './misc';
 import { mobileAppLabels } from './mobileApp';
+import { processLabels } from './process';
 import { ownerLabels } from './owner';
 import { paymentsLabels } from './payments';
 import { publicLabels } from './public';
@@ -50,6 +51,7 @@ export const pageLabelTranslations: Record<string, string> = {
   ...homeworkLabels,
   ...miscLabels,
   ...mobileAppLabels,
+  ...processLabels,
   ...ownerLabels,
   ...paymentsLabels,
   ...publicLabels,
