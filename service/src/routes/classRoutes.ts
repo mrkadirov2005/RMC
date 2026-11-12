@@ -176,6 +176,8 @@ router_class.put('/:id/level', requireAuth, validateParams(IdParamDto), levelCon
  *       200:
  *         description: Sessions generated
  */
+// The group's calendar rebuilt from its timetable (future unscored lessons only).
+router_class.post('/:id/sessions/sync', requireAuth, validateParams(IdParamDto), classController.syncClassCalendar);
 router_class.post('/:id/sessions/generate', requireAuth, validateParams(IdParamDto), validateBody(GenerateClassSessionsDto), classController.generateClassSessions);
 
 /**

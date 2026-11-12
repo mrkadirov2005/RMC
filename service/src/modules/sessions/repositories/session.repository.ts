@@ -117,6 +117,55 @@ const deleteUpcoming = async (classId: number, fromDate: string, toDate?: string
   return { deleted: rows.length };
 };
 
+/**
+ * A group's start and end dates as plain YYYY-MM-DD text. Read this way because the columns are
+ * dates in the database but timestamps in the schema, and that mapping turned them into Invalid
+ * Date, so generating lessons skipped every day for a group with a start date.
+ */
+const findClassDates = async (classId: number) => {
+  const result = await pool.query(
+    `SELECT start_date::date::text AS start_date, end_date::date::text AS end_date FROM classes WHERE class_id = $1`,
+    [classId],
+  );
+  return { start: result.rows[0]?.start_date || null, end: result.rows[0]?.end_date || null };
+};
+
+/**
+ * Future lessons of a group from `fromDate` on that do not fit its timetable (another weekday or
+ * start time, or outside the group's dates) and that nobody has scored or taken attendance for.
+ * Lessons that already fit stay as they are, as do scored lessons and lessons moved by an
+ * approved reschedule.
+ */
+const deleteOffTimetableFrom = async (
+  classId: number,
+  fromDate: string,
+  timetable: { days: string[]; time: string; start: string | null; end: string | null },
+  centerId?: number,
+  teacherId?: number,
+) => {
+  const days = timetable.days.map((day) => day.charAt(0).toUpperCase() + day.slice(1).toLowerCase());
+  const rows = await db
+    .update(sessions)
+    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(
+      eq(sessions.classId, classId),
+      gte(sessions.sessionDate, fromDate),
+      isNull(sessions.deletedAt),
+      ...scoped(centerId, teacherId),
+      sql`NOT (
+        to_char("sessions"."session_date", 'FMDay') = ANY(string_to_array(${days.join(',')}, ','))
+        AND substring("sessions"."start_time"::text, 1, 5) = ${timetable.time.slice(0, 5)}
+        AND (${timetable.start}::date IS NULL OR "sessions"."session_date" >= ${timetable.start}::date)
+        AND (${timetable.end}::date IS NULL OR "sessions"."session_date" <= ${timetable.end}::date)
+      )`,
+      sql`NOT EXISTS (SELECT 1 FROM grades g WHERE g.session_id = "sessions"."session_id")`,
+      sql`NOT EXISTS (SELECT 1 FROM attendance a WHERE a.session_id = "sessions"."session_id")`,
+      sql`NOT EXISTS (SELECT 1 FROM lesson_reschedules r WHERE r.class_id = "sessions"."class_id" AND r.new_date = "sessions"."session_date" AND r.status = 'approved')`,
+    ))
+    .returning({ session_id: sessions.sessionId });
+  return { deleted: rows.length };
+};
+
 const updateTime = async (
   classId: number,
   sessionId: number,
@@ -163,6 +212,8 @@ const purgeById = async (classId: number, sessionId: number, centerId?: number, 
   return { deleted: rows.length };
 };
 
-module.exports = { create, bulkInsert, findByClass, findByClasses, deleteUpcoming, updateTime, deleteById, softDeleteByClass, purgeById };
+module.exports = {
+  findClassDates,
+  deleteOffTimetableFrom, create, bulkInsert, findByClass, findByClasses, deleteUpcoming, updateTime, deleteById, softDeleteByClass, purgeById };
 
 export {};

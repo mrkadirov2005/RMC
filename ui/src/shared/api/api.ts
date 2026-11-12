@@ -352,6 +352,8 @@ export const classAPI = {
   update: (id: number, data: any) => apiClient.put(`/classes/${id}`, data),
   delete: (id: number, params?: { force?: boolean }) => apiClient.delete(`/classes/${id}`, { params }),
   purge: (id: number) => apiClient.delete(`/classes/${id}/purge`),
+  /** Rebuilds the group's future unscored lessons from its timetable (scored lessons stay). */
+  syncCalendar: (id: number) => apiClient.post<{ removed: number; created: number }>(`/classes/${id}/sessions/sync`),
   generateSessions: (id: number, data: { month: number; year: number; duration_minutes: number; center_id?: number }) =>
     apiClient.post(`/classes/${id}/sessions/generate`, data),
   deleteSessions: (id: number, params: { from: string; to?: string }) =>
