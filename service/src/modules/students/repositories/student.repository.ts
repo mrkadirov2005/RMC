@@ -214,6 +214,9 @@ const handOverMainRecord = async (tx: any, oldMain: any) => {
   return nextMainId;
 };
 
+// A case-insensitive regex for the search text that never matches in the middle of a number.
+const schoolSearchRegex = (search: string) => `(^|[^0-9])${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`;
+
 const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
   const conditions: any[] = [isNull(students.deletedAt)];
   // A transferred-out student keeps a row in their old class (status='Transferred', deletedAt
@@ -246,8 +249,10 @@ const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, 
         ilike(students.email, pattern),
         ilike(students.phone, pattern),
         ilike(students.parentName, pattern),
-        ilike(students.schoolName, pattern),
-        ilike(students.schoolClass, pattern)
+        // School and class: "7-Maktab" must not find "97-Maktab" or "37-Maktab", so a number in the
+        // search only matches where a number starts (no digit right before it).
+        sql`${students.schoolName} ~* ${schoolSearchRegex(search)}`,
+        sql`${students.schoolClass} ~* ${schoolSearchRegex(search)}`
       )
     );
   }
@@ -1024,6 +1029,7 @@ const saveVideos = async (id: number, videos: { before_video_url: string | null;
 };
 
 module.exports = {
+  schoolSearchRegex,
   removeAddedGroup,
   discountCopy,
   findActionReason,
