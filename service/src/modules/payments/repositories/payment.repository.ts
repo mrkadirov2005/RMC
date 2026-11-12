@@ -363,7 +363,17 @@ const findStudentPaymentSummary = async (filters: {
  * month. Each comes with its lessons' share of the month, what those lessons cost at that month's
  * group price, and what was already paid on it in that month.
  */
-const findTransferMonthShares = async (studentId: number, paymentDate: string) => {
+/**
+ * Each record in a transferred student's chain with its lessons' share of the month, what that is
+ * worth and what was paid for it. `paymentDate` picks the month. With `transferMonthOnly`, earlier
+ * records count only when the student left them in that month (used to look back at a past
+ * transfer month without touching ordinary old debts).
+ *
+ * A split's month is in its reference (SPLIT-<payment>-<record>-YYYY-MM), so a late payment's share
+ * counts for the transfer month even though the money came in later; splits without a month (the
+ * first ones) count by their date.
+ */
+const findTransferMonthShares = async (studentId: number, paymentDate: string, options: { transferMonthOnly?: boolean } = {}) => {
   const result = await pool.query(
     `WITH RECURSIVE chain AS (
        SELECT student_id, transferred_from_student_id, 0 AS depth FROM students WHERE student_id = $1
@@ -380,14 +390,17 @@ const findTransferMonthShares = async (studentId: number, paymentDate: string) =
             COALESCE((SELECT SUM(p.amount) FROM payments p
                       WHERE p.student_id = s.student_id AND p.deleted_at IS NULL
                         AND LOWER(COALESCE(p.payment_status::text, '')) IN ('completed', 'paid')
-                        AND date_trunc('month', p.payment_date) = month.m), 0)::numeric AS paid
+                        AND ((date_trunc('month', p.payment_date) = month.m
+                              AND NOT (p.payment_type = 'Transfer Split' AND COALESCE(p.transaction_reference, '') ~ '-[0-9]{4}-[0-9]{2}$'))
+                          OR (p.payment_type = 'Transfer Split' AND p.transaction_reference LIKE '%-' || to_char(month.m, 'YYYY-MM')))), 0)::numeric AS paid
      FROM chain
      JOIN students s ON s.student_id = chain.student_id
      LEFT JOIN classes c ON c.class_id = s.class_id
      CROSS JOIN month
      WHERE s.deleted_at IS NULL
-       AND (s.student_id = $1 OR (s.end_date IS NOT NULL AND s.end_date::date >= month.m))`,
-    [studentId, paymentDate],
+       AND (s.student_id = $1 OR (s.end_date IS NOT NULL AND s.end_date::date >= month.m
+            AND (NOT $3::boolean OR s.end_date::date < (month.m + INTERVAL '1 month')::date)))`,
+    [studentId, paymentDate, Boolean(options.transferMonthOnly)],
   );
   return result.rows.map((row: any) => ({
     student_id: Number(row.student_id),

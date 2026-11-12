@@ -60,6 +60,30 @@ const syncInvoiceAfterPayment = async (
   await invoiceRepository.updateStatus(invoice.invoice_id, nextStatus, client);
 };
 
+/** YYYY-MM-01 of the month `back` months before the date's month. */
+const monthStartBefore = (date: string, back: number) => {
+  const [year, month] = String(date).slice(0, 7).split('-').map(Number);
+  const target = new Date(Date.UTC(year, month - 1 - back, 1));
+  return target.toISOString().slice(0, 10);
+};
+
+/** How many months back a late payment still settles a transfer month. */
+const TRANSFER_LOOKBACK_MONTHS = 2;
+
+const findTransferSplits = async (studentId: number, amount: number, paymentDate: string) => {
+  const parts: any[] = [];
+  let left = amount;
+  for (let back = TRANSFER_LOOKBACK_MONTHS; back >= 0 && left > 0; back -= 1) {
+    const monthStart = monthStartBefore(paymentDate, back);
+    const shares = await paymentRepository.findTransferMonthShares(studentId, back === 0 ? paymentDate : monthStart, back === 0 ? {} : { transferMonthOnly: true });
+    for (const part of splitTransferPayment(left, shares || [], studentId)) {
+      parts.push({ ...part, month: monthStart.slice(0, 7) });
+      left = Math.round((left - part.amount) * 100) / 100;
+    }
+  }
+  return parts;
+};
+
 const createPayment = async (body: any, centerId?: number, receivedByName?: string | null) => {
   const {
     student_id,
@@ -141,10 +165,12 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
   // The form computes is_complete against its own (possibly stale) discount, so it can only lower the flag
   const complete = paidAmount >= resolvedFinalAmount && is_complete !== false;
 
-  // A student moved from another group this month: the part of the payment the earlier group's
-  // lessons were worth goes to that group (see transferSplit), the rest stays here.
+  // A student moved from another group: the part of the payment the earlier group's lessons were
+  // worth goes to that group (see transferSplit), the rest stays here. This month's transfer and,
+  // for a late payment, a transfer in one of the two months before it whose old group is still
+  // owed its lessons (oldest first).
   const splitParts = student_id && isSplittable(payment_type)
-    ? splitTransferPayment(paidAmount, await paymentRepository.findTransferMonthShares(Number(student_id), paymentDate), Number(student_id))
+    ? await findTransferSplits(Number(student_id), paidAmount, paymentDate)
     : [];
   const splitTotal = splitParts.reduce((sum: number, part: any) => sum + part.amount, 0);
   const keptAmount = Math.round((paidAmount - splitTotal) * 100) / 100;
@@ -184,11 +210,11 @@ const createPayment = async (body: any, centerId?: number, receivedByName?: stri
         part.amount,
         currency || 'UZS',
         payment_method || 'Cash',
-        `SPLIT-${createdPayment?.payment_id ?? 'new'}-${part.student_id}`,
+        `SPLIT-${createdPayment?.payment_id ?? 'new'}-${part.student_id}-${part.month}`,
         null,
         'Completed',
         'Transfer Split',
-        `Part of a payment taken in the new group after a transfer: the lessons taught in this group that month (${Math.round(Number(part.share || 0) * 12)} of 12).`,
+        `Part of a payment taken in the new group after a transfer: the lessons taught in this group in ${part.month} (${Math.round(Number(part.share || 0) * 12)} of 12).`,
         null,
         null,
         null,
