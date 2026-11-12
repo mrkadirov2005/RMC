@@ -245,7 +245,7 @@ const listStudentPaymentSummary = async (query: any, centerId?: number) => {
   if (from > to) [from, to] = [to, from];
   const months = Math.max(1, Math.min(36, monthsTouched(from, to)));
   const page = Math.max(1, Number(query.page) || 1);
-  const status = ['paid', 'partial', 'unpaid'].includes(String(query.status)) ? String(query.status) as 'paid' | 'partial' | 'unpaid' : undefined;
+  const status = ['paid', 'partial', 'unpaid', 'debt'].includes(String(query.status)) ? String(query.status) as 'paid' | 'partial' | 'unpaid' | 'debt' : undefined;
 
   const row = await paymentRepository.findStudentPaymentSummary({
     centerId,

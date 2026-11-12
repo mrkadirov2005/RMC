@@ -229,7 +229,8 @@ const findStudentPaymentSummary = async (filters: {
   from: string;
   to: string;
   months: number;
-  status?: 'paid' | 'partial' | 'unpaid';
+  /** 'debt' is partial or unpaid: everyone who still owes for the period. */
+  status?: 'paid' | 'partial' | 'unpaid' | 'debt';
   teacherId?: number;
   classId?: number;
   subject?: string;
@@ -250,7 +251,9 @@ const findStudentPaymentSummary = async (filters: {
     where.push(`(CONCAT_WS(' ', s.first_name, s.last_name) ILIKE ${term} OR CONCAT_WS(' ', s.last_name, s.first_name) ILIKE ${term}
       OR regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g') LIKE ${add(`%${String(filters.q).replace(/\D/g, '') || '~'}%`)})`);
   }
-  const statusFilter = filters.status ? `WHERE state = ${add(filters.status)}` : '';
+  const statusFilter = filters.status === 'debt'
+    ? `WHERE state IN ('partial', 'unpaid')`
+    : filters.status ? `WHERE state = ${add(filters.status)}` : '';
   const limit = add(filters.limit);
   const offset = add(filters.offset);
 
