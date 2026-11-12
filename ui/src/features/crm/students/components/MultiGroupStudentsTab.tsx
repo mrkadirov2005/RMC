@@ -45,7 +45,7 @@ interface Props {
   classOptions: Array<{ id?: number; label: string; value: string | number }>;
   teacherOptions: Array<{ id?: number; label: string; value: string | number }>;
   subjectOptions: Array<{ id?: number; label: string; value: string | number }>;
-  levelOptions: Array<string | number>;
+  levelOptions: Array<{ value: string; label: string }>;
   addressOptions: string[];
 }
 

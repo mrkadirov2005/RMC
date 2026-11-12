@@ -45,6 +45,7 @@ interface StudentListFilters {
   class_id?: number;
   subject_id?: number;
   level?: number;
+  level_id?: number;
   address?: string;
   age?: number;
   gender?: string;
@@ -272,6 +273,7 @@ const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, 
 
   if (filters.subject_id != null) conditions.push(eq(subjects.subjectId, filters.subject_id));
   if (filters.level != null) conditions.push(eq(classes.level, filters.level));
+  if (filters.level_id != null) conditions.push(eq(classes.levelId, Number(filters.level_id)));
 
   const address = String(filters.address || '').trim();
   if (address) conditions.push(eq(centers.address, address));

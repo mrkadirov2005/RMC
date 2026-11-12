@@ -14,12 +14,14 @@ const cleanString = (value: unknown) => {
 };
 
 const hasClassListParams = (query: Record<string, unknown>) =>
-  ['q', 'search', 'teacher_id', 'level', 'page', 'limit'].some((key) => query[key] !== undefined && query[key] !== '');
+  ['q', 'search', 'teacher_id', 'level', 'level_id', 'page', 'limit'].some((key) => query[key] !== undefined && query[key] !== '');
 
 const parseClassListQuery = (query: Record<string, unknown>) => ({
   q: cleanString(query.q || query.search),
   teacher_id: toPositiveInt(query.teacher_id),
   level: toInt(query.level),
+  // A subject level (Fanlar -> levels): the groups in it this month.
+  level_id: toPositiveInt(query.level_id),
   page: toPositiveInt(query.page) || 1,
   limit: Math.min(100, toPositiveInt(query.limit) || 20),
 });
