@@ -113,6 +113,16 @@ const findConflict = (centerId: number, roomNumber: string, day: string, startTi
     eq(rooms.day, day),
     sql`${rooms.time} < ${endTime}::time`,
     sql`COALESCE(${rooms.endTime}, ${rooms.time} + INTERVAL '1 hour') > ${startTime}::time`,
+    // Only a group that still runs keeps the room: timetable rows left from deleted groups, or from
+    // groups whose end date has passed, made a free room show as busy. The table is named in full
+    // because drizzle prints columns inside sql`` without their table, and inside the subquery an
+    // unqualified "class_id" would mean the subquery's own column.
+    sql.raw(`("rooms"."class_id" IS NULL OR EXISTS (
+      SELECT 1 FROM classes AS busy_class
+      WHERE busy_class.class_id = "rooms"."class_id"
+        AND busy_class.deleted_at IS NULL
+        AND (busy_class.end_date IS NULL OR busy_class.end_date::date >= CURRENT_DATE)
+    ))`),
   ];
   if (excludeRoomId) {
     filters.push(ne(rooms.roomId, excludeRoomId));
