@@ -40,8 +40,25 @@ describe('session workflow model', () => {
       activity: new Map([[1, 'Very active']]),
       points: new Map([[1, '50']]),
       settings: defaultLessonScoringSettings,
-    // On time 40 + 60% of 50 points; homework does not add on top of points.
-    })).toBe(70);
+    // The 100-point score is the total as typed; attendance and homework do not add to it.
+    })).toBe(50);
+  });
+
+  it('in the 100-point mode marks attendance from the score: 0 is absent, anything else present', () => {
+    const records = buildSessionWorkflowRecords({
+      students: [{ student_id: 1 }, { student_id: 2 }, { student_id: 3 }],
+      selectedActions: ['points', 'coins'],
+      attendance: new Map(),
+      homework: new Map(),
+      activity: new Map(),
+      points: new Map([[1, '80'], [2, '0']]),
+      stellarStudentIds: [],
+      settings: defaultLessonScoringSettings,
+    });
+    expect(records[0]).toMatchObject({ student_id: 1, points_score: 80, attendance_status: 'Present', attendance_score: null });
+    expect(records[1]).toMatchObject({ student_id: 2, points_score: 0, attendance_status: 'Absent' });
+    // No score typed yet: attendance is left alone.
+    expect(records[2]).toMatchObject({ student_id: 3, attendance_status: null });
   });
 
   it('builds the API record and awards the stellar bonus to every stellar student', () => {

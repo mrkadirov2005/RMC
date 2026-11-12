@@ -34,15 +34,18 @@ describe('lesson start helpers', () => {
     expect(hasScoringAction(['coins', 'points'])).toBe(true);
   });
 
-  it('never lets points be chosen together with homework or activity', () => {
-    expect(toggleLessonAction(['attendance', 'homework', 'activity', 'coins'], 'points', true)).toEqual(['attendance', 'coins', 'points']);
-    expect(toggleLessonAction(['attendance', 'points'], 'homework', true)).toEqual(['attendance', 'homework']);
-    expect(toggleLessonAction(['attendance', 'points'], 'coins', true)).toEqual(['attendance', 'points', 'coins']);
-    expect(toggleLessonAction(['attendance', 'points'], 'points', false)).toEqual(['attendance']);
+  it('never lets points be chosen together with attendance, homework or activity', () => {
+    // The 100-point score marks attendance itself (0 = absent), so attendance is not taken by hand.
+    expect(toggleLessonAction(['attendance', 'homework', 'activity', 'coins'], 'points', true)).toEqual(['coins', 'points']);
+    expect(toggleLessonAction(['points'], 'homework', true)).toEqual(['homework']);
+    expect(toggleLessonAction(['points'], 'attendance', true)).toEqual(['attendance']);
+    expect(toggleLessonAction(['points'], 'coins', true)).toEqual(['points', 'coins']);
+    expect(toggleLessonAction(['coins', 'points'], 'points', false)).toEqual(['coins']);
   });
 
-  it('drops points from an old link that also has homework or activity', () => {
+  it('drops points from an old link that also has attendance, homework or activity', () => {
     expect(resolveLessonActions(['attendance', 'homework', 'points'])).toEqual(['attendance', 'homework']);
-    expect(resolveLessonActions(['attendance', 'points'])).toEqual(['attendance', 'points']);
+    expect(resolveLessonActions(['attendance', 'points'])).toEqual(['attendance']);
+    expect(resolveLessonActions(['points', 'coins'])).toEqual(['points', 'coins']);
   });
 });

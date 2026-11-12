@@ -49,7 +49,7 @@ describe('homework warnings', () => {
     expect(result[0].lessons).toEqual([
       { date: '2026-10-02', homework_score: 15, homework_label: 'Good', score_percent: 55, reasons: ['low_score'] },
       { date: '2026-10-05', homework_score: 5, homework_label: 'Weak', score_percent: 35, reasons: ['homework', 'low_score'] },
-      { date: '2026-10-07', homework_score: null, homework_label: null, score_percent: 64, reasons: ['low_score'] },
+      { date: '2026-10-07', homework_score: null, homework_label: null, score_percent: 40, reasons: ['low_score'] },
     ]);
   });
 

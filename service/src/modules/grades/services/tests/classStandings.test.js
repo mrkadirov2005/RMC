@@ -8,15 +8,15 @@ describe('group standings', () => {
   test("ranks by points over the month's lessons; equal points share a place", async () => {
     repository.findClassLessonScores.mockResolvedValue([
       lesson(1, 40), lesson(2, 90), lesson(3, 90), lesson(1, 30), lesson(4, 10),
-      { student_id: 4, attendance_score: 40, points_score: 50 }, // 40 + 60% of 50
+      { student_id: 4, attendance_score: 40, points_score: 50 }, // the 100-point score counts as typed: 50
     ]);
     const result = await classStandings(7, 2, 9, '2026-11');
     expect(repository.findClassLessonScores).toHaveBeenCalledWith({ classId: 7, centerId: 2, teacherId: 9, month: '2026-11' });
     expect(result.map((row) => [row.student_id, row.total_points, row.lessons, row.place])).toEqual([
       [2, 90, 1, 1],
       [3, 90, 1, 1],
-      [4, 80, 2, 3],
-      [1, 70, 2, 4],
+      [1, 70, 2, 3],
+      [4, 60, 2, 4],
     ]);
   });
 

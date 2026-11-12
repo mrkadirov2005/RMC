@@ -1,7 +1,7 @@
 import type { LessonScoringSettings } from './lessonScoringSettings';
 import type { ScoreOption } from './components/SessionWorkflowScoring';
 import { DEFAULT_ATTENDANCE_REMARK } from './absenceStreak';
-import { combineLessonScore, POINTS_WEIGHT_WITH_ATTENDANCE } from './utils/points';
+import { combineLessonScore } from './utils/points';
 
 export type WorkflowScoreMap = Map<number, string>;
 export type WorkflowScoringAction = 'attendance' | 'homework' | 'activity' | 'points' | 'coins';
@@ -92,7 +92,7 @@ const maxOptionScore = (options: ScoreOption[]) => Math.max(0, ...options.map((o
 export const getWorkflowMaxScore = (selectedActions: WorkflowScoringAction[], settings: LessonScoringSettings) => {
   const has = (action: WorkflowScoringAction) => selectedActions.includes(action);
   const max = has('points')
-    ? (has('attendance') ? maxOptionScore(settings.attendance) + Math.round(100 * POINTS_WEIGHT_WITH_ATTENDANCE) : 100)
+    ? 100
     : (has('attendance') ? maxOptionScore(settings.attendance) : 0)
       + (has('homework') ? maxOptionScore(settings.homework) : 0)
       + (has('activity') ? maxOptionScore(settings.activity) : 0);
@@ -139,12 +139,18 @@ export const buildSessionWorkflowRecords = ({
     const homeworkStatus = homework.get(studentId);
     const activityStatus = activity.get(studentId);
     const pointsScore = Number(points.get(studentId) || 0);
+    // In the 100-point mode attendance is not taken by hand: a 0 marks the student absent and any
+    // other score present, so attendance still knows who missed the lesson.
+    const pointsGiven = selectedActions.includes('points') && points.has(studentId) && String(points.get(studentId)).trim() !== '';
+    const attendanceFromPoints = !selectedActions.includes('attendance') && pointsGiven;
     return {
       student_id: studentId,
       is_stellar_student: awardsCoins && stellarStudentIds.includes(studentId),
       stellar_bonus_coins: awardsCoins && stellarStudentIds.includes(studentId) ? settings.stellarBonusCoins : 0,
-      attendance_status: selectedActions.includes('attendance') ? (statusMap[attendanceStatus] || attendanceStatus) : null,
-      attendance_remarks: selectedActions.includes('attendance') ? (attendanceReasons?.get(studentId)?.trim() || DEFAULT_ATTENDANCE_REMARK) : null,
+      attendance_status: selectedActions.includes('attendance')
+        ? (statusMap[attendanceStatus] || attendanceStatus)
+        : attendanceFromPoints ? (pointsScore === 0 ? 'Absent' : 'Present') : null,
+      attendance_remarks: selectedActions.includes('attendance') || attendanceFromPoints ? (attendanceReasons?.get(studentId)?.trim() || DEFAULT_ATTENDANCE_REMARK) : null,
       attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
       homework_score: selectedActions.includes('homework') && homeworkStatus ? (homeworkPoints[homeworkStatus] ?? 0) : null,
       activity_score: selectedActions.includes('activity') && activityStatus ? (activityPoints[activityStatus] ?? 0) : null,
