@@ -14,6 +14,8 @@ import { getGroupWeekdays } from '@/shared/groupLabel';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getPaymentMonths, recentMonthKeys } from '../utils/paymentMonths';
 import { loadGroupPrices } from '@/shared/groupPrices';
+import { sortTeachers, teacherSortOptionsFor, type TeacherSort } from '../../teachers/teacherSort';
+import { useAppSelector } from '@/features/crm/hooks';
 
 interface Option {
   id?: number;
@@ -28,6 +30,10 @@ interface TeacherSummary {
   last_name?: string;
   student_count?: number;
   class_count?: number;
+  /** The first subject of the teacher's groups (from the teacher list). */
+  subject_name?: string | null;
+  specialization?: string | null;
+  salary_percentage?: number | string | null;
 }
 
 interface Props {
@@ -145,9 +151,11 @@ export const StudentsTeacherGroupsTab = ({
   const [classLoading, setClassLoading] = useState(false);
   const [searchDraft, setSearchDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [teacherSort, setTeacherSort] = useState<TeacherSort>('students');
+  const canSeeSalary = String(useAppSelector((state) => state.auth.user?.role) || '').toLowerCase() === 'owner';
 
   const teachers = useMemo(() => {
-    const map = new Map<number, { id: number; name: string; studentCount?: number; classCount?: number }>();
+    const map = new Map<number, { id: number; name: string; studentCount?: number; classCount?: number; subject?: string | null; salary?: number | null }>();
     for (const teacher of teacherItems) {
       const id = toId(teacher.teacher_id || teacher.id);
       if (!id) continue;
@@ -157,14 +165,16 @@ export const StudentsTeacherGroupsTab = ({
         name,
         studentCount: teacher.student_count == null ? undefined : Number(teacher.student_count),
         classCount: teacher.class_count == null ? undefined : Number(teacher.class_count),
+        subject: teacher.subject_name || teacher.specialization || null,
+        salary: teacher.salary_percentage == null ? null : Number(teacher.salary_percentage),
       });
     }
     for (const teacher of teacherOptions) {
       const id = toId(teacher.value || teacher.id);
       if (id && !map.has(id)) map.set(id, { id, name: teacher.label });
     }
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [teacherItems, teacherOptions]);
+    return sortTeachers(Array.from(map.values()), teacherSort);
+  }, [teacherItems, teacherOptions, teacherSort]);
 
   const overviewClassRows = useMemo<TeacherClassRow[]>(() => {
     const realRows = classes
@@ -680,6 +690,14 @@ export const StudentsTeacherGroupsTab = ({
             {t('Clear')}
           </Button>
         )}
+        <Select value={teacherSort} onValueChange={(value) => setTeacherSort(value as TeacherSort)}>
+          <SelectTrigger aria-label={t('Sort by')} className="h-8 w-auto min-w-[170px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {teacherSortOptionsFor(canSeeSalary).map((option) => <SelectItem key={option.value} value={option.value}>{t(option.label)}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <span className="text-xs text-muted-foreground sm:ml-auto">{t('{count} teachers', { count: filteredTeachers.length })}</span>
       </div>
 

@@ -1,4 +1,10 @@
 export const teachersLabels: Record<string, string> = {
+  'Sort by': "Saralash",
+  'Most students': "O'quvchilar soni bo'yicha",
+  'Most groups': "Guruhlar soni bo'yicha",
+  'Subject (A-Z)': "Fan bo'yicha (A-Z)",
+  'Salary share (highest)': "Maosh ulushi bo'yicha",
+  'Name (A-Z)': "Alifbo bo'yicha (A-Z)",
   'Account Password': 'Hisob paroli',
   'Add Grades to Students': "O'quvchilarga baho qo'yish",
   'Back to Teachers': "O'qituvchilarga qaytish",

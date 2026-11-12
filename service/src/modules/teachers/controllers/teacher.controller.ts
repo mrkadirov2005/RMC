@@ -15,13 +15,16 @@ const cleanString = (value: unknown) => {
 };
 
 const hasTeacherListParams = (query: Record<string, unknown>) =>
-  ['q', 'search', 'status', 'page', 'limit'].some((key) => query[key] !== undefined && query[key] !== '');
+  ['q', 'search', 'status', 'page', 'limit', 'sort', 'dir'].some((key) => query[key] !== undefined && query[key] !== '');
 
 const parseTeacherListQuery = (query: Record<string, unknown>) => ({
   q: cleanString(query.q || query.search),
   status: cleanString(query.status),
   page: toPositiveInt(query.page) || 1,
   limit: Math.min(100, toPositiveInt(query.limit) || 20),
+  // students | groups | subject | salary | name; the repository ignores anything else.
+  sort: cleanString(query.sort),
+  dir: query.dir === 'asc' || query.dir === 'desc' ? query.dir : undefined,
 });
 
 const getMyProfile = async (req: any, res: any) => {

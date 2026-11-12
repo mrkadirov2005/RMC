@@ -475,3 +475,22 @@ describe('teachers repository', () => {
     });
   });
 });
+
+describe('teacher list sorting', () => {
+  const render = (sort, dir) => teacherRepository.teacherOrderBy(sort, dir).map((part) => dialect.sqlToQuery(part.getSQL ? part.getSQL() : part).sql);
+
+  test('sorts every teacher by students, groups, subject, salary or name', () => {
+    expect(render('students')[0]).toMatch(/counted_students[\s\S]*DESC NULLS LAST$/);
+    expect(render('groups')[0]).toMatch(/teacher_classes[\s\S]*DESC NULLS LAST$/);
+    expect(render('subject')[0]).toMatch(/LOWER\([\s\S]*teacher_subject\.subject_name[\s\S]*ASC NULLS LAST$/);
+    expect(render('salary')[0]).toMatch(/"salary_percentage" DESC NULLS LAST$/);
+    expect(render('name')[0]).toMatch(/CONCAT_WS[\s\S]*ASC NULLS LAST$/);
+  });
+
+  test('dir flips the order, an unknown sort falls back to students, and ties go by name', () => {
+    expect(render('groups', 'asc')[0]).toMatch(/ASC NULLS LAST$/);
+    expect(render('name', 'desc')[0]).toMatch(/DESC NULLS LAST$/);
+    expect(render('drop table')[0]).toMatch(/counted_students/);
+    expect(render('salary').slice(1).join(' ')).toMatch(/"first_name"[\s\S]*"last_name"[\s\S]*"teacher_id"/);
+  });
+});

@@ -2,7 +2,8 @@
 
 import { useAppSelector } from '../hooks';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, User, X, Loader2, Search, Upload, Download, MoreHorizontal, Target, Users, LineChart } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, User, X, Loader2, Search, Upload, Download, MoreHorizontal, Target, Users, LineChart, ArrowUpDown } from 'lucide-react';
+import { teacherSortOptionsFor, type TeacherSort } from './teacherSort';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -83,11 +84,15 @@ const TeachersPage = () => {
   const { t } = useLanguage();
   // Only the owner sees and sets a teacher's salary share; admins see salary amounts only.
   const canSeeShare = String(useAppSelector((state) => state.auth.user?.role) || '').toLowerCase() === 'owner';
+  // Sorted on the server, so the order covers every teacher, not just the page on screen.
+  const [sort, setSort] = useState<TeacherSort>('students');
+  const sortOptions = teacherSortOptionsFor(canSeeShare);
   const teacherParams = useMemo(() => ({
     q: debouncedSearchTerm.trim() || undefined,
     page,
     limit: pageSize,
-  }), [debouncedSearchTerm, page, pageSize]);
+    sort,
+  }), [debouncedSearchTerm, page, pageSize, sort]);
   const {
     navigate,
     state,
@@ -114,22 +119,8 @@ const TeachersPage = () => {
     const timeout = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
     return () => window.clearTimeout(timeout);
   }, [searchTerm]);
-  const visibleTeachers = useMemo(
-    () =>
-      [...state.items].sort((left, right) => {
-        const studentCountDifference =
-          Number(right.student_count || 0) - Number(left.student_count || 0);
-        if (studentCountDifference !== 0) return studentCountDifference;
-
-        const leftName = `${left.first_name || ''} ${left.last_name || ''}`.trim();
-        const rightName = `${right.first_name || ''} ${right.last_name || ''}`.trim();
-        const nameDifference = leftName.localeCompare(rightName);
-        if (nameDifference !== 0) return nameDifference;
-
-        return Number(left.teacher_id || left.id || 0) - Number(right.teacher_id || right.id || 0);
-      }),
-    [state.items],
-  );
+  // The server returns the teachers already in the chosen order.
+  const visibleTeachers = state.items;
   const totalTeachers = Number(state.meta?.total || 0);
   const totalPages = Math.max(1, Math.ceil(totalTeachers / pageSize));
   const pageStart = totalTeachers === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -287,6 +278,15 @@ const TeachersPage = () => {
             </Button>
           )}
         </div>
+        <Select value={sort} onValueChange={(value) => { setSort(value as TeacherSort); setPage(1); }}>
+          <SelectTrigger aria-label={t('Sort by')} className="h-8 w-auto min-w-[170px] text-xs">
+            <ArrowUpDown className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sortOptions.map((option) => <SelectItem key={option.value} value={option.value}>{t(option.label)}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button type="button" variant="outline" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[210px] p-2">

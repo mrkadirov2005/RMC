@@ -35,6 +35,9 @@ export interface TeacherListParams extends Record<string, unknown> {
   status?: string;
   page?: number;
   limit?: number;
+  /** Server-side order: students | groups | subject | salary | name. */
+  sort?: string;
+  dir?: 'asc' | 'desc';
 }
 
 interface TeachersMeta {
