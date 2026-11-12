@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toReports } from '../ProcessPage';
+import { toReports, withInPageLinks } from '../ProcessPage';
 
 describe('process reports', () => {
   it('names each report by its <title> and lists the newest first', () => {
@@ -11,6 +11,12 @@ describe('process reports', () => {
       ['2026-11-12-task-status', 'RMC Task Status', '2026-11-12'],
       ['2026-10-01-old', 'Old status', '2026-10-01'],
     ]);
+  });
+
+  it('makes "#task" links scroll inside the report instead of loading the app in the frame', () => {
+    const html = withInPageLinks('<html><body><a href="#task-9">9</a></body></html>');
+    expect(html).toMatch(/a\[href\^="#"\][\s\S]*scrollIntoView[\s\S]*<\/script><\/body>/);
+    expect(withInPageLinks('<p>no body tag</p>')).toContain('scrollIntoView');
   });
 
   it('falls back to the file name when there is no title', () => {

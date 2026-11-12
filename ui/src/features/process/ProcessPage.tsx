@@ -13,6 +13,23 @@ const FILES = import.meta.glob('./reports/*.html', { query: '?raw', import: 'def
 
 export type ProcessReport = { id: string; title: string; date: string; html: string };
 
+// A report runs in a frame whose links resolve against the app's address, so a "#task-9" link
+// would load the app (and its login page) inside the frame. This makes such links scroll inside
+// the report instead.
+const IN_PAGE_LINKS = `<script>
+document.addEventListener('click', function (event) {
+  var link = event.target && event.target.closest ? event.target.closest('a[href^="#"]') : null;
+  if (!link) return;
+  event.preventDefault();
+  var target = document.getElementById(decodeURIComponent(link.getAttribute('href').slice(1)));
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>`;
+
+/** The report's HTML with in-page links made to scroll inside the frame. */
+export const withInPageLinks = (html: string) =>
+  /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${IN_PAGE_LINKS}</body>`) : `${html}${IN_PAGE_LINKS}`;
+
 const titleOf = (html: string, fallback: string) => html.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() || fallback;
 
 /** Reports newest first, from file names like 2026-11-12-task-status.html. */
@@ -21,7 +38,7 @@ export const toReports = (files: Record<string, string>): ProcessReport[] =>
     .map(([path, html]) => {
       const id = path.split('/').pop()!.replace(/\.html$/, '');
       const date = /^\d{4}-\d{2}-\d{2}/.exec(id)?.[0] || '';
-      return { id, title: titleOf(html, id), date, html };
+      return { id, title: titleOf(html, id), date, html: withInPageLinks(html) };
     })
     .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
 
