@@ -49,19 +49,37 @@ describe('payments service', () => {
 
   it('splits a transferred student\'s payment by the lessons each group taught that month', async () => {
     // Moved mid-month: 6 lessons in the old group (record 7, 200 000) and 6 in the new (record 8).
-    paymentRepository.findTransferMonthShares.mockResolvedValue([
+    paymentRepository.findTransferMonthShares.mockImplementation(async (id, date) => (date === '2026-11-20' ? [
       { student_id: 8, center_id: 1, expected: 200000, paid: 0, share: 0.5 },
       { student_id: 7, center_id: 1, expected: 200000, paid: 0, share: 0.5 },
-    ]);
+    ] : [{ student_id: 8, center_id: 1, expected: 400000, paid: 400000, share: 1 }]));
     paymentRepository.insert.mockResolvedValueOnce({ payment_id: 55 }).mockResolvedValueOnce({ payment_id: 56 });
 
     await paymentService.createPayment({ student_id: 8, payment_date: '2026-11-20', amount: 400000, payment_type: 'Tuition' }, 1, 'admin');
 
-    expect(paymentRepository.findTransferMonthShares).toHaveBeenCalledWith(8, '2026-11-20');
+    expect(paymentRepository.findTransferMonthShares).toHaveBeenCalledWith(8, '2026-11-20', {});
     const [kept, split] = paymentRepository.insert.mock.calls.map((call) => call[0]);
     expect([kept[0], kept[3]]).toEqual([8, 200000]);
-    expect([split[0], split[3], split[6], split[9]]).toEqual([7, 200000, 'SPLIT-55-7', 'Transfer Split']);
+    expect([split[0], split[3], split[6], split[9]]).toEqual([7, 200000, 'SPLIT-55-7-2026-11', 'Transfer Split']);
     expect(split[10]).toContain('6 of 12');
+  });
+
+  it('a late payment still pays the old group for the transfer month, dated the day it is paid', async () => {
+    // Moved in October (old record 7 owed 125 000 for its 5 lessons); the student pays in December.
+    paymentRepository.findTransferMonthShares.mockImplementation(async (id, date, options) => (date === '2026-10-01' ? [
+      { student_id: 8, center_id: 1, expected: 175000, paid: 0, share: 7 / 12 },
+      { student_id: 7, center_id: 1, expected: 125000, paid: 0, share: 5 / 12 },
+    ] : [{ student_id: 8, center_id: 1, expected: 300000, paid: 0, share: 1 }]));
+    paymentRepository.insert.mockResolvedValueOnce({ payment_id: 60 }).mockResolvedValueOnce({ payment_id: 61 });
+
+    await paymentService.createPayment({ student_id: 8, payment_date: '2026-12-03', amount: 300000, payment_type: 'Tuition' }, 1, 'admin');
+
+    expect(paymentRepository.findTransferMonthShares).toHaveBeenCalledWith(8, '2026-10-01', { transferMonthOnly: true });
+    expect(paymentRepository.findTransferMonthShares).toHaveBeenCalledWith(8, '2026-11-01', { transferMonthOnly: true });
+    const [kept, split] = paymentRepository.insert.mock.calls.map((call) => call[0]);
+    expect([kept[0], kept[3]]).toEqual([8, 175000]);
+    expect([split[0], split[2], split[3], split[6]]).toEqual([7, '2026-12-03', 125000, 'SPLIT-60-7-2026-10']);
+    expect(split[10]).toContain('2026-10 (5 of 12)');
   });
 
   it('never splits a transfer adjustment', async () => {

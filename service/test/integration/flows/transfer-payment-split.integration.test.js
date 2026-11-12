@@ -56,6 +56,20 @@ describe('payment of a student transferred mid-month, with PostgreSQL', () => {
     expect(byId[newRecord].expected).toBeCloseTo(233333.33, 2);
   });
 
+  test('the payment form preview lists each teacher, the lessons there and the part each gets', async () => {
+    const paymentService = require('../../../src/modules/payments/services/payment.service');
+    const preview = await paymentService.previewTransferSplit(newRecord, 400000, '2026-09-20');
+    expect(preview.months).toHaveLength(1);
+    expect(preview.months[0].month).toBe('2026-09');
+    const [first, second] = preview.months[0].groups;
+    expect(first).toMatchObject({ student_id: oldRecord, class_name: 'First', teacher_name: 'T-1 Teacher', lessons: 6, end_date: '2026-09-15', current: false });
+    expect(first.split_amount).toBeCloseTo(184615.38, 1);
+    expect(second).toMatchObject({ student_id: newRecord, class_name: 'Second', teacher_name: 'T-2 Teacher', lessons: 7, start_date: '2026-09-16', current: true, split_amount: null });
+    expect(preview.kept_amount).toBeCloseTo(215384.62, 1);
+    // A student who never moved groups: nothing to show.
+    expect(await paymentService.previewTransferSplit(oldRecord, 400000, '2026-08-20')).toBeNull();
+  });
+
   test('a full-month payment in the new group is split 6 : 7 by lessons', async () => {
     const paymentService = require('../../../src/modules/payments/services/payment.service');
     await paymentService.createPayment({ student_id: newRecord, payment_date: '2026-09-20', amount: 400000, payment_type: 'Tuition', payment_method: 'Cash' }, centerId, 'admin');
@@ -65,7 +79,7 @@ describe('payment of a student transferred mid-month, with PostgreSQL', () => {
     expect((await paidIn(oldRecord)) + (await paidIn(newRecord))).toBeCloseTo(400000, 2);
     const split = (await pool.query(`SELECT payment_type, transaction_reference FROM payments WHERE student_id = $1`, [oldRecord])).rows[0];
     expect(split.payment_type).toBe('Transfer Split');
-    expect(split.transaction_reference).toMatch(/^SPLIT-\d+-\d+$/);
+    expect(split.transaction_reference).toMatch(/^SPLIT-\d+-\d+-2026-09$/);
   });
 
   test('once the old group is paid for its lessons, later payments stay in the new group', async () => {
@@ -76,5 +90,39 @@ describe('payment of a student transferred mid-month, with PostgreSQL', () => {
     await paymentService.createPayment({ student_id: newRecord, payment_date: '2026-09-26', amount: 50000, payment_type: 'Tuition', payment_method: 'Cash' }, centerId, 'admin');
     expect(await paidIn(oldRecord)).toBeCloseTo(200000, 2);
     expect(await paidIn(newRecord)).toBeCloseTo(550000 - 200000, 2);
+  });
+
+  test('a payment made later still pays the old group for the transfer month, dated the day it is paid', async () => {
+    const groupOf = async (record) => (await pool.query('SELECT class_id FROM students WHERE student_id = $1', [record])).rows[0].class_id;
+    // October 2026: in the first group 1-15 (6 lessons), in the second from the 16th (7 lessons); pays in December.
+    const lateOld = (await pool.query(
+      `INSERT INTO students (center_id, enrollment_number, first_name, last_name, class_id, status, start_date, end_date)
+       VALUES ($1, 'SPLIT-2', 'Vali', 'Aliyev', $2, 'Transferred', '2026-09-01', '2026-10-15') RETURNING student_id`,
+      [centerId, await groupOf(oldRecord)],
+    )).rows[0].student_id;
+    const lateNew = (await pool.query(
+      `INSERT INTO students (center_id, enrollment_number, first_name, last_name, class_id, status, start_date, transferred_from_student_id)
+       VALUES ($1, 'SPLIT-2', 'Vali', 'Aliyev', $2, 'Active', '2026-10-16', $3) RETURNING student_id`,
+      [centerId, await groupOf(newRecord), lateOld],
+    )).rows[0].student_id;
+    const paymentService = require('../../../src/modules/payments/services/payment.service');
+    const splits = async () => (await pool.query(
+      `SELECT payment_date::text AS d, amount::numeric AS amount, transaction_reference AS ref FROM payments WHERE student_id = $1 ORDER BY payment_id`, [lateOld],
+    )).rows;
+
+    await paymentService.createPayment({ student_id: lateNew, payment_date: '2026-12-02', amount: 400000, payment_type: 'Tuition', payment_method: 'Cash' }, centerId, 'admin');
+    let rows = await splits();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].d).toBe('2026-12-02');
+    expect(Number(rows[0].amount)).toBeCloseTo(184615.38, 1);
+    expect(rows[0].ref).toMatch(/^SPLIT-\d+-\d+-2026-10$/);
+
+    // The October share counts as paid even though it came in December: next payments top it up to 200 000, never more.
+    await paymentService.createPayment({ student_id: lateNew, payment_date: '2026-12-10', amount: 100000, payment_type: 'Tuition', payment_method: 'Cash' }, centerId, 'admin');
+    await paymentService.createPayment({ student_id: lateNew, payment_date: '2026-12-20', amount: 100000, payment_type: 'Tuition', payment_method: 'Cash' }, centerId, 'admin');
+    rows = await splits();
+    expect(rows.reduce((sum, row) => sum + Number(row.amount), 0)).toBeCloseTo(200000, 2);
+    const shares = await require('../../../src/modules/payments/repositories/payment.repository').findTransferMonthShares(lateNew, '2026-10-01', { transferMonthOnly: true });
+    expect(shares.find((row) => row.student_id === lateOld)).toMatchObject({ expected: 200000, paid: 200000 });
   });
 });

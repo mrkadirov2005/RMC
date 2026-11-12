@@ -48,6 +48,7 @@ router_payment.get('/', requireAuth, paymentController.getAllPayments);
  *         description: Payment not found
  */
 router_payment.get('/students-summary', requireAuth, paymentController.getStudentPaymentSummary);
+router_payment.get('/transfer-split-preview', requireAuth, paymentController.getTransferSplitPreview);
 router_payment.get('/:id', requireAuth, validateParams(IdParamDto), paymentController.getPaymentById);
 
 /**

@@ -32,6 +32,28 @@ const getStudentPaymentSummary = async (req: any, res: any) => {
   }
 };
 
+// Admins and the owner, in the payment form: how a transferred student's payment will be split
+// (the groups, teachers and lessons of the transfer month).
+const getTransferSplitPreview = async (req: any, res: any) => {
+  try {
+    if (req.user?.userType !== 'superuser') return res.status(403).json({ error: 'Kirish rad etildi.' });
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const studentId = Number(req.query.student_id);
+    const date = String(req.query.payment_date || new Date().toISOString().slice(0, 10));
+    if (!Number.isInteger(studentId) || studentId <= 0 || !/^\d{4}-\d{2}-\d{2}/.test(date)) {
+      return res.status(400).json({ error: "O'quvchi va sana kerak." });
+    }
+    const student = await paymentService.findStudentCenter(studentId);
+    if (!student || (scope.centerId != null && Number(student.center_id) !== Number(scope.centerId))) {
+      return res.json(null);
+    }
+    res.json(await paymentService.previewTransferSplit(studentId, Number(req.query.amount || 0), date.slice(0, 10)));
+  } catch (error: any) {
+    sendError(res, error, "Ko'chirish bo'yicha bo'linishni hisoblab bo'lmadi");
+  }
+};
+
 const getAllPayments = async (req: any, res: any) => {
   try {
     if (!ensurePaymentAccess(req, res)) return;
@@ -194,6 +216,7 @@ const purgePayment = async (req: any, res: any) => {
 };
 
 module.exports = {
+  getTransferSplitPreview,
   getStudentPaymentSummary,
   getAllPayments,
   getPaymentById,

@@ -419,6 +419,9 @@ export const cashAPI = {
 export const paymentAPI = {
   /** Every active student's payments over a date range (this month by default), 100 per page. */
   getStudentsSummary: (params: Record<string, unknown>) => apiClient.get('/payments/students-summary', { params }),
+  /** For a transferred student: the groups, teachers and lessons of the month(s) this payment settles, and how it splits. */
+  getTransferSplitPreview: (params: { student_id: number; payment_date: string; amount?: number }) =>
+    apiClient.get('/payments/transfer-split-preview', { params }),
   getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/payments', {
       params,
