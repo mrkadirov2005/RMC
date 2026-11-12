@@ -45,12 +45,14 @@ describe('teacherFullName', () => {
 });
 
 describe('computeFinalScorePreview', () => {
-  it('averages the four KPI categories', () => {
-    expect(computeFinalScorePreview(60, 100, 80, 100)).toBe(85);
+  const parts = { retentionScore: 90, studentScore: 80, contributionScore: 70, examScore: 85, teachingQualityScore: 95, gradingScore: 100, referralCount: 0 };
+
+  it('averages the six 100-point parts, as the server does', () => {
+    expect(computeFinalScorePreview(parts)).toBe(86.67);
   });
 
-  it('rounds to two decimal places', () => {
-    expect(computeFinalScorePreview(70, 71, 72, 73)).toBe(71.5);
+  it('adds 1 point for each new student who came for the teacher', () => {
+    expect(computeFinalScorePreview({ ...parts, referralCount: 3 })).toBe(89.67);
   });
 });
 

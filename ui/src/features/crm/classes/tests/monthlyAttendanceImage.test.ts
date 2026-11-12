@@ -53,7 +53,7 @@ describe('monthly attendance image', () => {
     });
 
     expect(grid.dates).toEqual(['2026-10-02', '2026-10-09']);
-    expect(grid.rows[0]).toMatchObject({ marks: ['present', null], scores: [90, 60], lessons: 2, total: 150 });
+    expect(grid.rows[0]).toMatchObject({ marks: ['present', null], scores: [90, 50], lessons: 2, total: 140 });
   });
 
   it('with standings, rows go by place over all lessons (no lessons last) and carry the place and trend', () => {

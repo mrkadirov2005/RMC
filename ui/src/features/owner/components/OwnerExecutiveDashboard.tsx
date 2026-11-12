@@ -103,7 +103,7 @@ export const OwnerExecutiveDashboard = ({ collections, kpis, loading }: Props) =
 
       <div className="grid gap-4 lg:grid-cols-3">
         <RankingCard title="KPI bo‘yicha top 3 ustoz" rows={metrics.topTeachers.map(({ row, score }) => ({ name: nameOf(row, `Ustoz #${row.teacher_id}`), value: score, suffix: 'ball' }))} empty="Bu oy KPI ball olgan ustoz yo‘q" />
-        <RankingCard title="Ball bo‘yicha top 3 o‘quvchi" rows={topStudents.map((item) => ({ name: item.name, value: item.score, suffix: 'ball' }))} empty={rankings.loading ? 'Yuklanmoqda...' : rankings.error ? 'Ballarni yuklab bo‘lmadi' : 'Bu oy dars ballari yo‘q'} link={{ to: '/owner/reports?section=students', label: 'To‘liq ro‘yxat' }} />
+        <RankingCard title="Ball bo‘yicha top 3 o‘quvchi" rows={topStudents.map((item) => ({ name: `${item.name} · ${item.groups.join(', ')}`, value: item.score, suffix: 'ball' }))} empty={rankings.loading ? 'Yuklanmoqda...' : rankings.error ? 'Ballarni yuklab bo‘lmadi' : 'Bu oy dars ballari yo‘q'} link={{ to: '/owner/reports?section=students', label: 'To‘liq ro‘yxat' }} />
         <RankingCard title="Eng ko‘p o‘quvchi yo‘qotgan ustozlar" rows={metrics.lostTeachers.map((row) => ({ name: row.name, value: row.count, suffix: 'o‘quvchi' }))} empty="Yo‘qotilgan o‘quvchilar topilmadi" />
       </div>
     </section>

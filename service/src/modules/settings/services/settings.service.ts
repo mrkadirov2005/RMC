@@ -13,14 +13,16 @@ const OWNER_PALETTES: Record<string, any> = {
 };
 const allowedTones = new Set(['emerald', 'sky', 'violet', 'amber', 'rose', 'orange']);
 
+// The old "Stellar" activity level is now an ordinary top level ("Excellent"); Stellar student
+// is a separate mark.
+const isOldStellarLevel = (option: any) => option?.stellar === true || option?.label === 'Stellar';
+
 const normalizeOption = (option: any, fallback: any) => ({
-  label: String(option?.label || fallback.label),
+  label: isOldStellarLevel(option) && (!option?.label || option.label === 'Stellar') ? 'Excellent' : String(option?.label || fallback.label),
   score: Number.isFinite(Number(option?.score)) ? Number(option.score) : Number(fallback.score || 0),
   symbol: String(option?.symbol || fallback.symbol || '●').slice(0, 4),
   fill: Math.max(0, Math.min(100, Number.isFinite(Number(option?.fill)) ? Number(option.fill) : Number(fallback.fill || 0))),
   tone: allowedTones.has(option?.tone) ? option.tone : fallback.tone,
-  // The stellar activity level; kept only where it is set.
-  ...(option?.stellar === true || (option?.stellar === undefined && fallback?.stellar && option?.label === fallback.label) ? { stellar: true } : {}),
 });
 
 const normalizeOptionList = (items: any, fallback: any[]) => {

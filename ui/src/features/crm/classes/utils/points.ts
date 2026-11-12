@@ -1,6 +1,7 @@
 export const getPointTone = (points: number | null) => {
   if (points === null) return { label: 'Missing', className: 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-700', icon: '!' };
-  if (points === 0) return { label: 'Zero', className: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600', icon: '0' };
+  // In the 100-point mode a 0 means the student was absent, so it shows in red.
+  if (points === 0) return { label: 'Absent', className: 'bg-rose-100 text-rose-700 border-rose-300 font-bold dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-700', icon: '0' };
   if (points < 50) return { label: 'Low', className: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700', icon: '-' };
   if (points < 80) return { label: 'Good', className: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-700', icon: '+' };
   return { label: 'Strong', className: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700', icon: '✓' };
@@ -13,9 +14,6 @@ export type LessonPointRecord = {
   points_score?: number | string | null;
 };
 
-/** Weight of the 100-point score next to attendance, so the lesson total stays at most 100. */
-export const POINTS_WEIGHT_WITH_ATTENDANCE = 0.6;
-
 const toScore = (value: unknown) => {
   if (value === null || value === undefined || value === '') return null;
   const number = Number(value);
@@ -24,14 +22,13 @@ const toScore = (value: unknown) => {
 
 /**
  * A lesson's total out of 100, the same rule the server uses (grades/services/lessonScore.ts):
- * attendance + homework + activity, or, when the 100-point score was given, attendance + 60% of
- * it (it stands in for homework and activity). Points without attendance count in full.
+ * attendance + homework + activity, or, when the 100-point score was given, that score exactly
+ * as typed (80 stays 80; attendance is not added).
  */
 export const combineLessonScore = (scores: LessonPointRecord) => {
-  const attendance = toScore(scores.attendance_score);
   const points = toScore(scores.points_score);
-  if (points !== null) return attendance !== null ? attendance + Math.round(points * POINTS_WEIGHT_WITH_ATTENDANCE) : points;
-  return (attendance || 0) + (toScore(scores.homework_score) || 0) + (toScore(scores.activity_score) || 0);
+  if (points !== null) return points;
+  return (toScore(scores.attendance_score) || 0) + (toScore(scores.homework_score) || 0) + (toScore(scores.activity_score) || 0);
 };
 
 /** 90+ is a 5, 70-89 a 4, 50-69 a 3, below 50 a 2 (out of 100). */

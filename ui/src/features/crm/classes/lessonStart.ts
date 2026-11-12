@@ -12,7 +12,7 @@ export const lessonActionOptions: Array<{ id: LessonAction; label: string; detai
   { id: 'homework', label: 'Homework', detail: 'Score homework completion.', icon: CheckCircle2 },
   { id: 'activity', label: 'Activity', detail: 'Score class activity.', icon: Star },
   { id: 'coins', label: 'Coins', detail: 'Apply coins from the final score.', icon: Coins },
-  { id: 'points', label: 'Points', detail: 'Enter a 100-point score for each student; replaces homework and activity.', icon: PencilLine },
+  { id: 'points', label: 'Points', detail: 'Enter a 100-point score for each student, saved exactly as typed. No attendance needed: a 0 marks the student absent.', icon: PencilLine },
 ];
 
 /** Route segment used in place of a session id for a lesson that has no session row yet. */
@@ -26,10 +26,11 @@ export const getSessionId = (session: any) => Number(session?.session_id || sess
 export const findSessionOnDate = (sessions: any[], dateKey: string) =>
   sessions.find((session) => !session?.deleted_at && sessionDateKey(session) === dateKey);
 
-// The 100-point score replaces homework and activity in the lesson total, so they never go together.
-const POINTS_EXCLUDES: LessonAction[] = ['homework', 'activity'];
+// The 100-point score is the whole lesson total and marks attendance itself (0 = absent), so it
+// never goes together with attendance, homework or activity.
+const POINTS_EXCLUDES: LessonAction[] = ['attendance', 'homework', 'activity'];
 
-/** Turns an action on or off; choosing points drops homework and activity, and vice versa. */
+/** Turns an action on or off; choosing points drops attendance, homework and activity, and vice versa. */
 export const toggleLessonAction = (actions: LessonAction[], action: LessonAction, checked: boolean): LessonAction[] => {
   if (!checked) return actions.filter((item) => item !== action);
   const kept = action === 'points'
@@ -38,7 +39,7 @@ export const toggleLessonAction = (actions: LessonAction[], action: LessonAction
   return Array.from(new Set([...kept, action]));
 };
 
-/** Drops points from an action list that also has homework or activity (e.g. an old link). */
+/** Drops points from an action list that also has attendance, homework or activity (e.g. an old link). */
 export const resolveLessonActions = <T extends string>(actions: T[]): T[] =>
   actions.some((item) => POINTS_EXCLUDES.includes(item as LessonAction)) ? actions.filter((item) => item !== 'points') : actions;
 

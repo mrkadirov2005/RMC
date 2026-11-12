@@ -73,6 +73,7 @@ const upsert = async (req: any, res: any) => {
       kpiMonth: Number(req.body.kpi_month),
       contributionScore: Number(req.body.contribution_score),
       teachingQualityScore: Number(req.body.teaching_quality_score),
+      examScore: Number(req.body.exam_score ?? 0),
       notes: req.body.notes,
       actingUser: req.user,
     });

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/table';
 import { SelectField } from '../students/components/SelectField';
 import DebtAnalyzer from './DebtAnalyzer';
+import DebtsByMonth from './DebtsByMonth';
 import { useDebtsPage } from './hooks/useDebtsPage';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -87,6 +88,7 @@ const DebtsPage = () => {
         </Button>
       </div>
 
+      <DebtsByMonth />
       <DebtAnalyzer />
 
       {state.error && (

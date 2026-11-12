@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RetentionBreakdown } from './RetentionBreakdown';
 import { useSearchParams } from 'react-router-dom';
 import {
   ArrowDownRight,
@@ -351,6 +352,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
             <TeacherStudentsDialog teacher={selectedTeacher} intake={isIntake} onOpenChange={(open) => !open && setSelectedTeacher(null)} />
           </>
         )}
+        <RetentionBreakdown month={month} centerId={centerId} view={isIntake ? 'intake' : 'retention'} />
       </div>
     </div>
   );

@@ -133,6 +133,9 @@ const findPaginated = async (filters: Record<string, any> = {}, centerId?: numbe
   if (filters.level != null) {
     conditions.push(eq(classes.level, Number(filters.level)));
   }
+  if (filters.level_id != null) {
+    conditions.push(eq(classes.levelId, Number(filters.level_id)));
+  }
 
   const where = and(...conditions);
   const countRows = await db.select({ total: sql`COUNT(*)::int` }).from(classes).where(where);

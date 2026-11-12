@@ -57,3 +57,25 @@ describe('transfer allocation', () => {
     expect(todayInCenterTimeZone(new Date('2026-10-01T19:00:00Z')).toISOString().slice(0, 10)).toBe('2026-10-02');
   });
 });
+
+describe('transfer split by lessons', () => {
+  const { buildTransferAllocation: allocate } = require('../transferAllocation');
+  const MWF = ['Monday', 'Wednesday', 'Friday'];
+
+  test('the old group keeps 1/12 of its price per lesson it taught before the transfer', () => {
+    // Moved on Wednesday 16 September 2026; Mon/Wed/Fri lessons from the 1st to the 15th: 2, 4, 7, 9, 11, 14.
+    const result = allocate(400000, 400000, 400000, new Date(Date.UTC(2026, 8, 16)), '2026-08-01', MWF, MWF);
+    expect(result.sourceLessons).toBe(6);
+    expect(result.sourceEarned).toBe(200000);
+    expect(result.movedAmount).toBe(200000);
+    // From the 16th: 16, 18, 21, 23, 25, 28, 30 -> 7 lessons.
+    expect(result.targetLessons).toBe(7);
+    expect(result.targetCharge).toBe(233333.33);
+  });
+
+  test('a group without lesson days still splits by calendar days', () => {
+    const result = allocate(300000, 300000, 300000, new Date(Date.UTC(2026, 8, 16)), '2026-08-01');
+    expect(result.sourceLessons).toBeNull();
+    expect(result.sourceEarned).toBe(150000);
+  });
+});

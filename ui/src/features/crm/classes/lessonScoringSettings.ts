@@ -28,8 +28,8 @@ export const defaultLessonScoringSettings: LessonScoringSettings = {
     { label: 'None', score: 0, symbol: '😞', fill: 0, tone: 'rose' },
   ],
   activity: [
-    // The stellar level: any number of students per lesson, each gets the stellar bonus coins.
-    { label: 'Stellar', score: 40, symbol: '🌟', fill: 100, tone: 'violet', stellar: true },
+    // The top level: "Fill all" can give it to everyone. Stellar student is a separate mark.
+    { label: 'Excellent', score: 40, symbol: '◆', fill: 100, tone: 'violet' },
     { label: 'Very active', score: 30, symbol: '★', fill: 75, tone: 'emerald' },
     { label: 'Good', score: 20, symbol: '●', fill: 50, tone: 'sky' },
     { label: 'Little', score: 10, symbol: '◔', fill: 25, tone: 'amber' },
@@ -56,15 +56,17 @@ export const defaultLessonScoringSettings: LessonScoringSettings = {
 const normalizeOptions = (items: unknown, fallback: ScoreOption[]) => {
   if (!Array.isArray(items) || items.length === 0) return fallback;
   return items.map((item, index) => {
-    const source = item as Partial<ScoreOption>;
+    const source = item as Partial<ScoreOption> & { stellar?: boolean };
     const base = fallback[index] || fallback[0];
+    // The old "Stellar" activity level is now an ordinary top level: Stellar student is its own
+    // mark (coins only, at most 5 per lesson).
+    const wasStellarLevel = source.stellar === true || source.label === 'Stellar';
     return {
-      label: String(source.label || base.label),
+      label: wasStellarLevel && (!source.label || source.label === 'Stellar') ? 'Excellent' : String(source.label || base.label),
       score: Number.isFinite(Number(source.score)) ? Number(source.score) : base.score,
       symbol: String(source.symbol || base.symbol),
       fill: Math.max(0, Math.min(100, Number.isFinite(Number(source.fill)) ? Number(source.fill) : base.fill)),
       tone: source.tone || base.tone,
-      ...(source.stellar === true || (source.stellar === undefined && base.stellar && source.label === base.label) ? { stellar: true } : {}),
     } as ScoreOption;
   });
 };

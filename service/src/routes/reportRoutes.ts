@@ -8,6 +8,7 @@ router.get('/overview', reportController.getOverviewReport);
 router.get('/payments', reportController.getPaymentsReport);
 router.get('/attendance', reportController.getAttendanceReport);
 router.get('/retention', reportController.getRetentionReport);
+router.get('/retention-breakdown', reportController.getRetentionBreakdown);
 router.get('/student-trend', reportController.getStudentTrend);
 router.get('/student-rankings', reportController.getStudentRankings);
 

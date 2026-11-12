@@ -21,7 +21,8 @@ describe('session workflow model', () => {
   it('counts completed values independently', () => {
     const counts = getWorkflowCounts(
       2,
-      new Map([[1, 'On time'], [2, 'Absent']]),
+      // Student 2 came (late) but has no homework yet, so homework is not complete.
+      new Map([[1, 'On time'], [2, 'Late']]),
       new Map([[1, 'Good'], [2, '']]),
       new Map([[1, 'Average'], [2, 'Weak']]),
       new Map([[1, '0'], [2, '50']]),
@@ -40,8 +41,50 @@ describe('session workflow model', () => {
       activity: new Map([[1, 'Very active']]),
       points: new Map([[1, '50']]),
       settings: defaultLessonScoringSettings,
-    // On time 40 + 60% of 50 points; homework does not add on top of points.
-    })).toBe(70);
+    // The 100-point score is the total as typed; attendance and homework do not add to it.
+    })).toBe(50);
+  });
+
+  it('absent students skip homework and activity: 0 for an absence, 50 for an excused one', () => {
+    const base = {
+      students: [{ student_id: 1 }, { student_id: 2 }, { student_id: 3 }],
+      selectedActions: ['attendance', 'homework', 'activity', 'coins'] as const,
+      // Homework typed for 2 and 3 before they were marked absent is dropped.
+      attendance: new Map([[1, 'On time'], [2, 'Absent'], [3, 'Excused']]),
+      homework: new Map([[1, 'Good'], [2, 'Good'], [3, 'Good']]),
+      activity: new Map([[1, 'Good']]),
+      points: new Map(),
+      stellarStudentIds: [2],
+      settings: defaultLessonScoringSettings,
+    };
+    const records = buildSessionWorkflowRecords({ ...base, selectedActions: [...base.selectedActions] });
+    expect(records[1]).toMatchObject({ student_id: 2, attendance_status: 'Absent', attendance_score: 0, homework_score: null, activity_score: null, points_score: null, stellar_bonus_coins: 0 });
+    expect(records[2]).toMatchObject({ student_id: 3, attendance_status: 'Absent R', homework_score: null, activity_score: null, points_score: 50 });
+
+    const total = (studentId: number) => getWorkflowTotalScore({ ...base, selectedActions: [...base.selectedActions], studentId });
+    expect(total(2)).toBe(0);
+    expect(total(3)).toBe(50);
+
+    // Homework and activity are complete once everyone who came is scored.
+    const counts = getWorkflowCounts(3, base.attendance, new Map([[1, 'Good']]), new Map([[1, 'Good']]), new Map());
+    expect(counts).toMatchObject({ absentCount: 2, allHomeworkMarked: true, allActivityMarked: true });
+  });
+
+  it('in the 100-point mode marks attendance from the score: 0 is absent, anything else present', () => {
+    const records = buildSessionWorkflowRecords({
+      students: [{ student_id: 1 }, { student_id: 2 }, { student_id: 3 }],
+      selectedActions: ['points', 'coins'],
+      attendance: new Map(),
+      homework: new Map(),
+      activity: new Map(),
+      points: new Map([[1, '80'], [2, '0']]),
+      stellarStudentIds: [],
+      settings: defaultLessonScoringSettings,
+    });
+    expect(records[0]).toMatchObject({ student_id: 1, points_score: 80, attendance_status: 'Present', attendance_score: null });
+    expect(records[1]).toMatchObject({ student_id: 2, points_score: 0, attendance_status: 'Absent' });
+    // No score typed yet: attendance is left alone.
+    expect(records[2]).toMatchObject({ student_id: 3, attendance_status: null });
   });
 
   it('builds the API record and awards the stellar bonus to every stellar student', () => {

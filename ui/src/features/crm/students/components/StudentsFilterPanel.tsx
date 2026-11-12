@@ -33,7 +33,8 @@ interface Props {
   showUnassignedClassOption?: boolean;
   teacherOptions: Option[];
   subjectOptions: Option[];
-  levelOptions: Array<string | number>;
+  /** Subject levels: value is the level id, label "Subject · Level". */
+  levelOptions: Array<{ value: string; label: string }>;
   addressOptions: string[];
 }
 
@@ -123,7 +124,7 @@ export const StudentsFilterPanel = ({
             <SelectTrigger><SelectValue placeholder="Hamma darajalar" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Hamma darajalar</SelectItem>
-              {levelOptions.map((item) => <SelectItem key={item} value={String(item)}>{t('Level')} {item}</SelectItem>)}
+              {levelOptions.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

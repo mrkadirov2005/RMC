@@ -53,7 +53,8 @@ export const useStudentsFilters = (students: Student[]) => {
     class_id: filterClassId || undefined,
     teacher_id: filterTeacherId || undefined,
     subject_id: filterSubjectId || undefined,
-    level: filterLevel || undefined,
+    // The level filter picks a subject level, so it is sent as level_id.
+    level_id: filterLevel || undefined,
     address: filterAddress || undefined,
     age: filterAge || undefined,
     gender: filterGender || undefined,

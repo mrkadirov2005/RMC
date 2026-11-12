@@ -63,17 +63,53 @@ const teacherStudentCount = sql`
   ), 0)::int
 `;
 
+const teacherClassCount = sql`
+  COALESCE((
+    SELECT COUNT(*)::int
+    FROM classes AS teacher_classes
+    WHERE teacher_classes.deleted_at IS NULL
+      AND teacher_classes.teacher_id = teachers.teacher_id
+  ), 0)::int
+`;
+
+// The subject a teacher teaches: the first (A-Z) subject of their groups, else their specialization.
+const teacherSubject = sql`
+  COALESCE((
+    SELECT MIN(teacher_subject.subject_name)
+    FROM subjects AS teacher_subject
+    JOIN classes AS subject_class
+      ON subject_class.class_id = teacher_subject.class_id
+     AND subject_class.deleted_at IS NULL
+    WHERE subject_class.teacher_id = teachers.teacher_id
+  ), ${teachers.specialization})
+`;
+
 const teacherListSelection = {
   ...teacherSelection,
   student_count: teacherStudentCount,
-  class_count: sql`
-    COALESCE((
-      SELECT COUNT(*)::int
-      FROM classes AS teacher_classes
-      WHERE teacher_classes.deleted_at IS NULL
-        AND teacher_classes.teacher_id = teachers.teacher_id
-    ), 0)::int
-  `,
+  class_count: teacherClassCount,
+  subject_name: teacherSubject,
+};
+
+export type TeacherSort = 'students' | 'groups' | 'subject' | 'salary' | 'name';
+const TEACHER_SORTS: TeacherSort[] = ['students', 'groups', 'subject', 'salary', 'name'];
+const isTeacherSort = (value: unknown): value is TeacherSort => TEACHER_SORTS.includes(value as TeacherSort);
+
+// Sorting runs on the server so it covers every teacher, not just the page on screen. Numbers
+// sort largest first and text A-Z by default; dir=asc / dir=desc flips that. Ties go by name.
+const teacherOrderBy = (sort: unknown, dir: unknown) => {
+  const key: TeacherSort = isTeacherSort(sort) ? sort : 'students';
+  const textSort = key === 'subject' || key === 'name';
+  const ascending = dir === 'asc' ? true : dir === 'desc' ? false : textSort;
+  const by = (expression: any) => (ascending ? sql`${expression} ASC NULLS LAST` : sql`${expression} DESC NULLS LAST`);
+  const primary = {
+    students: by(teacherStudentCount),
+    groups: by(teacherClassCount),
+    subject: by(sql`LOWER(${teacherSubject})`),
+    salary: by(teachers.salaryPercentage),
+    name: by(sql`LOWER(CONCAT_WS(' ', ${teachers.firstName}, ${teachers.lastName}))`),
+  }[key];
+  return [primary, asc(teachers.firstName), asc(teachers.lastName), asc(teachers.teacherId)];
 };
 
 const scopedTeacherConditions = (id?: number, centerId?: number, includeDeleted = false) => {
@@ -128,7 +164,7 @@ const findPaginated = async (filters: Record<string, any> = {}, centerId?: numbe
       .select(teacherListSelection)
       .from(teachers)
       .where(and(...conditions))
-      .orderBy(desc(teacherStudentCount), asc(teachers.firstName), asc(teachers.lastName), asc(teachers.teacherId))
+      .orderBy(...teacherOrderBy(filters.sort, filters.dir))
       .limit(Math.min(100, Math.max(1, Number(filters.limit || 20))))
       .offset((Math.max(1, Number(filters.page || 1)) - 1) * Math.min(100, Math.max(1, Number(filters.limit || 20)))),
   ]);
@@ -362,6 +398,7 @@ const updatePasswordHash = (id: number, password_hash: string) =>
     .where(and(eq(teachers.teacherId, id), isNull(teachers.deletedAt)));
 
 module.exports = {
+  teacherOrderBy,
   findAll,
   findPaginated,
   findById,

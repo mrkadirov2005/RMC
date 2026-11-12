@@ -24,7 +24,7 @@ describe('student rankings', () => {
     expect(repository.findMonthLessonScores).toHaveBeenCalledWith({ centerId: 4, monthStart: '2026-10-01', monthEnd: '2026-11-01' });
     expect(result.month).toBe('2026-10');
     expect(result.rows).toEqual([
-      { student_id: 1, name: 'S1', center_id: 4, class_id: 10, class_name: 'G10', level: 2, lessons: 2, score: 160 },
+      { student_id: 1, name: 'S1', center_id: 4, class_id: 10, class_name: 'G10', level: 2, lessons: 2, score: 150 },
       { student_id: 1, name: 'S1', center_id: 4, class_id: 11, class_name: 'G11', level: 2, lessons: 1, score: 40 },
       { student_id: 2, name: 'S2', center_id: 4, class_id: 10, class_name: 'G10', level: null, lessons: 1, score: 0 },
     ]);

@@ -1,4 +1,12 @@
 export const paymentsLabels: Record<string, string> = {
+  // To'lovlar -> Statistics (one month).
+  'Should come in this month': "Shu oy tushishi kerak",
+  'Collected so far': "Hozirgacha yig'ildi",
+  'Still unpaid': "Hali to'lanmagan",
+  'students paid in full': "o'quvchi to'liq to'lagan",
+  'Payments closed this month': "Shu oy yopilgan to'lovlar",
+  'Teachers paid their salary': "Oylik olgan o'qituvchilar",
+  'Still waiting': 'Hali kutmoqda',
   'Type at least 2 characters.': 'Kamida 2 ta harf kiriting.',
   'Could not load the data.': "Ma'lumotlarni yuklab bo'lmadi.",
   'Search by name or phone': "Ism yoki telefon bo'yicha qidirish",

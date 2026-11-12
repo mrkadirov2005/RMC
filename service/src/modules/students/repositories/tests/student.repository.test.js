@@ -122,7 +122,7 @@ describe('students repository', () => {
 
     expect(chain.set).toHaveBeenCalledWith(expect.objectContaining({
       parentName: 'Vali Valiyev',
-      parentPhone: '998901234567',
+      parentPhone: '+998901234567',
       dateOfBirth: '2010-01-02',
       gender: 'Male',
       enrollmentNumber: 'ST-004',

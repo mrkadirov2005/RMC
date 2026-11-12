@@ -287,7 +287,8 @@ export const archiveAPI = {
     apiClient.delete(`/archive/${entity}/${id}/purge`),
   /** Students archived as "finished successfully", with study history and certificates. */
   getGraduates: () => apiClient.get('/archive/graduates'),
-  uploadCertificate: (studentId: number, data: { title: string; file_name: string; data: string }) =>
+  getGraduateStats: (year?: number) => apiClient.get('/archive/graduates/stats', { params: { year } }),
+  uploadCertificate: (studentId: number, data: { title: string; kind?: string; received_on?: string; link_url?: string; note?: string; file_name?: string; data?: string }) =>
     apiClient.post(`/archive/graduates/${studentId}/certificates`, data),
   downloadCertificate: (id: number) => apiClient.get(`/archive/certificates/${id}/file`, { responseType: 'blob' }),
   deleteCertificate: (id: number) => apiClient.delete(`/archive/certificates/${id}`),
@@ -351,6 +352,8 @@ export const classAPI = {
   update: (id: number, data: any) => apiClient.put(`/classes/${id}`, data),
   delete: (id: number, params?: { force?: boolean }) => apiClient.delete(`/classes/${id}`, { params }),
   purge: (id: number) => apiClient.delete(`/classes/${id}/purge`),
+  /** Rebuilds the group's future unscored lessons from its timetable (scored lessons stay). */
+  syncCalendar: (id: number) => apiClient.post<{ removed: number; created: number }>(`/classes/${id}/sessions/sync`),
   generateSessions: (id: number, data: { month: number; year: number; duration_minutes: number; center_id?: number }) =>
     apiClient.post(`/classes/${id}/sessions/generate`, data),
   deleteSessions: (id: number, params: { from: string; to?: string }) =>

@@ -22,6 +22,8 @@ import {
   getWorkflowStudentId,
   getWorkflowMaxScore,
   getWorkflowTotalScore,
+  isAbsentFromLesson,
+  MAX_STELLAR_STUDENTS,
   toWorkflowPointMap,
   type LessonSummary,
 } from './sessionWorkflowModel';
@@ -206,7 +208,6 @@ export default function SessionWorkflowPage() {
           if (id && activity) nextActivity.set(id, activity);
           if (id && grade.points_score !== null && grade.points_score !== undefined) nextPoints.set(id, String(Number(grade.points_score || 0)));
           if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarIds.add(id);
-          if (id && activity && nextScoringSettings.activity.find((option) => option.label === activity)?.stellar) nextStellarIds.add(id);
         });
 
         // A read-only view shows what is saved, never an unsaved draft.
@@ -356,13 +357,24 @@ export default function SessionWorkflowPage() {
     return false;
   };
 
-  // Stellar is the top activity level; any number of students can get it in one lesson.
-  const stellarLabel = scoringSettings.activity.find((option) => option.stellar)?.label || '';
   const toggleActivity = (studentId: number, value: string) => {
     if (isViewMode) return;
-    const becomesStellar = Boolean(stellarLabel) && value === stellarLabel && activityScores.get(studentId) !== stellarLabel;
     toggleMapValue(setActivityScores, studentId, value);
-    setStellarStudentIds((current) => (becomesStellar ? [...current, studentId] : current.filter((id) => id !== studentId)));
+  };
+
+  // Stellar student of the lesson: coins only (no points), at most MAX_STELLAR_STUDENTS, kept for
+  // the really outstanding.
+  const toggleStellar = (studentId: number) => {
+    if (isViewMode) return;
+    if (stellarStudentIds.includes(studentId)) {
+      setStellarStudentIds((current) => current.filter((id) => id !== studentId));
+      return;
+    }
+    if (stellarStudentIds.length >= MAX_STELLAR_STUDENTS) {
+      showToast.error(t('At most {count} stellar students in one lesson.', { count: MAX_STELLAR_STUDENTS }));
+      return;
+    }
+    setStellarStudentIds((current) => [...current, studentId]);
   };
 
   const setAbsenceReason = (studentId: number, value: string) => {
@@ -689,9 +701,9 @@ export default function SessionWorkflowPage() {
                 students={students}
                 options={scoringSettings.homework}
                 values={homeworkScores}
-                isEnabled={isViewMode ? undefined : (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
+                isEnabled={isViewMode ? undefined : (studentId) => !selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId))}
                 onToggle={(studentId, value) => toggleMapValue(setHomeworkScores, studentId, value)}
-                onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId)))}
+                onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId)))}
                 readOnly={isViewMode}
                 action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? t('Complete Homework') : t('Save Scores')}</Button></>}
               />
@@ -702,9 +714,12 @@ export default function SessionWorkflowPage() {
                 students={students}
                 options={scoringSettings.activity}
                 values={activityScores}
-                isEnabled={isViewMode ? undefined : (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
+                isEnabled={isViewMode ? undefined : (studentId) => (!selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
                 onToggle={toggleActivity}
-                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))) && (!stellarLabel || activityScores.get(studentId) !== stellarLabel))}
+                stellarStudentIds={shouldAwardCoins ? stellarStudentIds : undefined}
+                onToggleStellar={shouldAwardCoins ? toggleStellar : undefined}
+                stellarBonusCoins={scoringSettings.stellarBonusCoins}
+                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || (Boolean(attendance.get(studentId)) && !isAbsentFromLesson(attendance, studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))))}
                 getTotalScore={getTotalScore}
                 maxScore={maxScore}
                 readOnly={isViewMode}

@@ -1,5 +1,6 @@
 // Scoring discipline: lessons must be scored on the lesson day, within two hours of the start.
-// Each lesson scored late or not at all costs 5 KPI points; a finished month with none earns 10.
+// Each lesson scored late or not at all costs 5 KPI points for every day it was (or still is)
+// late, so a lesson left unscored costs more each day; a finished month with none earns 10.
 
 const GRADING_WINDOW_MINUTES = 120;
 const PENALTY = 5;
@@ -70,21 +71,28 @@ const deadlineOf = (lesson: Lesson) => {
  * Each lesson's status against the sessions actually scored (first grade time, Tashkent, as
  * "YYYY-MM-DD HH:MM"): on time, late, missing, or pending while its deadline has not passed.
  */
+// Days a lesson was late: every started day after its deadline counts, at least one.
+const DAY_MS = 24 * 60 * 60 * 1000;
+const toTime = (value: string) => Date.parse(`${value.replace(' ', 'T')}:00Z`);
+const daysLate = (deadline: string, until: string) => Math.max(1, Math.ceil((toTime(until) - toTime(deadline)) / DAY_MS));
+
 const evaluate = (lessons: Lesson[], sessions: Session[], now: string, monthFinished: boolean) => {
   const graded = new Map(sessions.map((session) => [`${Number(session.class_id)}|${session.session_date}`, session.first_graded]));
   const rows = lessons.map((lesson) => {
     const deadline = deadlineOf(lesson);
     const firstGraded = graded.get(`${lesson.class_id}|${lesson.date}`) || null;
     const status = firstGraded ? (firstGraded <= deadline ? 'on_time' : 'late') : now > deadline ? 'missing' : 'pending';
-    return { ...lesson, deadline, first_graded: firstGraded, status };
+    const days_late = status === 'late' ? daysLate(deadline, firstGraded as string) : status === 'missing' ? daysLate(deadline, now) : 0;
+    return { ...lesson, deadline, first_graded: firstGraded, status, days_late };
   });
   const count = (status: string) => rows.filter((row) => row.status === status).length;
   const late = count('late');
   const missing = count('missing');
   const due = rows.length - count('pending');
   const bonus = monthFinished && due > 0 && late + missing === 0 ? MONTH_BONUS : 0;
-  return { lessons: rows, summary: { due, on_time: count('on_time'), late, missing, pending: count('pending'), points: bonus - PENALTY * (late + missing), bonus } };
+  const lateDays = rows.reduce((sum, row) => sum + row.days_late, 0);
+  return { lessons: rows, summary: { due, on_time: count('on_time'), late, missing, pending: count('pending'), late_days: lateDays, points: bonus - PENALTY * lateDays, bonus } };
 };
 
-module.exports = { expectedLessons, evaluate, deadlineOf, GRADING_WINDOW_MINUTES };
+module.exports = { expectedLessons, evaluate, deadlineOf, daysLate, GRADING_WINDOW_MINUTES, PENALTY };
 export {};

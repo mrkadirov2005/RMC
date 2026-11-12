@@ -13,8 +13,9 @@ const DEFAULT_LESSON_SCORING_SETTINGS = {
     { label: 'None', score: 0, symbol: '😞', fill: 0, tone: 'rose' },
   ],
   activity: [
-    // The stellar level: any number of students per lesson, each gets the stellar bonus coins.
-    { label: 'Stellar', score: 40, symbol: '🌟', fill: 100, tone: 'violet', stellar: true },
+    // The top level: "Fill all" can give it to everyone. Stellar student is a separate mark that
+    // gives the stellar bonus coins only, at most MAX_STELLAR_STUDENTS per lesson.
+    { label: 'Excellent', score: 40, symbol: '◆', fill: 100, tone: 'violet' },
     { label: 'Very active', score: 30, symbol: '★', fill: 75, tone: 'emerald' },
     { label: 'Good', score: 20, symbol: '●', fill: 50, tone: 'sky' },
     { label: 'Little', score: 10, symbol: '◔', fill: 25, tone: 'amber' },
@@ -38,6 +39,9 @@ const DEFAULT_LESSON_SCORING_SETTINGS = {
   ],
 };
 
-module.exports = { DEFAULT_LESSON_SCORING_SETTINGS };
+/** Stellar students a lesson may have; each gets the stellar bonus coins and no extra points. */
+const MAX_STELLAR_STUDENTS = 5;
+
+module.exports = { DEFAULT_LESSON_SCORING_SETTINGS, MAX_STELLAR_STUDENTS };
 
 export {};

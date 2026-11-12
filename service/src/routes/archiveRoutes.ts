@@ -9,6 +9,7 @@ const router = express.Router();
 
 // Graduates ("finished successfully") and their certificate PDFs. Declared before /:entity routes.
 router.get('/graduates', graduateController.getGraduates);
+router.get('/graduates/stats', graduateController.getGraduateStats);
 router.post('/graduates/:studentId/certificates', graduateController.uploadCertificate);
 router.get('/certificates/:id/file', graduateController.downloadCertificate);
 router.delete('/certificates/:id', graduateController.removeCertificate);

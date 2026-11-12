@@ -1,4 +1,5 @@
 const reportService = require('../services/report.service');
+const retentionBreakdownService = require('../services/retentionBreakdown.service');
 const studentTrendService = require('../services/studentTrend.service');
 const studentRankingService = require('../services/studentRanking.service');
 const { getCenterScope, sendError, sendScopeError } = require('../../../shared/controller');
@@ -75,7 +76,20 @@ const getStudentRankings = async (req: any, res: any) => {
   }
 };
 
+// Retention by the owner's five leaving groups, teachers ranked by students lost, and the
+// admissions balance for one month, with teacher, subject and level filters.
+const getRetentionBreakdown = async (req: any, res: any) => {
+  try {
+    const scope = getCenterScope(req, { requireConcreteCenter: true });
+    if (sendScopeError(res, scope)) return;
+    res.json(await retentionBreakdownService.breakdown(req.query, scope.centerId ?? undefined));
+  } catch (error: any) {
+    sendError(res, error, "Retention tahlilini yuklab bo'lmadi");
+  }
+};
+
 module.exports = {
+  getRetentionBreakdown,
   getStudentRankings,
   getStudentTrend,
   getOverviewReport,

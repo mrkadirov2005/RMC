@@ -1,8 +1,12 @@
 // Shared by the teacher panel and the admin page.
 
 export type LessonStatus = 'on_time' | 'late' | 'missing' | 'pending';
-export type DueLesson = { class_id: number; class_name: string; date: string; start: string; deadline: string; status: LessonStatus };
-export type Summary = { due: number; on_time: number; late: number; missing: number; pending: number; points?: number; bonus?: number };
+/** days_late: every started day past the deadline; each costs 5 KPI points, so it grows daily. */
+export type DueLesson = { class_id: number; class_name: string; date: string; start: string; deadline: string; status: LessonStatus; days_late?: number };
+export type Summary = { due: number; on_time: number; late: number; missing: number; pending: number; late_days?: number; points?: number; bonus?: number };
+
+/** KPI points one lesson costs for each day it is late. */
+export const PENALTY_PER_DAY = 5;
 export type Reschedule = {
   reschedule_id: number; class_id: number; class_name: string; teacher_name?: string | null; original_date: string; new_date: string;
   new_time?: string | null; reason?: string | null; status: 'pending' | 'approved' | 'rejected'; decided_by_name?: string | null;

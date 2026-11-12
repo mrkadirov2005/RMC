@@ -27,6 +27,14 @@ describe('centers repository summaries', () => {
     expect(rendered).toContain('COALESCE(');
   });
 
+  it('counts students like the Students page: deleted and transferred-out rows are left out', () => {
+    centerRepository.getSummaries();
+    const selection = mockDb.select.mock.calls[0][0];
+    const { sql: rendered } = dialect.sqlToQuery(selection.students.getSQL());
+    expect(rendered).toContain('s.deleted_at IS NULL');
+    expect(rendered).toContain("s.status <> 'Transferred'");
+  });
+
   it('counts each branch on its own rows, never the totals of all branches', () => {
     centerRepository.getSummaries();
     const selection = mockDb.select.mock.calls[0][0];

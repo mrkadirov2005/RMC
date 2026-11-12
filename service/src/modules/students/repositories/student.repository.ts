@@ -1,8 +1,10 @@
 const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, ne, or, sql } = require('drizzle-orm');
+const { standardizeStudentPayload } = require('../../../shared/studentFormat');
 const pool = require('../../../db/pool');
 const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, studentActionReasons, subjects, teachers } = require('../../../db/schema');
 const { effectiveEndDate } = require('../../discounts/repositories/discount.repository');
 const { buildTransferAllocation, toDateOnly, todayInCenterTimeZone } = require('../../../utils/transferAllocation');
+const { lessonDaysOf } = require('../../salaries/services/groupPayments');
 
 const db = pool.db;
 
@@ -44,6 +46,7 @@ interface StudentListFilters {
   class_id?: number;
   subject_id?: number;
   level?: number;
+  level_id?: number;
   address?: string;
   age?: number;
   gender?: string;
@@ -91,7 +94,9 @@ const studentSelection = {
   updated_at: students.updatedAt,
 };
 
-const studentInsertValues = (payload: Record<string, unknown>) => ({
+const studentInsertValues = (raw: Record<string, unknown>) => studentInsertColumns(standardizeStudentPayload(raw));
+
+const studentInsertColumns = (payload: Record<string, unknown>) => ({
   centerId: payload.center_id,
   enrollmentNumber: payload.enrollment_number,
   firstName: payload.first_name,
@@ -214,6 +219,9 @@ const handOverMainRecord = async (tx: any, oldMain: any) => {
   return nextMainId;
 };
 
+// A case-insensitive regex for the search text that never matches in the middle of a number.
+const schoolSearchRegex = (search: string) => `(^|[^0-9])${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`;
+
 const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
   const conditions: any[] = [isNull(students.deletedAt)];
   // A transferred-out student keeps a row in their old class (status='Transferred', deletedAt
@@ -246,8 +254,10 @@ const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, 
         ilike(students.email, pattern),
         ilike(students.phone, pattern),
         ilike(students.parentName, pattern),
-        ilike(students.schoolName, pattern),
-        ilike(students.schoolClass, pattern)
+        // School and class: "7-Maktab" must not find "97-Maktab" or "37-Maktab", so a number in the
+        // search only matches where a number starts (no digit right before it).
+        sql`${students.schoolName} ~* ${schoolSearchRegex(search)}`,
+        sql`${students.schoolClass} ~* ${schoolSearchRegex(search)}`
       )
     );
   }
@@ -264,6 +274,7 @@ const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, 
 
   if (filters.subject_id != null) conditions.push(eq(subjects.subjectId, filters.subject_id));
   if (filters.level != null) conditions.push(eq(classes.level, filters.level));
+  if (filters.level_id != null) conditions.push(eq(classes.levelId, Number(filters.level_id)));
 
   const address = String(filters.address || '').trim();
   if (address) conditions.push(eq(centers.address, address));
@@ -528,7 +539,9 @@ const insert = async (payload: Record<string, unknown>) => {
   return rows[0];
 };
 
-const update = async (id: number, payload: Record<string, unknown>, centerId?: number, teacherId?: number) => {
+const update = async (id: number, rawPayload: Record<string, unknown>, centerId?: number, teacherId?: number) => {
+  // School, class and phones in one standard form ("7-Maktab", "7-Sinf", "+998901234567").
+  const payload: Record<string, any> = standardizeStudentPayload(rawPayload);
   const conditions = [eq(students.studentId, id), isNull(students.deletedAt)];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(students.teacherId, teacherId));
@@ -611,6 +624,7 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         ...studentSelection,
         source_password_hash: students.passwordHash,
         source_payment_amount: classes.paymentAmount,
+        source_section: classes.section,
       })
       .from(students)
       .leftJoin(classes, eq(classes.classId, students.classId))
@@ -626,6 +640,7 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         center_id: classes.centerId,
         teacher_id: classes.teacherId,
         payment_amount: classes.paymentAmount,
+        section: classes.section,
       })
       .from(classes)
       .where(and(...targetConditions))
@@ -716,7 +731,11 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
           lte(payments.paymentDate, toDateOnly(monthEnd))
         )
       );
-    const allocation = buildTransferAllocation(source.source_payment_amount, targetClass.payment_amount, (paidRows[0] as any)?.paid_amount, transferDate, source.start_date);
+    // Split by lessons, as in billing (calendar days for a group without lesson days).
+    const allocation = buildTransferAllocation(
+      source.source_payment_amount, targetClass.payment_amount, (paidRows[0] as any)?.paid_amount, transferDate, source.start_date,
+      lessonDaysOf(source.source_section), lessonDaysOf(targetClass.section),
+    );
 
     const insertTransferPayment = (studentId: number, amount: number, reference: string, notes: string, center: number) =>
       tx.insert(payments).values({
@@ -749,14 +768,18 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         id,
         -allocation.movedAmount,
         `TRANSFER-${id}-${newStudent.student_id}-SOURCE`,
-        `Transfer credit: ${allocation.sourceDays}/${allocation.totalDays} days kept in previous group`,
+        allocation.sourceLessons !== null
+          ? `Transfer credit: ${allocation.sourceLessons} of 12 lessons kept in previous group`
+          : `Transfer credit: ${allocation.sourceDays}/${allocation.totalDays} days kept in previous group`,
         source.center_id
       );
       await insertTransferPayment(
         newStudent.student_id,
         allocation.movedAmount,
         `TRANSFER-${id}-${newStudent.student_id}-TARGET`,
-        `Transfer credit: ${allocation.targetDays}/${allocation.totalDays} days in new group`,
+        allocation.targetLessons !== null
+          ? `Transfer credit: ${allocation.targetLessons} of 12 lessons in new group`
+          : `Transfer credit: ${allocation.targetDays}/${allocation.totalDays} days in new group`,
         targetClass.center_id
       );
     }
@@ -1024,6 +1047,7 @@ const saveVideos = async (id: number, videos: { before_video_url: string | null;
 };
 
 module.exports = {
+  schoolSearchRegex,
   removeAddedGroup,
   discountCopy,
   findActionReason,

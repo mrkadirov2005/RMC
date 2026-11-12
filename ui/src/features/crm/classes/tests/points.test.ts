@@ -6,10 +6,11 @@ describe('getCombinedLessonPoints', () => {
     expect(getCombinedLessonPoints({ attendance_score: 40, homework_score: 20, activity_score: 40 })).toBe(100);
   });
 
-  it('counts the 100-point score as 60 next to attendance, in place of homework and activity', () => {
+  it('keeps the 100-point score exactly as typed, in place of everything else', () => {
     expect(getCombinedLessonPoints({ attendance_score: 40, homework_score: 20, activity_score: 30, points_score: 100 })).toBe(100);
-    expect(getCombinedLessonPoints({ attendance_score: 40, points_score: 50 })).toBe(70);
-    expect(getCombinedLessonPoints({ points_score: 80 })).toBe(80);
+    expect(getCombinedLessonPoints({ attendance_score: 40, points_score: 80 })).toBe(80);
+    expect(getCombinedLessonPoints({ points_score: 99 })).toBe(99);
+    expect(getCombinedLessonPoints({ points_score: 77 })).toBe(77);
   });
 
   it('treats omitted score categories as zero', () => {

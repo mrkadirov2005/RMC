@@ -51,13 +51,15 @@ const StudentsPage = () => {
     }
     return Array.from(values).sort((a, b) => a.localeCompare(b));
   }, [s.state.items]);
+  // The subject levels the groups are in (Fanlar -> levels), e.g. "English · A2".
   const levelOptions = useMemo(() => {
-    const values = new Set<number>();
+    const options = new Map<string, string>();
     for (const cls of s.classes) {
-      const level = Number(cls.level);
-      if (Number.isFinite(level)) values.add(level);
+      const id = Number(cls.level_id);
+      if (!Number.isInteger(id) || id <= 0 || !cls.level_name) continue;
+      options.set(String(id), [cls.subject_name, cls.level_name].filter(Boolean).join(' · '));
     }
-    return Array.from(values).sort((a, b) => a - b);
+    return Array.from(options, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
   }, [s.classes]);
   const addressOptions = useMemo(() => {
     const values = new Set<string>();

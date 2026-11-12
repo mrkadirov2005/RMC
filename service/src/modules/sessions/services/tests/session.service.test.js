@@ -1,6 +1,6 @@
 jest.mock('../../../classes/repositories/class.repository', () => ({ findById: jest.fn() }));
 jest.mock('../../repositories/session.repository', () => ({
-  bulkInsert: jest.fn(), findByClass: jest.fn(), findByClasses: jest.fn(), deleteUpcoming: jest.fn(),
+  bulkInsert: jest.fn(), findClassDates: jest.fn(async () => ({ start: null, end: null })), findByClass: jest.fn(), findByClasses: jest.fn(), deleteUpcoming: jest.fn(),
   deleteById: jest.fn(), purgeById: jest.fn(), create: jest.fn(),
 }));
 
@@ -26,6 +26,11 @@ describe('session service', () => {
       section: JSON.stringify({ days: ['Mon', 'thursday'], time: '09:00', endTime: '10:30' }),
       start_date: '2024-02-05', end_date: '2024-02-29',
     });
+    // The generator reads the group's dates as text from the database.
+    repository.findClassDates.mockResolvedValue({ start: '2024-02-05', end: '2024-02-29' });
+    classes.findById.mockResolvedValue({
+      ...(await classes.findById()),
+    });
     repository.bulkInsert.mockImplementation(async (rows) => ({ created: rows.length - 1 }));
     const result = await service.generateMonthlySessions({ classId: 7, centerId: 2, month: 2, year: 2024, durationMinutes: 45 });
     const rows = repository.bulkInsert.mock.calls[0][0];
@@ -37,6 +42,7 @@ describe('session service', () => {
 
   test('uses fallback duration and calculates an end time across an hour boundary', async () => {
     classes.findById.mockResolvedValue({ center_id: 2, class_id: 7, section: JSON.stringify({ days: [1], time: '09:45' }) });
+    repository.findClassDates.mockResolvedValue({ start: null, end: null });
     repository.bulkInsert.mockResolvedValue({ created: 4 });
     await service.generateMonthlySessions({ classId: 7, month: 4, year: 2024, durationMinutes: 50 });
     expect(repository.bulkInsert.mock.calls[0][0][0]).toMatchObject({ end_time: '10:35', duration_minutes: 50 });

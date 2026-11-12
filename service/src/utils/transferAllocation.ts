@@ -1,9 +1,9 @@
 /**
  * Splits a student's month between the group they leave and the group they join.
  *
- * Calendar days decide the split: the source group earns its monthly fee for the days
- * before the transfer date, and whatever the student paid beyond that moves to the new
- * group. The moved amount is never rescaled to the target price, so money is conserved:
+ * Lessons decide the split, as in billing: the source group earns 1/12 of its monthly fee for
+ * each of its lesson days before the transfer date (calendar days when the group has no lesson
+ * days), and whatever the student paid beyond that moves to the new group. The moved amount is never rescaled to the target price, so money is conserved:
  * if it exceeds the target's prorated charge the student carries a balance, and if it
  * falls short the student still owes the difference in the new group.
  */
@@ -34,8 +34,12 @@ const buildTransferAllocation = (
   targetMonthlyAmount: unknown,
   paidAmount: unknown,
   transferDate: Date,
-  sourceStartDate?: unknown
+  sourceStartDate?: unknown,
+  sourceLessonDays: string[] = [],
+  targetLessonDays: string[] = []
 ) => {
+  // Required here, not at the top, so this small helper does not load the salary module early.
+  const { getMonthShare } = require('../modules/salaries/services/groupPayments');
   const sourceMonthly = Number(sourceMonthlyAmount || 0);
   const targetMonthly = Number(targetMonthlyAmount || 0);
   const paid = Number(paidAmount || 0);
@@ -48,9 +52,18 @@ const buildTransferAllocation = (
   const firstSourceDay = startedOn && startedOn >= monthStart && startedOn <= effectiveDate ? startedOn.getUTCDate() : 1;
   const sourceDays = Math.max(effectiveDate.getUTCDate() - firstSourceDay, 0);
   const targetDays = totalDays - effectiveDate.getUTCDate() + 1;
-  const sourceEarned = roundMoney((sourceMonthly * sourceDays) / totalDays);
+  const monthKey = toDateOnly(monthStart).slice(0, 7);
+  const dayBefore = new Date(effectiveDate.getTime() - 24 * 60 * 60 * 1000);
+  const sourceShare = sourceDays > 0
+    ? getMonthShare({ start_date: `${monthKey}-${String(firstSourceDay).padStart(2, '0')}`, end_date: toDateOnly(dayBefore) }, monthKey, sourceLessonDays)
+    : 0;
+  const targetShare = getMonthShare({ start_date: toDateOnly(effectiveDate) }, monthKey, targetLessonDays);
+  const sourceEarned = roundMoney(sourceMonthly * sourceShare);
   const movedAmount = roundMoney(Math.max(paid - sourceEarned, 0));
-  const targetCharge = roundMoney((targetMonthly * targetDays) / totalDays);
+  const targetCharge = roundMoney(targetMonthly * targetShare);
+  // Lessons in each part of the month (12 = a whole month), when the groups have lesson days.
+  const sourceLessons = sourceLessonDays.length ? Math.round(sourceShare * 12) : null;
+  const targetLessons = targetLessonDays.length ? Math.round(targetShare * 12) : null;
 
   return {
     monthStart,
@@ -59,6 +72,8 @@ const buildTransferAllocation = (
     totalDays,
     sourceDays,
     targetDays,
+    sourceLessons,
+    targetLessons,
     sourceMonthly,
     targetMonthly,
     paidAmount: paid,

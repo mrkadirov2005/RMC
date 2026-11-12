@@ -19,7 +19,7 @@ describe('branch admin page access catalog', () => {
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total and monthly', 'List', "Students' payments"]);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Retention')?.children?.map((child) => child.label)).toEqual(['Retention', 'Intake']);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Reports')?.children?.map((child) => child.view)).toEqual([
-      'finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes',
+      'finance', 'students', 'teachers', 'discounts', 'retention', 'graduates', 'attendance', 'classes',
     ]);
   });
 

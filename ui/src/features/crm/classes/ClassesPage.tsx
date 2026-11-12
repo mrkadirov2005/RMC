@@ -1,6 +1,9 @@
 // Page component for the classes screen in the crm feature.
 
 import { scheduleDaysUz } from './utils/schedule';
+import { showToast } from '@/utils/toast';
+import { classAPI } from '@/shared/api/api';
+import { filterGroups, SESSION_SLOTS, sessionOf, type GroupFilters } from './groupFinder';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pencil, Trash2, Info, CalendarDays, BookOpen, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +33,34 @@ const ClassesPage = () => {
   const [groupView, setGroupView] = useState<'groups' | 'teachers'>('teachers');
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
+  // Finding a group for a student: level, odd/even days, session, start time, emptiest first.
+  const [finder, setFinder] = useState<GroupFilters>({ levelId: null, days: '', session: '', start: '', mostFreeFirst: false });
+  const [syncing, setSyncing] = useState(false);
+  // Every group's calendar rebuilt from its timetable: future lessons that nobody scored and that
+  // do not fit the timetable go, missing ones are added. Scored lessons are never touched.
+  const syncAllCalendars = async () => {
+    setSyncing(true);
+    let removed = 0;
+    let created = 0;
+    let skipped = 0;
+    try {
+      for (const cls of state.items) {
+        const id = getClassId(cls);
+        if (!id) continue;
+        try {
+          const response = await classAPI.syncCalendar(id);
+          const data: any = (response as any)?.data ?? response;
+          removed += Number(data?.removed || 0);
+          created += Number(data?.created || 0);
+        } catch {
+          skipped += 1; // a group without a timetable
+        }
+      }
+      showToast.success(t('Calendar updated: {created} lessons added, {removed} removed, {skipped} groups without a timetable.', { created, removed, skipped }));
+    } finally {
+      setSyncing(false);
+    }
+  };
   const [expandedTeacherIds, setExpandedTeacherIds] = useState<Set<number>>(new Set());
   const [expandedClassIds, setExpandedClassIds] = useState<Set<number>>(new Set());
   const [classStudents, setClassStudents] = useState<Student[]>([]);
@@ -121,7 +152,7 @@ const ClassesPage = () => {
     const search = searchTerm.trim().toLowerCase();
     const teacherId = teacherFilter === 'all' ? null : Number(teacherFilter);
 
-    return state.items.filter((cls) => {
+    const matching = state.items.filter((cls) => {
       if (teacherId != null && getEffectiveTeacherId(cls) !== teacherId) return false;
       if (!search) return true;
 
@@ -140,7 +171,16 @@ const ClassesPage = () => {
         .filter((value) => value != null)
         .some((value) => String(value).toLowerCase().includes(search));
     });
-  }, [effectiveTeacherByClassId, searchTerm, state.items, teacherFilter]);
+    return filterGroups(matching, finder, (cls) => (studentsByClassId.get(getClassId(cls)) || []).length || Number((cls as any).student_count || 0));
+  }, [effectiveTeacherByClassId, finder, searchTerm, state.items, studentsByClassId, teacherFilter]);
+  const levelOptions = useMemo(() => {
+    const options = new Map<number, string>();
+    state.items.forEach((cls: any) => {
+      const id = Number(cls.level_id);
+      if (id > 0 && cls.level_name) options.set(id, [cls.subject_name, cls.level_name].filter(Boolean).join(' · '));
+    });
+    return Array.from(options, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  }, [state.items]);
   const teacherById = useMemo(() => {
     const map = new Map<number, string>();
     teacherOptions.forEach((teacher) => map.set(Number(teacher.value), teacher.label));
@@ -328,6 +368,34 @@ const ClassesPage = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-2 text-sm" data-testid="group-finder">
+        <span className="font-semibold text-muted-foreground">{t('Find a group')}:</span>
+        <select aria-label={t('Level')} className="h-8 rounded-md border bg-background px-2" value={finder.levelId ?? ''} onChange={(event) => setFinder({ ...finder, levelId: event.target.value ? Number(event.target.value) : null })}>
+          <option value="">{t('All levels')}</option>
+          {levelOptions.map((level) => <option key={level.id} value={level.id}>{level.name}</option>)}
+        </select>
+        <select aria-label={t('Days')} className="h-8 rounded-md border bg-background px-2" value={finder.days} onChange={(event) => setFinder({ ...finder, days: event.target.value as GroupFilters['days'] })}>
+          <option value="">{t('Any days')}</option>
+          <option value="odd">{t('Odd days (Mon, Wed, Fri)')}</option>
+          <option value="even">{t('Even days (Tue, Thu, Sat)')}</option>
+        </select>
+        <select aria-label={t('Session')} className="h-8 rounded-md border bg-background px-2" value={finder.session} onChange={(event) => setFinder({ ...finder, session: event.target.value as GroupFilters['session'], start: '' })}>
+          <option value="">{t('Any session')}</option>
+          <option value="morning">{t('Morning')}</option>
+          <option value="afternoon">{t('Afternoon')}</option>
+        </select>
+        <select aria-label={t('Start time')} className="h-8 rounded-md border bg-background px-2" value={finder.start} onChange={(event) => setFinder({ ...finder, start: event.target.value })}>
+          <option value="">{t('Any time')}</option>
+          {SESSION_SLOTS.filter((slot) => !finder.session || sessionOf(slot) === finder.session).map((slot) => <option key={slot} value={slot}>{slot}</option>)}
+        </select>
+        <label className="inline-flex items-center gap-1.5">
+          <input type="checkbox" checked={Boolean(finder.mostFreeFirst)} onChange={(event) => setFinder({ ...finder, mostFreeFirst: event.target.checked })} />
+          {t('Most free places first')}
+        </label>
+        <Button type="button" size="sm" variant="outline" className="ml-auto h-8" disabled={syncing} onClick={() => void syncAllCalendars()}>
+          {syncing ? t('Updating the calendar...') : t('Update the calendar from the timetable')}
+        </Button>
+      </div>
       <ClassesMainView
         t={t}
         viewMode={viewMode}

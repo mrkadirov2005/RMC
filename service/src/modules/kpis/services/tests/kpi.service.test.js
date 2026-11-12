@@ -5,6 +5,11 @@ jest.mock('../../repositories/kpi.repository', () => ({
   listRecordsForTeacher: jest.fn(),
   monthlyStudentScore: jest.fn(),
   monthlyRetentionCounts: jest.fn(),
+  monthlyReferralCount: jest.fn().mockResolvedValue(0),
+  listRecordsForYear: jest.fn().mockResolvedValue([]),
+}));
+jest.mock('../../../lesson_control/services/lessonControl.service', () => ({
+  discipline: jest.fn().mockResolvedValue({ teachers: [{ summary: { points: 0 } }] }),
 }));
 jest.mock('../../../teachers/services/teacher.service', () => ({ getTeacher: jest.fn() }));
 jest.mock('../../../owners/services/owner.service', () => ({ getOwner: jest.fn() }));
@@ -56,7 +61,7 @@ describe('kpi service', () => {
     expect(record.retentionScore).toBe(80);
   });
 
-  test('final score is the average of all four categories', async () => {
+  test('final score is the average of the six 100-point parts plus the referral points', async () => {
     repository.monthlyStudentScore.mockResolvedValue(60);
     repository.monthlyRetentionCounts.mockResolvedValue({ startCount: 5, leftCount: 0 });
     ownerService.getOwner.mockResolvedValue({ first_name: 'Ada', last_name: 'Owner' });
@@ -69,13 +74,16 @@ describe('kpi service', () => {
       kpiMonth: 8,
       contributionScore: 80,
       teachingQualityScore: 100,
+      examScore: 90,
       actingUser: { id: 5, role: 'owner', userType: 'superuser' },
     });
 
-    // (60 student + 100 retention + 80 contribution + 100 teaching quality) / 4
+    // (100 retention + 60 student + 80 contribution + 90 exam + 100 teaching quality + 100 on-time scoring) / 6
     expect(record.studentScore).toBe(60);
     expect(record.retentionScore).toBe(100);
-    expect(record.finalScore).toBe(85);
+    expect(record.gradingScore).toBe(100);
+    expect(record.examScore).toBe(90);
+    expect(record.finalScore).toBe(88.33);
   });
 
   test('overview pairs each teacher with their existing record and a live auto-score preview', async () => {
@@ -88,7 +96,9 @@ describe('kpi service', () => {
 
     expect(result.teachers).toHaveLength(1);
     expect(result.teachers[0].kpi).toBeNull();
-    expect(result.teachers[0].preview).toEqual({ student_score: 70, retention_score: 75 });
+    expect(result.teachers[0].preview).toEqual({ student_score: 70, retention_score: 75, grading_score: 100, referral_count: 0 });
+    // No saved month yet: no place this month or this year.
+    expect(result.teachers[0]).toMatchObject({ month_place: null, year_total: null, year_place: null });
   });
 
   test('teacher detail lists only recorded months, no backfill', async () => {
@@ -120,8 +130,8 @@ describe('kpi service', () => {
 
     expect(record.contributionScore).toBe(0);
     // final score must be computed from the clamped value (0), not the raw -50:
-    // (50 student + 100 retention + 0 contribution + 40 teaching) / 4 = 47.5
-    expect(record.finalScore).toBe(47.5);
+    // (100 retention + 50 student + 0 contribution + 0 exam + 40 teaching + 100 on-time) / 6 = 48.33
+    expect(record.finalScore).toBe(48.33);
   });
 
   test('teaching quality score above 100 is clamped to the 100 boundary rather than stored over-max', async () => {
@@ -143,8 +153,8 @@ describe('kpi service', () => {
     expect(record.teachingQualityScore).toBe(100);
     // startCount == leftCount => retention 0
     expect(record.retentionScore).toBe(0);
-    // (60 student + 0 retention + 70 contribution + 100 teaching) / 4 = 57.5
-    expect(record.finalScore).toBe(57.5);
+    // (0 retention + 60 student + 70 contribution + 0 exam + 100 teaching + 100 on-time) / 6 = 55
+    expect(record.finalScore).toBe(55);
   });
 
   test('upserting the same teacher/period twice always targets the same identity key, proving no duplicate row is minted on retry', async () => {

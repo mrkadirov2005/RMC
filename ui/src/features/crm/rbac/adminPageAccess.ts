@@ -87,6 +87,7 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
       { label: "O'qituvchilar", view: 'teachers', permission: PERMISSION_CODES.REPORTS_TAB_TEACHERS },
       { label: 'Chegirmalar', view: 'discounts', permission: PERMISSION_CODES.REPORTS_TAB_DISCOUNTS },
       { label: 'Retention', view: 'retention', permission: PERMISSION_CODES.REPORTS_TAB_RETENTION },
+      { label: 'Bitiruvchilar', view: 'graduates', permission: PERMISSION_CODES.REPORTS_TAB_GRADUATES },
       { label: 'Davomat', view: 'attendance', permission: PERMISSION_CODES.REPORTS_TAB_ATTENDANCE },
       { label: 'Class Reports', view: 'classes', permission: PERMISSION_CODES.REPORTS_TAB_CLASSES },
     ],

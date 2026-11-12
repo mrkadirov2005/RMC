@@ -1,6 +1,7 @@
 const { asc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { centers } = require('../../../db/schema');
+const { countedStudentSql } = require('../../../shared/studentCount');
 
 const db = pool.db;
 
@@ -28,7 +29,7 @@ const getSummaries = (centerId?: number) => {
   const query = db
     .select({
       center_id: centers.centerId,
-      students: sql.raw(`(SELECT COUNT(*)::int FROM students s WHERE s.center_id = ${BRANCH} AND s.deleted_at IS NULL)`),
+      students: sql.raw(`(SELECT COUNT(*)::int FROM students s WHERE s.center_id = ${BRANCH} AND ${countedStudentSql('s')})`),
       teachers: sql.raw(`(SELECT COUNT(*)::int FROM teachers t WHERE t.center_id = ${BRANCH} AND t.deleted_at IS NULL)`),
       classes: sql.raw(`(SELECT COUNT(*)::int FROM classes c WHERE c.center_id = ${BRANCH} AND c.deleted_at IS NULL)`),
       payments: sql.raw(`(SELECT COUNT(*)::int FROM payments p WHERE p.center_id = ${BRANCH} AND p.deleted_at IS NULL)`),

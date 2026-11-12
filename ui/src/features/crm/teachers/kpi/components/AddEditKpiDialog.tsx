@@ -27,6 +27,7 @@ interface AddEditKpiDialogProps {
   autoScores: KpiAutoScores;
   existingContributionScore?: number | string | null;
   existingTeachingQualityScore?: number | string | null;
+  existingExamScore?: number | string | null;
   existingNotes?: string | null;
 }
 
@@ -40,6 +41,7 @@ export const AddEditKpiDialog = ({
   autoScores,
   existingContributionScore,
   existingTeachingQualityScore,
+  existingExamScore,
   existingNotes,
 }: AddEditKpiDialogProps) => {
   const { t } = useLanguage();
@@ -48,24 +50,35 @@ export const AddEditKpiDialog = ({
 
   const [contributionScore, setContributionScore] = useState('');
   const [teachingQualityScore, setTeachingQualityScore] = useState('');
+  const [examScore, setExamScore] = useState('');
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (!open) return;
     setContributionScore(existingContributionScore != null ? String(existingContributionScore) : '');
     setTeachingQualityScore(existingTeachingQualityScore != null ? String(existingTeachingQualityScore) : '');
+    setExamScore(existingExamScore != null ? String(existingExamScore) : '');
     setNotes(existingNotes || '');
-  }, [open, existingContributionScore, existingTeachingQualityScore, existingNotes]);
+  }, [open, existingContributionScore, existingTeachingQualityScore, existingExamScore, existingNotes]);
 
   const parsedContribution = Number(contributionScore);
   const parsedTeachingQuality = Number(teachingQualityScore);
+  const parsedExam = Number(examScore);
   const isScoreValid = (value: number, raw: string) => raw.trim() !== '' && Number.isFinite(value) && value >= 0 && value <= 100;
-  const isValid = isScoreValid(parsedContribution, contributionScore) && isScoreValid(parsedTeachingQuality, teachingQualityScore);
+  const isValid = isScoreValid(parsedContribution, contributionScore) && isScoreValid(parsedTeachingQuality, teachingQualityScore) && isScoreValid(parsedExam, examScore);
 
   const finalScorePreview = useMemo(() => {
     if (!isValid) return null;
-    return computeFinalScorePreview(autoScores.student_score, autoScores.retention_score, parsedContribution, parsedTeachingQuality);
-  }, [autoScores, isValid, parsedContribution, parsedTeachingQuality]);
+    return computeFinalScorePreview({
+      studentScore: autoScores.student_score,
+      retentionScore: autoScores.retention_score,
+      contributionScore: parsedContribution,
+      examScore: parsedExam,
+      teachingQualityScore: parsedTeachingQuality,
+      gradingScore: Number(autoScores.grading_score ?? 100),
+      referralCount: Number(autoScores.referral_count ?? 0),
+    });
+  }, [autoScores, isValid, parsedContribution, parsedExam, parsedTeachingQuality]);
 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -76,6 +89,7 @@ export const AddEditKpiDialog = ({
         kpi_month: kpiMonth,
         contribution_score: parsedContribution,
         teaching_quality_score: parsedTeachingQuality,
+        exam_score: parsedExam,
         notes: notes.trim() || undefined,
       })
     );
@@ -97,12 +111,20 @@ export const AddEditKpiDialog = ({
 
           <div className="grid grid-cols-2 gap-1.5 rounded-md border bg-muted/30 p-2.5 text-xs">
             <div>
+              <p className="text-muted-foreground">{t('Retention (auto)')}</p>
+              <p className="font-bold text-primary">{formatScore(autoScores.retention_score)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">{t('Came for this teacher (auto, +1 each)')}</p>
+              <p className="font-bold text-primary">+{Number(autoScores.referral_count ?? 0)}</p>
+            </div>
+            <div>
               <p className="text-muted-foreground">{t('Student Scores (auto)')}</p>
               <p className="font-bold text-primary">{formatScore(autoScores.student_score)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">{t('Retention (auto)')}</p>
-              <p className="font-bold text-primary">{formatScore(autoScores.retention_score)}</p>
+              <p className="text-muted-foreground">{t('On-time scoring (auto)')}</p>
+              <p className="font-bold text-primary">{formatScore(autoScores.grading_score ?? 100)}</p>
             </div>
           </div>
 
@@ -116,6 +138,18 @@ export const AddEditKpiDialog = ({
               value={contributionScore}
               onChange={(e) => setContributionScore(e.target.value)}
               placeholder="e.g. 85"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>{t('Exam score (0–100)')}</Label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={examScore}
+              onChange={(e) => setExamScore(e.target.value)}
+              placeholder="e.g. 80"
             />
           </div>
           <div className="space-y-1">
@@ -142,7 +176,7 @@ export const AddEditKpiDialog = ({
 
           {finalScorePreview !== null && (
             <div className="rounded-md border bg-primary/5 p-2.5 text-xs">
-              <p className="text-muted-foreground">{t('Final KPI (average of all 4 categories)')}</p>
+              <p className="text-muted-foreground">{t('Final KPI (average of the 6 parts + 1 per student who came for the teacher)')}</p>
               <p className="text-lg font-black text-primary">{formatScore(finalScorePreview)}</p>
             </div>
           )}

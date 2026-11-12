@@ -88,6 +88,11 @@ const updateClass = async (req: any, res: any) => {
       });
     }
     if (!row) return res.status(404).json({ error: 'Guruh topilmadi' });
+    // A new timetable or new dates: the calendar follows (future unscored lessons only). Never fails the save.
+    if (req.body?.section !== undefined || req.body?.start_date !== undefined || req.body?.end_date !== undefined) {
+      await sessionService.syncCalendarWithTimetable({ classId: Number(req.params.id), centerId: centerId ?? undefined })
+        .catch((error: any) => console.error('Calendar sync after group update failed:', error?.message || error));
+    }
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -239,6 +244,23 @@ const generateClassSessions = async (req: any, res: any) => {
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Sessiyalarni yaratib bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+// Makes the group's calendar match its timetable (future unscored lessons rebuilt; scored ones kept).
+const syncClassCalendar = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    if (req.user?.userType === 'student') return res.status(403).json({ error: 'Kirish rad etildi.' });
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    const out = await sessionService.syncCalendarWithTimetable({ classId: Number(req.params.id), centerId: centerId ?? undefined, teacherId });
+    if (out?.error === 'not_found') return res.status(404).json({ error: 'Guruh topilmadi' });
+    if (out?.error === 'missing_schedule') return res.status(400).json({ error: "Guruh jadvali topilmadi yoki noto'g'ri.", code: 'MISSING_SCHEDULE' });
+    res.json(out);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "Taqvimni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -436,6 +458,7 @@ module.exports = {
   createClassSession,
   updateClassSession,
   generateClassSessions,
+  syncClassCalendar,
   getClassSessions,
   getBulkClassSessions,
   deleteUpcomingClassSessions,

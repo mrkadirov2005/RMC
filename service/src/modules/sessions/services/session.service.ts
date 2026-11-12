@@ -96,8 +96,10 @@ const generateMonthlySessions = async (params: {
   const monthIndex = month - 1;
   const daysInMonth = new Date(year, month, 0).getDate();
   const sessions: any[] = [];
-  const startDate = cls.start_date ? toLocalDateKey(new Date(cls.start_date)) : null;
-  const endDate = cls.end_date ? toLocalDateKey(new Date(cls.end_date)) : null;
+  // The group's dates as text from the database (the schema's timestamp mapping makes them Invalid Date).
+  const groupDates = await sessionRepository.findClassDates(classId);
+  const startDate = groupDates.start;
+  const endDate = groupDates.end;
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     const dateObj = new Date(year, monthIndex, day);
@@ -126,6 +128,40 @@ const generateMonthlySessions = async (params: {
     total: sessions.length,
     skipped: Math.max(sessions.length - result.created, 0),
   };
+};
+
+// Today in Tashkent as YYYY-MM-DD.
+const tashkentToday = (now = new Date()) => new Date(now.getTime() + 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+/**
+ * Makes a group's calendar match its timetable: future unscored lessons on another day or time (or
+ * outside the group's dates) are removed, then any lesson missing from this month and the next two
+ * is added from the group's days and time. Lessons that already fit, scored lessons, past lessons
+ * and approved reschedules are never touched. Run after the timetable or
+ * the group's dates change, or on demand.
+ */
+const syncCalendarWithTimetable = async (params: { classId: number; centerId?: number; teacherId?: number; months?: number; now?: Date }) => {
+  const { classId, centerId, teacherId } = params;
+  const cls = await classRepository.findById(classId, centerId, teacherId);
+  if (!cls) return { error: 'not_found' as const };
+  const schedule = parseSchedule(cls.section);
+  if (!schedule.days.length || !schedule.time) return { error: 'missing_schedule' as const };
+
+  const today = tashkentToday(params.now);
+  const dates = await sessionRepository.findClassDates(classId);
+  const days = schedule.days.map(normalizeDayName).filter((day: string) => day.length > 0);
+  const removed = await sessionRepository.deleteOffTimetableFrom(classId, today, { days, time: schedule.time, start: dates.start, end: dates.end }, centerId, teacherId);
+  const [year, month] = today.split('-').map(Number);
+  let created = 0;
+  for (let offset = 0; offset < Math.min(Math.max(params.months ?? 3, 1), 6); offset += 1) {
+    const target = new Date(Date.UTC(year, month - 1 + offset, 1));
+    const out: any = await generateMonthlySessions({
+      classId, centerId, teacherId, month: target.getUTCMonth() + 1, year: target.getUTCFullYear(), durationMinutes: 90,
+    });
+    if (out?.error) break;
+    created += Number(out.created || 0);
+  }
+  return { removed: removed.deleted, created, from: today };
 };
 
 const listByClass = (classId: number, centerId?: number, teacherId?: number) =>
@@ -204,6 +240,7 @@ const createSession = async (params: {
 };
 
 module.exports = {
+  syncCalendarWithTimetable,
   createSession,
   generateMonthlySessions,
   listByClass,

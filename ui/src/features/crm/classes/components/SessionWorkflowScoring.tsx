@@ -24,8 +24,6 @@ export type ScoreOption = {
   symbol: string;
   fill: number;
   tone: ScoreTone;
-  /** The stellar activity level: given one student at a time, so it is never in "Fill all". */
-  stellar?: boolean;
 };
 
 
@@ -111,7 +109,7 @@ export const ScoreTable = ({
   onFillAll,
   getTotalScore,
   maxScore = 100,
-  stellarStudentId,
+  stellarStudentIds,
   onToggleStellar,
   stellarBonusCoins = 30,
   action,
@@ -127,7 +125,8 @@ export const ScoreTable = ({
   getTotalScore?: (studentId: number) => number;
   /** The lesson's maximum for the chosen actions; the grade is the score as a share of it. */
   maxScore?: number;
-  stellarStudentId?: number | null;
+  /** Stellar students of the lesson (coins only, at most 5). */
+  stellarStudentIds?: number[];
   onToggleStellar?: (studentId: number) => void;
   stellarBonusCoins?: number;
   action?: ReactNode;
@@ -145,7 +144,7 @@ export const ScoreTable = ({
   <div className="overflow-x-auto rounded-lg border">
     {!readOnly && <div className="flex flex-wrap items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
       <span className="mr-1 shrink-0 text-xs font-semibold text-muted-foreground">{t('Fill all')}</span>
-      {options.filter((option) => !option.stellar).map((option) => {
+      {options.map((option) => {
         const tone = optionToneClasses[option.tone];
         return (
           <button
@@ -187,7 +186,7 @@ export const ScoreTable = ({
           const studentId = getStudentId(student);
           const selected = values.get(studentId) || '';
           const enabled = isEnabled ? isEnabled(studentId) : true;
-          const isStellar = stellarStudentId === studentId;
+          const isStellar = Boolean(stellarStudentIds?.includes(studentId));
           const note = renderRowNote?.(studentId);
           return (
             <Fragment key={studentId}>

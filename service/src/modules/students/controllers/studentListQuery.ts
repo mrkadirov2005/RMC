@@ -21,6 +21,7 @@ const studentListParamKeys = [
   'class_id',
   'subject_id',
   'level',
+  'level_id',
   'address',
   'age',
   'gender',
@@ -36,6 +37,8 @@ const parseStudentListQuery = (query: Record<string, unknown>) => ({
   class_id: toInt(query.class_id),
   subject_id: toPositiveInt(query.subject_id),
   level: toInt(query.level),
+  // A subject level (Fanlar -> levels): students whose group is in it this month.
+  level_id: toPositiveInt(query.level_id),
   address: cleanString(query.address),
   age: toPositiveInt(query.age),
   gender: cleanString(query.gender),

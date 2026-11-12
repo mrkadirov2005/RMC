@@ -144,6 +144,11 @@ const teacherKpis = pgTable('teacher_kpis', {
   retentionScore: numeric('retention_score').notNull(),
   contributionScore: numeric('contribution_score').notNull(),
   teachingQualityScore: numeric('teaching_quality_score').notNull(),
+  // Monthly exam score of the teacher's students (entered), on-time scoring (lesson control) and
+  // new students who came asking for this teacher (+1 point each).
+  examScore: numeric('exam_score'),
+  gradingScore: numeric('grading_score'),
+  referralCount: integer('referral_count').notNull().default(0),
   finalScore: numeric('final_score').notNull(),
   notes: text('notes'),
   markedById: integer('marked_by_id'),
@@ -736,8 +741,14 @@ const studentCertificates = pgTable('student_certificates', {
   centerId: integer('center_id').notNull(),
   studentId: integer('student_id').notNull(),
   title: varchar('title', { length: 255 }).notNull(),
-  fileName: varchar('file_name', { length: 255 }).notNull(),
-  fileSize: integer('file_size').notNull(),
+  // certificate | admission | thanks; when it was received; a file or a link (or both); a note.
+  kind: varchar('kind', { length: 20 }).notNull().default('certificate'),
+  receivedOn: date('received_on'),
+  linkUrl: text('link_url'),
+  note: text('note'),
+  contentType: varchar('content_type', { length: 50 }),
+  fileName: varchar('file_name', { length: 255 }),
+  fileSize: integer('file_size'),
   uploadedByName: varchar('uploaded_by_name', { length: 255 }),
   createdAt: timestamp('created_at'),
   deletedAt: timestamp('deleted_at'),

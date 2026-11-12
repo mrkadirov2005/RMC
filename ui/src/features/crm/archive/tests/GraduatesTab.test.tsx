@@ -33,20 +33,42 @@ describe('graduates tab', () => {
     expect(screen.getByText('15.09.2025 – 20.06.2026')).toBeTruthy();
     expect(screen.getByText('9 months')).toBeTruthy();
     expect(screen.getByText('IELTS 6.5 oldi')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /IELTS 6\.5$/ })).toBeTruthy();
+    expect(screen.getByText('IELTS 6.5')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Download' })).toBeTruthy();
   });
 
-  it('accepts only PDF files', async () => {
+  it('accepts a PDF or a screenshot, or a link instead of a file', async () => {
     render(<GraduatesTab />);
-    fireEvent.click(await screen.findByRole('button', { name: /Add certificate/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Add a result/ }));
     fireEvent.change(screen.getByLabelText('Certificate name'), { target: { value: 'CEFR B2' } });
-    fireEvent.change(screen.getByLabelText('PDF file'), { target: { files: [new File(['x'], 'photo.png', { type: 'image/png' })] } });
+    // Neither a file nor a link.
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
-    expect(toast.error).toHaveBeenCalledWith('Only a PDF file up to 5 MB can be uploaded.');
+    expect(toast.error).toHaveBeenCalledWith('Enter the name and choose a file or paste a link.');
+    // A Word file is refused.
+    fireEvent.change(screen.getByLabelText('File (PDF or screenshot)'), { target: { files: [new File(['x'], 'b2.docx', { type: 'application/msword' })] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
+    expect(toast.error).toHaveBeenCalledWith('Only a PDF or an image (PNG, JPG) up to 5 MB can be uploaded.');
 
-    fireEvent.change(screen.getByLabelText('PDF file'), { target: { files: [new File(['%PDF-1.4'], 'b2.pdf', { type: 'application/pdf' })] } });
+    fireEvent.change(screen.getByLabelText('File (PDF or screenshot)'), { target: { files: [new File(['%PDF-1.4'], 'b2.pdf', { type: 'application/pdf' })] } });
+    fireEvent.change(screen.getByLabelText('Received on'), { target: { value: '2026-09-14' } });
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
-    await waitFor(() => expect(api.uploadCertificate).toHaveBeenCalledWith(1, expect.objectContaining({ title: 'CEFR B2', file_name: 'b2.pdf', data: expect.stringMatching(/^data:application\/pdf;base64,/) })));
+    await waitFor(() => expect(api.uploadCertificate).toHaveBeenCalledWith(1, expect.objectContaining({
+      title: 'CEFR B2', kind: 'certificate', received_on: '2026-09-14', file_name: 'b2.pdf', data: expect.stringMatching(/^data:application\/pdf;base64,/),
+    })));
+  });
+
+  it('filters by the year and month a result was received', async () => {
+    api.getGraduates.mockResolvedValue({ data: [
+      { ...graduate, certificates: [{ certificate_id: 5, title: 'IELTS 6.5', kind: 'certificate', received_on: '2026-09-14', file_name: 'ielts.pdf', file_size: 1, has_file: true }] },
+      { ...graduate, student_id: 2, first_name: 'Malika', last_name: 'Karimova', certificates: [{ certificate_id: 6, title: 'WIUT', kind: 'admission', received_on: '2026-10-02', link_url: 'https://wiut.uz', file_name: null, file_size: null, has_file: false }] },
+    ] });
+    render(<GraduatesTab />);
+    await screen.findByText('Karimova Malika');
+    expect(screen.getByRole('link', { name: 'Open link' }).getAttribute('href')).toBe('https://wiut.uz');
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '2026' } });
+    fireEvent.change(screen.getByLabelText('Month'), { target: { value: '09' } });
+    await waitFor(() => expect(screen.queryByText('Karimova Malika')).toBeNull());
+    expect(screen.getByText('Abduqodirov Hojiakbar')).toBeTruthy();
   });
 
   it('searches graduates and filters by when they finished', async () => {

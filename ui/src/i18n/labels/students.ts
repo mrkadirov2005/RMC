@@ -1,4 +1,9 @@
 export const studentsLabels: Record<string, string> = {
+  'School number': 'Maktab raqami',
+  'Example: 7 (saved as 7-Maktab)': "Masalan: 7 (7-Maktab bo'lib saqlanadi)",
+  'Example: 7 (saved as 7-Sinf)': "Masalan: 7 (7-Sinf bo'lib saqlanadi)",
+  'College or university name': 'Kollej yoki universitet nomi',
+  'Example: 2': 'Masalan: 2',
   'Paid in full': "To'liq to'langan",
   'Not paid': "To'lanmagan",
   'Not in the group this month': "Bu oy guruhda bo'lmagan",

@@ -75,6 +75,10 @@ export interface Class {
   class_name: string;
   class_code: string;
   level: number;
+  /** The subject level the group is in this month (Fanlar -> levels), and its names. */
+  level_id?: number | null;
+  level_name?: string | null;
+  subject_name?: string | null;
   capacity: number;
   center_id?: number;
   teacher_id?: number;

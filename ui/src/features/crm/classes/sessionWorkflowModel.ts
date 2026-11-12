@@ -1,7 +1,7 @@
 import type { LessonScoringSettings } from './lessonScoringSettings';
 import type { ScoreOption } from './components/SessionWorkflowScoring';
 import { DEFAULT_ATTENDANCE_REMARK } from './absenceStreak';
-import { combineLessonScore, POINTS_WEIGHT_WITH_ATTENDANCE } from './utils/points';
+import { combineLessonScore } from './utils/points';
 
 export type WorkflowScoreMap = Map<number, string>;
 export type WorkflowScoringAction = 'attendance' | 'homework' | 'activity' | 'points' | 'coins';
@@ -27,6 +27,20 @@ export const clampWorkflowPoints = (value: string) => {
     : String(Math.max(0, Math.min(100, Math.round(numericValue))));
 };
 
+/** Stellar students one lesson may have (the server checks the same limit). */
+export const MAX_STELLAR_STUDENTS = 5;
+
+/** Lesson points an excused absence gets automatically; the student is not scored further. */
+export const EXCUSED_LESSON_POINTS = 50;
+
+/** Whether attendance marked the student absent or excused (they skip homework and activity). */
+export const absenceOf = (label: string | undefined): 'absent' | 'excused' | null => {
+  const status = WORKFLOW_ATTENDANCE_STATUS[label || ''];
+  return status === 'Absent' ? 'absent' : status === 'Absent R' ? 'excused' : null;
+};
+
+export const isAbsentFromLesson = (attendance: WorkflowScoreMap, studentId: number) => absenceOf(attendance.get(studentId)) !== null;
+
 export const getWorkflowCounts = (
   studentCount: number,
   attendance: WorkflowScoreMap,
@@ -35,18 +49,24 @@ export const getWorkflowCounts = (
   points: WorkflowScoreMap,
 ) => {
   const attendanceMarked = Array.from(attendance.values()).filter(Boolean).length;
-  const homeworkMarked = Array.from(homework.values()).filter(Boolean).length;
-  const activityMarked = Array.from(activity.values()).filter(Boolean).length;
+  // Students marked absent or excused skip homework and activity, so those steps are complete
+  // once everyone who came is scored.
+  const absentIds = new Set(Array.from(attendance.keys()).filter((id) => isAbsentFromLesson(attendance, id)));
+  const scoredWhoCame = (map: WorkflowScoreMap) => Array.from(map.entries()).filter(([id, value]) => Boolean(value) && !absentIds.has(id)).length;
+  const homeworkMarked = scoredWhoCame(homework);
+  const activityMarked = scoredWhoCame(activity);
   const pointsMarked = Array.from(points.values()).filter((value) => value !== '').length;
+  const toScore = studentCount - absentIds.size;
   return {
     total: studentCount,
     attendanceMarked,
     homeworkMarked,
     activityMarked,
     pointsMarked,
+    absentCount: absentIds.size,
     allAttendanceMarked: studentCount > 0 && attendanceMarked === studentCount,
-    allHomeworkMarked: studentCount > 0 && homeworkMarked === studentCount,
-    allActivityMarked: studentCount > 0 && activityMarked === studentCount,
+    allHomeworkMarked: studentCount > 0 && homeworkMarked === toScore,
+    allActivityMarked: studentCount > 0 && activityMarked === toScore,
     allPointsMarked: studentCount > 0 && pointsMarked === studentCount,
   };
 };
@@ -75,6 +95,10 @@ export const getWorkflowTotalScore = ({
   const homeworkStatus = selectedActions.includes('homework') ? homework.get(studentId) || '' : '';
   const activityStatus = selectedActions.includes('activity') ? activity.get(studentId) || '' : '';
   const manualPoints = Number(points.get(studentId) || 0);
+  // Absent: 0. Excused: 50 automatically. Neither is scored for homework or activity.
+  const absence = selectedActions.includes('attendance') ? absenceOf(attendanceStatus) : null;
+  if (absence === 'absent') return 0;
+  if (absence === 'excused') return EXCUSED_LESSON_POINTS;
   return combineLessonScore({
     attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
     homework_score: homeworkPoints[homeworkStatus] || 0,
@@ -92,7 +116,7 @@ const maxOptionScore = (options: ScoreOption[]) => Math.max(0, ...options.map((o
 export const getWorkflowMaxScore = (selectedActions: WorkflowScoringAction[], settings: LessonScoringSettings) => {
   const has = (action: WorkflowScoringAction) => selectedActions.includes(action);
   const max = has('points')
-    ? (has('attendance') ? maxOptionScore(settings.attendance) + Math.round(100 * POINTS_WEIGHT_WITH_ATTENDANCE) : 100)
+    ? 100
     : (has('attendance') ? maxOptionScore(settings.attendance) : 0)
       + (has('homework') ? maxOptionScore(settings.homework) : 0)
       + (has('activity') ? maxOptionScore(settings.activity) : 0);
@@ -139,16 +163,26 @@ export const buildSessionWorkflowRecords = ({
     const homeworkStatus = homework.get(studentId);
     const activityStatus = activity.get(studentId);
     const pointsScore = Number(points.get(studentId) || 0);
+    // In the 100-point mode attendance is not taken by hand: a 0 marks the student absent and any
+    // other score present, so attendance still knows who missed the lesson.
+    const pointsGiven = selectedActions.includes('points') && points.has(studentId) && String(points.get(studentId)).trim() !== '';
+    const attendanceFromPoints = !selectedActions.includes('attendance') && pointsGiven;
+    const absence = selectedActions.includes('attendance') ? absenceOf(attendanceStatus) : null;
     return {
       student_id: studentId,
-      is_stellar_student: awardsCoins && stellarStudentIds.includes(studentId),
-      stellar_bonus_coins: awardsCoins && stellarStudentIds.includes(studentId) ? settings.stellarBonusCoins : 0,
-      attendance_status: selectedActions.includes('attendance') ? (statusMap[attendanceStatus] || attendanceStatus) : null,
-      attendance_remarks: selectedActions.includes('attendance') ? (attendanceReasons?.get(studentId)?.trim() || DEFAULT_ATTENDANCE_REMARK) : null,
+      is_stellar_student: !absence && awardsCoins && stellarStudentIds.includes(studentId),
+      stellar_bonus_coins: !absence && awardsCoins && stellarStudentIds.includes(studentId) ? settings.stellarBonusCoins : 0,
+      attendance_status: selectedActions.includes('attendance')
+        ? (statusMap[attendanceStatus] || attendanceStatus)
+        : attendanceFromPoints ? (pointsScore === 0 ? 'Absent' : 'Present') : null,
+      attendance_remarks: selectedActions.includes('attendance') || attendanceFromPoints ? (attendanceReasons?.get(studentId)?.trim() || DEFAULT_ATTENDANCE_REMARK) : null,
       attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
-      homework_score: selectedActions.includes('homework') && homeworkStatus ? (homeworkPoints[homeworkStatus] ?? 0) : null,
-      activity_score: selectedActions.includes('activity') && activityStatus ? (activityPoints[activityStatus] ?? 0) : null,
-      points_score: selectedActions.includes('points') && Number.isFinite(pointsScore) ? pointsScore : null,
+      homework_score: !absence && selectedActions.includes('homework') && homeworkStatus ? (homeworkPoints[homeworkStatus] ?? 0) : null,
+      activity_score: !absence && selectedActions.includes('activity') && activityStatus ? (activityPoints[activityStatus] ?? 0) : null,
+      // An excused absence is saved as a 50-point lesson; an absence stays at 0 (attendance only).
+      points_score: absence === 'excused'
+        ? EXCUSED_LESSON_POINTS
+        : !absence && selectedActions.includes('points') && Number.isFinite(pointsScore) ? pointsScore : null,
     };
   }).filter((record) => record.student_id > 0);
 };

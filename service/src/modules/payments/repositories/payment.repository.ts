@@ -229,7 +229,8 @@ const findStudentPaymentSummary = async (filters: {
   from: string;
   to: string;
   months: number;
-  status?: 'paid' | 'partial' | 'unpaid';
+  /** 'debt' is partial or unpaid: everyone who still owes for the period. */
+  status?: 'paid' | 'partial' | 'unpaid' | 'debt';
   teacherId?: number;
   classId?: number;
   subject?: string;
@@ -250,7 +251,9 @@ const findStudentPaymentSummary = async (filters: {
     where.push(`(CONCAT_WS(' ', s.first_name, s.last_name) ILIKE ${term} OR CONCAT_WS(' ', s.last_name, s.first_name) ILIKE ${term}
       OR regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g') LIKE ${add(`%${String(filters.q).replace(/\D/g, '') || '~'}%`)})`);
   }
-  const statusFilter = filters.status ? `WHERE state = ${add(filters.status)}` : '';
+  const statusFilter = filters.status === 'debt'
+    ? `WHERE state IN ('partial', 'unpaid')`
+    : filters.status ? `WHERE state = ${add(filters.status)}` : '';
   const limit = add(filters.limit);
   const offset = add(filters.offset);
 
@@ -354,6 +357,49 @@ const findStudentPaymentSummary = async (filters: {
   return result.rows[0];
 };
 
-module.exports = { findStudentPaymentSummary, findAll, findById, insert, withTransaction, update, findByStudent, remove, purge, findReceipt, findStaffName };
+/**
+ * For a payment on `studentId` in the month of `paymentDate`: that record and every earlier group
+ * record it was transferred from (following transferred_from_student_id) that still ran in that
+ * month. Each comes with its lessons' share of the month, what those lessons cost at that month's
+ * group price, and what was already paid on it in that month.
+ */
+const findTransferMonthShares = async (studentId: number, paymentDate: string) => {
+  const result = await pool.query(
+    `WITH RECURSIVE chain AS (
+       SELECT student_id, transferred_from_student_id, 0 AS depth FROM students WHERE student_id = $1
+       UNION ALL
+       SELECT s.student_id, s.transferred_from_student_id, chain.depth + 1
+       FROM students s JOIN chain ON s.student_id = chain.transferred_from_student_id
+       WHERE chain.depth < 12
+     ),
+     month AS (SELECT date_trunc('month', $2::date)::date AS m)
+     SELECT s.student_id, s.status, s.center_id, s.class_id,
+            billing_month_share(c.section, s.start_date::date, s.end_date::date, month.m)::numeric AS share,
+            ROUND(billing_month_share(c.section, s.start_date::date, s.end_date::date, month.m)
+              * ${priceAtSql('s.class_id', 'month.m', 'c.payment_amount')}, 2)::numeric AS expected,
+            COALESCE((SELECT SUM(p.amount) FROM payments p
+                      WHERE p.student_id = s.student_id AND p.deleted_at IS NULL
+                        AND LOWER(COALESCE(p.payment_status::text, '')) IN ('completed', 'paid')
+                        AND date_trunc('month', p.payment_date) = month.m), 0)::numeric AS paid
+     FROM chain
+     JOIN students s ON s.student_id = chain.student_id
+     LEFT JOIN classes c ON c.class_id = s.class_id
+     CROSS JOIN month
+     WHERE s.deleted_at IS NULL
+       AND (s.student_id = $1 OR (s.end_date IS NOT NULL AND s.end_date::date >= month.m))`,
+    [studentId, paymentDate],
+  );
+  return result.rows.map((row: any) => ({
+    student_id: Number(row.student_id),
+    center_id: row.center_id == null ? null : Number(row.center_id),
+    class_id: row.class_id == null ? null : Number(row.class_id),
+    status: row.status,
+    share: Number(row.share || 0),
+    expected: Number(row.expected || 0),
+    paid: Number(row.paid || 0),
+  }));
+};
+
+module.exports = { findTransferMonthShares, findStudentPaymentSummary, findAll, findById, insert, withTransaction, update, findByStudent, remove, purge, findReceipt, findStaffName };
 
 export {};

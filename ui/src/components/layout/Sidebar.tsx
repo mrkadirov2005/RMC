@@ -294,6 +294,7 @@ const Sidebar = memo(() => {
         { label: "O'qituvchilar", path: '/owner/reports?section=teachers', iconName: 'Teachers', permission: 'REPORTS_TAB_TEACHERS' },
         { label: 'Chegirmalar', path: '/owner/reports?section=discounts', iconName: 'Discounts', permission: 'REPORTS_TAB_DISCOUNTS' },
         { label: 'Retention', path: '/owner/reports?section=retention', iconName: 'Retention', permission: 'REPORTS_TAB_RETENTION' },
+        { label: 'Bitiruvchilar', path: '/owner/reports?section=graduates', iconName: 'Students', permission: 'REPORTS_TAB_GRADUATES' },
         { label: 'Davomat', path: '/owner/reports?section=attendance', iconName: 'Attendance', permission: 'REPORTS_TAB_ATTENDANCE' },
         { label: 'Class Reports', path: '/owner/reports?section=classes', iconName: 'Classes', permission: 'REPORTS_TAB_CLASSES' },
       ],

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { GraduateStatsPanel } from './components/GraduateStatsPanel';
 import { useSearchParams } from 'react-router-dom';
 import {  Loader2 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -20,7 +21,7 @@ import { useRBAC } from '../crm/hooks/useRBAC';
 import { resolveSubPageView } from '../crm/rbac/adminPageAccess';
 import { getStoredActiveCenterId } from '@/shared/auth/authStorage';
 
-type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention' | 'attendance' | 'classes';
+type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention' | 'attendance' | 'classes' | 'graduates';
 
 const emptyCollections: OwnerManagerStatisticsCollections = {
   students: [],
@@ -38,7 +39,7 @@ const OwnerReports = () => {
   const { canAccessSubPage } = useRBAC();
   // Only the report sections this admin was given; a hidden one falls back to an allowed section.
   const requestedSection = resolveSubPageView(PERMISSION_CODES.VIEW_REPORTS, searchParams.get('section') || 'finance', canAccessSubPage);
-  const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes'].includes(String(requestedSection))
+  const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes', 'graduates'].includes(String(requestedSection))
     ? requestedSection as ReportTab
     : 'finance';
   const [collections, setCollections] = useState<OwnerManagerStatisticsCollections>(emptyCollections);
@@ -84,7 +85,7 @@ const OwnerReports = () => {
       setLoading(true);
       try {
         const nextCollections: OwnerManagerStatisticsCollections = { ...emptyCollections };
-        if (activeTab === 'retention') {
+        if (activeTab === 'retention' || activeTab === 'graduates') {
           if (!alive) return;
           setCollections(nextCollections);
           return;
@@ -201,6 +202,7 @@ const OwnerReports = () => {
             {activeTab === 'finance' && <OwnerFinancePanel collections={collections} loading={false} />}
             {activeTab === 'discounts' && <DiscountStatsPanel collections={collections} />}
             {activeTab === 'retention' && <RetentionPage embedded />}
+            {activeTab === 'graduates' && <GraduateStatsPanel />}
             {activeTab === 'students' && (
               <div className="space-y-4">
                 <StudentRankingCard />

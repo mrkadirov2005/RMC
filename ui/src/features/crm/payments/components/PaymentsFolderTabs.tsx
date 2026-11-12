@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Folder,
   Search,
@@ -13,27 +12,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { PageToolbar } from '@/components/common/PageToolbar';
 import { SimplePaginationBar } from '@/components/common/SimplePaginationBar';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { useAppSelector } from '../../hooks';
-import { fetchSalaryOverview, selectSalaryOverview, selectSalaryOverviewLoading } from '@/slices/salariesSlice';
-import { formatStudentPaidShare, teacherFullName } from '../../salary/model/salaryModel';
 import type { UsePaymentsPageReturn } from '../hooks/usePaymentsPage';
 import { PaymentGroupsMatrixTab } from './PaymentGroupsMatrixTab';
 import { PaymentListView } from './PaymentListView';
+import { PaymentsMonthStats } from './PaymentsMonthStats';
 
 const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
@@ -55,9 +43,6 @@ interface PaymentsFolderTabsProps {
 
 export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
-  const salaryOverview = useAppSelector(selectSalaryOverview);
-  const salaryOverviewLoading = useAppSelector(selectSalaryOverviewLoading);
   const {
     dispatch,
     setPaymentsSearchTerm,
@@ -79,8 +64,6 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
     paginatedRootTeachers,
     getPaymentCountForTeacher,
     getTeacherPaymentStats,
-    // statistics tab
-    overallPaymentStats,
     // pagination
     setFolderPage,
     folderPageSize,
@@ -94,12 +77,6 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
       dispatch(setPaymentsActiveTab('classes'));
     }
   }, [activeTab, dispatch, setPaymentsActiveTab]);
-
-  useEffect(() => {
-    if (activeTab === 'statistics' && !isTeacher) {
-      dispatch(fetchSalaryOverview());
-    }
-  }, [activeTab, isTeacher, dispatch]);
 
   const getTeacherName = (teacherId?: number | null) => {
     const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId));
@@ -340,127 +317,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
         )}
 
         {/* Statistics Tab */}
-        {activeTab === 'statistics' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
-              <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
-                <CardContent className="p-3">
-                  <p className="text-xs text-white/70">{t('Payments')}</p>
-                  <p className="text-lg font-bold text-white">{overallPaymentStats.totalPayments}</p>
-                </CardContent>
-              </Card>
-              <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600">
-                <CardContent className="p-3">
-                  <p className="text-xs text-white/70">{t('Total Amount')}</p>
-                  <p className="text-lg font-bold text-white">{formatMoney(overallPaymentStats.totalAmount)}</p>
-                </CardContent>
-              </Card>
-              <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600">
-                <CardContent className="p-3">
-                  <p className="text-xs text-white/70">{t('Paid Amount')}</p>
-                  <p className="text-lg font-bold text-white">{formatMoney(overallPaymentStats.paidAmount)}</p>
-                </CardContent>
-              </Card>
-              <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-400 via-rose-500 to-pink-600">
-                <CardContent className="p-3">
-                  <p className="text-xs text-white/70">{t('Unpaid Amount')}</p>
-                  <p className="text-lg font-bold text-white">{formatMoney(overallPaymentStats.unpaidAmount)}</p>
-                </CardContent>
-              </Card>
-              <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-400 via-orange-500 to-orange-600">
-                <CardContent className="p-3">
-                  <p className="text-xs text-white/70">{t('Paid Share')}</p>
-                  <p className="text-lg font-bold text-white">{overallPaymentStats.paidPercent}%</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none">
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <div>
-                  <p className="text-sm font-medium">{t('Paid vs Unpaid')}</p>
-                  <p className="text-xs text-muted-foreground">{t('Relative payment amount across all records')}</p>
-                </div>
-                <div className="text-right text-xs text-muted-foreground">
-                  <p>{overallPaymentStats.paidPercent}% {t('paid')}</p>
-                  <p>{overallPaymentStats.unpaidPercent}% {t('unpaid')}</p>
-                </div>
-              </div>
-              <div className="h-4 w-full overflow-hidden rounded-full bg-muted shadow-inner">
-                <div className="flex h-full w-full">
-                  <div
-                    className="h-full bg-emerald-500 transition-all duration-300"
-                    style={{ width: `${overallPaymentStats.paidPercent}%` }}
-                  />
-                  <div
-                    className="h-full bg-rose-500 transition-all duration-300"
-                    style={{ width: `${overallPaymentStats.unpaidPercent}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {!isTeacher && (
-              <div className={cn(paymentSurfaceClass, 'rounded-lg [&_table]:text-xs [&_th]:text-xs [&_td]:py-2')}>
-                <div className="flex items-center justify-between gap-3 border-b p-3">
-                  <p className="text-sm font-semibold">{t('Teacher Salaries (last month)')}</p>
-                  <Button variant="link" size="sm" className="h-auto p-0" onClick={() => navigate('/salary')}>
-                    {t('View full Salary report')} →
-                  </Button>
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('Teacher')}</TableHead>
-                      <TableHead>{t('Last-Month Salary')}</TableHead>
-                      <TableHead>{t('Paid?')}</TableHead>
-                      <TableHead>{t('Students Paid')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salaryOverviewLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8">
-                          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                          <p className="text-muted-foreground">{t('Loading statistics...')}</p>
-                        </TableCell>
-                      </TableRow>
-                    ) : salaryOverview.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                          {t('No teachers found')}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      salaryOverview.map((row) => (
-                        <TableRow
-                          key={row.teacher_id}
-                          className="cursor-pointer hover:bg-muted/40"
-                          onClick={() => navigate(`/salary/${row.teacher_id}`)}
-                        >
-                          <TableCell>
-                            <p className="font-semibold">{teacherFullName(row)}</p>
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {row.salary ? formatMoney(row.salary.amount) : '—'}
-                          </TableCell>
-                          <TableCell>
-                            {row.salary?.is_paid ? (
-                              <Badge variant="success">{t('Paid')}</Badge>
-                            ) : (
-                              <Badge variant="warning">{t('Unpaid')}</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>{formatStudentPaidShare(row.student_stats)}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </div>
-        )}
+        {activeTab === 'statistics' && <PaymentsMonthStats />}
       </div>
     </>
   );

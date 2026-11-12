@@ -22,6 +22,11 @@ describe('student payment summary', () => {
     expect(out.rows[0]).toMatchObject({ paid_amount: 150000, expected: 300000, remaining: 150000 });
   });
 
+  it('passes the debt status through: partial and unpaid students together', async () => {
+    await service.listStudentPaymentSummary({ from: '2026-10-01', to: '2026-10-31', status: 'debt' }, 1);
+    expect(repository.findStudentPaymentSummary.mock.calls[0][0].status).toBe('debt');
+  });
+
   it('defaults to this month, ignores an unknown status and swaps a reversed range', async () => {
     await service.listStudentPaymentSummary({ status: 'everything' }, 1);
     const call = repository.findStudentPaymentSummary.mock.calls[0][0];
