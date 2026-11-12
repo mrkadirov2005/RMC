@@ -23,20 +23,21 @@ export interface RankedStudent {
   score: number;
 }
 
-/** Ranks children by points; in the level and center views a child in several groups counts once. */
+/** Ranks students by points. Each group (subject) is ranked on its own: a child in two subjects
+ * appears once per subject, and the points of different subjects are never added together. */
 export const rankStudents = (rows: StudentRankingRow[], scope: RankingScope, filter: number | null = null): RankedStudent[] => {
   const picked = rows.filter((row) =>
     scope === 'group' ? row.class_id === filter : scope === 'level' ? row.level === filter : true
   );
-  const byStudent = new Map<number, Omit<RankedStudent, 'place'>>();
+  const byStudentGroup = new Map<string, Omit<RankedStudent, 'place'>>();
   picked.forEach((row) => {
-    const entry = byStudent.get(row.student_id) || { studentId: row.student_id, name: row.name, groups: [], lessons: 0, score: 0 };
-    if (!entry.groups.includes(row.class_name)) entry.groups.push(row.class_name);
+    const key = `${row.student_id}:${row.class_id}`;
+    const entry = byStudentGroup.get(key) || { studentId: row.student_id, name: row.name, groups: [row.class_name], lessons: 0, score: 0 };
     entry.lessons += row.lessons;
     entry.score += row.score;
-    byStudent.set(row.student_id, entry);
+    byStudentGroup.set(key, entry);
   });
-  return Array.from(byStudent.values())
+  return Array.from(byStudentGroup.values())
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
     .map((entry, index) => ({ ...entry, place: index + 1 }));
 };

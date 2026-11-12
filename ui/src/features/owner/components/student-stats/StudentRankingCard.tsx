@@ -74,7 +74,7 @@ export function StudentRankingCard() {
             </thead>
             <tbody>
               {visible.map((item) => (
-                <tr key={item.studentId} className="border-t">
+                <tr key={`${item.studentId}-${item.groups.join(",")}`} className="border-t">
                   <td className="px-3 py-2 font-semibold tabular-nums text-muted-foreground">{item.place}</td>
                   <td className="px-3 py-2 font-semibold">{item.name}</td>
                   <td className="px-3 py-2 text-muted-foreground">{item.groups.join(', ')}</td>
