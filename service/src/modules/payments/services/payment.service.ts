@@ -115,9 +115,16 @@ const previewTransferSplit = async (studentId: number, amount: number, paymentDa
   const parts = splitAcrossMonths(studentId, Number(amount) > 0 ? Number(amount) : 0, months);
   const partOf = (month: string, recordId: number) => parts.find((part) => part.month === month && part.student_id === recordId)?.amount || 0;
   const splitTotal = parts.reduce((sum, part) => sum + part.amount, 0);
+  const money = (value: number) => Math.round(value * 100) / 100;
+  const dueOf = (shares: any[]) => money(shares.reduce((sum, row) => sum + Math.max(0, Number(row.expected || 0)), 0));
+  const owedOf = (shares: any[]) => money(shares.reduce((sum, row) => sum + Math.max(0, Number(row.expected || 0) - Number(row.paid || 0)), 0));
   return {
+    // What the month costs in all its groups (each group's price for its lessons), and what is still unpaid.
+    owed_total: money(months.reduce((sum, { shares }) => sum + owedOf(shares), 0)),
     months: months.map(({ month, shares }) => ({
       month,
+      due: dueOf(shares),
+      owed: owedOf(shares),
       groups: shares
         .filter((row: any) => Number(row.share) > 0)
         .sort((a: any, b: any) => String(a.start_date || '').localeCompare(String(b.start_date || '')))

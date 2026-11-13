@@ -156,7 +156,10 @@ const PaymentFormPage = () => {
   const canMoveHistoryForward = getMonthKey(historyWindowEnd) < getMonthKey(getMonthStart());
   const expectedMonthlyPayment = Number(selectedClass?.payment_amount || formData.original_amount || formData.amount || 0);
   // A payment can't be more than the student's group fee.
-  const groupFee = Number(selectedClass?.payment_amount || 0) > 0 ? Number(selectedClass?.payment_amount) : null;
+  // A transferred student's month in all groups (each at its own price), from the yellow notice.
+  const [transferDue, setTransferDue] = useState<number | null>(null);
+  const classFee = Number(selectedClass?.payment_amount || 0) > 0 ? Number(selectedClass?.payment_amount) : null;
+  const groupFee = classFee != null && transferDue != null ? Math.max(classFee, transferDue) : classFee;
 
   useEffect(() => {
     if (isOwner) dispatch(fetchCenters());
@@ -645,7 +648,16 @@ const PaymentFormPage = () => {
             </section>
 
             {!isEditing && Number(formData.student_id || 0) > 0 ? (
-              <TransferSplitNotice studentId={Number(formData.student_id)} paymentDate={formData.payment_date} amount={Number(formData.amount || 0)} />
+              <TransferSplitNotice
+                studentId={Number(formData.student_id)}
+                paymentDate={formData.payment_date}
+                amount={Number(formData.amount || 0)}
+                onDue={(due) => {
+                  setTransferDue(due);
+                  // Fill in what the month costs in all groups; the admin can still change it.
+                  if (due != null) setFormData((current) => ({ ...current, amount: due, original_amount: due }));
+                }}
+              />
             ) : null}
 
             {(isEditing || selectedStudent) && (

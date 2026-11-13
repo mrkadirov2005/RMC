@@ -16,7 +16,9 @@ export type TransferSplitGroup = {
 };
 
 export type TransferSplitPreview = {
-  months: Array<{ month: string; groups: TransferSplitGroup[] }>;
+  /** Still unpaid for the month(s) in all the groups, each at its own price for its lessons. */
+  owed_total: number;
+  months: Array<{ month: string; due: number; owed: number; groups: TransferSplitGroup[] }>;
   split_total: number;
   kept_amount: number;
 } | null;
@@ -40,3 +42,13 @@ export const daysInMonthText = (month: string, group: Pick<TransferSplitGroup, '
 /** The part of the payment the group gets: its split, or what is left for the group being paid in. */
 export const partFor = (group: TransferSplitGroup, preview: NonNullable<TransferSplitPreview>) =>
   group.current ? preview.kept_amount : Number(group.split_amount || 0);
+
+/** "150 000 + 233 333": each group's price for its lessons in the month. */
+export const dueBreakdown = (groups: TransferSplitGroup[]) =>
+  groups.map((group) => Math.round(Number(group.expected || 0)).toLocaleString()).join(' + ');
+
+/** The amount the form fills in: what is still owed, rounded to whole so'm; null when nothing is. */
+export const amountToFill = (preview: TransferSplitPreview) => {
+  const owed = Math.round(Number(preview?.owed_total || 0));
+  return owed > 0 ? owed : null;
+};

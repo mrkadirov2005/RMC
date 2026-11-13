@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRightLeft } from 'lucide-react';
 import { paymentAPI } from '../api';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { daysInMonthText, partFor, type TransferSplitPreview } from './transferSplitModel';
+import { amountToFill, daysInMonthText, dueBreakdown, partFor, type TransferSplitPreview } from './transferSplitModel';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -10,9 +10,20 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
  * Shown in the payment form when the student moved to this group from another one in the month the
  * payment settles: each teacher, the days and lessons there, and how much of this payment each gets.
  */
-export const TransferSplitNotice = ({ studentId, paymentDate, amount }: { studentId: number; paymentDate?: string; amount?: number }) => {
+export const TransferSplitNotice = ({ studentId, paymentDate, amount, onDue }: {
+  studentId: number;
+  paymentDate?: string;
+  amount?: number;
+  /** What the student still owes for the month(s) in all groups, or null; called when it changes. */
+  onDue?: (due: number | null) => void;
+}) => {
   const { t } = useLanguage();
   const [preview, setPreview] = useState<TransferSplitPreview>(null);
+  const due = amountToFill(preview);
+  useEffect(() => {
+    onDue?.(due);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [due]);
 
   useEffect(() => {
     if (!studentId || !paymentDate) {
@@ -41,11 +52,18 @@ export const TransferSplitNotice = ({ studentId, paymentDate, amount }: { studen
         <ArrowRightLeft className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">{t('This student moved to another teacher. The payment is split by the lessons studied with each.')}</p>
-          {preview.months.map(({ month, groups }) => {
+          {preview.months.map(({ month, due: monthDue, owed, groups }) => {
             const [year, m] = month.split('-').map(Number);
+            const monthName = `${t(MONTHS[m - 1])} ${year}`;
             return (
               <div key={month} className="mt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">{t(MONTHS[m - 1])} {year}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">{monthName}</p>
+                <p className="mt-1 text-sm font-semibold">
+                  {t('Due for {month}: {amount} so\'m ({parts})', { month: monthName, amount: Math.round(monthDue).toLocaleString(), parts: dueBreakdown(groups) })}
+                </p>
+                {Math.round(owed) < Math.round(monthDue) ? (
+                  <p className="text-xs text-amber-800/90 dark:text-amber-200/90">{t('Already paid {paid}, still owed {owed} so\'m.', { paid: Math.round(monthDue - owed).toLocaleString(), owed: Math.round(owed).toLocaleString() })}</p>
+                ) : null}
                 <ul className="mt-1.5 space-y-1.5">
                   {groups.map((group) => (
                     <li key={group.student_id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-sm">

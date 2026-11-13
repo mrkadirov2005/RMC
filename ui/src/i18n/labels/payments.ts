@@ -81,4 +81,6 @@ export const paymentsLabels: Record<string, string> = {
   'Enter the amount to see how much each teacher gets.': "Har bir ustozga qancha tushishini ko'rish uchun summani kiriting.",
   'No teacher': "Ustoz yo'q",
   "so'm": "so'm",
+  "Due for {month}: {amount} so'm ({parts})": "{month} uchun to'lov: {amount} so'm ({parts})",
+  "Already paid {paid}, still owed {owed} so'm.": "{paid} to'langan, yana {owed} so'm qoldi.",
 };
