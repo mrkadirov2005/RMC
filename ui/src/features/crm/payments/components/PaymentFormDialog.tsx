@@ -118,8 +118,11 @@ export const PaymentFormDialog = ({
   // Re-render when the groups' price histories arrive: each month uses its own price.
   useGroupPrices();
   const normalizedAmount = Number(formData.amount || 0);
-  // A payment can't be more than what the student pays for the group.
-  const maxAmount = Number(selectedStudent?.amount || 0) > 0 ? Number(selectedStudent?.amount) : null;
+  // A transferred student's month in all groups (each at its own price), from the yellow notice.
+  const [transferDue, setTransferDue] = useState<number | null>(null);
+  // A payment can't be more than what the student pays for the group, or for a transfer month in all groups.
+  const groupAmount = Number(selectedStudent?.amount || 0) > 0 ? Number(selectedStudent?.amount) : null;
+  const maxAmount = groupAmount != null && transferDue != null ? Math.max(groupAmount, transferDue) : groupAmount;
   const isEditing = Boolean(formData.payment_id || formData.id);
   const [studentSearch, setStudentSearch] = useState('');
   const [studentPickerOpen, setStudentPickerOpen] = useState(false);
@@ -786,7 +789,16 @@ export const PaymentFormDialog = ({
             </div>
             {!isEditing && Number(formData.student_id || 0) > 0 ? (
               <div className="mt-4">
-                <TransferSplitNotice studentId={Number(formData.student_id)} paymentDate={formData.payment_date} amount={Number(formData.amount || 0)} />
+                <TransferSplitNotice
+                  studentId={Number(formData.student_id)}
+                  paymentDate={formData.payment_date}
+                  amount={Number(formData.amount || 0)}
+                  onDue={(due) => {
+                    setTransferDue(due);
+                    // Fill in what the month costs in all groups; the admin can still change it.
+                    if (due != null) setPaymentField(setFormData, { amount: due });
+                  }}
+                />
               </div>
             ) : null}
           </section>

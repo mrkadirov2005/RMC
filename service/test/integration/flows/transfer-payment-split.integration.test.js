@@ -61,6 +61,9 @@ describe('payment of a student transferred mid-month, with PostgreSQL', () => {
     const preview = await paymentService.previewTransferSplit(newRecord, 400000, '2026-09-20');
     expect(preview.months).toHaveLength(1);
     expect(preview.months[0].month).toBe('2026-09');
+    // The month in both groups at their own prices: 6/12 of 400 000 + 7/12 of 400 000, nothing paid yet.
+    expect(preview.months[0].due).toBeCloseTo(433333.33, 2);
+    expect(preview.owed_total).toBeCloseTo(433333.33, 2);
     const [first, second] = preview.months[0].groups;
     expect(first).toMatchObject({ student_id: oldRecord, class_name: 'First', teacher_name: 'T-1 Teacher', lessons: 6, end_date: '2026-09-15', current: false });
     expect(first.split_amount).toBeCloseTo(184615.38, 1);
@@ -68,6 +71,33 @@ describe('payment of a student transferred mid-month, with PostgreSQL', () => {
     expect(preview.kept_amount).toBeCloseTo(215384.62, 1);
     // A student who never moved groups: nothing to show.
     expect(await paymentService.previewTransferSplit(oldRecord, 400000, '2026-08-20')).toBeNull();
+  });
+
+  test('groups with different prices: each part at its own group\'s price', async () => {
+    const cheap = (await pool.query(
+      `INSERT INTO classes (center_id, class_name, class_code, payment_amount, section) VALUES ($1, 'Cheap', 'CHEAP', 300000, $2) RETURNING class_id`,
+      [centerId, MONDAY_WEDNESDAY_FRIDAY],
+    )).rows[0].class_id;
+    const dear = (await pool.query(
+      `INSERT INTO classes (center_id, class_name, class_code, payment_amount, section) VALUES ($1, 'Dear', 'DEAR', 400000, $2) RETURNING class_id`,
+      [centerId, MONDAY_WEDNESDAY_FRIDAY],
+    )).rows[0].class_id;
+    // November 2026: Mon/Wed/Fri lessons 2-13 (6) in the 300 000 group, 16-30 (7) in the 400 000 group.
+    const from = (await pool.query(
+      `INSERT INTO students (center_id, enrollment_number, first_name, last_name, class_id, status, start_date, end_date)
+       VALUES ($1, 'PRICE-1', 'Sardor', 'K', $2, 'Transferred', '2026-10-01', '2026-11-15') RETURNING student_id`, [centerId, cheap],
+    )).rows[0].student_id;
+    const to = (await pool.query(
+      `INSERT INTO students (center_id, enrollment_number, first_name, last_name, class_id, status, start_date, transferred_from_student_id)
+       VALUES ($1, 'PRICE-1', 'Sardor', 'K', $2, 'Active', '2026-11-16', $3) RETURNING student_id`, [centerId, dear, from],
+    )).rows[0].student_id;
+    const paymentService = require('../../../src/modules/payments/services/payment.service');
+    const preview = await paymentService.previewTransferSplit(to, 0, '2026-11-20');
+    const [first, second] = preview.months[0].groups;
+    expect([first.lessons, first.expected]).toEqual([6, 150000]);
+    expect(second.lessons).toBe(7);
+    expect(second.expected).toBeCloseTo(233333.33, 2);
+    expect(preview.owed_total).toBeCloseTo(383333.33, 2);
   });
 
   test('a full-month payment in the new group is split 6 : 7 by lessons', async () => {
